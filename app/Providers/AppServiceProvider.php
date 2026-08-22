@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Console\Commands\CreateSuperAdminCommand;
 use App\Console\Commands\MailTestCommand;
 use App\Console\Commands\PostgresWipeCommand;
 use App\Models\Business;
@@ -40,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
+                CreateSuperAdminCommand::class,
                 MailTestCommand::class,
                 PostgresWipeCommand::class,
             ]);
