@@ -9,6 +9,10 @@ class EnsureAdminAccess
 {
     public function handle(Request $request, Closure $next)
     {
+        if ($request->user()?->role === 'super_admin' && ! $request->routeIs('platform.*')) {
+            return redirect()->route('platform.dashboard');
+        }
+
         if ($request->user()?->role === 'client_portal') {
             return redirect()->route('portal.dashboard');
         }

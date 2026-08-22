@@ -29,6 +29,10 @@ class DashboardController extends Controller
 {
     public function __invoke(Request $request)
     {
+        if ($request->user()?->role === 'super_admin') {
+            return redirect()->route('platform.dashboard');
+        }
+
         if ($dashboardRoute = $this->industryDashboardRoute()) {
             return redirect()->route($dashboardRoute);
         }

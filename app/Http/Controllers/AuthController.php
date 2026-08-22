@@ -61,7 +61,11 @@ class AuthController extends Controller
                 app(IamService::class)->recordLogin($request, $user, true);
             }
 
-            return redirect()->intended(Auth::user()->role === 'client_portal' ? route('portal.dashboard') : route('dashboard'));
+            return redirect()->intended(match (Auth::user()->role) {
+                'super_admin' => route('platform.dashboard'),
+                'client_portal' => route('portal.dashboard'),
+                default => route('dashboard'),
+            });
         }
 
         if ($user && Schema::hasColumn('users', 'failed_login_attempts')) {

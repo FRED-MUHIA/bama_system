@@ -22,7 +22,7 @@ class CreateSuperAdminCommand extends Command
         {--username=superadmin : Login username}
         {--password= : Password to set}
         {--generate-password : Generate and print a secure temporary password}
-        {--no-business-access : Do not attach the account to existing tenants and businesses}';
+        {--with-business-access : Attach the account to existing tenants and businesses for emergency support}';
 
     protected $description = 'Create or update a platform super admin account.';
 
@@ -57,12 +57,14 @@ class CreateSuperAdminCommand extends Command
 
                 $user->forceFill(['email_verified_at' => now()])->save();
 
-                if (! $this->option('no-business-access')) {
+                if ($this->option('with-business-access')) {
                     $this->attachToExistingWorkspaces($user, $iam);
+                } else {
+                    $this->detachFromWorkspaces($user);
                 }
 
-                if (Schema::hasColumn('users', 'current_tenant_id') && ! $user->current_tenant_id) {
-                    $user->forceFill(['current_tenant_id' => Tenant::query()->value('id')])->saveQuietly();
+                if (Schema::hasColumn('users', 'current_tenant_id') && ! $this->option('with-business-access')) {
+                    $user->forceFill(['current_tenant_id' => null])->saveQuietly();
                 }
 
                 return $user;
@@ -211,5 +213,16 @@ class CreateSuperAdminCommand extends Command
                 );
             });
         });
+    }
+
+    private function detachFromWorkspaces(User $user): void
+    {
+        if (Schema::hasTable('tenant_user')) {
+            DB::table('tenant_user')->where('user_id', $user->id)->delete();
+        }
+
+        if (Schema::hasTable('business_user')) {
+            DB::table('business_user')->where('user_id', $user->id)->delete();
+        }
     }
 }

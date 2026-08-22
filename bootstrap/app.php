@@ -1,5 +1,12 @@
 <?php
 
+use App\Http\Middleware\EnsureAdminAccess;
+use App\Http\Middleware\EnsureModuleEnabled;
+use App\Http\Middleware\EnsureSubscriptionActive;
+use App\Http\Middleware\EnsureSuperAdmin;
+use App\Http\Middleware\IdentifyTenant;
+use App\Http\Middleware\RecordMajorActivity;
+use App\Http\Middleware\RequirePermission;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,13 +20,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: ['logout']);
-        $middleware->web(append: [\App\Http\Middleware\IdentifyTenant::class, \App\Http\Middleware\RecordMajorActivity::class]);
+        $middleware->web(append: [IdentifyTenant::class, RecordMajorActivity::class]);
         $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureAdminAccess::class,
-            'permission' => \App\Http\Middleware\RequirePermission::class,
-            'tenant.context' => \App\Http\Middleware\IdentifyTenant::class,
-            'module.enabled' => \App\Http\Middleware\EnsureModuleEnabled::class,
-            'subscription.active' => \App\Http\Middleware\EnsureSubscriptionActive::class,
+            'admin' => EnsureAdminAccess::class,
+            'permission' => RequirePermission::class,
+            'super_admin' => EnsureSuperAdmin::class,
+            'tenant.context' => IdentifyTenant::class,
+            'module.enabled' => EnsureModuleEnabled::class,
+            'subscription.active' => EnsureSubscriptionActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
