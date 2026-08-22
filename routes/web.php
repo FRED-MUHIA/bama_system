@@ -75,6 +75,7 @@ use Shared\Communication\Controllers\CommunicationCenterController;
 use Shared\Compliance\Etims\Controllers\EtimsComplianceController;
 
 Route::get('/', LandingController::class)->name('landing');
+Route::get('/industries/{industry}', [LandingController::class, 'industry'])->name('industries.show');
 Route::get('/activate/{token}', [AdministrationController::class, 'activateForm'])->name('administration.activate');
 Route::post('/activate/{token}', [AdministrationController::class, 'activate'])->name('administration.activate.store');
 Route::get('/account-recovery/{token}', [AdministrationController::class, 'recoveryForm'])->name('administration.recovery');

@@ -63,6 +63,8 @@ class IndustrySetupService
 
     public function find(string $slug): array
     {
+        $slug = $this->normalizeIndustrySlug($slug);
+
         return $this->industries()->firstWhere('slug', $slug) ?? $this->industries()->firstWhere('slug', 'professional-services');
     }
 

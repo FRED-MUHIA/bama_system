@@ -14,4 +14,20 @@ class LandingController extends Controller
             'plans' => $plans->all(),
         ]);
     }
+
+    public function industry(string $industry, IndustrySetupService $industries, PlanSelectionService $plans)
+    {
+        abort_unless($industries->isImplemented($industry), 404);
+
+        $definition = $industries->find($industry);
+
+        return view('landing.industry', [
+            'industry' => $definition + [
+                'industry' => $definition['name'],
+                'dashboard' => $industries->dashboardFeatures($definition['slug']),
+            ],
+            'industries' => $industries->implementedIndustries(),
+            'plans' => $plans->all(),
+        ]);
+    }
 }

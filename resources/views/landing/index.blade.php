@@ -495,14 +495,14 @@
             <div class="mt-8 grid gap-6 lg:grid-cols-[.9fr_1.1fr]">
                 <div class="grid gap-3 sm:grid-cols-2">
                     @foreach ($industryCards as $industry)
-                        <button type="button" data-industry-tab="{{ $industry['slug'] }}" class="industry-tab rounded-2xl border border-zinc-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-1 hover:border-[#00A651] hover:shadow-xl">
+                        <a href="{{ route('industries.show', ['industry' => str_replace('_', '-', $industry['slug'])]) }}" data-industry-tab="{{ $industry['slug'] }}" class="industry-tab rounded-2xl border border-zinc-200 bg-white p-4 text-left text-black no-underline shadow-sm transition hover:-translate-y-1 hover:border-[#00A651] hover:text-black hover:shadow-xl">
                             <div class="flex items-start justify-between gap-4">
                                 <span class="grid h-10 w-10 place-items-center rounded-lg bg-[#EAF8F0] text-sm font-black text-[#007A3B]">{{ substr($industry['name'], 0, 1) }}</span>
                                 <span class="text-sm font-black text-[#00A651]">Learn More</span>
                             </div>
                             <h3 class="mt-4 text-lg font-black">{{ $industry['name'] }}</h3>
                             <p class="mt-2 text-sm leading-6 text-zinc-600">{{ $industry['description'] }}</p>
-                        </button>
+                        </a>
                     @endforeach
                 </div>
 
@@ -746,7 +746,7 @@
             <div class="grid gap-8 sm:grid-cols-4">
                 @foreach ([
                     'Products' => ['CRM', 'Finance', 'Projects', 'Inventory'],
-                    'Industries' => ['Construction', 'Healthcare', 'Retail', 'Real Estate'],
+                    'Industries' => ['Construction', 'Real Estate', 'Retail', 'Hospitality'],
                     'Company' => ['Pricing', 'Documentation', 'Support', 'Social Media'],
                     'Legal' => ['Privacy Policy', 'Terms'],
                 ] as $heading => $links)
@@ -754,7 +754,8 @@
                         <h3 class="font-black text-black">{{ $heading }}</h3>
                         <div class="mt-3 grid gap-2 text-sm">
                             @foreach ($links as $link)
-                                <a href="#top" class="hover:text-[#00A651]">{{ $link }}</a>
+                                @php($industryFooterSlug = str($link)->lower()->replace(' ', '-')->toString())
+                                <a href="{{ $heading === 'Industries' ? route('industries.show', ['industry' => $industryFooterSlug]) : '#top' }}" class="hover:text-[#00A651]">{{ $link }}</a>
                             @endforeach
                         </div>
                     </div>
@@ -875,7 +876,10 @@
     }
 
     productButtons.forEach((button) => button.addEventListener('click', () => selectProductTab(button.dataset.productTab)));
-    industryButtons.forEach((button) => button.addEventListener('click', () => selectIndustry(button.dataset.industryTab)));
+    industryButtons.forEach((button) => {
+        button.addEventListener('mouseenter', () => selectIndustry(button.dataset.industryTab));
+        button.addEventListener('focus', () => selectIndustry(button.dataset.industryTab));
+    });
     registerAnimations();
     selectProductTab(Object.keys(productTabs)[0]);
     selectIndustry(Object.keys(industryTabs)[0]);
