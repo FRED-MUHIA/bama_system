@@ -1,0 +1,3 @@
+<?php
+namespace App\Models; use App\Models\Concerns\BelongsToBusiness; use Illuminate\Database\Eloquent\Model;
+class FinanceAccount extends Model {use BelongsToBusiness; protected $fillable=['business_id','parent_id','code','name','type','subtype','description','tax_treatment','opening_balance','is_system','is_active'];protected $casts=['opening_balance'=>'decimal:2','is_system'=>'boolean','is_active'=>'boolean'];public function parent(){return $this->belongsTo(self::class,'parent_id');}public function children(){return $this->hasMany(self::class,'parent_id');}public function lines(){return $this->hasMany(JournalLine::class);}}

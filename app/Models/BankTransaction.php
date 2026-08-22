@@ -1,0 +1,3 @@
+<?php
+namespace App\Models; use App\Models\Concerns\BelongsToBusiness; use Illuminate\Database\Eloquent\Model;
+class BankTransaction extends Model {use BelongsToBusiness;protected $fillable=['business_id','bank_account_id','journal_entry_id','transaction_date','type','reference','description','amount','is_reconciled','reconciled_at','reconciled_by'];protected $casts=['transaction_date'=>'date','amount'=>'decimal:2','is_reconciled'=>'boolean','reconciled_at'=>'datetime'];public function bankAccount(){return $this->belongsTo(BankAccount::class);}public function journal(){return $this->belongsTo(JournalEntry::class,'journal_entry_id');}}

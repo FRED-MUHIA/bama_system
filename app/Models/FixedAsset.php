@@ -1,0 +1,3 @@
+<?php
+namespace App\Models; use App\Models\Concerns\BelongsToBusiness; use Illuminate\Database\Eloquent\Model;
+class FixedAsset extends Model {use BelongsToBusiness;protected $fillable=['business_id','asset_account_id','depreciation_account_id','expense_account_id','asset_number','name','category','purchase_date','cost','residual_value','useful_life_months','depreciation_method','reducing_rate','location','assigned_to','status','disposed_at','disposal_proceeds'];protected $casts=['purchase_date'=>'date','disposed_at'=>'date','cost'=>'decimal:2','residual_value'=>'decimal:2'];public function schedules(){return $this->hasMany(AssetDepreciationSchedule::class);}}

@@ -1,0 +1,2 @@
+<?php
+namespace App\Models;use App\Models\Concerns\BelongsToBusiness;use Illuminate\Database\Eloquent\Model;class UserInvitation extends Model{use BelongsToBusiness;protected $fillable=['business_id','user_id','token','expires_at','accepted_at','cancelled_at','status','invited_by'];protected $casts=['expires_at'=>'datetime','accepted_at'=>'datetime','cancelled_at'=>'datetime'];public function user(){return $this->belongsTo(User::class);}}

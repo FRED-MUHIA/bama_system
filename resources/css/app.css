@@ -1,0 +1,45 @@
+@import 'tailwindcss' source(none);
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@font-face {
+    font-family: 'McQueen';
+    src:
+        local('McQueen SemiBold'),
+        local('McQueen 600'),
+        local('McQueen');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@theme {
+    --font-brand: 'McQueen', 'Inter Tight', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@layer base {
+    :root {
+        --font-brand: 'McQueen', 'Inter Tight', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: var(--font-brand) !important;
+        font-weight: 600 !important;
+        font-optical-sizing: auto;
+        font-variation-settings: 'opsz' 28;
+        font-synthesis: none;
+        letter-spacing: 0;
+        text-rendering: geometricPrecision;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}

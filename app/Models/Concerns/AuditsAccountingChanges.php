@@ -1,0 +1,3 @@
+<?php
+namespace App\Models\Concerns;use App\Models\AccountingAuditLog;use Illuminate\Support\Facades\Schema;
+trait AuditsAccountingChanges{protected static function bootAuditsAccountingChanges():void{foreach(['created','updated','deleted'] as $event){static::registerModelEvent($event,function($model)use($event){if(!Schema::hasTable('accounting_audit_logs'))return;AccountingAuditLog::create(['business_id'=>$model->business_id,'user_id'=>auth()->id(),'event'=>$event,'auditable_type'=>$model::class,'auditable_id'=>$model->getKey(),'old_values'=>$event==='updated'?$model->getOriginal():null,'new_values'=>$event==='deleted'?null:$model->getAttributes(),'created_at'=>now()]);});}}}

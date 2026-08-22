@@ -1,0 +1,3 @@
+@extends('layouts.app')
+@section('title','Account Recovery')
+@section('content')<div class="row justify-content-center"><div class="col-md-5"><div class="card p-4"><h1 class="h5">One-time account recovery</h1><p class="text-muted">Set a new private password for {{$user->name}}. This link can only be used once.</p><form method="post" action="{{route('administration.recovery.store',$token)}}">@csrf<input class="form-control mb-2" type="password" name="password" placeholder="New strong password" required><input class="form-control mb-3" type="password" name="password_confirmation" placeholder="Confirm password" required><button class="btn btn-warning w-100">Set new password</button></form></div></div></div>@endsection
