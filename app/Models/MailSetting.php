@@ -18,12 +18,14 @@ class MailSetting extends Model
 
     public function apply(): void
     {
-        if (! $this->enabled) return;
+        if (! $this->enabled) {
+            return;
+        }
 
         $scheme = match ($this->scheme) {
             'ssl', 'smtps' => 'smtps',
             'tls', 'smtp' => 'smtp',
-            default => null,
+            default => ((int) $this->port === 465 ? 'smtps' : 'smtp'),
         };
 
         config([

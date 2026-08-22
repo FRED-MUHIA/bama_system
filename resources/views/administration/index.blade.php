@@ -366,12 +366,12 @@
             <form method="post" action="{{ route('administration.mail.update') }}" class="row g-3">
                 @csrf @method('PUT')
                 <div class="col-12"><label><input type="checkbox" name="enabled" value="1" @checked($mailSetting?->enabled)> Use these settings</label></div>
-                <div class="col-md-6"><label class="form-label">SMTP host</label><input class="form-control" name="host" value="{{ old('host',$mailSetting?->host) }}" required></div>
-                <div class="col-md-3"><label class="form-label">Port</label><input class="form-control" type="number" name="port" value="{{ old('port',$mailSetting?->port ?? 587) }}" required></div>
-                <div class="col-md-3"><label class="form-label">Encryption</label><select class="form-select" name="scheme"><option value="tls" @selected($mailSetting?->scheme === 'tls')>TLS</option><option value="ssl" @selected($mailSetting?->scheme === 'ssl')>SSL</option></select></div>
-                <div class="col-md-6"><label class="form-label">Username</label><input class="form-control" name="username" value="{{ old('username',$mailSetting?->username) }}" autocomplete="off"></div>
+                <div class="col-md-6"><label class="form-label">SMTP host</label><input class="form-control" name="host" value="{{ old('host',$mailSetting?->host ?? config('mail.mailers.smtp.host')) }}" required></div>
+                <div class="col-md-3"><label class="form-label">Port</label><input class="form-control" type="number" name="port" value="{{ old('port',$mailSetting?->port ?? config('mail.mailers.smtp.port', 465)) }}" required></div>
+                <div class="col-md-3"><label class="form-label">Encryption</label><select class="form-select" name="scheme"><option value="ssl" @selected(($mailSetting?->scheme ?? 'ssl') === 'ssl')>SSL/TLS</option><option value="tls" @selected($mailSetting?->scheme === 'tls')>STARTTLS</option></select></div>
+                <div class="col-md-6"><label class="form-label">Username</label><input class="form-control" name="username" value="{{ old('username',$mailSetting?->username ?? config('mail.mailers.smtp.username')) }}" autocomplete="off"></div>
                 <div class="col-md-6"><label class="form-label">Password</label><input class="form-control" type="password" name="password" placeholder="{{ $mailSetting?->password ? 'Saved - leave blank to keep' : 'Enter SMTP password' }}" autocomplete="new-password"></div>
-                <div class="col-md-6"><label class="form-label">From address</label><input class="form-control" type="email" name="from_address" value="{{ old('from_address',$mailSetting?->from_address) }}" required></div>
+                <div class="col-md-6"><label class="form-label">From address</label><input class="form-control" type="email" name="from_address" value="{{ old('from_address',$mailSetting?->from_address ?? config('mail.from.address')) }}" required></div>
                 <div class="col-md-6"><label class="form-label">From name</label><input class="form-control" name="from_name" value="{{ old('from_name',$mailSetting?->from_name ?? config('app.name')) }}" required></div>
                 <div class="col-12"><button class="btn btn-warning">Save Encrypted Settings</button></div>
             </form>

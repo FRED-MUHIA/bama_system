@@ -4,14 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\IndustrySetupService;
+use App\Services\OutgoingMailService;
 use App\Services\PlanSelectionService;
 use App\Services\TenantProvisioningService;
-use Illuminate\Http\Request;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class RegistrationController extends Controller
 {
@@ -141,6 +142,7 @@ class RegistrationController extends Controller
         }
 
         try {
+            app(OutgoingMailService::class)->apply();
             $request->user()->sendEmailVerificationNotification();
         } catch (\Throwable $e) {
             report($e);

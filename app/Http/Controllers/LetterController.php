@@ -14,11 +14,10 @@ use App\Models\Signatory;
 use App\Models\Site;
 use App\Models\Warranty;
 use App\Services\LetterService;
+use App\Services\OutgoingMailService;
 use App\Support\ActiveBusiness;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -26,7 +25,7 @@ use Illuminate\Validation\Rule;
 
 class LetterController extends Controller
 {
-    public function __construct(private LetterService $letters) {}
+    public function __construct(private LetterService $letters, private OutgoingMailService $outgoingMail) {}
 
     public function index(Request $request)
     {
@@ -190,13 +189,17 @@ class LetterController extends Controller
             }
 
             try {
-                Mail::raw($data['message'] ?: $letter->subject, function ($mail) use ($letter, $recipient) {
-                    $mail->to($recipient)->subject($letter->subject)
-                        ->attachData($this->letters->pdf($letter)->output(), $letter->letter_number.'.pdf', ['mime' => 'application/pdf']);
-                });
+                $this->outgoingMail->sendRaw(
+                    $recipient,
+                    $letter->subject,
+                    $data['message'] ?: $letter->subject,
+                    fn ($mail) => $mail->attachData($this->letters->pdf($letter)->output(), $letter->letter_number.'.pdf', ['mime' => 'application/pdf']),
+                    $letter->business_id,
+                );
                 $letter->update(['recipient' => $recipient, 'sent_at' => now(), 'delivery_status' => 'sent', 'status' => 'Sent']);
             } catch (\Throwable $e) {
                 $letter->update(['recipient' => $recipient, 'delivery_status' => 'failed']);
+
                 return back()->withErrors(['email' => 'Email failed: '.$e->getMessage()]);
             }
         } elseif ($data['mode'] === 'portal') {
@@ -244,6 +247,7 @@ class LetterController extends Controller
     public function fromReceipt(Receipt $receipt)
     {
         $receipt->load('invoice');
+
         return redirect()->route('letters.create', ['receipt_id' => $receipt->id, 'invoice_id' => $receipt->invoice_id, 'client_id' => $receipt->invoice?->client_id, 'project_id' => $receipt->project_id, 'template' => 'Acknowledgement']);
     }
 

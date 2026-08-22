@@ -7,22 +7,30 @@ use App\Models\CompanySetting;
 use App\Models\Invoice;
 use App\Models\PaymentMethod;
 use App\Models\Quotation;
-use App\Support\ActiveBusiness;
 use App\Services\DocumentService;
 use App\Services\InvoicePosOrderService;
+use App\Services\OutgoingMailService;
+use App\Support\ActiveBusiness;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class QuotationController extends Controller
 {
-    public function __construct(private DocumentService $documents, private InvoicePosOrderService $invoiceOrders) {}
+    public function __construct(private DocumentService $documents, private InvoicePosOrderService $invoiceOrders, private OutgoingMailService $outgoingMail) {}
 
-    public function index() { return view('quotations.index', ['quotations' => Quotation::with('client')->latest()->paginate(12)]); }
-    public function create() { return view('quotations.form', $this->formData(new Quotation(['quotation_date' => now(), 'valid_until' => now()->addDays(14)]))); }
+    public function index()
+    {
+        return view('quotations.index', ['quotations' => Quotation::with('client')->latest()->paginate(12)]);
+    }
+
+    public function create()
+    {
+        return view('quotations.form', $this->formData(new Quotation(['quotation_date' => now(), 'valid_until' => now()->addDays(14)])));
+    }
+
     public function show(Quotation $quotation)
     {
         $relationships = ['client', 'items', 'emailLogs'];
@@ -34,32 +42,42 @@ class QuotationController extends Controller
 
         return view('quotations.show', ['quotation' => $quotation->load($relationships)]);
     }
-    public function edit(Quotation $quotation) { return view('quotations.form', $this->formData($quotation->load('items'))); }
+
+    public function edit(Quotation $quotation)
+    {
+        return view('quotations.form', $this->formData($quotation->load('items')));
+    }
 
     public function store(Request $request)
     {
-        $quotation = DB::transaction(fn () => $this->saveQuotation(new Quotation(), $request));
+        $quotation = DB::transaction(fn () => $this->saveQuotation(new Quotation, $request));
+
         return redirect()->route('quotations.show', $quotation)->with('status', 'Quotation saved.');
     }
 
     public function update(Request $request, Quotation $quotation)
     {
         DB::transaction(fn () => $this->saveQuotation($quotation, $request));
+
         return redirect()->route('quotations.show', $quotation)->with('status', 'Quotation updated.');
     }
 
     public function destroy(Quotation $quotation)
     {
         $quotation->delete();
+
         return redirect()->route('quotations.index')->with('status', 'Quotation deleted.');
     }
 
     public function download(Quotation $quotation)
     {
-        return $this->pdf($quotation)->download($quotation->quotation_number . '.pdf');
+        return $this->pdf($quotation)->download($quotation->quotation_number.'.pdf');
     }
 
-    public function emailForm(Quotation $quotation) { return view('documents.email', ['document' => $quotation->load('client'), 'type' => 'quotation']); }
+    public function emailForm(Quotation $quotation)
+    {
+        return view('documents.email', ['document' => $quotation->load('client'), 'type' => 'quotation']);
+    }
 
     public function sendEmail(Request $request, Quotation $quotation)
     {
@@ -67,16 +85,21 @@ class QuotationController extends Controller
         $quotation->load('client');
 
         try {
-            Mail::raw($data['message'], function ($mail) use ($quotation, $data) {
-                $mail->to($quotation->client->email)->subject($data['subject'])
-                    ->attachData($this->pdf($quotation)->output(), $quotation->quotation_number . '.pdf', ['mime' => 'application/pdf']);
-            });
+            $this->outgoingMail->sendRaw(
+                $quotation->client->email,
+                $data['subject'],
+                $data['message'],
+                fn ($mail) => $mail->attachData($this->pdf($quotation)->output(), $quotation->quotation_number.'.pdf', ['mime' => 'application/pdf']),
+                $quotation->business_id,
+            );
             $quotation->emailLogs()->create($data + ['recipient_email' => $quotation->client->email, 'status' => 'sent', 'sent_at' => now()]);
             $quotation->update(['sent_at' => now(), 'status' => 'sent']);
+
             return redirect()->route('quotations.show', $quotation)->with('status', 'Quotation emailed.');
         } catch (\Throwable $e) {
             $quotation->emailLogs()->create($data + ['recipient_email' => $quotation->client->email, 'status' => 'failed', 'error' => $e->getMessage()]);
-            return back()->withErrors(['email' => 'Email failed: ' . $e->getMessage()]);
+
+            return back()->withErrors(['email' => 'Email failed: '.$e->getMessage()]);
         }
     }
 
@@ -116,6 +139,7 @@ class QuotationController extends Controller
             }
             $this->invoiceOrders->sync($invoice);
             $quotation->update(['status' => 'converted']);
+
             return $invoice;
         });
 
@@ -144,6 +168,7 @@ class QuotationController extends Controller
         foreach ($items as $item) {
             $quotation->items()->create($item + ['line_total' => $this->documents->lineTotal($item)]);
         }
+
         return $quotation;
     }
 
@@ -192,6 +217,7 @@ class QuotationController extends Controller
             }
 
             $client = Client::create($data['client']);
+
             return $client->id;
         }
 

@@ -134,6 +134,7 @@ class TenantProvisioningService
             app(IamService::class)->bootstrapBusinessDefaults($user);
 
             try {
+                app(OutgoingMailService::class)->apply($tenant->businesses()->value('id'));
                 $user->sendEmailVerificationNotification();
             } catch (\Throwable $e) {
                 report($e);

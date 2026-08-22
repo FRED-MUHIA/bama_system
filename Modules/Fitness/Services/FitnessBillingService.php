@@ -5,15 +5,18 @@ namespace Modules\Fitness\Services;
 use App\Models\Client;
 use App\Models\CompanySetting;
 use App\Models\Invoice;
-use App\Models\Payment;
 use App\Models\PaymentMethod;
+use App\Models\Receipt;
 use App\Models\ReceiptAllocation;
 use App\Services\DocumentService;
+use App\Services\IamService;
 use App\Services\InvoiceVerificationService;
+use App\Services\OutgoingMailService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Modules\Fitness\Models\MemberMembership;
 
 class FitnessBillingService
@@ -21,9 +24,8 @@ class FitnessBillingService
     public function __construct(
         private DocumentService $documents,
         private InvoiceVerificationService $verification,
-    )
-    {
-    }
+        private OutgoingMailService $outgoingMail,
+    ) {}
 
     public function invoiceMembership(MemberMembership $membership): Invoice
     {
@@ -39,7 +41,7 @@ class FitnessBillingService
                 'business_id' => $membership->business_id,
                 'client_id' => $membership->member->client_id,
                 'invoice_number' => $this->documents->number('invoice'),
-                'public_token' => \Illuminate\Support\Str::random(48),
+                'public_token' => Str::random(48),
                 'invoice_date' => now()->toDateString(),
                 'due_date' => now()->addDays(7)->toDateString(),
                 'payment_status' => $amount > 0 ? 'unpaid' : 'paid',
@@ -68,7 +70,7 @@ class FitnessBillingService
         });
     }
 
-    public function recordMembershipPayment(MemberMembership $membership, array $data): \App\Models\Receipt
+    public function recordMembershipPayment(MemberMembership $membership, array $data): Receipt
     {
         return DB::transaction(function () use ($membership, $data) {
             $membership = MemberMembership::with('invoice', 'member.client', 'plan')->lockForUpdate()->findOrFail($membership->id);
@@ -77,7 +79,7 @@ class FitnessBillingService
 
             $amount = round((float) $data['amount'], 2);
             if ($amount <= 0 || $amount > (float) $invoice->balance) {
-                throw \Illuminate\Validation\ValidationException::withMessages(['amount' => 'Payment amount exceeds the outstanding membership balance.']);
+                throw ValidationException::withMessages(['amount' => 'Payment amount exceeds the outstanding membership balance.']);
             }
 
             $payment = $invoice->payments()->create($data + [
@@ -124,22 +126,22 @@ class FitnessBillingService
                 'new_values' => ['payment_id' => $payment->id, 'receipt_id' => $receipt->id, 'amount' => $payment->amount],
             ]);
 
-            app(\App\Services\IamService::class)->audit('membership.payment.recorded', $payment);
+            app(IamService::class)->audit('membership.payment.recorded', $payment);
 
             return $receipt;
         });
     }
 
-    public function sendInvoiceAfterPayment(Invoice $invoice, \App\Models\Receipt $receipt): bool
+    public function sendInvoiceAfterPayment(Invoice $invoice, Receipt $receipt): bool
     {
         $invoice->load('client', 'items', 'payments.paymentMethod', 'receipts');
         $email = $invoice->client?->email;
         $subject = 'Payment received - invoice '.$invoice->invoice_number;
         $message = "Hello {$invoice->client?->name},\n\n"
-            ."Thank you. We have received your payment of ".number_format((float) $receipt->amount_paid, 2)
+            .'Thank you. We have received your payment of '.number_format((float) $receipt->amount_paid, 2)
             ." for invoice {$invoice->invoice_number}.\n\n"
             ."The updated invoice is attached for your records.\n\n"
-            ."Thank you.";
+            .'Thank you.';
 
         if (! $email) {
             $invoice->emailLogs()->create([
@@ -154,10 +156,13 @@ class FitnessBillingService
         }
 
         try {
-            Mail::raw($message, function ($mail) use ($invoice, $email, $subject) {
-                $mail->to($email)->subject($subject)
-                    ->attachData($this->invoicePdf($invoice)->output(), $invoice->invoice_number.'.pdf', ['mime' => 'application/pdf']);
-            });
+            $this->outgoingMail->sendRaw(
+                $email,
+                $subject,
+                $message,
+                fn ($mail) => $mail->attachData($this->invoicePdf($invoice)->output(), $invoice->invoice_number.'.pdf', ['mime' => 'application/pdf']),
+                $invoice->business_id,
+            );
 
             $invoice->emailLogs()->create([
                 'recipient_email' => $email,

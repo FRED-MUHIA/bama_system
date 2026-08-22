@@ -3,9 +3,11 @@
 namespace Modules\Fitness\Services;
 
 use App\Models\Client;
+use App\Services\IamService;
+use App\Services\OutgoingMailService;
 use App\Support\ActiveBusiness;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Modules\Fitness\Models\Member;
 use Modules\Fitness\Models\MemberMembership;
@@ -13,9 +15,7 @@ use Modules\Fitness\Models\MembershipPlan;
 
 class MembershipService
 {
-    public function __construct(private FitnessNumberService $numbers)
-    {
-    }
+    public function __construct(private FitnessNumberService $numbers, private OutgoingMailService $outgoingMail) {}
 
     public function createMember(array $clientData, array $memberData): Member
     {
@@ -39,7 +39,7 @@ class MembershipService
         return DB::transaction(function () use ($member, $plan, $data) {
             $this->cancelActiveMemberships($member);
 
-            $startsAt = \Illuminate\Support\Carbon::parse($data['starts_at'] ?? now()->toDateString())->startOfDay();
+            $startsAt = Carbon::parse($data['starts_at'] ?? now()->toDateString())->startOfDay();
             $endsAt = $startsAt->copy()->addDays(max((int) $plan->duration_days, 1) - 1);
             $price = round((float) ($data['price_charged'] ?? $plan->price), 2);
             $joiningFee = round((float) ($data['joining_fee_charged'] ?? $plan->joining_fee), 2);
@@ -109,8 +109,8 @@ class MembershipService
                 throw ValidationException::withMessages(['membership' => 'This membership plan does not allow freezes.']);
             }
 
-            $startsAt = \Illuminate\Support\Carbon::parse($data['starts_at'])->startOfDay();
-            $endsAt = \Illuminate\Support\Carbon::parse($data['ends_at'])->startOfDay();
+            $startsAt = Carbon::parse($data['starts_at'])->startOfDay();
+            $endsAt = Carbon::parse($data['ends_at'])->startOfDay();
             $days = $startsAt->diffInDays($endsAt) + 1;
             $old = $membership->toArray();
 
@@ -183,9 +183,11 @@ class MembershipService
 
                     if ($membership->member?->client?->email) {
                         try {
-                            Mail::raw(
+                            $this->outgoingMail->sendRaw(
+                                $membership->member->client->email,
+                                'Membership expiry reminder',
                                 'Your '.$membership->plan?->name.' membership expires '.$membership->ends_at->format('d M Y').'. Please renew to keep access active.',
-                                fn ($mail) => $mail->to($membership->member->client->email)->subject('Membership expiry reminder')
+                                businessId: $membership->business_id,
                             );
                         } catch (\Throwable $e) {
                             report($e);
@@ -214,6 +216,6 @@ class MembershipService
             'new_values' => $new,
         ]);
 
-        app(\App\Services\IamService::class)->audit($event, $membership);
+        app(IamService::class)->audit($event, $membership);
     }
 }

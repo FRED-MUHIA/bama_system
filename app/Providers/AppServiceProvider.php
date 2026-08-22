@@ -2,23 +2,24 @@
 
 namespace App\Providers;
 
-use App\Models\Business;
+use App\Console\Commands\MailTestCommand;
 use App\Console\Commands\PostgresWipeCommand;
+use App\Models\Business;
 use App\Services\NavigationManager;
 use App\Services\ThemeManager;
 use App\Support\ActiveBusiness;
 use App\Support\ActiveTenant;
+use App\Support\SchemaCache;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
-use App\Support\SchemaCache;
-use Shared\Compliance\Etims\Contracts\EtimsComplianceServiceContract;
-use Shared\Compliance\Etims\Services\EtimsComplianceService;
-use Shared\Communication\Contracts\CommunicationServiceContract;
-use Shared\Communication\Services\CommunicationService;
 use Modules\Salon\Contracts\SalonSpaServiceContract;
 use Modules\Salon\Services\SalonSpaService;
+use Shared\Communication\Contracts\CommunicationServiceContract;
+use Shared\Communication\Services\CommunicationService;
+use Shared\Compliance\Etims\Contracts\EtimsComplianceServiceContract;
+use Shared\Compliance\Etims\Services\EtimsComplianceService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
+                MailTestCommand::class,
                 PostgresWipeCommand::class,
             ]);
         }

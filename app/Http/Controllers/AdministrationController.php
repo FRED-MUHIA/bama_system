@@ -14,12 +14,13 @@ use App\Models\User;
 use App\Models\UserDevice;
 use App\Models\UserInvitation;
 use App\Services\IamService;
+use App\Services\OutgoingMailService;
 use App\Support\ActiveBusiness;
 use App\Support\ActiveTenant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password as PasswordBroker;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -28,9 +29,7 @@ use Illuminate\Validation\Rules\Password;
 
 class AdministrationController extends Controller
 {
-    public function __construct(private IamService $iam)
-    {
-    }
+    public function __construct(private IamService $iam, private OutgoingMailService $outgoingMail) {}
 
     public function index()
     {
@@ -85,7 +84,7 @@ class AdministrationController extends Controller
             ->latest()
             ->limit(15)
             ->get()
-            ->map(fn ($log) => (object) ['event' => 'auth:'.$log->event, 'when' => \Illuminate\Support\Carbon::parse($log->created_at)]);
+            ->map(fn ($log) => (object) ['event' => 'auth:'.$log->event, 'when' => Carbon::parse($log->created_at)]);
         $timeline = $audit->concat($auth)->sortByDesc('when')->take(30)->values();
 
         return view('administration.user-activity', compact('user', 'online', 'lastActivity', 'timeline'));
@@ -209,12 +208,9 @@ class AdministrationController extends Controller
         $this->assertProfileUser($user);
         $user->update(['force_password_change' => true, 'session_version' => ($user->session_version ?? 0) + 1]);
         DB::table('sessions')->where('user_id', $user->id)->delete();
-        $mailSetting = Schema::hasTable('mail_settings') ? MailSetting::where('business_id', $this->businessId())->first() : null;
-        if ($mailSetting?->enabled) {
-            $mailSetting->apply();
-        }
 
         try {
+            $this->outgoingMail->apply($this->businessId());
             $result = PasswordBroker::sendResetLink(['email' => $user->email]);
             $sent = $result === PasswordBroker::RESET_LINK_SENT;
         } catch (\Throwable $e) {
@@ -432,12 +428,19 @@ class AdministrationController extends Controller
             'enabled' => ['nullable', 'boolean'],
             'host' => ['required', 'string', 'max:255'],
             'port' => ['required', 'integer', 'min:1', 'max:65535'],
-            'scheme' => ['nullable', 'in:tls,ssl'],
+            'scheme' => ['nullable', 'in:tls,ssl,smtp,smtps'],
             'username' => ['nullable', 'string', 'max:255'],
             'password' => ['nullable', 'string', 'max:1000'],
             'from_address' => ['required', 'email'],
             'from_name' => ['required', 'string', 'max:255'],
         ]);
+
+        $data['scheme'] = match ($data['scheme'] ?? null) {
+            'smtps' => 'ssl',
+            'smtp' => 'tls',
+            default => $data['scheme'] ?? ((int) $data['port'] === 465 ? 'ssl' : 'tls'),
+        };
+
         $setting = MailSetting::firstOrNew(['business_id' => $this->businessId()]);
         if (blank($data['password'] ?? null)) {
             unset($data['password']);
@@ -455,7 +458,7 @@ class AdministrationController extends Controller
 
         try {
             $setting->apply();
-            Mail::raw('Your '.$this->profileName().' SMTP settings are working.', fn ($mail) => $mail->to($data['test_email'])->subject('SMTP configuration test'));
+            $this->outgoingMail->sendRaw($data['test_email'], 'SMTP configuration test', 'Your '.$this->profileName().' SMTP settings are working.');
             $this->iam->audit('mail.settings.test_succeeded', $setting);
 
             return back()->with('status', 'Test email sent successfully.');
@@ -626,10 +629,6 @@ class AdministrationController extends Controller
     private function sendInvitation(User $user): bool
     {
         $hours = SecuritySetting::where('business_id', $this->businessId())->first()?->invitation_expiry_hours ?? 24;
-        $mailSetting = Schema::hasTable('mail_settings') ? MailSetting::where('business_id', $this->businessId())->first() : null;
-        if ($mailSetting?->enabled) {
-            $mailSetting->apply();
-        }
 
         UserInvitation::where('business_id', $this->businessId())
             ->where('user_id', $user->id)
@@ -647,7 +646,7 @@ class AdministrationController extends Controller
         ]);
 
         try {
-            Mail::raw('Welcome to '.$this->profileName().'. Activate your account: '.route('administration.activate', $invite->token), fn ($mail) => $mail->to($user->email)->subject('Activate your account'));
+            $this->outgoingMail->sendRaw($user->email, 'Activate your account', 'Welcome to '.$this->profileName().'. Activate your account: '.route('administration.activate', $invite->token), businessId: $this->businessId());
 
             return true;
         } catch (\Throwable $e) {

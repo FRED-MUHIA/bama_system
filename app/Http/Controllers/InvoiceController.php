@@ -4,23 +4,29 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\CompanySetting;
+use App\Models\Contact;
 use App\Models\Invoice;
 use App\Models\InvoiceAllocation;
 use App\Models\PaymentMethod;
+use App\Models\Project;
 use App\Models\ReceiptAllocation;
-use App\Support\ActiveBusiness;
-use App\Support\ActiveTenant;
+use App\Models\Site;
+use App\Services\CostAccountingService;
 use App\Services\DocumentService;
 use App\Services\InvoicePartPaymentService;
 use App\Services\InvoicePosOrderService;
 use App\Services\InvoiceVerificationService;
+use App\Services\OutgoingMailService;
+use App\Support\ActiveBusiness;
+use App\Support\ActiveTenant;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Modules\PrintingBranding\Models\ProductionJob;
 
 class InvoiceController extends Controller
 {
@@ -29,6 +35,7 @@ class InvoiceController extends Controller
         private InvoicePosOrderService $invoiceOrders,
         private InvoicePartPaymentService $partPayments,
         private InvoiceVerificationService $verification,
+        private OutgoingMailService $outgoingMail,
     ) {}
 
     public function index()
@@ -40,7 +47,12 @@ class InvoiceController extends Controller
 
         return view('invoices.index', ['invoices' => Invoice::source()->with($relationships)->latest()->paginate(12)]);
     }
-    public function create() { return view('invoices.form', $this->formData(new Invoice(['invoice_date' => now(), 'due_date' => now()->addDays(14)]))); }
+
+    public function create()
+    {
+        return view('invoices.form', $this->formData(new Invoice(['invoice_date' => now(), 'due_date' => now()->addDays(14)])));
+    }
+
     public function show(Invoice $invoice)
     {
         return view('invoices.show', [
@@ -52,6 +64,7 @@ class InvoiceController extends Controller
             'qrCode' => $this->verification->qrCodeDataUri($invoice, 150),
         ]);
     }
+
     public function edit(Invoice $invoice)
     {
         if ($invoice->isPartPayment()) {
@@ -63,7 +76,8 @@ class InvoiceController extends Controller
 
     public function store(Request $request)
     {
-        $invoice = DB::transaction(fn () => $this->saveInvoice(new Invoice(), $request));
+        $invoice = DB::transaction(fn () => $this->saveInvoice(new Invoice, $request));
+
         return redirect()->route('invoices.show', $invoice)->with('status', 'Invoice saved.');
     }
 
@@ -74,6 +88,7 @@ class InvoiceController extends Controller
         }
 
         DB::transaction(fn () => $this->saveInvoice($invoice, $request));
+
         return redirect()->route('invoices.show', $invoice)->with('status', 'Invoice updated.');
     }
 
@@ -88,11 +103,19 @@ class InvoiceController extends Controller
         }
 
         $invoice->delete();
+
         return redirect()->route('invoices.index')->with('status', 'Invoice deleted.');
     }
 
-    public function download(Invoice $invoice) { return $this->pdf($invoice)->download($invoice->invoice_number . '.pdf'); }
-    public function emailForm(Invoice $invoice) { return view('documents.email', ['document' => $invoice->load('client'), 'type' => 'invoice']); }
+    public function download(Invoice $invoice)
+    {
+        return $this->pdf($invoice)->download($invoice->invoice_number.'.pdf');
+    }
+
+    public function emailForm(Invoice $invoice)
+    {
+        return view('documents.email', ['document' => $invoice->load('client'), 'type' => 'invoice']);
+    }
 
     public function publicShow(string $token)
     {
@@ -102,9 +125,9 @@ class InvoiceController extends Controller
             $invoice->setRelation('parentInvoice', Invoice::withoutGlobalScope('business')->find($invoice->parent_invoice_id));
         }
         if (Invoice::supportsProjectLinks()) {
-            $invoice->setRelation('site', \App\Models\Site::withoutGlobalScope('business')->find($invoice->site_id));
-            $invoice->setRelation('project', \App\Models\Project::withoutGlobalScope('business')->find($invoice->project_id));
-            $invoice->setRelation('contact', \App\Models\Contact::withoutGlobalScope('business')->find($invoice->contact_id));
+            $invoice->setRelation('site', Site::withoutGlobalScope('business')->find($invoice->site_id));
+            $invoice->setRelation('project', Project::withoutGlobalScope('business')->find($invoice->project_id));
+            $invoice->setRelation('contact', Contact::withoutGlobalScope('business')->find($invoice->contact_id));
         }
         $settings = CompanySetting::withoutGlobalScope('business')->where('business_id', $invoice->business_id)->first();
 
@@ -121,7 +144,7 @@ class InvoiceController extends Controller
     {
         $invoice = Invoice::withoutGlobalScope('business')->where('public_token', $token)->firstOrFail();
 
-        return $this->pdf($invoice)->download($invoice->invoice_number . '.pdf');
+        return $this->pdf($invoice)->download($invoice->invoice_number.'.pdf');
     }
 
     public function sendEmail(Request $request, Invoice $invoice)
@@ -129,16 +152,21 @@ class InvoiceController extends Controller
         $data = $request->validate(['subject' => ['required', 'string'], 'message' => ['required', 'string']]);
         $invoice->load('client');
         try {
-            Mail::raw($data['message'], function ($mail) use ($invoice, $data) {
-                $mail->to($invoice->client->email)->subject($data['subject'])
-                    ->attachData($this->pdf($invoice)->output(), $invoice->invoice_number . '.pdf', ['mime' => 'application/pdf']);
-            });
+            $this->outgoingMail->sendRaw(
+                $invoice->client->email,
+                $data['subject'],
+                $data['message'],
+                fn ($mail) => $mail->attachData($this->pdf($invoice)->output(), $invoice->invoice_number.'.pdf', ['mime' => 'application/pdf']),
+                $invoice->business_id,
+            );
             $invoice->emailLogs()->create($data + ['recipient_email' => $invoice->client->email, 'status' => 'sent', 'sent_at' => now()]);
             $invoice->update(['sent_at' => now()]);
+
             return redirect()->route('invoices.show', $invoice)->with('status', 'Invoice emailed.');
         } catch (\Throwable $e) {
             $invoice->emailLogs()->create($data + ['recipient_email' => $invoice->client->email, 'status' => 'failed', 'error' => $e->getMessage()]);
-            return back()->withErrors(['email' => 'Email failed: ' . $e->getMessage()]);
+
+            return back()->withErrors(['email' => 'Email failed: '.$e->getMessage()]);
         }
     }
 
@@ -238,7 +266,7 @@ class InvoiceController extends Controller
                 };
 
                 if ($amount <= 0 || $amount > $remaining) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
+                    throw ValidationException::withMessages([
                         'amount' => 'Allocation for '.$source->invoice_number.' exceeds remaining balance of '.number_format($remaining, 2).'.',
                     ]);
                 }
@@ -366,7 +394,7 @@ class InvoiceController extends Controller
     {
         $data = $this->validated($request);
         if (! empty($data['project_id']) && empty($data['cost_center_id'])) {
-            $center = app(\App\Services\CostAccountingService::class)->ensureProjectCostCenter(\App\Models\Project::findOrFail($data['project_id']));
+            $center = app(CostAccountingService::class)->ensureProjectCostCenter(Project::findOrFail($data['project_id']));
             $data['cost_center_id'] = $center->id;
             $data['department_id'] ??= $center->department_id;
         }
@@ -427,6 +455,7 @@ class InvoiceController extends Controller
             $invoice->items()->create($item + ['line_total' => $this->documents->lineTotal($item)]);
         }
         $this->invoiceOrders->sync($invoice);
+
         return $invoice;
     }
 
@@ -483,6 +512,7 @@ class InvoiceController extends Controller
             }
 
             $client = Client::create($data['client']);
+
             return $client->id;
         }
 
@@ -520,7 +550,7 @@ class InvoiceController extends Controller
 
         $selectedJobId = data_get($invoice->industry_context, 'production_job_id');
 
-        return \Modules\PrintingBranding\Models\ProductionJob::with('client', 'quotation', 'cost', 'machine', 'ticket')
+        return ProductionJob::with('client', 'quotation', 'cost', 'machine', 'ticket')
             ->where(function ($query) use ($selectedJobId) {
                 $query->whereNotIn('status', ['Cancelled'])
                     ->when($selectedJobId, fn ($query) => $query->orWhereKey($selectedJobId));
@@ -536,7 +566,7 @@ class InvoiceController extends Controller
             return null;
         }
 
-        return \Modules\PrintingBranding\Models\ProductionJob::with('client', 'quotation', 'cost', 'machine', 'ticket')
+        return ProductionJob::with('client', 'quotation', 'cost', 'machine', 'ticket')
             ->whereKey($jobId)
             ->firstOrFail();
     }
@@ -544,7 +574,7 @@ class InvoiceController extends Controller
     private function printingInvoicesAvailable(): bool
     {
         return $this->isPrintingBrandingTenant()
-            && class_exists(\Modules\PrintingBranding\Models\ProductionJob::class)
+            && class_exists(ProductionJob::class)
             && Schema::hasTable('printing_jobs');
     }
 
@@ -572,9 +602,9 @@ class InvoiceController extends Controller
     {
         $invoice->load('items');
         if (Invoice::supportsProjectLinks()) {
-            $invoice->setRelation('site', \App\Models\Site::withoutGlobalScope('business')->find($invoice->site_id));
-            $invoice->setRelation('project', \App\Models\Project::withoutGlobalScope('business')->find($invoice->project_id));
-            $invoice->setRelation('contact', \App\Models\Contact::withoutGlobalScope('business')->find($invoice->contact_id));
+            $invoice->setRelation('site', Site::withoutGlobalScope('business')->find($invoice->site_id));
+            $invoice->setRelation('project', Project::withoutGlobalScope('business')->find($invoice->project_id));
+            $invoice->setRelation('contact', Contact::withoutGlobalScope('business')->find($invoice->contact_id));
         }
         if ($invoice->isPartPayment()) {
             $invoice->setRelation('parentInvoice', Invoice::withoutGlobalScope('business')->find($invoice->parent_invoice_id));

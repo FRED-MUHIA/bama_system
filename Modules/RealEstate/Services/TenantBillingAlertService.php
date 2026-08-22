@@ -4,17 +4,17 @@ namespace Modules\RealEstate\Services;
 
 use App\Models\Business;
 use App\Models\Tenant as PlatformTenant;
+use App\Services\OutgoingMailService;
 use App\Support\ActiveBusiness;
 use App\Support\ActiveTenant;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Modules\RealEstate\Models\Tenant;
 
 class TenantBillingAlertService
 {
-    public function __construct(private TenantLedgerService $ledger) {}
+    public function __construct(private TenantLedgerService $ledger, private OutgoingMailService $outgoingMail) {}
 
     public function updateSettings(Tenant $tenant, array $data): Tenant
     {
@@ -89,7 +89,7 @@ class TenantBillingAlertService
         $message = $this->message($tenant, $summary, $lease, $date);
 
         try {
-            Mail::raw($message, fn ($mail) => $mail->to($email)->subject($subject));
+            $this->outgoingMail->sendRaw($email, $subject, $message, businessId: $tenant->business_id);
 
             $tenant->emailLogs()->create([
                 'recipient_email' => $email,

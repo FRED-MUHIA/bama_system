@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\LoginToken;
-use App\Models\MailSetting;
 use App\Models\OtpCode;
+use App\Models\SecuritySetting;
 use App\Models\User;
+use App\Services\IamService;
+use App\Services\OutgoingMailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
@@ -17,7 +18,10 @@ use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    public function loginForm() { return view('auth.login'); }
+    public function loginForm()
+    {
+        return view('auth.login');
+    }
 
     public function login(Request $request)
     {
@@ -28,8 +32,12 @@ class AuthController extends Controller
 
         $loginField = filter_var($data['username'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
         $user = User::where($loginField, $data['username'])->first();
-        if ($user?->locked_at && $user->locked_at->isFuture()) return back()->withErrors(['username' => 'Account temporarily locked. Try again later or contact an administrator.']);
-        if ($user && ! in_array($user->status ?? 'Active', ['Active'])) return back()->withErrors(['username' => 'This account is '.$user->status.'.']);
+        if ($user?->locked_at && $user->locked_at->isFuture()) {
+            return back()->withErrors(['username' => 'Account temporarily locked. Try again later or contact an administrator.']);
+        }
+        if ($user && ! in_array($user->status ?? 'Active', ['Active'])) {
+            return back()->withErrors(['username' => 'This account is '.$user->status.'.']);
+        }
         if ($user && Schema::hasColumn('users', 'enable_password_login') && ! $user->enable_password_login) {
             return back()->withErrors(['username' => 'Password login is disabled for this user. Use OTP or magic link.'])->onlyInput('username');
         }
@@ -46,19 +54,28 @@ class AuthController extends Controller
                 'last_login_at' => now(),
                 'last_login_ip' => $request->ip(),
             ])->filter(fn ($value, $column) => Schema::hasColumn('users', $column))->all();
-            if ($loginUpdates) $user->update($loginUpdates);
-            if (Schema::hasTable('login_activities')) app(\App\Services\IamService::class)->recordLogin($request,$user,true);
+            if ($loginUpdates) {
+                $user->update($loginUpdates);
+            }
+            if (Schema::hasTable('login_activities')) {
+                app(IamService::class)->recordLogin($request, $user, true);
+            }
+
             return redirect()->intended(Auth::user()->role === 'client_portal' ? route('portal.dashboard') : route('dashboard'));
         }
 
         if ($user && Schema::hasColumn('users', 'failed_login_attempts')) {
             $attempts = ($user->failed_login_attempts ?? 0) + 1;
-            $max = Schema::hasTable('security_settings') ? (\App\Models\SecuritySetting::first()?->max_failed_attempts ?? 5) : 5;
+            $max = Schema::hasTable('security_settings') ? (SecuritySetting::first()?->max_failed_attempts ?? 5) : 5;
             $failedUpdates = ['failed_login_attempts' => $attempts];
-            if (Schema::hasColumn('users', 'locked_at')) $failedUpdates['locked_at'] = $attempts >= $max ? now()->addMinutes(30) : null;
+            if (Schema::hasColumn('users', 'locked_at')) {
+                $failedUpdates['locked_at'] = $attempts >= $max ? now()->addMinutes(30) : null;
+            }
             $user->update($failedUpdates);
         }
-        if (Schema::hasTable('login_activities')) app(\App\Services\IamService::class)->recordLogin($request,$user,false);
+        if (Schema::hasTable('login_activities')) {
+            app(IamService::class)->recordLogin($request, $user, false);
+        }
 
         return back()->withErrors(['username' => 'Invalid login details or inactive account.'])->onlyInput('username');
     }
@@ -76,6 +93,7 @@ class AuthController extends Controller
         $resendKey = 'login-otp:'.sha1(strtolower($data['email']).'|'.$request->ip());
         if (RateLimiter::tooManyAttempts($resendKey, 1)) {
             $seconds = RateLimiter::availableIn($resendKey);
+
             return back()->with(['otp_sent' => true, 'otp_email' => $data['email'], 'otp_resend_at' => now()->addSeconds($seconds)->timestamp])
                 ->withErrors(['email' => "Please wait {$seconds} seconds before requesting another OTP."]);
         }
@@ -88,11 +106,11 @@ class AuthController extends Controller
         ]);
 
         try {
-            $this->applyMailSettings();
-            Mail::raw('Your BAMA login OTP is '.$otp->code, fn ($mail) => $mail->to($user->email)->subject('BAMA login OTP'));
+            app(OutgoingMailService::class)->sendRaw($user->email, 'BAMA login OTP', 'Your BAMA login OTP is '.$otp->code);
         } catch (\Throwable $e) {
             $otp->delete();
             report($e);
+
             return back()->withErrors(['email' => 'The OTP email could not be delivered. Please contact an administrator.']);
         }
 
@@ -136,11 +154,11 @@ class AuthController extends Controller
         ]);
 
         try {
-            $this->applyMailSettings();
-            Mail::raw('Login here: '.route('login.magic.consume', $token->token), fn ($mail) => $mail->to($user->email)->subject('BAMA magic login link'));
+            app(OutgoingMailService::class)->sendRaw($user->email, 'BAMA magic login link', 'Login here: '.route('login.magic.consume', $token->token));
         } catch (\Throwable $e) {
             $token->delete();
             report($e);
+
             return back()->withErrors(['email' => 'The magic-link email could not be delivered. Please contact an administrator.']);
         }
 
@@ -161,14 +179,20 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        if (Schema::hasTable('login_activities')) app(\App\Services\IamService::class)->recordLogin($request,$request->user(),true,'logout');
+        if (Schema::hasTable('login_activities')) {
+            app(IamService::class)->recordLogin($request, $request->user(), true, 'logout');
+        }
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('login')->with('status', 'You have been logged out securely.');
     }
 
-    public function forgotForm() { return view('auth.forgot-password'); }
+    public function forgotForm()
+    {
+        return view('auth.forgot-password');
+    }
 
     public function forgot(Request $request)
     {
@@ -178,8 +202,10 @@ class AuthController extends Controller
             $status = Password::sendResetLink($request->only('email'));
         } catch (\Throwable $e) {
             report($e);
+
             return back()->withErrors(['email' => 'The password-reset email could not be delivered. Please contact an administrator.']);
         }
+
         return $status === Password::RESET_LINK_SENT
             ? back()->with('status', __($status))
             : back()->withErrors(['email' => __($status)]);
@@ -209,6 +235,6 @@ class AuthController extends Controller
 
     private function applyMailSettings(): void
     {
-        if (Schema::hasTable('mail_settings')) MailSetting::first()?->apply();
+        app(OutgoingMailService::class)->apply();
     }
 }
