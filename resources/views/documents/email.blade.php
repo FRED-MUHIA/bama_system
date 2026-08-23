@@ -16,7 +16,7 @@
             <a class="btn btn-sm btn-outline-dark" href="{{ route('administration.index') }}#profile-email">Set Business Email</a>
         </div>
     @else
-        <div class="alert alert-success">Sending from {{ $mailSetting->from_name }} &lt;{{ $mailSetting->from_address }}&gt;</div>
+        <div class="alert alert-success">Sending as {{ $mailSetting->from_name }}. Replies go to {{ $mailSetting->from_address }}.</div>
     @endunless
     <form method="post" action="{{ route($type.'s.email.send', $document) }}">@csrf
         <div class="mb-3"><label class="form-label">To</label><input class="form-control" value="{{ $client->email }}" disabled></div>

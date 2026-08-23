@@ -23,20 +23,25 @@ class MailSetting extends Model
         }
 
         $smtp = config('mail.mailers.smtp', []);
-        $scheme = match ($this->scheme) {
+        $port = (int) ($smtp['port'] ?? $this->port ?? 587);
+        $scheme = match ($smtp['scheme'] ?? $this->scheme) {
             'ssl', 'smtps' => 'smtps',
             'tls', 'smtp' => 'smtp',
-            default => ((int) $this->port === 465 ? 'smtps' : 'smtp'),
+            default => $port === 465 ? 'smtps' : 'smtp',
         };
+        $fromAddress = config('mail.from.address');
+        if (blank($fromAddress) || $fromAddress === 'hello@example.com') {
+            $fromAddress = $smtp['username'] ?? $this->from_address;
+        }
 
         config([
             'mail.default' => 'smtp',
-            'mail.mailers.smtp.host' => $this->host,
-            'mail.mailers.smtp.port' => $this->port,
+            'mail.mailers.smtp.host' => $smtp['host'] ?? $this->host,
+            'mail.mailers.smtp.port' => $port,
             'mail.mailers.smtp.scheme' => $scheme,
-            'mail.mailers.smtp.username' => $this->username ?: ($smtp['username'] ?? null),
-            'mail.mailers.smtp.password' => ($smtp['password'] ?? null) ?: $this->password,
-            'mail.from.address' => $this->from_address,
+            'mail.mailers.smtp.username' => $smtp['username'] ?? $this->username,
+            'mail.mailers.smtp.password' => $smtp['password'] ?? $this->password,
+            'mail.from.address' => $fromAddress,
             'mail.from.name' => $this->from_name,
         ]);
         app('mail.manager')->forgetMailers();

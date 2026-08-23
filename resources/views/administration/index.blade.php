@@ -9,7 +9,6 @@
     $permissionScope = $permissionScope ?? 'Shared business modules';
     $profileEmail = $companySetting?->email ?: auth()->user()->email;
     $mailFromAddress = old('from_address', $mailSetting?->from_address ?? $profileEmail);
-    $mailUsername = old('username', $mailSetting?->username ?? $mailFromAddress);
     $mailFromName = old('from_name', $mailSetting?->from_name ?? $companySetting?->company_name ?? $profileName);
 @endphp
 
@@ -410,7 +409,7 @@
             <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
                 <div>
                     <h3 class="h5 mb-1">Business Email</h3>
-                    <p class="text-muted mb-0">Invoices, quotations, receipts, invitations, OTPs and reset links for {{ $profileName }} use this sender.</p>
+                    <p class="text-muted mb-0">Invoices, quotations, receipts, invitations, OTPs and reset links use this profile name and reply email.</p>
                 </div>
                 @if($mailSetting?->enabled)
                     <span class="badge text-bg-success align-self-start">Enabled</span>
@@ -419,31 +418,22 @@
                 @endif
             </div>
             <div class="alert alert-info">
-                Clients do not enter an email password here. The system owner keeps the mail password hidden on the server. If the server uses Gmail or Yahoo, the owner should set an App Password in the server mail configuration.
+                Clients only set the business name and reply email. The real mail login, host and password are hidden on the server and managed by the system owner.
                 <div class="mt-2 d-flex flex-wrap gap-2">
                     <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener" class="alert-link">Gmail app password help</a>
                     <a href="https://help.yahoo.com/kb/SLN15241.html" target="_blank" rel="noopener" class="alert-link">Yahoo app password help</a>
                 </div>
             </div>
-            <div class="d-flex flex-wrap gap-2 mb-3">
-                <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="smtp.gmail.com" data-port="465" data-scheme="ssl">Use Gmail</button>
-                <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="smtp.mail.yahoo.com" data-port="465" data-scheme="ssl">Use Yahoo</button>
-                <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="mail.{{ parse_url(config('app.url'), PHP_URL_HOST) ?: 'yourdomain.com' }}" data-port="465" data-scheme="ssl">Use cPanel/Webmail</button>
-            </div>
             <form method="post" action="{{ route('administration.mail.update') }}" class="row g-3">
                 @csrf @method('PUT')
-                <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="enabled" value="1" @checked($mailSetting?->enabled)> <span class="form-check-label">Send emails from this profile address</span></label></div>
-                <div class="col-md-6"><label class="form-label">From address</label><input class="form-control" id="mail-from" type="email" name="from_address" value="{{ $mailFromAddress }}" placeholder="info@example.com" required></div>
+                <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="enabled" value="1" @checked($mailSetting?->enabled)> <span class="form-check-label">Enable business email for this profile</span></label></div>
+                <div class="col-md-6"><label class="form-label">Reply-to business email</label><input class="form-control" type="email" name="from_address" value="{{ $mailFromAddress }}" placeholder="info@example.com" required></div>
                 <div class="col-md-6"><label class="form-label">From name</label><input class="form-control" name="from_name" value="{{ $mailFromName }}" placeholder="{{ $profileName }}" required></div>
-                <div class="col-md-6"><label class="form-label">Username</label><input class="form-control" id="mail-username" name="username" value="{{ $mailUsername }}" placeholder="Same as from address" autocomplete="off"></div>
                 <div class="col-md-6">
-                    <label class="form-label">Password</label>
+                    <label class="form-label">Mail login</label>
                     <input class="form-control" value="Hidden on server" disabled>
-                    <div class="form-text">The email password is managed by the system owner in the server .env file.</div>
+                    <div class="form-text">The server uses MAIL_HOST, MAIL_USERNAME and MAIL_PASSWORD from .env.</div>
                 </div>
-                <div class="col-md-6"><label class="form-label">SMTP host</label><input class="form-control" id="mail-host" name="host" value="{{ old('host',$mailSetting?->host ?? 'mail.'.(parse_url(config('app.url'), PHP_URL_HOST) ?: 'yourdomain.com')) }}" required></div>
-                <div class="col-md-3"><label class="form-label">Port</label><input class="form-control" id="mail-port" type="number" name="port" value="{{ old('port',$mailSetting?->port ?? 465) }}" required></div>
-                <div class="col-md-3"><label class="form-label">Security</label><select class="form-select" id="mail-scheme" name="scheme"><option value="ssl" @selected(($mailSetting?->scheme ?? 'ssl') === 'ssl')>SSL/TLS</option><option value="tls" @selected($mailSetting?->scheme === 'tls')>STARTTLS</option></select></div>
                 <div class="col-12"><button class="btn btn-warning">Save Business Email</button></div>
             </form>
             @if($mailSetting)
@@ -632,25 +622,6 @@ document.addEventListener('DOMContentLoaded', () => {
     activateSecurityTab();
     window.addEventListener('hashchange', activateSecurityTab);
 
-    const host = document.getElementById('mail-host');
-    const port = document.getElementById('mail-port');
-    const scheme = document.getElementById('mail-scheme');
-    const from = document.getElementById('mail-from');
-    const username = document.getElementById('mail-username');
-
-    document.querySelectorAll('[data-mail-preset]').forEach((button) => {
-        button.addEventListener('click', () => {
-            let nextHost = button.dataset.host;
-            if (nextHost?.startsWith('mail.') && from?.value.includes('@')) {
-                nextHost = 'mail.' + from.value.split('@').pop().trim();
-            }
-
-            if (host && nextHost) host.value = nextHost;
-            if (port && button.dataset.port) port.value = button.dataset.port;
-            if (scheme && button.dataset.scheme) scheme.value = button.dataset.scheme;
-            if (username && !username.value && from?.value) username.value = from.value;
-        });
-    });
 });
 </script>
 @endpush

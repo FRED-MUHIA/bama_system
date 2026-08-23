@@ -460,25 +460,23 @@ class AdministrationController extends Controller
     {
         $data = $request->validate([
             'enabled' => ['nullable', 'boolean'],
-            'host' => ['required', 'string', 'max:255'],
-            'port' => ['required', 'integer', 'min:1', 'max:65535'],
-            'scheme' => ['nullable', 'in:tls,ssl,smtp,smtps'],
-            'username' => ['nullable', 'string', 'max:255'],
-            'password' => ['nullable', 'string', 'max:1000'],
             'from_address' => ['required', 'email'],
             'from_name' => ['required', 'string', 'max:255'],
         ]);
 
-        $data['scheme'] = match ($data['scheme'] ?? null) {
+        $smtp = config('mail.mailers.smtp', []);
+        $port = (int) ($smtp['port'] ?? 587);
+        $data['host'] = $smtp['host'] ?? '127.0.0.1';
+        $data['port'] = $port;
+        $data['username'] = $smtp['username'] ?? null;
+        $data['password'] = null;
+        $data['scheme'] = match ($smtp['scheme'] ?? null) {
             'smtps' => 'ssl',
             'smtp' => 'tls',
-            default => $data['scheme'] ?? ((int) $data['port'] === 465 ? 'ssl' : 'tls'),
+            default => $smtp['scheme'] ?? ($port === 465 ? 'ssl' : 'tls'),
         };
 
         $setting = MailSetting::firstOrNew(['business_id' => $this->businessId()]);
-        if (blank($data['password'] ?? null)) {
-            unset($data['password']);
-        }
         $setting->fill($data + ['enabled' => $request->boolean('enabled')])->save();
         $this->iam->audit('mail.settings.updated', $setting);
 
