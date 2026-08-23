@@ -14,6 +14,7 @@ use App\Support\ActiveTenant;
 use App\Support\SchemaCache;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Modules\Salon\Contracts\SalonSpaServiceContract;
@@ -47,6 +48,10 @@ class AppServiceProvider extends ServiceProvider
                 PostgresWipeCommand::class,
                 PurgeNonSuperAdminUsersCommand::class,
             ]);
+        }
+
+        if (config('app.force_https')) {
+            URL::forceScheme('https');
         }
 
         Paginator::useBootstrapFive();

@@ -7,6 +7,7 @@ use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\IdentifyTenant;
 use App\Http\Middleware\RecordMajorActivity;
 use App\Http\Middleware\RequirePermission;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,7 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: ['logout']);
-        $middleware->web(append: [IdentifyTenant::class, RecordMajorActivity::class]);
+        $middleware->web(append: [IdentifyTenant::class, RecordMajorActivity::class, SecurityHeaders::class]);
         $middleware->alias([
             'admin' => EnsureAdminAccess::class,
             'permission' => RequirePermission::class,
