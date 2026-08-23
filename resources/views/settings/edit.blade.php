@@ -16,6 +16,27 @@
                         </div>
                     @endif
                 </div>
+                <div class="col-md-4">
+                    <label class="form-label">Primary document color</label>
+                    <div class="input-group">
+                        <input class="form-control form-control-color" type="color" name="primary_color" value="{{ old('primary_color',$settings->primary_color ?? \App\Models\CompanySetting::DEFAULT_PRIMARY_COLOR) }}">
+                        <input class="form-control" value="{{ old('primary_color',$settings->primary_color ?? \App\Models\CompanySetting::DEFAULT_PRIMARY_COLOR) }}" disabled>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Secondary document color</label>
+                    <div class="input-group">
+                        <input class="form-control form-control-color" type="color" name="secondary_color" value="{{ old('secondary_color',$settings->secondary_color ?? \App\Models\CompanySetting::DEFAULT_SECONDARY_COLOR) }}">
+                        <input class="form-control" value="{{ old('secondary_color',$settings->secondary_color ?? \App\Models\CompanySetting::DEFAULT_SECONDARY_COLOR) }}" disabled>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Accent document color</label>
+                    <div class="input-group">
+                        <input class="form-control form-control-color" type="color" name="accent_color" value="{{ old('accent_color',$settings->accent_color ?? \App\Models\CompanySetting::DEFAULT_ACCENT_COLOR) }}">
+                        <input class="form-control" value="{{ old('accent_color',$settings->accent_color ?? \App\Models\CompanySetting::DEFAULT_ACCENT_COLOR) }}" disabled>
+                    </div>
+                </div>
                 <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="phone" value="{{ old('phone',$settings->phone) }}"></div>
                 <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="{{ old('email',$settings->email) }}"></div>
                 <div class="col-md-6"><label class="form-label">Website</label><input class="form-control" name="website" value="{{ old('website',$settings->website) }}"></div>

@@ -1,3 +1,13 @@
+@php
+    $documentColors = $settings?->documentColors() ?? [
+        'primary' => \App\Models\CompanySetting::DEFAULT_PRIMARY_COLOR,
+        'secondary' => \App\Models\CompanySetting::DEFAULT_SECONDARY_COLOR,
+        'accent' => \App\Models\CompanySetting::DEFAULT_ACCENT_COLOR,
+    ];
+    $primaryColor = $documentColors['primary'];
+    $secondaryColor = $documentColors['secondary'];
+    $accentColor = $documentColors['accent'];
+@endphp
 <!doctype html>
 <html>
 <head>
@@ -5,30 +15,30 @@
     <style>
         @page { margin: 34px 34px 42px; }
         body { font-family: DejaVu Sans, sans-serif; color:#1f2937; font-size:11px; line-height:1.5; }
-        .accent-top { position:fixed; top:-34px; left:-34px; width:360px; height:28px; background:#f97316; }
-        .accent-top-dark { position:fixed; top:-34px; left:270px; width:130px; height:28px; background:#431407; }
-        .accent-bottom { position:fixed; bottom:-42px; right:-34px; width:360px; height:32px; background:#f97316; }
-        .accent-bottom-dark { position:fixed; bottom:-42px; left:-34px; width:150px; height:32px; background:#431407; }
+        .accent-top { position:fixed; top:-34px; left:-34px; width:360px; height:28px; background:{{ $primaryColor }}; }
+        .accent-top-dark { position:fixed; top:-34px; left:270px; width:130px; height:28px; background:{{ $secondaryColor }}; }
+        .accent-bottom { position:fixed; bottom:-42px; right:-34px; width:360px; height:32px; background:{{ $primaryColor }}; }
+        .accent-bottom-dark { position:fixed; bottom:-42px; left:-34px; width:150px; height:32px; background:{{ $secondaryColor }}; }
         .header { display:table; width:100%; margin-top:8px; margin-bottom:24px; }
         .company-info, .logo-wrap { display:table-cell; vertical-align:top; }
         .company-info { width:72%; }
         .logo-wrap { width:28%; text-align:right; }
-        .company-name { color:#9a3412; font-size:18px; font-weight:700; margin:0 0 2px; }
-        .company-subtitle { color:#f97316; font-weight:bold; font-size:10px; margin-bottom:4px; }
+        .company-name { color:{{ $secondaryColor }}; font-size:18px; font-weight:700; margin:0 0 2px; }
+        .company-subtitle { color:{{ $primaryColor }}; font-weight:bold; font-size:10px; margin-bottom:4px; }
         .company-detail { color:#4b5563; font-size:10px; line-height:1.4; }
         .logo { max-height:72px; max-width:110px; }
-        .logo-fallback { display:inline-block; width:72px; height:72px; border-radius:50%; background:#431407; color:#fff; text-align:center; line-height:72px; font-size:12px; font-weight:bold; }
+        .logo-fallback { display:inline-block; width:72px; height:72px; border-radius:50%; background:{{ $secondaryColor }}; color:#fff; text-align:center; line-height:72px; font-size:12px; font-weight:bold; }
         .doc-meta { display:table; width:100%; margin-bottom:20px; border-bottom:1px solid #e5e7eb; padding-bottom:10px; }
         .doc-meta-left, .doc-meta-right { display:table-cell; vertical-align:top; width:50%; }
         .doc-meta-right { text-align:right; }
-        .doc-title { font-size:16px; font-weight:700; color:#111827; margin-bottom:4px; }
+        .doc-title { font-size:16px; font-weight:700; color:{{ $secondaryColor }}; margin-bottom:4px; }
         .meta-label { color:#6b7280; font-size:9px; text-transform:uppercase; letter-spacing:0.5px; }
-        .meta-value { font-size:11px; color:#111827; }
+        .meta-value { font-size:11px; color:{{ $secondaryColor }}; }
         .recipient-block { margin-bottom:22px; }
         .recipient-label { color:#6b7280; font-size:9px; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px; }
-        .recipient-name { font-size:12px; font-weight:700; color:#111827; }
+        .recipient-name { font-size:12px; font-weight:700; color:{{ $secondaryColor }}; }
         .recipient-detail { font-size:11px; color:#4b5563; line-height:1.4; }
-        .subject-line { font-size:13px; font-weight:700; color:#111827; margin-bottom:18px; padding:10px 14px; background:#f9fafb; border-left:3px solid #f97316; }
+        .subject-line { font-size:13px; font-weight:700; color:{{ $secondaryColor }}; margin-bottom:18px; padding:10px 14px; background:{{ $accentColor }}; border-left:3px solid {{ $primaryColor }}; }
         .content { font-size:11px; line-height:1.6; color:#1f2937; margin-bottom:28px; }
         .content p { margin:0 0 10px; }
         .signature-block { margin-top:36px; padding-top:20px; border-top:1px solid #e5e7eb; }
@@ -36,7 +46,7 @@
         .signature-left { width:60%; }
         .signature-right { width:40%; text-align:right; }
         .sig-img { max-height:60px; max-width:160px; margin-bottom:4px; }
-        .sig-name { font-weight:700; font-size:12px; color:#111827; }
+        .sig-name { font-weight:700; font-size:12px; color:{{ $secondaryColor }}; }
         .sig-title { font-size:10px; color:#6b7280; }
         .qr-wrap { text-align:right; margin-top:16px; }
         .qr-wrap img { width:86px; height:86px; display:inline-block; border:1px solid #e5e7eb; padding:4px; }

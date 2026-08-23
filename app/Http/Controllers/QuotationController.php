@@ -14,6 +14,7 @@ use App\Support\ActiveBusiness;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -233,8 +234,8 @@ class QuotationController extends Controller
         return [
             'quotation' => $quotation,
             'clients' => $clients,
-            'settings' => CompanySetting::first(),
-            'taxRate' => CompanySetting::first()?->tax_rate ?? 0,
+            'settings' => $settings = $this->companySettingsForBusiness(ActiveBusiness::id()),
+            'taxRate' => $settings?->tax_rate ?? 0,
             'projectLinksEnabled' => Quotation::supportsProjectLinks(),
         ];
     }
@@ -244,10 +245,39 @@ class QuotationController extends Controller
         return Pdf::loadView('pdf.document', [
             'type' => 'Quotation',
             'document' => $quotation->load(array_filter(['client', 'items', Quotation::supportsProjectLinks() ? 'site' : null, Quotation::supportsProjectLinks() ? 'project' : null, Quotation::supportsProjectLinks() ? 'contact' : null])),
-            'settings' => CompanySetting::first(),
-            'paymentMethods' => PaymentMethod::where('is_active', true)->get(),
+            'settings' => $this->companySettingsForBusiness($quotation->business_id),
+            'paymentMethods' => PaymentMethod::withoutGlobalScope('business')->where('business_id', $quotation->business_id)->where('is_active', true)->get(),
             'verificationUrl' => null,
             'qrCode' => null,
         ]);
+    }
+
+    private function companySettingsForBusiness(?int $businessId): ?CompanySetting
+    {
+        if (! $businessId) {
+            return CompanySetting::first();
+        }
+
+        return CompanySetting::withoutGlobalScope('business')->firstOrCreate(
+            ['business_id' => $businessId],
+            $this->defaultCompanySettings()
+        );
+    }
+
+    private function defaultCompanySettings(): array
+    {
+        $defaults = ['company_name' => ActiveBusiness::current()?->name ?? 'BAMA'];
+
+        foreach ([
+            'primary_color' => CompanySetting::DEFAULT_PRIMARY_COLOR,
+            'secondary_color' => CompanySetting::DEFAULT_SECONDARY_COLOR,
+            'accent_color' => CompanySetting::DEFAULT_ACCENT_COLOR,
+        ] as $column => $color) {
+            if (Schema::hasColumn('company_settings', $column)) {
+                $defaults[$column] = $color;
+            }
+        }
+
+        return $defaults;
     }
 }

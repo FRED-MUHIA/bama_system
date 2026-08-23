@@ -9,25 +9,33 @@
         $industryContext = $invoice->industry_context ?? [];
         $companyName = $issuerProfile['name'] ?? $settings?->company_name ?? 'BAMA';
         $companySubtitle = $issuerProfile['subtitle'] ?? 'Business Services';
+        $documentColors = $settings?->documentColors() ?? [
+            'primary' => \App\Models\CompanySetting::DEFAULT_PRIMARY_COLOR,
+            'secondary' => \App\Models\CompanySetting::DEFAULT_SECONDARY_COLOR,
+            'accent' => \App\Models\CompanySetting::DEFAULT_ACCENT_COLOR,
+        ];
+        $primaryColor = $documentColors['primary'];
+        $secondaryColor = $documentColors['secondary'];
+        $accentColor = $documentColors['accent'];
     @endphp
     <title>{{ $invoice->invoice_number }} - {{ $companyName }}</title>
     <style>
         * { box-sizing:border-box; }
         body { margin:0; background:#eef2f7; color:#111827; font-family:Arial, Helvetica, sans-serif; font-size:14px; }
         .toolbar { position:sticky; top:0; z-index:5; background:#fff; border-bottom:1px solid #e5e7eb; padding:12px 18px; display:flex; justify-content:flex-end; }
-        .btn { display:inline-block; background:#f97316; color:#fff; text-decoration:none; border-radius:7px; padding:10px 18px; font-weight:700; }
-        .btn:hover { background:#ea580c; }
+        .btn { display:inline-block; background:{{ $primaryColor }}; color:#fff; text-decoration:none; border-radius:7px; padding:10px 18px; font-weight:700; }
+        .btn:hover { opacity:.88; }
         .sheet { position:relative; max-width:860px; min-height:1060px; margin:28px auto; padding:54px 64px 76px; background:#fff; overflow:hidden; box-shadow:0 18px 45px rgba(15,23,42,.12); }
-        .accent-top { position:absolute; top:0; left:0; width:360px; height:28px; background:#f97316; border-bottom-right-radius:18px; }
-        .accent-top-dark { position:absolute; top:0; left:330px; width:115px; height:28px; background:#431407; border-bottom-left-radius:18px; border-bottom-right-radius:18px; }
-        .accent-bottom { position:absolute; right:0; bottom:0; width:360px; height:32px; background:#f97316; border-top-left-radius:22px; }
-        .accent-bottom-dark { position:absolute; left:0; bottom:0; width:150px; height:32px; background:#431407; border-top-right-radius:22px; }
+        .accent-top { position:absolute; top:0; left:0; width:360px; height:28px; background:{{ $primaryColor }}; border-bottom-right-radius:18px; }
+        .accent-top-dark { position:absolute; top:0; left:330px; width:115px; height:28px; background:{{ $secondaryColor }}; border-bottom-left-radius:18px; border-bottom-right-radius:18px; }
+        .accent-bottom { position:absolute; right:0; bottom:0; width:360px; height:32px; background:{{ $primaryColor }}; border-top-left-radius:22px; }
+        .accent-bottom-dark { position:absolute; left:0; bottom:0; width:150px; height:32px; background:{{ $secondaryColor }}; border-top-right-radius:22px; }
         .header { display:flex; justify-content:space-between; gap:24px; margin-bottom:34px; }
-        .company h2 { margin:0 0 2px; color:#f97316; font-size:25px; line-height:1; }
-        .subtitle { color:#9a3412; font-weight:700; margin-bottom:8px; }
+        .company h2 { margin:0 0 2px; color:{{ $secondaryColor }}; font-size:25px; line-height:1; }
+        .subtitle { color:{{ $primaryColor }}; font-weight:700; margin-bottom:8px; }
         .muted { color:#4b5563; }
         .logo { max-width:95px; max-height:80px; }
-        .logo-fallback { width:76px; height:76px; border-radius:50%; background:#431407; color:#fff; display:grid; place-items:center; text-align:center; font-size:12px; font-weight:800; line-height:1.1; }
+        .logo-fallback { width:76px; height:76px; border-radius:50%; background:{{ $secondaryColor }}; color:#fff; display:grid; place-items:center; text-align:center; font-size:12px; font-weight:800; line-height:1.1; }
         .verify-box { margin-top:12px; text-align:right; color:#4b5563; font-size:12px; }
         .verify-box img { width:112px; height:112px; border:1px solid #e5e7eb; padding:6px; background:#fff; }
         .doc-title { text-align:center; margin-bottom:34px; }
@@ -38,7 +46,7 @@
         .label { font-weight:800; }
         .profile-box { margin-top:12px; padding-top:10px; border-top:1px solid #e5e7eb; color:#374151; font-size:12px; line-height:1.5; }
         table { width:100%; border-collapse:collapse; }
-        .items th { background:#9ca3af; color:#111827; padding:11px 10px; font-size:12px; text-align:center; }
+        .items th { background:{{ $accentColor }}; color:{{ $secondaryColor }}; padding:11px 10px; font-size:12px; text-align:center; }
         .items td { border:1px solid #d1d5db; padding:12px 10px; vertical-align:top; }
         .items .text { text-align:left; }
         .items .number { text-align:center; white-space:nowrap; }
@@ -51,7 +59,7 @@
         .totals td { text-align:right; }
         .totals .grand th, .totals .grand td { font-weight:800; }
         .signature { margin-top:48px; }
-        .signature-line { width:160px; border-top:1px solid #111827; margin-bottom:6px; }
+        .signature-line { width:160px; border-top:1px solid {{ $secondaryColor }}; margin-bottom:6px; }
         .footer { position:absolute; left:64px; right:64px; bottom:42px; text-align:center; color:#6b7280; font-size:12px; }
         @media (max-width: 760px) {
             .sheet { margin:0; min-height:auto; padding:46px 18px 64px; }

@@ -1,3 +1,13 @@
+@php
+    $documentColors = $settings?->documentColors() ?? [
+        'primary' => \App\Models\CompanySetting::DEFAULT_PRIMARY_COLOR,
+        'secondary' => \App\Models\CompanySetting::DEFAULT_SECONDARY_COLOR,
+        'accent' => \App\Models\CompanySetting::DEFAULT_ACCENT_COLOR,
+    ];
+    $primaryColor = $documentColors['primary'];
+    $secondaryColor = $documentColors['secondary'];
+    $accentColor = $documentColors['accent'];
+@endphp
 <!doctype html>
 <html>
 <head>
@@ -5,29 +15,29 @@
     <style>
         @page { margin: 34px 34px 42px; }
         body { font-family: DejaVu Sans, sans-serif; color:#1f2937; font-size:11px; line-height:1.35; }
-        .accent-top { position:fixed; top:-34px; left:-34px; width:360px; height:28px; background:#f97316; }
-        .accent-top-dark { position:fixed; top:-34px; left:270px; width:130px; height:28px; background:#431407; }
-        .accent-bottom { position:fixed; bottom:-42px; right:-34px; width:360px; height:32px; background:#f97316; }
-        .accent-bottom-dark { position:fixed; bottom:-42px; left:-34px; width:150px; height:32px; background:#431407; }
+        .accent-top { position:fixed; top:-34px; left:-34px; width:360px; height:28px; background:{{ $primaryColor }}; }
+        .accent-top-dark { position:fixed; top:-34px; left:270px; width:130px; height:28px; background:{{ $secondaryColor }}; }
+        .accent-bottom { position:fixed; bottom:-42px; right:-34px; width:360px; height:32px; background:{{ $primaryColor }}; }
+        .accent-bottom-dark { position:fixed; bottom:-42px; left:-34px; width:150px; height:32px; background:{{ $secondaryColor }}; }
         .header { display:table; width:100%; margin-top:8px; margin-bottom:28px; }
         .company, .logo-wrap { display:table-cell; vertical-align:top; }
         .company { width:72%; }
         .logo-wrap { width:28%; text-align:right; }
-        .company h2 { color:#9a3412; font-size:20px; margin:0 0 2px; }
-        .company .subtitle { color:#f97316; font-weight:bold; font-size:12px; margin-bottom:6px; }
+        .company h2 { color:{{ $secondaryColor }}; font-size:20px; margin:0 0 2px; }
+        .company .subtitle { color:{{ $primaryColor }}; font-weight:bold; font-size:12px; margin-bottom:6px; }
         .logo { max-height:72px; max-width:110px; }
-        .logo-fallback { display:inline-block; width:72px; height:72px; border-radius:50%; background:#431407; color:#fff; text-align:center; line-height:72px; font-size:12px; font-weight:bold; }
+        .logo-fallback { display:inline-block; width:72px; height:72px; border-radius:50%; background:{{ $secondaryColor }}; color:#fff; text-align:center; line-height:72px; font-size:12px; font-weight:bold; }
         .verify-box { margin-top:10px; text-align:right; font-size:9px; color:#4b5563; }
         .verify-box img { width:86px; height:86px; display:inline-block; border:1px solid #e5e7eb; padding:4px; }
         .doc-title { text-align:center; margin-bottom:28px; }
-        .doc-title h1 { font-size:19px; letter-spacing:2px; text-decoration:underline; margin:0; color:#111827; }
+        .doc-title h1 { font-size:19px; letter-spacing:2px; text-decoration:underline; margin:0; color:{{ $secondaryColor }}; }
         .doc-title div { font-size:10px; }
         .parties { display:table; width:100%; margin-bottom:24px; }
         .bill-to, .dates { display:table-cell; vertical-align:top; width:50%; }
         .dates { text-align:right; }
-        .section-label { font-weight:bold; color:#111827; }
+        .section-label { font-weight:bold; color:{{ $secondaryColor }}; }
         table { width:100%; border-collapse:collapse; }
-        .items th { background:#9ca3af; color:#111827; padding:9px 8px; font-size:10px; text-align:center; }
+        .items th { background:{{ $accentColor }}; color:{{ $secondaryColor }}; padding:9px 8px; font-size:10px; text-align:center; }
         .items td { border:1px solid #d1d5db; padding:9px 8px; vertical-align:top; }
         .items .text { text-align:left; }
         .items .number { text-align:center; white-space:nowrap; }
@@ -38,11 +48,11 @@
         .totals td, .totals th { border:1px solid #d1d5db; padding:10px 8px; }
         .totals th { font-weight:normal; background:#fff; text-align:center; }
         .totals td { text-align:right; }
-        .totals .grand th, .totals .grand td { font-weight:bold; color:#111827; }
-        h3 { font-size:12px; margin:0 0 4px; color:#111827; }
+        .totals .grand th, .totals .grand td { font-weight:bold; color:{{ $secondaryColor }}; }
+        h3 { font-size:12px; margin:0 0 4px; color:{{ $secondaryColor }}; }
         p { margin:0 0 8px; }
         .signature { margin-top:44px; }
-        .signature-line { width:150px; border-top:1px solid #111827; margin-bottom:5px; }
+        .signature-line { width:150px; border-top:1px solid {{ $secondaryColor }}; margin-bottom:5px; }
         .footer { position:fixed; bottom:-20px; left:0; right:0; text-align:center; color:#6b7280; font-size:10px; }
     </style>
 </head>

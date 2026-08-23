@@ -69,8 +69,37 @@ class ReceiptController extends Controller
 
         return Pdf::loadView('pdf.receipt', [
             'receipt' => $receipt,
-            'settings' => CompanySetting::withoutGlobalScope('business')->where('business_id', $receipt->business_id)->first() ?: CompanySetting::first(),
+            'settings' => $this->companySettingsForBusiness($receipt->business_id),
             'paymentMethods' => PaymentMethod::withoutGlobalScope('business')->where('business_id', $receipt->business_id)->where('is_active', true)->get(),
         ]);
+    }
+
+    private function companySettingsForBusiness(?int $businessId): ?CompanySetting
+    {
+        if (! $businessId) {
+            return CompanySetting::first();
+        }
+
+        return CompanySetting::withoutGlobalScope('business')->firstOrCreate(
+            ['business_id' => $businessId],
+            $this->defaultCompanySettings()
+        );
+    }
+
+    private function defaultCompanySettings(): array
+    {
+        $defaults = ['company_name' => 'BAMA'];
+
+        foreach ([
+            'primary_color' => CompanySetting::DEFAULT_PRIMARY_COLOR,
+            'secondary_color' => CompanySetting::DEFAULT_SECONDARY_COLOR,
+            'accent_color' => CompanySetting::DEFAULT_ACCENT_COLOR,
+        ] as $column => $color) {
+            if (Schema::hasColumn('company_settings', $column)) {
+                $defaults[$column] = $color;
+            }
+        }
+
+        return $defaults;
     }
 }

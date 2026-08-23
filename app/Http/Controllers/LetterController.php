@@ -264,7 +264,10 @@ class LetterController extends Controller
     public function publicVerify(Letter $letter)
     {
         $letter->load('client', 'template', 'creator', 'approver');
-        $company = CompanySetting::first();
+        $company = CompanySetting::withoutGlobalScope('business')
+            ->where('business_id', $letter->business_id)
+            ->first()
+            ?: CompanySetting::first();
 
         return view('letters.verify', compact('letter', 'company'));
     }

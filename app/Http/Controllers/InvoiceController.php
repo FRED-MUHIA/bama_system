@@ -129,7 +129,7 @@ class InvoiceController extends Controller
             $invoice->setRelation('project', Project::withoutGlobalScope('business')->find($invoice->project_id));
             $invoice->setRelation('contact', Contact::withoutGlobalScope('business')->find($invoice->contact_id));
         }
-        $settings = CompanySetting::withoutGlobalScope('business')->where('business_id', $invoice->business_id)->first();
+        $settings = $this->companySettingsForBusiness($invoice->business_id);
 
         return view('invoices.public', [
             'invoice' => $invoice,
@@ -528,8 +528,8 @@ class InvoiceController extends Controller
         return [
             'invoice' => $invoice,
             'clients' => $clients,
-            'settings' => CompanySetting::first(),
-            'taxRate' => CompanySetting::first()?->tax_rate ?? 0,
+            'settings' => $settings = $this->companySettingsForBusiness(ActiveBusiness::id()),
+            'taxRate' => $settings?->tax_rate ?? 0,
             'projectLinksEnabled' => Invoice::supportsProjectLinks(),
             'printingInvoiceEnabled' => $this->printingInvoicesAvailable(),
             'printingJobs' => $this->printingInvoiceJobs($invoice),
@@ -614,10 +614,39 @@ class InvoiceController extends Controller
         return Pdf::loadView('pdf.document', [
             'type' => 'Invoice',
             'document' => $invoice,
-            'settings' => CompanySetting::withoutGlobalScope('business')->where('business_id', $invoice->business_id)->first() ?: CompanySetting::first(),
+            'settings' => $this->companySettingsForBusiness($invoice->business_id),
             'paymentMethods' => PaymentMethod::withoutGlobalScope('business')->where('business_id', $invoice->business_id)->where('is_active', true)->get(),
             'verificationUrl' => $this->verification->url($invoice),
             'qrCode' => $this->verification->qrCodeDataUri($invoice, 150),
         ]);
+    }
+
+    private function companySettingsForBusiness(?int $businessId): ?CompanySetting
+    {
+        if (! $businessId) {
+            return CompanySetting::first();
+        }
+
+        return CompanySetting::withoutGlobalScope('business')->firstOrCreate(
+            ['business_id' => $businessId],
+            $this->defaultCompanySettings()
+        );
+    }
+
+    private function defaultCompanySettings(): array
+    {
+        $defaults = ['company_name' => ActiveBusiness::current()?->name ?? 'BAMA'];
+
+        foreach ([
+            'primary_color' => CompanySetting::DEFAULT_PRIMARY_COLOR,
+            'secondary_color' => CompanySetting::DEFAULT_SECONDARY_COLOR,
+            'accent_color' => CompanySetting::DEFAULT_ACCENT_COLOR,
+        ] as $column => $color) {
+            if (Schema::hasColumn('company_settings', $column)) {
+                $defaults[$column] = $color;
+            }
+        }
+
+        return $defaults;
     }
 }

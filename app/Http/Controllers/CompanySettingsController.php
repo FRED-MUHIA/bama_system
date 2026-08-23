@@ -9,6 +9,7 @@ use App\Models\TermsCondition;
 use App\Models\User;
 use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class CompanySettingsController extends Controller
@@ -16,13 +17,10 @@ class CompanySettingsController extends Controller
     public function edit()
     {
         return view('settings.edit', [
-            'settings' => CompanySetting::firstOrCreate(
-                ['business_id' => ActiveBusiness::id()],
-                ['company_name' => ActiveBusiness::current()?->name ?? 'BAMA']
-            ),
+            'settings' => $this->activeCompanySettings(),
             'methods' => Schema::hasTable('payment_methods') ? PaymentMethod::latest()->get() : collect(),
             'terms' => Schema::hasTable('terms_conditions') ? TermsCondition::latest()->get() : collect(),
-            'users' => Schema::hasColumn('users', 'enable_otp_login') ? User::orderBy('name')->get() : collect(),
+            'users' => $this->profileUsers(),
             'signatories' => Schema::hasTable('signatories') ? Signatory::where('is_active', true)->orderBy('name')->get() : collect(),
         ]);
     }
@@ -32,6 +30,9 @@ class CompanySettingsController extends Controller
         $data = $request->validate([
             'company_name' => ['required', 'string', 'max:255'],
             'logo' => ['nullable', 'image', 'max:2048'],
+            'primary_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'secondary_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'accent_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'phone' => ['nullable', 'string', 'max:100'],
             'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string'],
@@ -43,14 +44,19 @@ class CompanySettingsController extends Controller
             'default_terms' => ['nullable', 'string'],
         ]);
 
-        $settings = CompanySetting::firstOrCreate(
-            ['business_id' => ActiveBusiness::id()],
-            ['company_name' => ActiveBusiness::current()?->name ?? 'BAMA']
-        );
+        $settings = $this->activeCompanySettings();
         if ($request->hasFile('logo')) {
             $data['logo_path'] = $request->file('logo')->store('logos', 'public');
         }
         unset($data['logo']);
+        $data['primary_color'] = $data['primary_color'] ?? CompanySetting::DEFAULT_PRIMARY_COLOR;
+        $data['secondary_color'] = $data['secondary_color'] ?? CompanySetting::DEFAULT_SECONDARY_COLOR;
+        $data['accent_color'] = $data['accent_color'] ?? CompanySetting::DEFAULT_ACCENT_COLOR;
+        foreach (['primary_color', 'secondary_color', 'accent_color'] as $colorColumn) {
+            if (! Schema::hasColumn('company_settings', $colorColumn)) {
+                unset($data[$colorColumn]);
+            }
+        }
         $data['tax_name'] = $data['tax_name'] ?? '';
         $data['tax_rate'] = $data['tax_rate'] ?? 0;
         $settings->update($data);
@@ -77,6 +83,7 @@ class CompanySettingsController extends Controller
         abort_unless(Schema::hasTable('payment_methods'), 404);
 
         $paymentMethod->delete();
+
         return back()->with('status', 'Payment method removed.');
     }
 
@@ -102,6 +109,7 @@ class CompanySettingsController extends Controller
         abort_unless(Schema::hasTable('terms_conditions'), 404);
 
         $termsCondition->delete();
+
         return back()->with('status', 'Terms removed.');
     }
 
@@ -139,6 +147,47 @@ class CompanySettingsController extends Controller
         abort_unless(Schema::hasTable('signatories'), 404);
 
         $signatory->delete();
+
         return back()->with('status', 'Signatory removed.');
+    }
+
+    private function activeCompanySettings(): CompanySetting
+    {
+        $defaults = ['company_name' => ActiveBusiness::current()?->name ?? 'BAMA'];
+
+        foreach ([
+            'primary_color' => CompanySetting::DEFAULT_PRIMARY_COLOR,
+            'secondary_color' => CompanySetting::DEFAULT_SECONDARY_COLOR,
+            'accent_color' => CompanySetting::DEFAULT_ACCENT_COLOR,
+        ] as $colorColumn => $default) {
+            if (Schema::hasColumn('company_settings', $colorColumn)) {
+                $defaults[$colorColumn] = $default;
+            }
+        }
+
+        return CompanySetting::firstOrCreate(
+            ['business_id' => ActiveBusiness::id()],
+            $defaults
+        );
+    }
+
+    private function profileUsers()
+    {
+        if (
+            ! Schema::hasColumn('users', 'enable_otp_login')
+            || ! Schema::hasTable('business_user')
+            || ! ActiveBusiness::id()
+        ) {
+            return collect();
+        }
+
+        $userIds = DB::table('business_user')
+            ->where('business_id', ActiveBusiness::id())
+            ->pluck('user_id');
+
+        return User::whereIn('id', $userIds)
+            ->whereNotIn('role', ['super_admin', 'client_portal'])
+            ->orderBy('name')
+            ->get();
     }
 }

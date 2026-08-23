@@ -4,29 +4,28 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\ClientPortalInvitation;
+use App\Models\CompanySetting;
+use App\Models\CostCenter;
+use App\Models\Department;
 use App\Models\DocumentTemplate;
 use App\Models\GoodsReceivedNote;
-use App\Models\HandoverRecord;
+use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\Project;
-use App\Models\ProjectCost;
 use App\Models\ProjectDocument;
-use App\Models\ProjectExpense;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Models\SupplierInvoice;
-use App\Models\SupplierPayment;
 use App\Models\SupplierQuote;
 use App\Models\User;
 use App\Models\Warranty;
-use App\Models\WarrantyClaim;
 use App\Services\StockService;
 use App\Support\ActiveBusiness;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class ErpController extends Controller
 {
@@ -47,8 +46,8 @@ class ErpController extends Controller
             'suppliers' => Supplier::with('quotes.project', 'purchaseOrders.project', 'invoices.project')->latest()->paginate(12),
             'projects' => Project::orderBy('project_name')->get(),
             'purchaseOrders' => PurchaseOrder::with('supplier', 'project')->latest()->get(),
-            'departments' => \App\Models\Department::where('is_active', true)->orderBy('name')->get(),
-            'costCenters' => \App\Models\CostCenter::where('is_active', true)->with('department')->orderBy('name')->get(),
+            'departments' => Department::where('is_active', true)->orderBy('name')->get(),
+            'costCenters' => CostCenter::where('is_active', true)->with('department')->orderBy('name')->get(),
             'products' => Product::where('is_active', true)->orderBy('name')->get(),
             'goodsReceived' => GoodsReceivedNote::with('purchaseOrder.supplier', 'product')->latest()->limit(12)->get(),
         ]);
@@ -92,7 +91,7 @@ class ErpController extends Controller
         $costs = $projects->sum(fn ($project) => $project->actualCost());
         $collected = $projects->sum(fn ($project) => $project->collected());
         $supplierOutstanding = SupplierInvoice::query()->selectRaw('SUM(GREATEST(total - amount_paid, 0)) as total')->value('total') ?? 0;
-        $taxDue = \App\Models\Invoice::source()->sum('tax_total');
+        $taxDue = Invoice::source()->sum('tax_total');
 
         return view('erp.reports', compact('projects', 'revenue', 'costs', 'collected', 'supplierOutstanding', 'taxDue'));
     }
@@ -140,6 +139,7 @@ class ErpController extends Controller
         }
 
         $project->documents()->create($data);
+
         return back()->with('status', 'Project document saved.');
     }
 
@@ -359,7 +359,10 @@ class ErpController extends Controller
             return response()->download($this->writeDocx($projectDocument), Str::slug($projectDocument->title).'.docx')->deleteFileAfterSend(true);
         }
 
-        return Pdf::loadView('pdf.project-document', ['document' => $projectDocument])
+        return Pdf::loadView('pdf.project-document', [
+            'document' => $projectDocument,
+            'settings' => $this->companySettingsForBusiness($projectDocument->business_id),
+        ])
             ->download(Str::slug($projectDocument->title).'.pdf');
     }
 
@@ -396,7 +399,7 @@ class ErpController extends Controller
     private function writeDocx(ProjectDocument $document): string
     {
         $path = tempnam(sys_get_temp_dir(), 'docx_');
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
         $zip->open($path, \ZipArchive::OVERWRITE);
         $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
         $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
@@ -407,6 +410,35 @@ class ErpController extends Controller
         $zip->close();
 
         return $path;
+    }
+
+    private function companySettingsForBusiness(?int $businessId): ?CompanySetting
+    {
+        if (! $businessId) {
+            return CompanySetting::first();
+        }
+
+        return CompanySetting::withoutGlobalScope('business')->firstOrCreate(
+            ['business_id' => $businessId],
+            $this->defaultCompanySettings()
+        );
+    }
+
+    private function defaultCompanySettings(): array
+    {
+        $defaults = ['company_name' => ActiveBusiness::current()?->name ?? 'BAMA'];
+
+        foreach ([
+            'primary_color' => CompanySetting::DEFAULT_PRIMARY_COLOR,
+            'secondary_color' => CompanySetting::DEFAULT_SECONDARY_COLOR,
+            'accent_color' => CompanySetting::DEFAULT_ACCENT_COLOR,
+        ] as $column => $color) {
+            if (Schema::hasColumn('company_settings', $column)) {
+                $defaults[$column] = $color;
+            }
+        }
+
+        return $defaults;
     }
 
     private function requireErp(): void

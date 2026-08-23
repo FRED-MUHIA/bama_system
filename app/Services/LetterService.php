@@ -7,9 +7,11 @@ use App\Models\CompanySetting;
 use App\Models\Invoice;
 use App\Models\Letter;
 use App\Models\LetterTemplate;
+use App\Models\Payment;
 use App\Models\Project;
 use App\Models\Receipt;
 use App\Models\Signatory;
+use App\Models\Site;
 use App\Models\TemplateCategory;
 use App\Models\Warranty;
 use App\Support\ActiveBusiness;
@@ -58,9 +60,15 @@ class LetterService
         $invoice = $context['invoice'] ?? null;
         $receipt = $context['receipt'] ?? null;
         $payment = $context['payment'] ?? null;
-        $company = CompanySetting::first();
-        $signatory = Schema::hasTable('signatories') ? Signatory::where('is_default', true)->where('is_active', true)->first() : null;
         $letter = $context['letter'] ?? null;
+        $businessId = $letter?->business_id
+            ?? $invoice?->business_id
+            ?? $receipt?->business_id
+            ?? $project?->business_id
+            ?? $client?->business_id
+            ?? ActiveBusiness::id();
+        $company = $this->companySettingsForBusiness($businessId);
+        $signatory = $this->defaultSignatoryForBusiness($businessId);
 
         $companyName = $company?->company_name ?: 'BAMA';
         $contactPerson = $client?->primaryContact;
@@ -123,7 +131,7 @@ class LetterService
         try {
             $url = route('public.letters.verify', $letter->id);
             $builder = new Builder(
-                writer: new SvgWriter(),
+                writer: new SvgWriter,
                 data: $url,
                 errorCorrectionLevel: ErrorCorrectionLevel::Medium,
                 size: 100,
@@ -145,7 +153,7 @@ class LetterService
         try {
             $url = route('public.letters.verify', $letter->id);
             $builder = new Builder(
-                writer: new SvgWriter(),
+                writer: new SvgWriter,
                 data: $url,
                 errorCorrectionLevel: ErrorCorrectionLevel::Medium,
                 size: $size,
@@ -207,8 +215,8 @@ class LetterService
         $client = ! empty($data['client_id']) ? Client::with('primaryContact')->find($data['client_id']) : null;
 
         $client ??= $invoice?->client ?? $receipt?->invoice?->client ?? $project?->client ?? $warranty?->client;
-        $site = ! empty($data['site_id']) ? \App\Models\Site::find($data['site_id']) : ($invoice?->site ?? $receipt?->invoice?->site ?? $project?->site ?? $warranty?->site);
-        $payment = ! empty($data['payment_id']) ? \App\Models\Payment::find($data['payment_id']) : $receipt?->payment;
+        $site = ! empty($data['site_id']) ? Site::find($data['site_id']) : ($invoice?->site ?? $receipt?->invoice?->site ?? $project?->site ?? $warranty?->site);
+        $payment = ! empty($data['payment_id']) ? Payment::find($data['payment_id']) : $receipt?->payment;
 
         return compact('client', 'site', 'project', 'invoice', 'receipt', 'payment', 'warranty');
     }
@@ -233,7 +241,7 @@ class LetterService
     public function writeDocx(Letter $letter): string
     {
         $path = tempnam(sys_get_temp_dir(), 'letter_docx_');
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
         $zip->open($path, \ZipArchive::OVERWRITE);
         $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
         $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
@@ -250,8 +258,8 @@ class LetterService
     {
         $letter->load('client', 'site', 'project', 'invoice', 'receipt');
 
-        $company = CompanySetting::first();
-        $signatory = Schema::hasTable('signatories') ? Signatory::where('is_default', true)->where('is_active', true)->first() : null;
+        $company = $this->companySettingsForBusiness($letter->business_id);
+        $signatory = $this->defaultSignatoryForBusiness($letter->business_id);
         $qrCode = $this->qrCodeDataUri($letter, 100);
 
         $context = $this->setLetterContext($letter);
@@ -325,12 +333,53 @@ class LetterService
             'Procurement' => 'procurement',
         ];
 
-        $categories = TemplateCategory::withoutGlobalScope('business')
-            ->whereIn('slug', array_values($slugsByType))
+        $categories = TemplateCategory::whereIn('slug', array_values($slugsByType))
             ->pluck('id', 'slug');
 
         return collect($slugsByType)
             ->mapWithKeys(fn (string $slug, string $type) => [$type => $categories[$slug] ?? null])
             ->all();
+    }
+
+    private function companySettingsForBusiness(?int $businessId): ?CompanySetting
+    {
+        if (! $businessId) {
+            return CompanySetting::first();
+        }
+
+        return CompanySetting::withoutGlobalScope('business')->firstOrCreate(
+            ['business_id' => $businessId],
+            $this->defaultCompanySettings()
+        );
+    }
+
+    private function defaultCompanySettings(): array
+    {
+        $defaults = ['company_name' => ActiveBusiness::current()?->name ?? 'BAMA'];
+
+        foreach ([
+            'primary_color' => CompanySetting::DEFAULT_PRIMARY_COLOR,
+            'secondary_color' => CompanySetting::DEFAULT_SECONDARY_COLOR,
+            'accent_color' => CompanySetting::DEFAULT_ACCENT_COLOR,
+        ] as $column => $color) {
+            if (Schema::hasColumn('company_settings', $column)) {
+                $defaults[$column] = $color;
+            }
+        }
+
+        return $defaults;
+    }
+
+    private function defaultSignatoryForBusiness(?int $businessId): ?Signatory
+    {
+        if (! Schema::hasTable('signatories')) {
+            return null;
+        }
+
+        $query = $businessId
+            ? Signatory::withoutGlobalScope('business')->where('business_id', $businessId)
+            : Signatory::query();
+
+        return $query->where('is_default', true)->where('is_active', true)->first();
     }
 }
