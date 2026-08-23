@@ -178,7 +178,7 @@ class InvoiceController extends Controller
         } catch (\Throwable $e) {
             $invoice->emailLogs()->create($data + ['recipient_email' => $invoice->client->email, 'status' => 'failed', 'error' => $e->getMessage()]);
 
-            return back()->withErrors(['email' => 'Email failed: '.$e->getMessage()]);
+            return back()->withErrors(['email' => 'Email failed: '.$this->outgoingMail->userFacingError($e)]);
         }
     }
 

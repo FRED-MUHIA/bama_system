@@ -111,7 +111,7 @@ class QuotationController extends Controller
         } catch (\Throwable $e) {
             $quotation->emailLogs()->create($data + ['recipient_email' => $quotation->client->email, 'status' => 'failed', 'error' => $e->getMessage()]);
 
-            return back()->withErrors(['email' => 'Email failed: '.$e->getMessage()]);
+            return back()->withErrors(['email' => 'Email failed: '.$this->outgoingMail->userFacingError($e)]);
         }
     }
 

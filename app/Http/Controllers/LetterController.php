@@ -200,7 +200,7 @@ class LetterController extends Controller
             } catch (\Throwable $e) {
                 $letter->update(['recipient' => $recipient, 'delivery_status' => 'failed']);
 
-                return back()->withErrors(['email' => 'Email failed: '.$e->getMessage()]);
+                return back()->withErrors(['email' => 'Email failed: '.$this->outgoingMail->userFacingError($e)]);
             }
         } elseif ($data['mode'] === 'portal') {
             $letter->update(['portal_published_at' => now(), 'delivery_status' => 'portal_published', 'status' => 'Sent']);

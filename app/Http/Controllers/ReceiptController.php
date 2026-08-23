@@ -71,7 +71,7 @@ class ReceiptController extends Controller
         } catch (\Throwable $e) {
             $receipt->emailLogs()->create($data + ['recipient_email' => $email, 'status' => 'failed', 'error' => $e->getMessage()]);
 
-            return back()->withErrors(['email' => 'Email failed: '.$e->getMessage()]);
+            return back()->withErrors(['email' => 'Email failed: '.$this->outgoingMail->userFacingError($e)]);
         }
     }
 

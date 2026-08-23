@@ -420,6 +420,10 @@
             </div>
             <div class="alert alert-info">
                 Use the mailbox email as the username. For Gmail or Yahoo, create an app password in that email account and paste the app password here, not the normal login password.
+                <div class="mt-2 d-flex flex-wrap gap-2">
+                    <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener" class="alert-link">Gmail app password help</a>
+                    <a href="https://help.yahoo.com/kb/SLN15241.html" target="_blank" rel="noopener" class="alert-link">Yahoo app password help</a>
+                </div>
             </div>
             <div class="d-flex flex-wrap gap-2 mb-3">
                 <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="smtp.gmail.com" data-port="465" data-scheme="ssl">Use Gmail</button>

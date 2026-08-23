@@ -500,7 +500,7 @@ class AdministrationController extends Controller
             report($e);
             $this->iam->audit('mail.settings.test_failed', $setting);
 
-            return back()->with('warning', 'Test failed: the SMTP server rejected the connection or credentials.');
+            return back()->with('warning', 'Test failed: '.$this->outgoingMail->userFacingError($e));
         }
     }
 
