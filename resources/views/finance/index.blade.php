@@ -5,6 +5,9 @@
 @php
     $money = fn($value) => 'KES '.number_format((float) $value, 2);
     $scorecards = $financeCockpit['scorecards'] ?? [];
+    $canOpenEtims = Route::has('etims.dashboard')
+        && \App\Support\SchemaCache::hasTable('etims_submissions')
+        && auth()->user()?->hasPermission('etims.view');
 @endphp
 
 <style>
@@ -31,10 +34,15 @@
         <h2 class="finance-title">Finance & General Ledger</h2>
         <p class="finance-muted mb-0">Double-entry accounting, receivables, payables, cash, assets, tax, controls, and industry profitability.</p>
     </div>
-    <form method="post" action="{{ route('finance.sync') }}">
-        @csrf
-        <button class="btn btn-dark"><i class="bi bi-arrow-repeat"></i> Sync existing transactions</button>
-    </form>
+    <div class="d-flex gap-2 flex-wrap">
+        @if($canOpenEtims)
+            <a class="btn btn-outline-dark" href="{{ route('etims.dashboard') }}"><i class="bi bi-receipt-cutoff"></i> Tax & ETIMS</a>
+        @endif
+        <form method="post" action="{{ route('finance.sync') }}">
+            @csrf
+            <button class="btn btn-dark"><i class="bi bi-arrow-repeat"></i> Sync existing transactions</button>
+        </form>
+    </div>
 </div>
 
 <div class="row g-3 mb-3">

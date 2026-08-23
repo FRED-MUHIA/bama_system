@@ -21,7 +21,6 @@ class NavigationManager
         $items = collect([
             ['module' => 'core', 'label' => 'Dashboard', 'route' => 'dashboard', 'icon' => 'bi-grid'],
             ['module' => 'shared-communication', 'shared' => true, 'label' => 'Messaging', 'route' => 'communication.center', 'icon' => 'bi-chat-dots', 'tables' => ['communication_channels'], 'permission' => 'communication.view'],
-            ['module' => 'etims-compliance', 'shared' => true, 'label' => 'Tax & ETIMS', 'route' => 'etims.dashboard', 'icon' => 'bi-receipt-cutoff', 'tables' => ['etims_submissions'], 'permission' => 'etims.view'],
             ['module' => 'crm', 'label' => 'Clients', 'route' => 'clients.index', 'icon' => 'bi-people'],
             ['module' => 'projects', 'label' => 'Projects', 'route' => 'projects.index', 'icon' => 'bi-kanban', 'tables' => ['projects']],
             ['module' => 'core', 'label' => 'Products', 'route' => 'products.index', 'icon' => 'bi-box-seam', 'tables' => ['products']],
@@ -39,7 +38,7 @@ class NavigationManager
             ['module' => 'administration', 'label' => 'Administration', 'route' => 'administration.index', 'icon' => 'bi-shield-lock', 'permission' => 'administration.view'],
         ]);
 
-        return $this->filterItems($items);
+        return $this->nestFinanceItems($this->filterItems($items));
     }
 
     private function industrySidebar(): Collection
@@ -88,11 +87,6 @@ class NavigationManager
                 fn (Collection $items) => $items->push(['module' => 'shared-communication', 'shared' => true, 'label' => 'Messaging', 'route' => 'communication.center', 'icon' => 'bi-chat-dots', 'permission' => 'communication.view'])
             )
             ->when(
-                ! $items->contains(fn ($item) => ($item['label'] ?? null) === 'Tax & ETIMS')
-                    && $this->itemAvailable(['module' => 'etims-compliance', 'shared' => true, 'label' => 'Tax & ETIMS', 'route' => 'etims.dashboard', 'icon' => 'bi-receipt-cutoff', 'tables' => ['etims_submissions'], 'permission' => 'etims.view']),
-                fn (Collection $items) => $items->push(['module' => 'etims-compliance', 'shared' => true, 'label' => 'Tax & ETIMS', 'route' => 'etims.dashboard', 'icon' => 'bi-receipt-cutoff', 'permission' => 'etims.view'])
-            )
-            ->when(
                 ! $items->contains(fn ($item) => ($item['label'] ?? null) === 'Finance')
                     && Route::has('finance.index')
                     && $this->tablesReady(['journal_entries'])
@@ -107,6 +101,35 @@ class NavigationManager
                 Route::has('administration.index') && $this->tablesReady(['iam_roles']) && auth()->check() && auth()->user()->hasPermission('administration.view'),
                 fn (Collection $items) => $items->push(['module' => 'administration', 'label' => 'Administration', 'route' => 'administration.index', 'icon' => 'bi-shield-lock', 'permission' => 'administration.view'])
             )
+            ->pipe(fn (Collection $items) => $this->nestFinanceItems($items))
+            ->values();
+    }
+
+    private function nestFinanceItems(Collection $items): Collection
+    {
+        $taxItem = ['module' => 'etims-compliance', 'shared' => true, 'label' => 'Tax & ETIMS', 'route' => 'etims.dashboard', 'icon' => 'bi-receipt-cutoff', 'tables' => ['etims_submissions'], 'permission' => 'etims.view'];
+
+        if (! $this->itemAvailable($taxItem)) {
+            return $items->reject(fn ($item) => ($item['route'] ?? null) === 'etims.dashboard')->values();
+        }
+
+        $child = collect($taxItem)->except('tables')->all();
+
+        return $items
+            ->reject(fn ($item) => ($item['route'] ?? null) === 'etims.dashboard')
+            ->map(function ($item) use ($child) {
+                if (($item['route'] ?? null) !== 'finance.index') {
+                    return $item;
+                }
+
+                $children = collect($item['children'] ?? [])
+                    ->reject(fn ($childItem) => ($childItem['route'] ?? null) === 'etims.dashboard')
+                    ->push($child)
+                    ->values()
+                    ->all();
+
+                return array_merge($item, ['children' => $children]);
+            })
             ->values();
     }
 

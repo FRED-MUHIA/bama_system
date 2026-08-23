@@ -269,6 +269,10 @@
         }
         .sidebar a.active::before { content:"";position:absolute;left:-1px;top:8px;bottom:8px;width:2px;border-radius:4px;background:var(--tenant-primary,var(--bama-orange)); }
         .sidebar a.active i { color:var(--tenant-primary,var(--bama-orange)); }
+        .sidebar-subnav { display:grid;gap:1px;margin:-.1rem 0 .2rem 1.44rem;padding-left:.55rem;border-left:1px solid rgba(255,255,255,.1); }
+        .sidebar .sidebar-subnav a { min-height:30px;padding:.34rem .55rem;font-size:.73rem;color:#aeadad;border-radius:7px; }
+        .sidebar .sidebar-subnav a i { width:16px;flex-basis:16px;font-size:.82rem; }
+        .sidebar .sidebar-subnav a.active::before { left:-.6rem;top:7px;bottom:7px; }
         .business-switcher { background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.08);border-radius:10px;padding:.7rem;margin-bottom:.75rem; }
         .business-switcher label { color:#8f8f8f;letter-spacing:.12em; }
         .business-switcher .form-control,.business-switcher .form-select { min-height:36px;background:#222;color:#f5f3ef;border-color:#3a3a3a;font-size:.8rem; }
@@ -449,6 +453,7 @@
                     @foreach($platformMenu ?? [] as $item)
                         @php
                             $routeParams = $item['params'] ?? [];
+                            $children = collect($item['children'] ?? []);
 
                             if (! empty($item['section'])) {
                                 $routeParams = array_merge($routeParams, ['section' => $item['section']]);
@@ -467,8 +472,38 @@
                                 $isActive = request()->routeIs($item['route'])
                                     && request()->query('section', 'dashboard') === $item['section'];
                             }
+
+                            $childIsActive = $children->contains(function ($child) {
+                                $patterns = collect($child['active_routes'] ?? [])
+                                    ->push(str_replace('.index', '.*', $child['route']))
+                                    ->push($child['route'])
+                                    ->filter()
+                                    ->unique()
+                                    ->values();
+
+                                return $patterns->contains(fn ($pattern) => request()->routeIs($pattern));
+                            });
+
+                            $isActive = $isActive || $childIsActive;
                         @endphp
                         <a href="{{ route($item['route'], $routeParams) }}" class="{{ $isActive ? 'active' : '' }}"><i class="bi {{ $item['icon'] }}"></i> {{ $item['label'] }}</a>
+                        @if($children->isNotEmpty())
+                            <div class="sidebar-subnav">
+                                @foreach($children as $child)
+                                    @php
+                                        $childRouteParams = $child['params'] ?? [];
+                                        $childActivePatterns = collect($child['active_routes'] ?? [])
+                                            ->push(str_replace('.index', '.*', $child['route']))
+                                            ->push($child['route'])
+                                            ->filter()
+                                            ->unique()
+                                            ->values();
+                                        $isChildActive = $childActivePatterns->contains(fn ($pattern) => request()->routeIs($pattern));
+                                    @endphp
+                                    <a href="{{ route($child['route'], $childRouteParams) }}" class="{{ $isChildActive ? 'active' : '' }}"><i class="bi {{ $child['icon'] }}"></i> {{ $child['label'] }}</a>
+                                @endforeach
+                            </div>
+                        @endif
                     @endforeach
                 </nav>
             </aside>
@@ -532,11 +567,6 @@
                                     </div>
                                 </div>
                             </div>
-                            @if(Route::has('etims.dashboard'))
-                                <a class="btn btn-outline-dark btn-sm" href="{{ route('etims.dashboard') }}" title="Tax & ETIMS compliance">
-                                    <i class="bi bi-receipt-cutoff"></i> <span>{{ 'Tax & ETIMS' }}</span>
-                                </a>
-                            @endif
                         @endunless
                         <button type="button" class="btn btn-outline-dark btn-sm theme-toggle" data-theme-toggle aria-label="Switch colour theme"><i class="bi bi-moon-stars"></i></button>
                         <a class="btn btn-outline-dark btn-sm profile-link" href="{{route('profile.edit')}}"><i class="bi bi-person"></i> <span>My Profile</span></a>
