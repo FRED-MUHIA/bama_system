@@ -55,7 +55,9 @@ class OutgoingMailService
 
             if ($setting) {
                 $mail->from(config('mail.from.address'), $setting->from_name);
-                $mail->replyTo($setting->from_address, $setting->from_name);
+                if (config('mail.from.address') !== $setting->from_address) {
+                    $mail->replyTo($setting->from_address, $setting->from_name);
+                }
             }
 
             if ($configure) {

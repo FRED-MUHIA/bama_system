@@ -10,6 +10,9 @@
     $profileEmail = $companySetting?->email ?: auth()->user()->email;
     $mailFromAddress = old('from_address', $mailSetting?->from_address ?? $profileEmail);
     $mailFromName = old('from_name', $mailSetting?->from_name ?? $companySetting?->company_name ?? $profileName);
+    $usesOwnSmtp = old('use_own_smtp') !== null
+        ? old('use_own_smtp') === '1'
+        : filled($mailSetting?->username) && filled($mailSetting?->password);
 @endphp
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
@@ -418,7 +421,7 @@
                 @endif
             </div>
             <div class="alert alert-info">
-                Clients only set the business name and reply email. The real mail login, host and password are hidden on the server and managed by the system owner.
+                Simple mode uses the hidden server mail login. Turn on corporate integration only when this profile has its own mailbox and wants emails to send through that mailbox.
                 <div class="mt-2 d-flex flex-wrap gap-2">
                     <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener" class="alert-link">Gmail app password help</a>
                     <a href="https://help.yahoo.com/kb/SLN15241.html" target="_blank" rel="noopener" class="alert-link">Yahoo app password help</a>
@@ -431,8 +434,35 @@
                 <div class="col-md-6"><label class="form-label">From name</label><input class="form-control" name="from_name" value="{{ $mailFromName }}" placeholder="{{ $profileName }}" required></div>
                 <div class="col-md-6">
                     <label class="form-label">Mail login</label>
-                    <input class="form-control" value="Hidden on server" disabled>
-                    <div class="form-text">The server uses MAIL_HOST, MAIL_USERNAME and MAIL_PASSWORD from .env.</div>
+                    <input class="form-control" value="{{ $usesOwnSmtp ? 'Own corporate mailbox connected' : 'Hidden server mail' }}" disabled>
+                    <div class="form-text">{{ $usesOwnSmtp ? 'This profile sends through its own saved SMTP mailbox.' : 'The server uses MAIL_HOST, MAIL_USERNAME and MAIL_PASSWORD from .env.' }}</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-check">
+                        <input class="form-check-input" type="checkbox" name="use_own_smtp" value="1" data-corporate-mail-toggle @checked($usesOwnSmtp)>
+                        <span class="form-check-label">Connect own corporate email server</span>
+                    </label>
+                </div>
+                <div class="col-12 {{ $usesOwnSmtp ? '' : 'd-none' }}" data-corporate-mail-panel>
+                    <div class="border rounded-2 p-3">
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="mail" data-port="465" data-scheme="ssl">cPanel/Webmail</button>
+                            <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="smtp.gmail.com" data-port="465" data-scheme="ssl">Google Workspace</button>
+                            <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="smtp.office365.com" data-port="587" data-scheme="tls">Microsoft 365</button>
+                            <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="smtp.mail.yahoo.com" data-port="465" data-scheme="ssl">Yahoo Business</button>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6"><label class="form-label">SMTP host</label><input class="form-control" id="mail-host" name="host" value="{{ old('host',$mailSetting?->host) }}" placeholder="mail.example.com"></div>
+                            <div class="col-md-3"><label class="form-label">Port</label><input class="form-control" id="mail-port" type="number" name="port" value="{{ old('port',$mailSetting?->port ?? 465) }}"></div>
+                            <div class="col-md-3"><label class="form-label">Security</label><select class="form-select" id="mail-scheme" name="scheme"><option value="ssl" @selected(($mailSetting?->scheme ?? 'ssl') === 'ssl')>SSL/TLS</option><option value="tls" @selected($mailSetting?->scheme === 'tls')>STARTTLS</option></select></div>
+                            <div class="col-md-6"><label class="form-label">Mailbox username</label><input class="form-control" id="mail-username" name="username" value="{{ old('username',$mailSetting?->username) }}" placeholder="info@example.com" autocomplete="off"></div>
+                            <div class="col-md-6">
+                                <label class="form-label">Mailbox password / app password</label>
+                                <input class="form-control" type="password" name="password" placeholder="{{ $mailSetting?->password ? 'Saved - leave blank to keep' : 'Paste password once' }}" autocomplete="new-password">
+                                <div class="form-text">For Google Workspace, Yahoo or Microsoft, this may be an app password.</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-12"><button class="btn btn-warning">Save Business Email</button></div>
             </form>
@@ -622,6 +652,34 @@ document.addEventListener('DOMContentLoaded', () => {
     activateSecurityTab();
     window.addEventListener('hashchange', activateSecurityTab);
 
+    const toggle = document.querySelector('[data-corporate-mail-toggle]');
+    const panel = document.querySelector('[data-corporate-mail-panel]');
+    const host = document.getElementById('mail-host');
+    const port = document.getElementById('mail-port');
+    const scheme = document.getElementById('mail-scheme');
+    const username = document.getElementById('mail-username');
+    const replyTo = document.querySelector('[name="from_address"]');
+
+    const renderCorporatePanel = () => {
+        panel?.classList.toggle('d-none', !toggle?.checked);
+    };
+
+    toggle?.addEventListener('change', renderCorporatePanel);
+    renderCorporatePanel();
+
+    document.querySelectorAll('[data-mail-preset]').forEach((button) => {
+        button.addEventListener('click', () => {
+            let nextHost = button.dataset.host || '';
+            if (nextHost === 'mail' && replyTo?.value.includes('@')) {
+                nextHost = 'mail.' + replyTo.value.split('@').pop().trim();
+            }
+
+            if (host && nextHost) host.value = nextHost;
+            if (port && button.dataset.port) port.value = button.dataset.port;
+            if (scheme && button.dataset.scheme) scheme.value = button.dataset.scheme;
+            if (username && !username.value && replyTo?.value) username.value = replyTo.value;
+        });
+    });
 });
 </script>
 @endpush

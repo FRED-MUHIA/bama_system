@@ -23,24 +23,25 @@ class MailSetting extends Model
         }
 
         $smtp = config('mail.mailers.smtp', []);
-        $port = (int) ($smtp['port'] ?? $this->port ?? 587);
-        $scheme = match ($smtp['scheme'] ?? $this->scheme) {
+        $usesOwnSmtp = filled($this->username) && filled($this->password);
+        $port = (int) ($usesOwnSmtp ? $this->port : ($smtp['port'] ?? $this->port ?? 587));
+        $scheme = match ($usesOwnSmtp ? $this->scheme : ($smtp['scheme'] ?? $this->scheme)) {
             'ssl', 'smtps' => 'smtps',
             'tls', 'smtp' => 'smtp',
             default => $port === 465 ? 'smtps' : 'smtp',
         };
-        $fromAddress = config('mail.from.address');
-        if (blank($fromAddress) || $fromAddress === 'hello@example.com') {
+        $fromAddress = $usesOwnSmtp ? $this->from_address : config('mail.from.address');
+        if (! $usesOwnSmtp && (blank($fromAddress) || $fromAddress === 'hello@example.com')) {
             $fromAddress = $smtp['username'] ?? $this->from_address;
         }
 
         config([
             'mail.default' => 'smtp',
-            'mail.mailers.smtp.host' => $smtp['host'] ?? $this->host,
+            'mail.mailers.smtp.host' => $usesOwnSmtp ? $this->host : ($smtp['host'] ?? $this->host),
             'mail.mailers.smtp.port' => $port,
             'mail.mailers.smtp.scheme' => $scheme,
-            'mail.mailers.smtp.username' => $smtp['username'] ?? $this->username,
-            'mail.mailers.smtp.password' => $smtp['password'] ?? $this->password,
+            'mail.mailers.smtp.username' => $usesOwnSmtp ? $this->username : ($smtp['username'] ?? $this->username),
+            'mail.mailers.smtp.password' => $usesOwnSmtp ? $this->password : ($smtp['password'] ?? $this->password),
             'mail.from.address' => $fromAddress,
             'mail.from.name' => $this->from_name,
         ]);
