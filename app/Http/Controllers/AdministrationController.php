@@ -483,7 +483,11 @@ class AdministrationController extends Controller
     {
         $invitation = UserInvitation::where('token', $token)->where('status', 'Pending')->whereNull('accepted_at')->whereNull('cancelled_at')->where('expires_at', '>', now())->firstOrFail();
 
-        return view('administration.activate', compact('invitation'));
+        $activationAction = request()->is('public/*')
+            ? route('public.administration.activate.store', $invitation->token)
+            : route('administration.activate.store', $invitation->token);
+
+        return view('administration.activate', compact('activationAction', 'invitation'));
     }
 
     public function activate(Request $request, string $token)
@@ -646,7 +650,7 @@ class AdministrationController extends Controller
         ]);
 
         try {
-            $this->outgoingMail->sendRaw($user->email, 'Activate your account', 'Welcome to '.$this->profileName().'. Activate your account: '.route('administration.activate', $invite->token), businessId: $this->businessId());
+            $this->outgoingMail->sendRaw($user->email, 'Activate your account', 'Welcome to '.$this->profileName().'. Activate your account: '.$this->activationUrl($invite), businessId: $this->businessId());
 
             return true;
         } catch (\Throwable $e) {
@@ -654,6 +658,11 @@ class AdministrationController extends Controller
 
             return false;
         }
+    }
+
+    private function activationUrl(UserInvitation $invitation): string
+    {
+        return route('public.administration.activate', $invitation->token);
     }
 
     private function profileUsers()

@@ -412,7 +412,7 @@
                     <td>
                         <div class="d-flex flex-wrap gap-1">
                             @if($inviteStatus === 'Pending')
-                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="navigator.clipboard.writeText('{{ route('administration.activate',$invite->token) }}')">Copy Link</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="navigator.clipboard.writeText('{{ route('public.administration.activate',$invite->token) }}')">Copy Link</button>
                                 <form method="post" action="{{ route('administration.invitations.cancel',$invite) }}">@csrf<button class="btn btn-sm btn-outline-danger">Cancel</button></form>
                             @endif
                             @if(in_array($inviteStatus,['Expired','Cancelled']))
