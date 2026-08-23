@@ -51,6 +51,7 @@
         .business-switcher .form-select,.business-switcher .form-control { border-radius:4px; font-size:.82rem; }
         .app-header { background:#fff; }
         .mobile-bottom-nav,.mobile-nav-backdrop,.mobile-overflow-sheet { display:none; }
+        .mobile-header-identity { display:none; }
         @media (max-width: 991px) { .sidebar { min-height:auto; } }
         @media (max-width: 991px) {
             body { background:#0b1220; padding-bottom:calc(76px + env(safe-area-inset-bottom)); }
@@ -408,6 +409,48 @@
             button,.btn,.form-control,.form-select { touch-action:manipulation; }
             body.dashboard-hero-condensed .app-header{flex-wrap:wrap;height:auto;padding-bottom:.55rem!important}.header-context-actions{order:3;width:100%;overflow-x:auto;padding-top:.45rem;margin:0;scrollbar-width:none}.header-context-actions::-webkit-scrollbar{display:none}.header-context-actions .context-label{display:none}.header-context-actions .btn{flex:0 0 auto;display:inline-grid;place-items:center;width:42px;height:42px;padding:0;border-color:#6b6b6b;color:#f7f3ed;background:rgba(255,255,255,.04)}.header-context-actions .btn.btn-success{background:var(--tenant-primary,#00A651);border-color:var(--tenant-primary,#00A651);color:#fff}.header-context-actions .btn:hover,.header-context-actions .btn:focus{border-color:var(--tenant-primary,#00A651);color:#fff;background:rgba(0,166,81,.18)}.header-context-actions .btn span{display:none}.header-context-actions .btn i{margin:0!important;font-size:1rem}.header-greeting{display:none}.app-header-actions{gap:.35rem}.app-header-actions .btn-sm:not(.theme-toggle){padding:.36rem .5rem}.app-header-actions .btn-sm span,.app-header-actions .btn-sm.profile-link{font-size:0}.app-header-actions .btn-sm.profile-link i{font-size:.9rem}
         }
+        @media (max-width:991px) {
+            body { background:#f7f8fb !important; padding-bottom:calc(70px + env(safe-area-inset-bottom)); }
+            main > header {
+                min-height:56px;
+                background:#fff !important;
+                border-color:#eef0f4 !important;
+                color:#111827;
+                box-shadow:none !important;
+            }
+            main > header .app-header-title { display:none; }
+            .mobile-header-identity { display:flex;align-items:center;gap:10px;min-width:0; }
+            .mobile-header-avatar { width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#f1f3f7;color:#111827;font-weight:800;flex:0 0 34px; }
+            .mobile-header-name { color:#111827;font-size:.86rem;font-weight:800;line-height:1.1;max-width:48vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+            .app-header-actions { margin-left:auto;gap:.25rem; }
+            .app-header-actions .header-greeting,
+            .app-header-actions .header-context-actions,
+            .app-header-actions .profile-link,
+            .app-header-actions form,
+            .app-header-actions .theme-toggle { display:none !important; }
+            .header-alert-btn { width:40px;height:40px;border:0 !important;background:#fff !important;color:#111827 !important;box-shadow:none !important; }
+            .header-alert-btn i { font-size:1.12rem; }
+            .mobile-bottom-nav {
+                min-height:64px;
+                gap:2px;
+                padding:7px 8px calc(7px + env(safe-area-inset-bottom));
+                background:#fff;
+                border:1px solid #e8ebf0;
+                border-bottom:0;
+                border-radius:0;
+                box-shadow:0 -8px 24px rgba(15,23,42,.08);
+                backdrop-filter:none;
+            }
+            .mobile-bottom-nav a,.mobile-bottom-nav button { color:#667085;border-radius:10px;font-size:.62rem;font-weight:700; }
+            .mobile-bottom-nav a.active,.mobile-bottom-nav button.active { color:var(--tenant-primary,#00A651);background:transparent; }
+            .mobile-bottom-nav a.active i,.mobile-bottom-nav button.active i { color:var(--tenant-primary,#00A651); }
+            .mobile-overflow-sheet { background:#fff;color:#111827;border-color:#e8ebf0;box-shadow:0 -20px 44px rgba(15,23,42,.16); }
+            .mobile-overflow-sheet .sheet-handle { background:#d0d5dd; }
+            .mobile-overflow-sheet .sheet-title { color:#667085; }
+            .mobile-overflow-sheet a,.mobile-overflow-sheet button { color:#111827; }
+            .mobile-overflow-sheet a.active { color:var(--tenant-primary,#00A651);background:#eefbf3; }
+            .mobile-overflow-sheet i { color:var(--tenant-primary,#00A651); }
+        }
         @media (prefers-reduced-motion:reduce) {
             *,*::before,*::after { scroll-behavior:auto !important;transition-duration:.01ms !important;animation-duration:.01ms !important;animation-iteration-count:1 !important; }
         }
@@ -512,7 +555,11 @@
         <main class="@auth {{ auth()->user()->role === 'client_portal' ? 'col-12' : 'col-lg-10' }} @else col-12 @endauth p-0">
             @auth
                 <header class="app-header border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="mobile-header-identity">
+                        <div class="mobile-header-avatar">{{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}</div>
+                        <div class="mobile-header-name">{{ $activeBusiness?->name ?? $activeTenant?->name ?? auth()->user()->name }}</div>
+                    </div>
+                    <div class="app-header-title">
                         <div class="text-muted small">Admin dashboard</div>
                         <h1 class="h4 mb-0">@yield('title', 'Dashboard')</h1>
                     </div>
@@ -690,6 +737,46 @@
             $mobileContextLabel = 'Agriculture';
             $mobileContextItems = $agricultureMobileItems;
             $mobileOverflowItems = array_slice($agricultureMobileItems, 4);
+        }
+
+        $sidebarMobileItems = collect($platformMenu ?? [])
+            ->flatMap(function ($item) {
+                $parent = [collect($item)->except('children')->all()];
+
+                return array_merge($parent, $item['children'] ?? []);
+            })
+            ->filter(fn ($item) => ! empty($item['route']))
+            ->map(function ($item) {
+                $route = $item['route'];
+                $match = collect($item['active_routes'] ?? [])
+                    ->push(str_replace('.index', '.*', $route))
+                    ->push($route)
+                    ->filter()
+                    ->first();
+
+                return [
+                    'label' => ($item['label'] ?? '') === 'Dashboard' ? 'Home' : ($item['label'] ?? 'Open'),
+                    'route' => $route,
+                    'match' => $match,
+                    'section' => $item['section'] ?? null,
+                    'params' => $item['params'] ?? [],
+                    'icon' => $item['icon'] ?? 'bi-grid',
+                ];
+            })
+            ->unique(fn ($item) => $item['route'].':'.($item['section'] ?? md5(json_encode($item['params'] ?? []))))
+            ->values();
+
+        if ($sidebarMobileItems->isNotEmpty()) {
+            $priority = ['Home', 'Dashboard', 'Transactions', 'Orders', 'POS Orders', 'Finance', 'Clients', 'Tenants', 'Guests', 'Members', 'Products', 'Inventory', 'Rooms', 'Properties', 'Projects'];
+            $mobileContextLabel = \Illuminate\Support\Str::headline($activeIndustrySlug ?: 'Workspace');
+            $mobileContextItems = $sidebarMobileItems
+                ->sortBy(fn ($item) => ($index = array_search($item['label'], $priority, true)) === false ? 99 : $index)
+                ->values()
+                ->all();
+            $mobileOverflowItems = $sidebarMobileItems
+                ->reject(fn ($item) => in_array($item['label'], collect($mobileContextItems)->take(4)->pluck('label')->all(), true))
+                ->values()
+                ->all();
         }
 
         $mobileItemAvailable = fn ($item) => \Illuminate\Support\Facades\Route::has($item['route']) && ($item['condition'] ?? true);

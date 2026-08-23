@@ -36,6 +36,16 @@
     ];
     $moneyCards = ['Pending Payments', 'POS Revenue', 'Receivables', 'Collected', 'Profit', 'Tax Due', 'Supplier Due'];
     $projectsEnabled = \App\Models\Client::supportsCompanyStructure();
+    $mobileMoney = fn ($value) => ($settings?->currency_code ?? 'KES').' '.number_format((float) $value, 2);
+    $mobileTiles = [
+        ['label' => 'To Receive', 'value' => $mobileMoney($cards['Pending Payments'] ?? $performance['outstanding']), 'tone' => 'receive', 'icon' => 'bi-arrow-down-left'],
+        ['label' => 'To Give', 'value' => $mobileMoney($cards['Supplier Due'] ?? 0), 'tone' => 'give', 'icon' => 'bi-arrow-up-right'],
+        ['label' => 'Sales', 'value' => $performance['revenueFormatted'], 'hint' => ucfirst($performance['period']), 'icon' => 'bi-chevron-right'],
+        ['label' => 'Purchases', 'value' => $mobileMoney($cards['Supplier Due'] ?? 0), 'hint' => ucfirst($performance['period']), 'icon' => 'bi-chevron-right'],
+        ['label' => 'Invoices', 'value' => $cards['Invoices'] ?? 0, 'hint' => 'Documents', 'icon' => 'bi-chevron-right'],
+        ['label' => 'Total Balance', 'value' => $mobileMoney(($cards['Collected'] ?? 0) + ($cards['POS Revenue'] ?? 0)), 'hint' => 'Cash and bank', 'icon' => 'bi-chevron-right'],
+    ];
+    $mobileQuickActions = $heroActions->take(6)->values();
 @endphp
 <style>
     .modern-dashboard { color:#0f172a; }
@@ -132,6 +142,41 @@
     @media(prefers-reduced-motion:reduce){.hero-art .orbit,.hero-art .signal{animation:none}}
 </style>
 <style>
+    .mobile-app-home{display:none}
+    @media(max-width:768px){
+        .modern-dashboard{margin:-.35rem -.15rem 0;color:#111827}
+        .mobile-app-home{display:block}
+        .modern-dashboard > .industry-panel,
+        .modern-dashboard > .hero-panel,
+        .modern-dashboard > .stat-grid,
+        .modern-dashboard > section.panel-card:not(.mobile-app-home),
+        .modern-dashboard > .row{display:none!important}
+        .mobile-industry-banner{border-radius:7px;background:linear-gradient(135deg,#073f24,#0c7a3e);color:#fff;padding:16px;margin-bottom:14px;min-height:82px;display:flex;align-items:flex-end;justify-content:space-between;gap:14px;overflow:hidden;position:relative}
+        .mobile-industry-banner:after{content:"";position:absolute;right:-28px;top:-34px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.12)}
+        .mobile-industry-banner strong{display:block;font-size:.95rem;line-height:1.15;position:relative;z-index:1}
+        .mobile-industry-banner span{display:block;color:#c9f5d8;font-size:.72rem;font-weight:700;position:relative;z-index:1}
+        .mobile-tile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
+        .mobile-money-tile{min-height:78px;border:1px solid #edf0f4;border-radius:7px;background:#fff;padding:12px;box-shadow:0 4px 14px rgba(15,23,42,.04);display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+        .mobile-money-tile.receive{background:#eafaf1;border-color:#bfead1;color:#008342}
+        .mobile-money-tile.give{background:#fff0f4;border-color:#f6c7d5;color:#d61f4c}
+        .mobile-money-tile strong{display:block;font-size:.96rem;font-weight:800;color:inherit}
+        .mobile-money-tile span{display:block;margin-top:8px;font-size:.68rem;color:#667085}
+        .mobile-money-tile i{color:inherit;font-size:.9rem}
+        .mobile-section-title{font-size:.92rem;font-weight:900;margin:10px 0}
+        .mobile-action-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+        .mobile-action{min-height:92px;border:1px solid #edf0f4;border-radius:7px;background:#fff;text-decoration:none;color:#111827;display:grid;place-items:center;text-align:center;padding:12px 8px;box-shadow:0 4px 14px rgba(15,23,42,.04)}
+        .mobile-action i{color:var(--tenant-primary,#00A651);font-size:1.15rem;margin-bottom:8px}
+        .mobile-action span{display:block;font-size:.76rem;font-weight:750;line-height:1.25}
+        .mobile-feed{border:1px solid #edf0f4;border-radius:8px;background:#fff;overflow:hidden}
+        .mobile-feed-row{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid #f1f3f7;text-decoration:none;color:#111827}
+        .mobile-feed-row:last-child{border-bottom:0}
+        .mobile-feed-icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:#eefbf3;color:var(--tenant-primary,#00A651);flex:0 0 34px}
+        .mobile-feed-row strong{display:block;font-size:.8rem}
+        .mobile-feed-row span{display:block;font-size:.68rem;color:#667085;margin-top:2px}
+        .mobile-feed-row .bi-chevron-right{margin-left:auto;color:#98a2b3}
+    }
+</style>
+<style>
     .industry-panel { overflow:hidden; }
     .industry-panel .panel-body { padding:clamp(18px,2vw,26px); }
     .industry-command-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(360px,520px); gap:18px; align-items:start; }
@@ -158,6 +203,56 @@
         $industryModules = collect($industryDashboard['modules'] ?? []);
         $industryFeatures = collect($industryDashboard['dashboard_features'] ?? []);
     @endphp
+    <section class="mobile-app-home panel-card">
+        <div class="mobile-industry-banner">
+            <div>
+                <strong>{{ $industryDashboard['industry'] ?? $hero['kicker'] ?? 'Workspace' }}</strong>
+                <span>{{ $industryDashboard['sub_industry'] ?? 'Business operations' }}</span>
+            </div>
+            <i class="bi bi-grid-1x2-fill"></i>
+        </div>
+
+        <div class="mobile-tile-grid">
+            @foreach($mobileTiles as $tile)
+                <a class="mobile-money-tile {{ $tile['tone'] ?? '' }}" href="{{ Route::has('finance.index') ? route('finance.index') : '#' }}">
+                    <div>
+                        <strong>{{ $tile['value'] }}</strong>
+                        <span>{{ $tile['label'] }} @if(!empty($tile['hint']))({{ $tile['hint'] }})@endif</span>
+                    </div>
+                    <i class="bi {{ $tile['icon'] }}"></i>
+                </a>
+            @endforeach
+        </div>
+
+        <div class="mobile-section-title">Explore App</div>
+        <div class="mobile-action-grid">
+            @foreach($mobileQuickActions as $action)
+                <a class="mobile-action" href="{{ route($action['route'], $action['params'] ?? []) }}">
+                    <div>
+                        <i class="bi {{ $action['icon'] }}"></i>
+                        <span>{{ $action['label'] }}</span>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+
+        <div class="mobile-section-title">Recent Activity</div>
+        <div class="mobile-feed">
+            @forelse($recentInvoices->take(3) as $doc)
+                <a class="mobile-feed-row" href="{{ route('invoices.show', $doc) }}">
+                    <div class="mobile-feed-icon"><i class="bi bi-receipt"></i></div>
+                    <div><strong>{{ $doc->invoice_number }}</strong><span>{{ $doc->client->name }} - {{ number_format($doc->total, 2) }}</span></div>
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            @empty
+                <a class="mobile-feed-row" href="{{ route('invoices.create') }}">
+                    <div class="mobile-feed-icon"><i class="bi bi-plus-circle"></i></div>
+                    <div><strong>Create invoice</strong><span>No recent invoices yet</span></div>
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            @endforelse
+        </div>
+    </section>
     @if(!empty($industryDashboard))
         <section class="panel-card industry-panel dashboard-visibility-anchor mb-3">
             <div class="panel-body">
