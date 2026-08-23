@@ -2,6 +2,7 @@
 
 namespace App\Models\Concerns;
 
+use App\Models\Tenant;
 use App\Support\ActiveTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\Schema;
 trait BelongsToTenant
 {
     private static array $tenantScopeTableExists = [];
+
     private static array $tenantScopeColumnExists = [];
 
     protected static function bootBelongsToTenant(): void
@@ -24,6 +26,8 @@ trait BelongsToTenant
             $tenantId = ActiveTenant::id();
             if ($tenantId) {
                 $builder->where($table.'.tenant_id', $tenantId);
+            } elseif (auth()->check() && auth()->user()?->role !== 'super_admin') {
+                $builder->whereRaw('1 = 0');
             }
         });
 
@@ -37,7 +41,7 @@ trait BelongsToTenant
 
     public function tenant()
     {
-        return $this->belongsTo(\App\Models\Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     private static function scopeHasColumn(string $table, string $column): bool

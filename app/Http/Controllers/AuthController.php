@@ -8,6 +8,8 @@ use App\Models\SecuritySetting;
 use App\Models\User;
 use App\Services\IamService;
 use App\Services\OutgoingMailService;
+use App\Support\ActiveBusiness;
+use App\Support\ActiveTenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -20,10 +22,25 @@ class AuthController extends Controller
 {
     public function loginForm()
     {
-        return view('auth.login');
+        return view('auth.login', ['loginContext' => $this->loginContext()]);
     }
 
     public function login(Request $request)
+    {
+        return $this->attemptLogin($request, $this->loginContext());
+    }
+
+    public function ownerLogin(Request $request)
+    {
+        return $this->attemptLogin($request, 'owner');
+    }
+
+    public function portalLogin(Request $request)
+    {
+        return $this->attemptLogin($request, 'portal');
+    }
+
+    private function attemptLogin(Request $request, string $context)
     {
         $data = $request->validate([
             'username' => ['required', 'string'],
@@ -48,6 +65,15 @@ class AuthController extends Controller
             'is_active' => true,
         ], $request->boolean('remember'))) {
             $request->session()->regenerate();
+            $authenticated = Auth::user();
+            if (! $this->accountMatchesContext($authenticated, $context) || ! $this->establishLoginContext($authenticated, $context)) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors(['username' => $this->invalidContextMessage($context)])->onlyInput('username');
+            }
+
             $loginUpdates = collect([
                 'failed_login_attempts' => 0,
                 'locked_at' => null,
@@ -55,17 +81,13 @@ class AuthController extends Controller
                 'last_login_ip' => $request->ip(),
             ])->filter(fn ($value, $column) => Schema::hasColumn('users', $column))->all();
             if ($loginUpdates) {
-                $user->update($loginUpdates);
+                $authenticated->update($loginUpdates);
             }
             if (Schema::hasTable('login_activities')) {
-                app(IamService::class)->recordLogin($request, $user, true);
+                app(IamService::class)->recordLogin($request, $authenticated, true);
             }
 
-            return redirect()->intended(match (Auth::user()->role) {
-                'super_admin' => route('platform.dashboard'),
-                'client_portal' => route('portal.dashboard'),
-                default => route('dashboard'),
-            });
+            return redirect()->intended($this->landingRouteFor($authenticated));
         }
 
         if ($user && Schema::hasColumn('users', 'failed_login_attempts')) {
@@ -88,9 +110,10 @@ class AuthController extends Controller
     {
         abort_unless(Schema::hasTable('otp_codes'), 404);
 
+        $context = $this->loginContext($request);
         $data = $request->validate(['email' => ['required', 'email']]);
         $user = User::where('email', $data['email'])->where('is_active', true)->first();
-        if (! $user || (Schema::hasColumn('users', 'enable_otp_login') && ! $user->enable_otp_login)) {
+        if (! $user || ! $this->accountMatchesContext($user, $context) || (Schema::hasColumn('users', 'enable_otp_login') && ! $user->enable_otp_login)) {
             return back()->withErrors(['email' => 'OTP login is not available for this account.']);
         }
 
@@ -98,7 +121,7 @@ class AuthController extends Controller
         if (RateLimiter::tooManyAttempts($resendKey, 1)) {
             $seconds = RateLimiter::availableIn($resendKey);
 
-            return back()->with(['otp_sent' => true, 'otp_email' => $data['email'], 'otp_resend_at' => now()->addSeconds($seconds)->timestamp])
+            return back()->with(['otp_sent' => true, 'otp_email' => $data['email'], 'otp_context' => $context, 'otp_resend_at' => now()->addSeconds($seconds)->timestamp])
                 ->withErrors(['email' => "Please wait {$seconds} seconds before requesting another OTP."]);
         }
 
@@ -120,33 +143,42 @@ class AuthController extends Controller
 
         RateLimiter::hit($resendKey, 60);
 
-        return back()->with(['status' => 'OTP sent to '.$user->email.'. Check your inbox and spam folder.', 'otp_sent' => true, 'otp_email' => $user->email, 'otp_resend_at' => now()->addSeconds(60)->timestamp]);
+        return back()->with(['status' => 'OTP sent to '.$user->email.'. Check your inbox and spam folder.', 'otp_sent' => true, 'otp_email' => $user->email, 'otp_context' => $context, 'otp_resend_at' => now()->addSeconds(60)->timestamp]);
     }
 
     public function verifyOtp(Request $request)
     {
         abort_unless(Schema::hasTable('otp_codes'), 404);
 
+        $context = $this->loginContext($request);
         $data = $request->validate(['email' => ['required', 'email'], 'code' => ['required', 'digits:6']]);
         $otp = OtpCode::where('email', $data['email'])->where('code', $data['code'])->whereNull('used_at')->where('expires_at', '>', now())->latest()->first();
-        if (! $otp || ! $otp->user) {
+        if (! $otp || ! $otp->user || ! $this->accountMatchesContext($otp->user, $context)) {
             return back()->withErrors(['code' => 'Invalid or expired OTP.']);
         }
 
         $otp->update(['used_at' => now()]);
         Auth::login($otp->user);
         $request->session()->regenerate();
+        if (! $this->establishLoginContext($otp->user, $context)) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
-        return redirect()->intended($otp->user->role === 'client_portal' ? route('portal.dashboard') : route('dashboard'));
+            return redirect()->route($this->loginRouteFor($context))->withErrors(['username' => $this->invalidContextMessage($context)]);
+        }
+
+        return redirect()->intended($this->landingRouteFor($otp->user));
     }
 
     public function requestMagicLink(Request $request)
     {
         abort_unless(Schema::hasTable('login_tokens'), 404);
 
+        $context = $this->loginContext($request);
         $data = $request->validate(['email' => ['required', 'email']]);
         $user = User::where('email', $data['email'])->where('is_active', true)->first();
-        if (! $user || (Schema::hasColumn('users', 'enable_magic_link_login') && ! $user->enable_magic_link_login)) {
+        if (! $user || ! $this->accountMatchesContext($user, $context) || (Schema::hasColumn('users', 'enable_magic_link_login') && ! $user->enable_magic_link_login)) {
             return back()->withErrors(['email' => 'Magic link login is not available for this account.']);
         }
 
@@ -158,7 +190,7 @@ class AuthController extends Controller
         ]);
 
         try {
-            app(OutgoingMailService::class)->sendRaw($user->email, 'BAMA magic login link', 'Login here: '.route('login.magic.consume', $token->token));
+            app(OutgoingMailService::class)->sendRaw($user->email, 'BAMA magic login link', 'Login here: '.route('login.magic.consume', ['token' => $token->token, 'context' => $context]));
         } catch (\Throwable $e) {
             $token->delete();
             report($e);
@@ -173,12 +205,21 @@ class AuthController extends Controller
     {
         abort_unless(Schema::hasTable('login_tokens'), 404);
 
+        $context = $this->loginContext($request);
         $loginToken = LoginToken::where('token', $token)->whereNull('used_at')->where('expires_at', '>', now())->firstOrFail();
+        abort_unless($this->accountMatchesContext($loginToken->user, $context), 404);
         $loginToken->update(['used_at' => now()]);
         Auth::login($loginToken->user);
         $request->session()->regenerate();
+        if (! $this->establishLoginContext($loginToken->user, $context)) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
-        return redirect()->intended($loginToken->user->role === 'client_portal' ? route('portal.dashboard') : route('dashboard'));
+            return redirect()->route($this->loginRouteFor($context))->withErrors(['username' => $this->invalidContextMessage($context)]);
+        }
+
+        return redirect()->intended($this->landingRouteFor($loginToken->user));
     }
 
     public function logout(Request $request)
@@ -240,5 +281,92 @@ class AuthController extends Controller
     private function applyMailSettings(): void
     {
         app(OutgoingMailService::class)->apply();
+    }
+
+    private function accountMatchesContext(?User $user, string $context): bool
+    {
+        return match ($context) {
+            'owner' => $user?->role === 'super_admin',
+            'portal' => $user?->role === 'client_portal',
+            default => $user && ! in_array($user->role, ['super_admin', 'client_portal'], true),
+        };
+    }
+
+    private function establishLoginContext(User $user, string $context): bool
+    {
+        ActiveBusiness::clear();
+
+        if ($context === 'owner' || $context === 'portal') {
+            ActiveTenant::clear();
+
+            if (Schema::hasColumn('users', 'current_tenant_id') && $user->current_tenant_id) {
+                $user->forceFill(['current_tenant_id' => null])->saveQuietly();
+            }
+
+            return true;
+        }
+
+        $tenant = ActiveTenant::firstTenantFor($user);
+        if (! $tenant) {
+            return false;
+        }
+
+        ActiveTenant::switchTo($tenant);
+
+        return (bool) ActiveBusiness::current();
+    }
+
+    private function landingRouteFor(User $user): string
+    {
+        return match ($user->role) {
+            'super_admin' => route('platform.dashboard'),
+            'client_portal' => route('portal.dashboard'),
+            default => route('dashboard'),
+        };
+    }
+
+    private function loginContext(?Request $request = null): string
+    {
+        $request ??= request();
+
+        if ($request->routeIs('platform.*')) {
+            return 'owner';
+        }
+
+        if ($request->routeIs('portal.login*')) {
+            return 'portal';
+        }
+
+        if ($request->routeIs('login.magic.consume')) {
+            $context = $request->query('context');
+
+            return in_array($context, ['owner', 'portal', 'business'], true) ? $context : 'business';
+        }
+
+        if ($request->routeIs('login') || $request->routeIs('login.*')) {
+            return 'business';
+        }
+
+        $context = $request->input('login_context') ?: $request->query('context');
+
+        return in_array($context, ['owner', 'portal', 'business'], true) ? $context : 'business';
+    }
+
+    private function loginRouteFor(string $context): string
+    {
+        return match ($context) {
+            'owner' => 'platform.login',
+            'portal' => 'portal.login',
+            default => 'login',
+        };
+    }
+
+    private function invalidContextMessage(string $context): string
+    {
+        return match ($context) {
+            'owner' => 'Use a platform owner account on this login page.',
+            'portal' => 'Use a client portal account on this login page.',
+            default => 'Use a business workspace account on this login page.',
+        };
     }
 }

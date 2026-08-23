@@ -93,10 +93,19 @@ Route::post('/hospitality/menu/reserve', [HospitalityFrontController::class, 're
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
     Route::get('/owner/login', [AuthController::class, 'loginForm'])->name('platform.login');
+    Route::get('/portal/login', [AuthController::class, 'loginForm'])->name('portal.login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+    Route::post('/owner/login', [AuthController::class, 'ownerLogin'])->name('platform.login.store');
+    Route::post('/portal/login', [AuthController::class, 'portalLogin'])->name('portal.login.store');
     Route::post('/login/otp', [AuthController::class, 'requestOtp'])->name('login.otp.request');
+    Route::post('/owner/login/otp', [AuthController::class, 'requestOtp'])->name('platform.login.otp.request');
+    Route::post('/portal/login/otp', [AuthController::class, 'requestOtp'])->name('portal.login.otp.request');
     Route::post('/login/otp/verify', [AuthController::class, 'verifyOtp'])->name('login.otp.verify');
+    Route::post('/owner/login/otp/verify', [AuthController::class, 'verifyOtp'])->name('platform.login.otp.verify');
+    Route::post('/portal/login/otp/verify', [AuthController::class, 'verifyOtp'])->name('portal.login.otp.verify');
     Route::post('/login/magic', [AuthController::class, 'requestMagicLink'])->name('login.magic.request');
+    Route::post('/owner/login/magic', [AuthController::class, 'requestMagicLink'])->name('platform.login.magic.request');
+    Route::post('/portal/login/magic', [AuthController::class, 'requestMagicLink'])->name('portal.login.magic.request');
     Route::get('/login/magic/{token}', [AuthController::class, 'consumeMagicLink'])->name('login.magic.consume');
     Route::get('/forgot-password', [AuthController::class, 'forgotForm'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'forgot'])->name('password.email');

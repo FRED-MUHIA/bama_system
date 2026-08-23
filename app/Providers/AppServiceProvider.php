@@ -51,7 +51,7 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('layouts.app', function ($view) {
             $user = auth()->user();
-            $showAdminShell = $user && $user->role !== 'client_portal';
+            $showAdminShell = $user && ! in_array($user->role, ['client_portal', 'super_admin'], true);
             $activeTenant = $user ? ActiveTenant::current() : null;
             $activeBusiness = $showAdminShell ? ActiveBusiness::current() : null;
             $themeManager = app(ThemeManager::class);

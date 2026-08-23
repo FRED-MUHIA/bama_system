@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\ActiveBusiness;
+use App\Support\ActiveTenant;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -16,6 +18,9 @@ class EnsureAdminAccess
         if ($request->user()?->role === 'client_portal') {
             return redirect()->route('portal.dashboard');
         }
+
+        abort_unless(ActiveTenant::id(), 403, 'No organisation is assigned to this login.');
+        abort_unless(ActiveBusiness::id(), 403, 'No business workspace is assigned to this login.');
 
         return $next($request);
     }

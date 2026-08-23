@@ -3,6 +3,18 @@
 @section('content')
 @php($otpAvailable = \Illuminate\Support\Facades\Schema::hasTable('otp_codes'))
 @php($otpSent = (bool) session('otp_sent'))
+@php($loginContext = $loginContext ?? session('otp_context', 'business'))
+@php($loginActions = [
+    'password' => $loginContext === 'owner' ? route('platform.login.store') : ($loginContext === 'portal' ? route('portal.login.store') : route('login.store')),
+    'otpRequest' => $loginContext === 'owner' ? route('platform.login.otp.request') : ($loginContext === 'portal' ? route('portal.login.otp.request') : route('login.otp.request')),
+    'otpVerify' => $loginContext === 'owner' ? route('platform.login.otp.verify') : ($loginContext === 'portal' ? route('portal.login.otp.verify') : route('login.otp.verify')),
+    'magic' => $loginContext === 'owner' ? route('platform.login.magic.request') : ($loginContext === 'portal' ? route('portal.login.magic.request') : route('login.magic.request')),
+])
+@php($loginCopy = [
+    'owner' => ['label' => 'Platform owner access', 'title' => 'Owner console.', 'intro' => 'Sign in to manage tenants, clients, pricing, and platform controls.'],
+    'portal' => ['label' => 'Client portal access', 'title' => 'Client portal.', 'intro' => 'Sign in to view your invited projects, invoices, and documents.'],
+    'business' => ['label' => 'Identity & Access', 'title' => 'Welcome back.', 'intro' => 'Choose a secure sign-in method to continue to your workspace.'],
+][$loginContext] ?? ['label' => 'Identity & Access', 'title' => 'Welcome back.', 'intro' => 'Choose a secure sign-in method to continue to your workspace.'])
 
 <style>
     body:has(.login-stage) { padding-bottom: 0 !important; }
@@ -493,9 +505,9 @@
                 BAMA
             </div>
 
-            <div class="login-auth-label">Identity & Access</div>
-            <h2>Welcome back.</h2>
-            <p class="login-auth-intro">Choose a secure sign-in method to continue to your workspace.</p>
+            <div class="login-auth-label">{{ $loginCopy['label'] }}</div>
+            <h2>{{ $loginCopy['title'] }}</h2>
+            <p class="login-auth-intro">{{ $loginCopy['intro'] }}</p>
 
             <div class="login-card">
                 @if ($otpAvailable)
@@ -514,8 +526,9 @@
                         <div class="tab-pane fade {{ $otpSent ? '' : 'show active' }}" id="password-login">
                 @endif
 
-                <form method="post" action="{{ route('login.store') }}">
+                <form method="post" action="{{ $loginActions['password'] }}">
                     @csrf
+                    <input type="hidden" name="login_context" value="{{ $loginContext }}">
                     <div class="mb-3">
                         <label class="form-label">Username or email</label>
                         <input name="username" value="{{ old('username') }}" class="form-control" autocomplete="username" required autofocus>
@@ -545,8 +558,9 @@
                                     <strong>OTP sent</strong><br>
                                     <small>We sent a 6-digit code to {{ session('otp_email') }}.</small>
                                 </div>
-                                <form method="post" action="{{ route('login.otp.verify') }}">
+                                <form method="post" action="{{ $loginActions['otpVerify'] }}">
                                     @csrf
+                                    <input type="hidden" name="login_context" value="{{ $loginContext }}">
                                     <input type="hidden" name="email" value="{{ session('otp_email') }}">
                                     <div class="mb-3">
                                         <label class="form-label">Verification code</label>
@@ -556,15 +570,17 @@
                                 </form>
                                 <div class="text-center mt-3">
                                     <small class="text-muted d-block mb-2">Didn’t receive it? Check your spam folder.</small>
-                                    <form method="post" action="{{ route('login.otp.request') }}">
+                                    <form method="post" action="{{ $loginActions['otpRequest'] }}">
                                         @csrf
+                                        <input type="hidden" name="login_context" value="{{ $loginContext }}">
                                         <input type="hidden" name="email" value="{{ session('otp_email') }}">
                                         <button id="resend-otp" class="btn btn-link" disabled data-ready-at="{{ session('otp_resend_at') }}">Resend OTP in <span id="otp-countdown">60</span>s</button>
                                     </form>
                                 </div>
                             @else
-                                <form method="post" action="{{ route('login.otp.request') }}">
+                                <form method="post" action="{{ $loginActions['otpRequest'] }}">
                                     @csrf
+                                    <input type="hidden" name="login_context" value="{{ $loginContext }}">
                                     <div class="mb-3">
                                         <label class="form-label">Work email</label>
                                         <input class="form-control" name="email" type="email" value="{{ old('email') }}" required>
@@ -574,8 +590,9 @@
                             @endif
                         </div>
                         <div class="tab-pane fade" id="magic-login">
-                            <form method="post" action="{{ route('login.magic.request') }}">
+                            <form method="post" action="{{ $loginActions['magic'] }}">
                                 @csrf
+                                <input type="hidden" name="login_context" value="{{ $loginContext }}">
                                 <div class="mb-3">
                                     <label class="form-label">Work email</label>
                                     <input class="form-control" name="email" type="email" required>

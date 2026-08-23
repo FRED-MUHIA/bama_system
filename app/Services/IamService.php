@@ -17,7 +17,9 @@ use Illuminate\Support\Str;
 class IamService
 {
     private static array $bootstrappedBusinesses = [];
+
     private static array $permissionCache = [];
+
     private static ?bool $ready = null;
 
     public const PERMISSIONS = [
@@ -369,7 +371,7 @@ class IamService
             SecuritySetting::firstOrCreate(['business_id' => ActiveBusiness::id()]);
         }
 
-        if (auth()->check() && auth()->user()->role !== 'client_portal') {
+        if (auth()->check() && ! in_array(auth()->user()->role, ['client_portal', 'super_admin'], true)) {
             DB::table('business_user')->insertOrIgnore([
                 'business_id' => ActiveBusiness::id(),
                 'user_id' => auth()->id(),

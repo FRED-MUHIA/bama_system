@@ -3,7 +3,6 @@
 namespace App\Support;
 
 use App\Models\Business;
-use App\Support\ActiveTenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
@@ -14,24 +13,41 @@ class ActiveBusiness
     public const SESSION_KEY = 'active_business_id';
 
     private static ?Business $current = null;
+
     private static ?Business $default = null;
 
     public static function current(): ?Business
     {
+        $user = auth()->user();
+        if ($user && in_array($user->role, ['super_admin', 'client_portal'], true)) {
+            self::clear();
+
+            return null;
+        }
+
         $sessionId = Session::get(self::SESSION_KEY);
 
         if (self::$current && (! $sessionId || (int) $sessionId === (int) self::$current->id)) {
             return self::$current;
         }
 
-        $business = self::ensureDefaults();
-        $activeId = $sessionId ?: $business?->id;
         $accessibleIds = self::accessibleBusinessIds();
+
+        if ($accessibleIds !== null && $accessibleIds === []) {
+            Session::forget(self::SESSION_KEY);
+
+            return self::$current = null;
+        }
+
+        $business = $accessibleIds === null ? self::ensureDefaults() : null;
+        $activeId = $sessionId ?: ($accessibleIds[0] ?? $business?->id);
 
         if ($accessibleIds !== null && $activeId && ! in_array((int) $activeId, $accessibleIds, true)) {
             $activeId = $accessibleIds[0] ?? null;
             if ($activeId) {
                 Session::put(self::SESSION_KEY, $activeId);
+            } else {
+                Session::forget(self::SESSION_KEY);
             }
         }
 
@@ -58,15 +74,28 @@ class ActiveBusiness
         self::$current = $business;
     }
 
+    public static function clear(): void
+    {
+        Session::forget(self::SESSION_KEY);
+        self::$current = null;
+        self::$default = null;
+    }
+
     public static function ensureDefaults(): ?Business
     {
         if (self::$default) {
             return self::$default;
         }
 
-        if (! Business::withoutGlobalScopes()->exists()) {
-            Business::create(['tenant_id' => ActiveTenant::id(), 'name' => 'BAMA', 'slug' => 'bama']);
-            Business::create(['tenant_id' => ActiveTenant::id(), 'name' => 'BAMA INTERIORS', 'slug' => 'bama-interiors']);
+        $tenantId = ActiveTenant::id();
+        if (! $tenantId) {
+            return null;
+        }
+
+        $tenantBusinesses = Business::withoutGlobalScopes()->where('tenant_id', $tenantId);
+        if (! $tenantBusinesses->exists()) {
+            Business::create(['tenant_id' => $tenantId, 'name' => 'BAMA', 'slug' => self::slug('BAMA')]);
+            Business::create(['tenant_id' => $tenantId, 'name' => 'BAMA INTERIORS', 'slug' => self::slug('BAMA INTERIORS')]);
         }
 
         return self::$default = Business::where('is_active', true)->orderBy('id')->first();
@@ -94,6 +123,10 @@ class ActiveBusiness
             return null;
         }
 
+        if ($user->role === 'client_portal') {
+            return [];
+        }
+
         $ids = DB::table('business_user')
             ->where('user_id', $user->id)
             ->whereIn('status', ['Active', 'Pending Invitation'])
@@ -101,6 +134,6 @@ class ActiveBusiness
             ->map(fn ($id) => (int) $id)
             ->all();
 
-        return $ids ?: null;
+        return $ids;
     }
 }
