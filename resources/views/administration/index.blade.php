@@ -218,6 +218,8 @@
                             <tbody>
                             @foreach($users as $user)
                                 @php($membership = $memberships->get($user->id))
+                                @php($profileStatus = $membership?->status ?? $user->status)
+                                @php($canDeleteUser = auth()->id() !== $user->id && in_array($profileStatus, ['Pending Invitation', 'Suspended'], true))
                                 <tr>
                                     <td>
                                         {{ $user->name }}
@@ -231,13 +233,21 @@
                                             {{ $branchById->get($membership?->branch_id)?->name ?? 'No branch' }}
                                         </small>
                                     </td>
-                                    <td>{{ $membership?->status ?? $user->status }}</td>
+                                    <td>{{ $profileStatus }}</td>
                                     <td>{{ $user->devices->whereNull('revoked_at')->count() }}</td>
                                     <td>
                                         <div class="d-flex flex-wrap gap-1">
                                             <form method="post" action="{{ route('administration.users.unlock',$user) }}">@csrf<button class="btn btn-sm btn-outline-success">Unlock</button></form>
                                             <form method="post" action="{{ route('administration.users.force-reset',$user) }}">@csrf<button class="btn btn-sm btn-outline-warning">Reset</button></form>
                                             <form method="post" action="{{ route('administration.users.status',$user) }}">@csrf<input type="hidden" name="status" value="Suspended"><button class="btn btn-sm btn-outline-danger">Suspend</button></form>
+                                            @if($canDeleteUser)
+                                                <form method="post" action="{{ route('administration.users.destroy',$user) }}" onsubmit="return confirm({{ \Illuminate\Support\Js::from('Delete this user access from '.$profileName.'? This cannot be undone.') }})">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <input type="hidden" name="confirm_delete" value="1">
+                                                    <button class="btn btn-sm btn-danger">Delete</button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -523,23 +533,6 @@
         @endforeach
     </div>
 </div>
-
-@php($deletableUsers = $users->whereIn('status',['Pending Invitation','Suspended']))
-@if($deletableUsers->isNotEmpty())
-    <div class="card p-3 mt-3">
-        <h3 class="h6">Delete Setup Users</h3>
-        <p class="text-muted">Pending invitation and suspended accounts can be permanently deleted. Accounts linked to protected records will be retained.</p>
-        <div class="d-flex flex-wrap gap-2">
-            @foreach($deletableUsers as $user)
-                <form method="post" action="{{ route('administration.users.destroy',$user) }}" onsubmit="return confirm('Permanently delete this user and associated access records? This cannot be undone.')">
-                    @csrf @method('DELETE')
-                    <input type="hidden" name="confirm_delete" value="1">
-                    <button class="btn btn-sm btn-outline-danger">Delete {{ $user->name }}</button>
-                </form>
-            @endforeach
-        </div>
-    </div>
-@endif
 
 <style>
     .presence-dot{width:10px;height:10px;border-radius:50%;flex:0 0 10px}
