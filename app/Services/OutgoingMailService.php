@@ -74,15 +74,15 @@ class OutgoingMailService
             || str_contains($lower, 'invalidsecondfactor')
             || str_contains($lower, '534-5.7.9')
         ) {
-            return 'Gmail needs an App Password. Open your Gmail account security settings, turn on 2-Step Verification, create an App Password, then paste that App Password here. Do not use your normal Gmail password.';
+            return 'Gmail needs an App Password. Ask the system owner to set the Gmail App Password in the hidden server mail settings.';
         }
 
         if (str_contains($lower, 'yahoo') && (str_contains($lower, 'authenticate') || str_contains($lower, 'password') || str_contains($lower, '535'))) {
-            return 'Yahoo needs an App Password. Open your Yahoo account security settings, create a third-party App Password, then paste that App Password here. Do not use your normal Yahoo password.';
+            return 'Yahoo needs an App Password. Ask the system owner to set the Yahoo App Password in the hidden server mail settings.';
         }
 
         if (str_contains($lower, '535') || str_contains($lower, 'failed to authenticate')) {
-            return 'The email username or password is not accepted. Use the full email address as username. For Gmail or Yahoo, paste an App Password, not the normal email password.';
+            return 'The email username or hidden server password is not accepted. Check the username, then ask the system owner to confirm the server mail password.';
         }
 
         if (str_contains($lower, 'connection could not be established') || str_contains($lower, 'connection refused') || str_contains($lower, 'timed out')) {

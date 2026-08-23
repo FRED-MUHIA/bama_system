@@ -419,7 +419,7 @@
                 @endif
             </div>
             <div class="alert alert-info">
-                Use the sending mailbox email as the username. The password below is for that mailbox or app password, not the user's BAMA login password. For Gmail or Yahoo, create an app password in that email account and paste the app password here, not the normal Gmail/Yahoo password.
+                Clients do not enter an email password here. The system owner keeps the mail password hidden on the server. If the server uses Gmail or Yahoo, the owner should set an App Password in the server mail configuration.
                 <div class="mt-2 d-flex flex-wrap gap-2">
                     <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener" class="alert-link">Gmail app password help</a>
                     <a href="https://help.yahoo.com/kb/SLN15241.html" target="_blank" rel="noopener" class="alert-link">Yahoo app password help</a>
@@ -437,9 +437,9 @@
                 <div class="col-md-6"><label class="form-label">From name</label><input class="form-control" name="from_name" value="{{ $mailFromName }}" placeholder="{{ $profileName }}" required></div>
                 <div class="col-md-6"><label class="form-label">Username</label><input class="form-control" id="mail-username" name="username" value="{{ $mailUsername }}" placeholder="Same as from address" autocomplete="off"></div>
                 <div class="col-md-6">
-                    <label class="form-label">Mailbox password / App password</label>
-                    <input class="form-control" type="password" name="password" placeholder="{{ $mailSetting?->password ? 'Saved - leave blank to keep' : 'Paste mailbox or app password' }}" autocomplete="new-password">
-                    <div class="form-text">Use the sending email's mailbox password or provider app password, not your BAMA profile login password.</div>
+                    <label class="form-label">Password</label>
+                    <input class="form-control" value="Hidden on server" disabled>
+                    <div class="form-text">The email password is managed by the system owner in the server .env file.</div>
                 </div>
                 <div class="col-md-6"><label class="form-label">SMTP host</label><input class="form-control" id="mail-host" name="host" value="{{ old('host',$mailSetting?->host ?? 'mail.'.(parse_url(config('app.url'), PHP_URL_HOST) ?: 'yourdomain.com')) }}" required></div>
                 <div class="col-md-3"><label class="form-label">Port</label><input class="form-control" id="mail-port" type="number" name="port" value="{{ old('port',$mailSetting?->port ?? 465) }}" required></div>

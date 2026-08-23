@@ -22,6 +22,7 @@ class MailSetting extends Model
             return;
         }
 
+        $smtp = config('mail.mailers.smtp', []);
         $scheme = match ($this->scheme) {
             'ssl', 'smtps' => 'smtps',
             'tls', 'smtp' => 'smtp',
@@ -33,8 +34,8 @@ class MailSetting extends Model
             'mail.mailers.smtp.host' => $this->host,
             'mail.mailers.smtp.port' => $this->port,
             'mail.mailers.smtp.scheme' => $scheme,
-            'mail.mailers.smtp.username' => $this->username,
-            'mail.mailers.smtp.password' => $this->password,
+            'mail.mailers.smtp.username' => $this->username ?: ($smtp['username'] ?? null),
+            'mail.mailers.smtp.password' => ($smtp['password'] ?? null) ?: $this->password,
             'mail.from.address' => $this->from_address,
             'mail.from.name' => $this->from_name,
         ]);
