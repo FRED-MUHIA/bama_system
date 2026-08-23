@@ -26,7 +26,7 @@ class CostAccountingController extends Controller
             'departments' => Department::with(['manager', 'costCenters.children'])->orderBy('name')->get(),
             'costCenters' => CostCenter::with('department')->orderBy('name')->get(),
             'projects' => Project::orderBy('project_name')->get(),
-            'users' => User::where('is_active', true)->orderBy('name')->get(),
+            'users' => $this->activeBusinessUsers()->where('is_active', true)->orderBy('name')->get(),
             'industries' => array_keys(CostAccountingService::INDUSTRIES),
             'auditLogs' => AccountingAuditLog::latest('created_at')->limit(30)->get(),
             'budgetAlerts' => BudgetAlert::with('budget')->whereNull('acknowledged_at')->latest()->get(),
@@ -35,7 +35,7 @@ class CostAccountingController extends Controller
 
     public function storeDepartment(Request $request)
     {
-        $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'code' => ['required', 'string', 'max:50', Rule::unique('departments')->where('business_id', ActiveBusiness::id())], 'manager_id' => ['nullable', 'exists:users,id'], 'description' => ['nullable', 'string']]);
+        $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'code' => ['required', 'string', 'max:50', Rule::unique('departments')->where('business_id', ActiveBusiness::id())], 'manager_id' => ['nullable', $this->activeBusinessUserExistsRule()], 'description' => ['nullable', 'string']]);
         $department = Department::create($data + ['created_by' => auth()->id(), 'updated_by' => auth()->id()]);
         $this->accounting->audit('created', $department);
         return back()->with('status', 'Department created.');
@@ -44,7 +44,7 @@ class CostAccountingController extends Controller
     public function updateDepartment(Request $request, Department $department)
     {
         $old = $department->getAttributes();
-        $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'code' => ['required', 'string', 'max:50', Rule::unique('departments')->where('business_id', ActiveBusiness::id())->ignore($department)], 'manager_id' => ['nullable', 'exists:users,id'], 'description' => ['nullable', 'string']]);
+        $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'code' => ['required', 'string', 'max:50', Rule::unique('departments')->where('business_id', ActiveBusiness::id())->ignore($department)], 'manager_id' => ['nullable', $this->activeBusinessUserExistsRule()], 'description' => ['nullable', 'string']]);
         $department->update($data + ['updated_by' => auth()->id()]);
         $this->accounting->audit('updated', $department, $old);
         return back()->with('status', 'Department updated.');

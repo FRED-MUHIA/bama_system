@@ -479,27 +479,6 @@ class AdministrationController extends Controller
         }
 
         $data = $request->validate($rules);
-        $requiredSenderDomain = strtolower((string) config('mail.required_sender_domain'));
-
-        if ($requiredSenderDomain !== '') {
-            $fromDomain = strtolower(Str::after($data['from_address'], '@'));
-
-            if ($fromDomain !== $requiredSenderDomain) {
-                return back()
-                    ->withErrors(['from_address' => 'Use a '.$requiredSenderDomain.' sender email for this profile.'])
-                    ->withInput();
-            }
-
-            if ($useOwnSmtp && str_contains($data['username'] ?? '', '@')) {
-                $usernameDomain = strtolower(Str::after($data['username'], '@'));
-
-                if ($usernameDomain !== $requiredSenderDomain) {
-                    return back()
-                        ->withErrors(['username' => 'Use a '.$requiredSenderDomain.' mailbox login for this profile.'])
-                        ->withInput();
-                }
-            }
-        }
 
         if ($useOwnSmtp && blank($data['password'] ?? null) && blank($setting->password)) {
             return back()->withErrors(['password' => 'Enter the corporate mailbox password or app password once to connect this profile.'])->withInput();

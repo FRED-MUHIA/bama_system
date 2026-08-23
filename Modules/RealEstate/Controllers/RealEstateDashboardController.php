@@ -129,7 +129,7 @@ class RealEstateDashboardController extends Controller
             'documents' => RealEstateDocument::with('documentable', 'documentTemplate')->latest()->limit(75)->get(),
             'branches' => Branch::orderBy('name')->get(),
             'clients' => Client::orderBy('name')->limit(100)->get(),
-            'users' => User::where('is_active', true)->orderBy('name')->get(),
+            'users' => $this->activeBusinessUsers()->where('is_active', true)->orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'documentTemplates' => DocumentTemplate::where('is_active', true)->orderBy('name')->get(),
         ]);

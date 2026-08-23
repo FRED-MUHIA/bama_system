@@ -51,10 +51,6 @@ class OutgoingMailService
             throw new RuntimeException('Enable SMTP mail settings for this profile before emailing documents.');
         }
 
-        if ($requireProfileSender && $setting) {
-            $this->assertAllowedSenderDomain($setting->from_address);
-        }
-
         Mail::raw($body, function ($mail) use ($to, $subject, $configure, $setting, $ccRecipients) {
             $mail->to($to)->subject($subject);
 
@@ -89,21 +85,6 @@ class OutgoingMailService
             fn ($email) => trim((string) $email),
             $emails
         ))));
-    }
-
-    private function assertAllowedSenderDomain(string $email): void
-    {
-        $requiredDomain = strtolower((string) config('mail.required_sender_domain'));
-
-        if ($requiredDomain === '') {
-            return;
-        }
-
-        $senderDomain = strtolower(str($email)->after('@')->toString());
-
-        if ($senderDomain !== $requiredDomain) {
-            throw new RuntimeException("This profile is configured to send from {$senderDomain}. Use a {$requiredDomain} mailbox before emailing documents.");
-        }
     }
 
     public function userFacingError(Throwable $e): string

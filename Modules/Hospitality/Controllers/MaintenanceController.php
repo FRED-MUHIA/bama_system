@@ -18,7 +18,7 @@ class MaintenanceController extends Controller
             'section' => 'maintenance',
             'records' => MaintenanceRequest::with('room', 'assignedUser')->latest()->paginate(30),
             'rooms' => Room::orderBy('room_number')->get(),
-            'users' => User::orderBy('name')->get(),
+            'users' => $this->activeBusinessUsers()->orderBy('name')->get(),
             'categories' => MaintenanceRequest::CATEGORIES,
             'priorities' => MaintenanceRequest::PRIORITIES,
             'statuses' => MaintenanceRequest::STATUSES,
@@ -38,7 +38,7 @@ class MaintenanceController extends Controller
             'status' => ['required', Rule::in(MaintenanceRequest::STATUSES)],
             'title' => ['required', 'string', 'max:160'],
             'description' => ['nullable', 'string'],
-            'assigned_to' => ['nullable', 'exists:users,id'],
+            'assigned_to' => ['nullable', $this->activeBusinessUserExistsRule()],
         ]);
 
         MaintenanceRequest::create($data);

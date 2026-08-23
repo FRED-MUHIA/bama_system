@@ -9,6 +9,11 @@
         ?: config('app.name', 'BAMA');
     $mailSetting = \App\Models\MailSetting::withoutGlobalScopes()->where('business_id', $document->business_id)->where('enabled', true)->first();
     $usesOwnSmtp = filled($mailSetting?->username) && filled($mailSetting?->password);
+    $serverMailDomain = config('mail.mailers.smtp.local_domain') ?: (
+        str_contains((string) config('mail.from.address'), '@')
+            ? \Illuminate\Support\Str::after(config('mail.from.address'), '@')
+            : 'bama.co.ke'
+    );
 @endphp
 <div class="card"><div class="card-body">
     @unless($mailSetting)
@@ -18,7 +23,7 @@
         </div>
     @else
         <div class="alert alert-success">
-            Sending as {{ $mailSetting->from_name }} &lt;{{ $mailSetting->from_address }}&gt;{{ $usesOwnSmtp ? ' through its corporate mailbox' : ' through server mail' }}.
+            Sending as {{ $mailSetting->from_name }} &lt;{{ $mailSetting->from_address }}&gt; {{ $usesOwnSmtp ? 'through its saved mailbox' : 'via '.$serverMailDomain.' server mail' }}.
         </div>
     @endunless
     <form method="post" action="{{ route($type.'s.email.send', $document) }}">@csrf

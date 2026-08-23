@@ -79,7 +79,7 @@ class AgricultureDashboardController extends Controller
             'budgets' => BudgetLine::with('farm', 'field')->latest()->limit(30)->get(),
             'weatherRecords' => WeatherRecord::with('farm')->latest()->limit(30)->get(),
             'documents' => AgricultureDocument::with('farm', 'documentable', 'documentTemplate')->latest()->limit(50)->get(),
-            'users' => User::where('role', '!=', 'client_portal')->orderBy('name')->get(),
+            'users' => $this->activeBusinessUsers()->orderBy('name')->get(),
             'products' => Product::where('is_active', true)->orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'clients' => Client::orderBy('name')->limit(100)->get(),

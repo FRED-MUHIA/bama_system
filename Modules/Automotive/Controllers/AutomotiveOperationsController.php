@@ -108,7 +108,7 @@ class AutomotiveOperationsController extends Controller
         $booking = $service->create($request->validate([
             'client_id' => ['nullable', 'exists:clients,id'],
             'vehicle_id' => ['nullable', 'exists:automotive_vehicles,id'],
-            'service_advisor_id' => ['nullable', 'exists:users,id'],
+            'service_advisor_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'requested_service' => ['nullable', 'string', 'max:255'],
             'preferred_date' => ['nullable', 'date'],
             'preferred_time' => ['nullable', 'date_format:H:i'],
@@ -129,7 +129,7 @@ class AutomotiveOperationsController extends Controller
             'booking_id' => ['nullable', 'exists:automotive_service_bookings,id'],
             'client_id' => ['nullable', 'exists:clients,id'],
             'vehicle_id' => ['required', 'exists:automotive_vehicles,id'],
-            'service_advisor_id' => ['nullable', 'exists:users,id'],
+            'service_advisor_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'mileage' => ['nullable', 'integer', 'min:0'],
             'fuel_level' => ['nullable', 'string', 'max:80'],
             'customer_complaint' => ['nullable', 'string'],
@@ -161,8 +161,8 @@ class AutomotiveOperationsController extends Controller
             'vehicle_id' => ['required', 'exists:automotive_vehicles,id'],
             'booking_id' => ['nullable', 'exists:automotive_service_bookings,id'],
             'check_in_id' => ['nullable', 'exists:automotive_check_ins,id'],
-            'service_advisor_id' => ['nullable', 'exists:users,id'],
-            'technician_id' => ['nullable', 'exists:users,id'],
+            'service_advisor_id' => ['nullable', $this->activeBusinessUserExistsRule()],
+            'technician_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'workshop_bay_id' => ['nullable', 'exists:automotive_workshop_bays,id'],
             'mileage' => ['nullable', 'integer', 'min:0'],
             'customer_complaint' => ['nullable', 'string'],
@@ -189,7 +189,7 @@ class AutomotiveOperationsController extends Controller
         $gate->authorize('job_cards.assign');
         $service->addLabourTask($job, $request->validate([
             'labour_operation_id' => ['nullable', 'exists:automotive_labour_operations,id'],
-            'technician_id' => ['nullable', 'exists:users,id'],
+            'technician_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'description' => ['required', 'string', 'max:255'],
             'standard_hours' => ['nullable', 'numeric', 'min:0'],
             'billable_hours' => ['nullable', 'numeric', 'min:0'],
@@ -293,7 +293,10 @@ class AutomotiveOperationsController extends Controller
 
         return $this->view('Technicians', 'Technician assignment, workload, specialist skills, active jobs, and productivity visibility.', [
             'section' => 'technicians',
-            'technicians' => User::where('is_active', true)->orWhere('status', 'Active')->orderBy('name')->paginate(20),
+            'technicians' => $this->activeBusinessUsers()
+                ->where(fn ($query) => $query->where('is_active', true)->orWhere('status', 'Active'))
+                ->orderBy('name')
+                ->paginate(20),
         ]);
     }
 
@@ -314,7 +317,7 @@ class AutomotiveOperationsController extends Controller
         $bay = $workshop->bay($request->validate([
             'name' => ['required', 'string', 'max:120'],
             'type' => ['nullable', 'string', 'max:120'],
-            'assigned_technician_id' => ['nullable', 'exists:users,id'],
+            'assigned_technician_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'status' => ['nullable', 'string', 'max:80'],
         ]));
 
@@ -325,7 +328,7 @@ class AutomotiveOperationsController extends Controller
     {
         $gate->authorize('workshop.manage');
         $diagnostic = $workshop->diagnostic($job, $request->validate([
-            'technician_id' => ['nullable', 'exists:users,id'],
+            'technician_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'diagnostic_type' => ['nullable', 'string', 'max:120'],
             'fault_codes' => ['nullable', 'array'],
             'symptoms' => ['nullable', 'string'],
@@ -353,7 +356,7 @@ class AutomotiveOperationsController extends Controller
             'vehicle_id' => ['required', 'exists:automotive_vehicles,id'],
             'check_in_id' => ['nullable', 'exists:automotive_check_ins,id'],
             'job_card_id' => ['nullable', 'exists:automotive_job_cards,id'],
-            'technician_id' => ['nullable', 'exists:users,id'],
+            'technician_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'inspection_date' => ['nullable', 'date'],
             'status' => ['nullable', 'string', 'max:80'],
             'recommendations' => ['nullable', 'string'],
@@ -457,7 +460,7 @@ class AutomotiveOperationsController extends Controller
     {
         $gate->authorize('quality_control.manage');
         $qc = $quality->quality($job, $request->validate([
-            'inspector_id' => ['nullable', 'exists:users,id'],
+            'inspector_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'checklist' => ['nullable', 'array'],
             'result' => ['required', Rule::in(['Pass', 'Conditional Pass', 'Fail'])],
             'failure_reason' => ['nullable', 'string'],
@@ -471,7 +474,7 @@ class AutomotiveOperationsController extends Controller
     {
         $gate->authorize('quality_control.manage');
         $test = $quality->roadTest($job, $request->validate([
-            'tester_id' => ['nullable', 'exists:users,id'],
+            'tester_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'start_mileage' => ['nullable', 'integer', 'min:0'],
             'end_mileage' => ['nullable', 'integer', 'min:0'],
             'test_result' => ['required', Rule::in(['Passed', 'Failed', 'Not Required'])],
@@ -497,7 +500,7 @@ class AutomotiveOperationsController extends Controller
         $gate->authorize('job_cards.complete');
         $release = $quality->release($job, $request->validate([
             'invoice_id' => ['nullable', 'exists:invoices,id'],
-            'released_by' => ['nullable', 'exists:users,id'],
+            'released_by' => ['nullable', $this->activeBusinessUserExistsRule()],
             'final_mileage' => ['nullable', 'integer', 'min:0'],
             'payment_status' => ['nullable', 'string', 'max:80'],
             'customer_name' => ['nullable', 'string', 'max:255'],
@@ -551,7 +554,7 @@ class AutomotiveOperationsController extends Controller
     {
         $gate->authorize('warranty.manage');
         $comeback = $service->comeback($job, $request->validate([
-            'technician_id' => ['nullable', 'exists:users,id'],
+            'technician_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'complaint' => ['required', 'string'],
             'return_date' => ['nullable', 'date'],
             'cause' => ['nullable', 'string'],
@@ -580,7 +583,7 @@ class AutomotiveOperationsController extends Controller
         $gate->authorize('fleet.manage');
         $fleet = $service->create($request->validate([
             'client_id' => ['nullable', 'exists:clients,id'],
-            'fleet_manager_id' => ['nullable', 'exists:users,id'],
+            'fleet_manager_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'name' => ['required', 'string', 'max:255'],
             'service_rules' => ['nullable', 'array'],
             'credit_terms' => ['nullable', 'string', 'max:120'],
@@ -660,7 +663,7 @@ class AutomotiveOperationsController extends Controller
         $gate->authorize('vehicle_sales.manage');
         $sale = VehicleSale::create($request->validate([
             'client_id' => ['nullable', 'exists:clients,id'],
-            'salesperson_id' => ['nullable', 'exists:users,id'],
+            'salesperson_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'vin' => ['nullable', 'string', 'max:120'],
             'registration_number' => ['nullable', 'string', 'max:80'],
             'make' => ['nullable', 'string', 'max:120'],
@@ -747,7 +750,7 @@ class AutomotiveOperationsController extends Controller
             'client_id' => ['nullable', 'exists:clients,id'],
             'vehicle_id' => ['nullable', 'exists:automotive_vehicles,id'],
             'job_card_id' => ['nullable', 'exists:automotive_job_cards,id'],
-            'assigned_employee_id' => ['nullable', 'exists:users,id'],
+            'assigned_employee_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'category' => ['nullable', 'string', 'max:120'],
             'description' => ['required', 'string'],
             'priority' => ['nullable', 'string', 'max:80'],
@@ -796,7 +799,11 @@ class AutomotiveOperationsController extends Controller
             'bookingsList' => ServiceBooking::latest()->limit(100)->get(),
             'checkInsList' => CheckIn::latest()->limit(100)->get(),
             'jobsList' => JobCard::with('vehicle')->latest()->limit(120)->get(),
-            'users' => User::where('is_active', true)->orWhere('status', 'Active')->orderBy('name')->limit(200)->get(),
+            'users' => $this->activeBusinessUsers()
+                ->where(fn ($query) => $query->where('is_active', true)->orWhere('status', 'Active'))
+                ->orderBy('name')
+                ->limit(200)
+                ->get(),
             'partsList' => Part::latest()->limit(200)->get(),
             'baysList' => WorkshopBay::latest()->limit(100)->get(),
             'labourOperations' => LabourOperation::latest()->limit(100)->get(),

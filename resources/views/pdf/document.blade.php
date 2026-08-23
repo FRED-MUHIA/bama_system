@@ -49,6 +49,7 @@
         default => $document->payment_status,
     };
     $logoPath = $settings?->logoFilePath();
+    $initials = \Illuminate\Support\Str::of($companyName)->explode(' ')->filter()->take(2)->map(fn ($word) => \Illuminate\Support\Str::substr($word, 0, 1))->implode('') ?: 'BA';
     $signaturePath = $signatory?->signatureFilePath();
     $stampPath = $signatory?->stampFilePath();
     $isAllocationInvoice = $type === 'Invoice' && $document->isAllocationInvoice();
@@ -59,23 +60,31 @@
 <head>
     <meta charset="utf-8">
     <style>
-        @page { margin: 22px 24px 28px; }
+        @page { margin: 24px 28px 30px; }
         body { font-family: DejaVu Sans, sans-serif; color:#101828; font-size:9.5px; line-height:1.35; }
-        .sheet { border:1px solid #d9e1ec; border-radius:7px; overflow:hidden; }
-        .top-bar { height:7px; background:{{ $primaryColor }}; }
-        .inner { padding:22px; }
+        .sheet { border:1px solid #d9e1ec; }
+        .top-bar { width:100%; height:8px; border-collapse:collapse; }
+        .top-bar td { padding:0; }
+        .top-primary { width:68%; background:{{ $primaryColor }}; }
+        .top-secondary { width:22%; background:{{ $secondaryColor }}; }
+        .top-accent { width:10%; background:{{ $accentColor }}; }
+        .inner { padding:22px 24px 24px; }
         table { width:100%; border-collapse:collapse; }
-        .head { margin-bottom:18px; }
-        .brand-cell { width:66%; vertical-align:top; }
-        .meta-cell { width:34%; vertical-align:top; text-align:right; }
+        .letterhead { margin-bottom:20px; padding-bottom:13px; border-bottom:2px solid #111827; }
+        .brand-cell { width:68%; vertical-align:top; }
+        .meta-cell { width:32%; vertical-align:top; text-align:right; }
         .brand-table td { vertical-align:top; }
-        .logo-cell { width:48px; }
-        .logo { width:42px; max-height:42px; object-fit:contain; }
-        .logo-fallback { width:42px; height:42px; border-radius:21px; background:{{ $primaryColor }}; color:#fff; text-align:center; line-height:42px; font-weight:bold; }
-        .company h2 { margin:0 0 2px; font-size:15px; color:#111827; }
-        .company div { color:#344054; }
-        .doc-type { color:{{ $primaryColor }}; font-size:8px; font-weight:bold; letter-spacing:1.5px; text-transform:uppercase; }
-        .doc-number { font-size:10px; font-weight:bold; color:#111827; margin-bottom:3px; }
+        .logo-cell { width:74px; }
+        .logo-frame { width:60px; height:60px; border:1px solid #d0d7e2; background:#fff; text-align:center; vertical-align:middle; }
+        .logo { max-width:52px; max-height:52px; object-fit:contain; margin-top:4px; }
+        .logo-fallback { width:60px; height:60px; background:{{ $primaryColor }}; color:#fff; text-align:center; line-height:60px; font-size:14px; font-weight:bold; }
+        .company h2 { margin:0 0 3px; font-size:18px; color:#111827; line-height:1.1; text-transform:uppercase; }
+        .company-subtitle { color:{{ $primaryColor }}; font-size:9px; font-weight:bold; letter-spacing:.9px; text-transform:uppercase; margin-bottom:7px; }
+        .company-detail { color:#344054; font-size:9px; line-height:1.45; }
+        .doc-type { display:inline-block; color:#fff; background:{{ $primaryColor }}; font-size:8px; font-weight:bold; letter-spacing:1.4px; text-transform:uppercase; padding:5px 8px; margin-bottom:7px; }
+        .doc-number { font-size:13px; font-weight:bold; color:#111827; margin-bottom:6px; }
+        .meta-line { color:#344054; font-size:9px; line-height:1.45; }
+        .meta-line strong { color:#111827; }
         .box-table { margin-bottom:16px; }
         .box { border:1px solid #dbe4ef; background:#f9fbfd; border-radius:7px; padding:12px; min-height:118px; vertical-align:top; }
         .gap { width:14px; }
@@ -109,27 +118,34 @@
 </head>
 <body>
 <div class="sheet">
-    <div class="top-bar"></div>
+    <table class="top-bar"><tr><td class="top-primary"></td><td class="top-secondary"></td><td class="top-accent"></td></tr></table>
     <div class="inner">
-        <table class="head">
+        <table class="letterhead">
             <tr>
                 <td class="brand-cell">
                     <table class="brand-table">
                         <tr>
                             <td class="logo-cell">
-                                @if($logoPath)
-                                    <img class="logo" src="{{ $logoPath }}">
-                                @else
-                                    <div class="logo-fallback">BA</div>
-                                @endif
+                                <div class="logo-frame">
+                                    @if($logoPath)
+                                        <img class="logo" src="{{ $logoPath }}">
+                                    @else
+                                        <div class="logo-fallback">{{ strtoupper($initials) }}</div>
+                                    @endif
+                                </div>
                             </td>
                             <td class="company">
                                 <h2>{{ $companyName }}</h2>
-                                <div>{{ $companySubtitle }}</div>
-                                @if($issuerProfile['phone'] ?? $settings?->phone)<div>{{ $issuerProfile['phone'] ?? $settings?->phone }}</div>@endif
-                                @if($issuerProfile['email'] ?? $settings?->email)<div>{{ $issuerProfile['email'] ?? $settings?->email }}</div>@endif
-                                @if($issuerProfile['address'] ?? $settings?->address)<div>{{ $issuerProfile['address'] ?? $settings?->address }}</div>@endif
-                                @if($settings?->location)<div>{{ $settings->location }}</div>@endif
+                                <div class="company-subtitle">{{ $companySubtitle }}</div>
+                                @if($issuerProfile['address'] ?? $settings?->address)<div class="company-detail">{{ $issuerProfile['address'] ?? $settings?->address }}</div>@endif
+                                @if($settings?->location)<div class="company-detail">{{ $settings->location }}</div>@endif
+                                @if(($issuerProfile['phone'] ?? $settings?->phone) || ($issuerProfile['email'] ?? $settings?->email))
+                                    <div class="company-detail">
+                                        @if($issuerProfile['phone'] ?? $settings?->phone){{ $issuerProfile['phone'] ?? $settings?->phone }}@endif
+                                        @if(($issuerProfile['phone'] ?? $settings?->phone) && ($issuerProfile['email'] ?? $settings?->email)) | @endif
+                                        @if($issuerProfile['email'] ?? $settings?->email){{ $issuerProfile['email'] ?? $settings?->email }}@endif
+                                    </div>
+                                @endif
                             </td>
                         </tr>
                     </table>
@@ -137,8 +153,8 @@
                 <td class="meta-cell">
                     <div class="doc-type">{{ $title }}</div>
                     <div class="doc-number">{{ $number }}</div>
-                    <div>Date: {{ $date?->format('M d, Y') ?: '-' }}</div>
-                    <div>{{ $secondaryDateLabel }}: {{ $secondaryDate }}</div>
+                    <div class="meta-line"><strong>Date:</strong> {{ $date?->format('M d, Y') ?: '-' }}</div>
+                    <div class="meta-line"><strong>{{ $secondaryDateLabel }}:</strong> {{ $secondaryDate }}</div>
                 </td>
             </tr>
         </table>

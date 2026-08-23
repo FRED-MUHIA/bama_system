@@ -124,12 +124,6 @@ class InvoiceController extends Controller
 
     public function emailForm(Invoice $invoice)
     {
-        if ($this->invoiceAlreadyEmailed($invoice)) {
-            return redirect()
-                ->route('invoices.show', $invoice)
-                ->with('warning', 'This invoice has already been emailed.');
-        }
-
         return view('documents.email', ['document' => $invoice->load('client'), 'type' => 'invoice']);
     }
 
@@ -166,12 +160,6 @@ class InvoiceController extends Controller
 
     public function sendEmail(Request $request, Invoice $invoice)
     {
-        if ($this->invoiceAlreadyEmailed($invoice)) {
-            return redirect()
-                ->route('invoices.show', $invoice)
-                ->with('warning', 'This invoice has already been emailed.');
-        }
-
         $data = $request->validate([
             'to' => ['required', 'email'],
             'cc' => ['nullable', 'string', 'max:2000'],
@@ -200,12 +188,6 @@ class InvoiceController extends Controller
 
             return back()->withErrors(['email' => 'Email failed: '.$this->outgoingMail->userFacingError($e)]);
         }
-    }
-
-    private function invoiceAlreadyEmailed(Invoice $invoice): bool
-    {
-        return filled($invoice->sent_at)
-            || $invoice->emailLogs()->where('status', 'sent')->exists();
     }
 
     public function recordPayment(Request $request, Invoice $invoice)

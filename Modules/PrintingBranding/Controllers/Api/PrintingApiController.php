@@ -45,7 +45,7 @@ class PrintingApiController extends Controller
         return response()->json(['data' => $waste->record($request->validate([
             'job_id' => ['nullable', 'exists:printing_jobs,id'],
             'material_id' => ['nullable', 'exists:printing_materials,id'],
-            'employee_id' => ['nullable', 'exists:users,id'],
+            'employee_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'machine_id' => ['nullable', 'exists:printing_machines,id'],
             'waste_type' => ['required', 'string', 'max:120'],
             'quantity' => ['required', 'numeric', 'min:0'],

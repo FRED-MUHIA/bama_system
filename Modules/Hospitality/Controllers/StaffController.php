@@ -41,7 +41,7 @@ class StaffController extends Controller
         return view('hospitality.index', [
             'title' => 'Staff',
             'section' => 'staff',
-            'records' => User::where('role', '!=', 'client_portal')->orderBy('name')->paginate(30),
+            'records' => $this->activeBusinessUsers()->orderBy('name')->paginate(30),
             'roles' => Schema::hasTable('iam_roles') ? IamRole::where('business_id', ActiveBusiness::id())->orderBy('name')->get() : collect(),
             'memberships' => Schema::hasTable('business_user') ? DB::table('business_user')->where('business_id', ActiveBusiness::id())->get()->keyBy('user_id') : collect(),
             'titles' => self::TITLES,
@@ -97,6 +97,8 @@ class StaffController extends Controller
 
     public function update(Request $request, User $staff)
     {
+        $this->abortUnlessActiveBusinessUser($staff);
+
         $data = $request->validate([
             'job_title' => ['required', 'string', 'max:255'],
             'iam_role_id' => ['required', Rule::exists('iam_roles', 'id')->where('business_id', ActiveBusiness::id())],

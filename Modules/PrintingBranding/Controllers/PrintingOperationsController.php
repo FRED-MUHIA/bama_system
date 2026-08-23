@@ -241,7 +241,7 @@ class PrintingOperationsController extends Controller
             'section' => 'artwork',
             'artworks' => Artwork::with('client', 'job', 'designer')->latest()->paginate(20),
             'jobs' => ProductionJob::with('client')->latest()->limit(100)->get(),
-            'designers' => User::where('role', '!=', 'client_portal')->orderBy('name')->get(),
+            'designers' => $this->activeBusinessUsers()->orderBy('name')->get(),
         ]);
     }
 
@@ -250,7 +250,7 @@ class PrintingOperationsController extends Controller
         $gate->authorize('artwork.manage');
         $data = $request->validate([
             'job_id' => ['required', 'exists:printing_jobs,id'],
-            'designer_id' => ['nullable', 'exists:users,id'],
+            'designer_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'file' => ['nullable', 'file', 'max:10240'],
             'revision_notes' => ['nullable', 'string'],
             'status' => ['nullable', 'string', 'max:80'],
@@ -295,7 +295,7 @@ class PrintingOperationsController extends Controller
             'operations' => ProductionOperation::with('job')->latest()->paginate(20),
             'jobs' => ProductionJob::latest()->limit(100)->get(),
             'machines' => Machine::orderBy('name')->get(),
-            'staff' => User::where('role', '!=', 'client_portal')->orderBy('name')->get(),
+            'staff' => $this->activeBusinessUsers()->orderBy('name')->get(),
         ]);
     }
 
@@ -304,7 +304,7 @@ class PrintingOperationsController extends Controller
         $gate->authorize('production.execute');
         $data = $request->validate([
             'job_id' => ['required', 'exists:printing_jobs,id'],
-            'operator_id' => ['nullable', 'exists:users,id'],
+            'operator_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'machine_id' => ['nullable', 'exists:printing_machines,id'],
             'stage' => ['required', 'string', 'max:120'],
             'quantity_produced' => ['nullable', 'numeric', 'min:0'],
@@ -389,7 +389,7 @@ class PrintingOperationsController extends Controller
             'schedules' => ProductionSchedule::with('job')->latest()->paginate(20),
             'jobs' => ProductionJob::latest()->limit(100)->get(),
             'machines' => Machine::orderBy('name')->get(),
-            'staff' => User::where('role', '!=', 'client_portal')->orderBy('name')->get(),
+            'staff' => $this->activeBusinessUsers()->orderBy('name')->get(),
         ]);
     }
 
@@ -399,7 +399,7 @@ class PrintingOperationsController extends Controller
         $data = $request->validate([
             'job_id' => ['required', 'exists:printing_jobs,id'],
             'machine_id' => ['nullable', 'exists:printing_machines,id'],
-            'staff_id' => ['nullable', 'exists:users,id'],
+            'staff_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'starts_at' => ['required', 'date'],
             'ends_at' => ['required', 'date', 'after:starts_at'],
             'view_type' => ['nullable', 'string', 'max:80'],
@@ -419,7 +419,7 @@ class PrintingOperationsController extends Controller
         return $this->view('Machines', 'Machine registry, status, capacity, cost per hour, and maintenance.', [
             'section' => 'machines',
             'machines' => Machine::with('maintenance')->latest()->paginate(20),
-            'technicians' => User::where('role', '!=', 'client_portal')->orderBy('name')->get(),
+            'technicians' => $this->activeBusinessUsers()->orderBy('name')->get(),
         ]);
     }
 
@@ -446,7 +446,7 @@ class PrintingOperationsController extends Controller
     {
         $gate->authorize('machines.manage');
         $data = $request->validate([
-            'technician_id' => ['nullable', 'exists:users,id'],
+            'technician_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'maintenance_type' => ['required', 'string', 'max:120'],
             'service_date' => ['required', 'date'],
             'cost' => ['nullable', 'numeric', 'min:0'],
@@ -468,7 +468,7 @@ class PrintingOperationsController extends Controller
         if ($request->isMethod('post')) {
             $data = $request->validate([
                 'job_id' => ['required', 'exists:printing_jobs,id'],
-                'inspector_id' => ['nullable', 'exists:users,id'],
+                'inspector_id' => ['nullable', $this->activeBusinessUserExistsRule()],
                 'checkpoints' => ['nullable', 'array'],
                 'result' => ['required', 'in:Pass,Conditional Pass,Reject,Reprint Required'],
                 'notes' => ['nullable', 'string'],
@@ -487,7 +487,7 @@ class PrintingOperationsController extends Controller
             'section' => 'quality',
             'checks' => QualityCheck::with('job')->latest()->paginate(20),
             'jobs' => ProductionJob::latest()->limit(100)->get(),
-            'inspectors' => User::where('role', '!=', 'client_portal')->orderBy('name')->get(),
+            'inspectors' => $this->activeBusinessUsers()->orderBy('name')->get(),
         ]);
     }
 
@@ -499,7 +499,7 @@ class PrintingOperationsController extends Controller
             $service->record($this->withoutNullValues($request->validate([
                 'job_id' => ['nullable', 'exists:printing_jobs,id'],
                 'material_id' => ['nullable', 'exists:printing_materials,id'],
-                'employee_id' => ['nullable', 'exists:users,id'],
+                'employee_id' => ['nullable', $this->activeBusinessUserExistsRule()],
                 'machine_id' => ['nullable', 'exists:printing_machines,id'],
                 'waste_type' => ['required', 'string', 'max:120'],
                 'quantity' => ['required', 'numeric', 'min:0'],
@@ -516,7 +516,7 @@ class PrintingOperationsController extends Controller
             'jobs' => ProductionJob::latest()->limit(100)->get(),
             'materials' => Material::orderBy('name')->get(),
             'machines' => Machine::orderBy('name')->get(),
-            'employees' => User::where('role', '!=', 'client_portal')->orderBy('name')->get(),
+            'employees' => $this->activeBusinessUsers()->orderBy('name')->get(),
         ]);
     }
 
@@ -528,7 +528,7 @@ class PrintingOperationsController extends Controller
             'section' => 'dispatch',
             'dispatches' => Dispatch::with('job')->latest()->paginate(20),
             'jobs' => ProductionJob::with('client')->latest()->limit(100)->get(),
-            'drivers' => User::where('role', '!=', 'client_portal')->orderBy('name')->get(),
+            'drivers' => $this->activeBusinessUsers()->orderBy('name')->get(),
         ]);
     }
 
@@ -537,7 +537,7 @@ class PrintingOperationsController extends Controller
         $gate->authorize('dispatch.manage');
         $data = $request->validate([
             'job_id' => ['required', 'exists:printing_jobs,id'],
-            'driver_id' => ['nullable', 'exists:users,id'],
+            'driver_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'status' => ['nullable', 'string', 'max:80'],
             'delivery_address' => ['nullable', 'string'],
             'vehicle' => ['nullable', 'string', 'max:120'],

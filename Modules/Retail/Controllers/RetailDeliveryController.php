@@ -3,7 +3,6 @@
 namespace Modules\Retail\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Modules\Retail\Models\RetailDelivery;
 use Modules\Retail\Models\RetailOrder;
@@ -19,7 +18,7 @@ class RetailDeliveryController extends Controller
             'section' => 'deliveries',
             'records' => RetailDelivery::with('order.client', 'driver')->latest()->paginate(20),
             'orders' => RetailOrder::orderByDesc('id')->limit(50)->get(),
-            'drivers' => User::orderBy('name')->get(),
+            'drivers' => $this->activeBusinessUsers()->orderBy('name')->get(),
         ]);
     }
 

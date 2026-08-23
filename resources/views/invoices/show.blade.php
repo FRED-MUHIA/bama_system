@@ -8,10 +8,9 @@
 <div class="d-flex gap-2 flex-wrap justify-content-end mb-3">
     @unless($invoice->isPartPayment())<a class="btn btn-outline-dark" href="{{ route('invoices.edit',$invoice) }}"><i class="bi bi-pencil"></i> Edit</a>@endunless
     <a class="btn btn-outline-warning" href="{{ route('invoices.download',$invoice) }}"><i class="bi bi-download"></i> PDF</a>
+    <a class="btn btn-outline-primary" href="{{ route('invoices.email',$invoice) }}"><i class="bi bi-envelope"></i> {{ $invoiceWasEmailed ? 'Email again' : 'Email' }}</a>
     @if($invoiceWasEmailed)
         <span class="btn btn-outline-success disabled"><i class="bi bi-envelope-check"></i> Email sent</span>
-    @else
-        <a class="btn btn-outline-primary" href="{{ route('invoices.email',$invoice) }}"><i class="bi bi-envelope"></i> Email</a>
     @endif
     @if(\Illuminate\Support\Facades\Schema::hasTable('letters'))<a class="btn btn-outline-warning" href="{{ route('letters.from-invoice',$invoice) }}"><i class="bi bi-envelope-paper"></i> Balance Letter</a>@endif
     <a class="btn btn-warning" href="{{ $publicLink }}" target="_blank"><i class="bi bi-link-45deg"></i> Open Link</a>

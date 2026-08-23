@@ -70,11 +70,22 @@ class RetailValidationRules
     {
         return [
             'retail_order_id' => ['required', Rule::exists('retail_orders', 'id')->where('business_id', ActiveBusiness::id())],
-            'driver_id' => ['nullable', Rule::exists('users', 'id')],
+            'driver_id' => ['nullable', self::activeBusinessUserRule()],
             'status' => ['required', Rule::in(RetailDelivery::STATUSES)],
             'scheduled_at' => ['nullable', 'date'],
             'delivery_address' => ['required', 'string'],
             'tracking_number' => ['nullable', 'string', 'max:255'],
         ];
+    }
+
+    private static function activeBusinessUserRule()
+    {
+        return Rule::exists('users', 'id')
+            ->where(fn ($query) => $query->whereIn('id', function ($subquery) {
+                $subquery->select('user_id')
+                    ->from('business_user')
+                    ->where('business_id', ActiveBusiness::id())
+                    ->whereIn('status', ['Active', 'Pending Invitation']);
+            }));
     }
 }

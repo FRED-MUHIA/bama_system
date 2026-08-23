@@ -26,7 +26,6 @@ class MailSetting extends Model
 
         if (! $usesOwnSmtp) {
             config([
-                'mail.default' => 'sendmail',
                 'mail.from.address' => $this->from_address,
                 'mail.from.name' => $this->from_name,
             ]);

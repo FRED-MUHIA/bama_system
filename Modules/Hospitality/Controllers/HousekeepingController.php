@@ -18,7 +18,7 @@ class HousekeepingController extends Controller
             'section' => 'housekeeping',
             'records' => HousekeepingTask::with('room', 'assignedUser')->latest()->paginate(30),
             'rooms' => Room::orderBy('room_number')->get(),
-            'users' => User::orderBy('name')->get(),
+            'users' => $this->activeBusinessUsers()->orderBy('name')->get(),
             'types' => HousekeepingTask::TYPES,
             'statuses' => HousekeepingTask::STATUSES,
             'completionStats' => [
@@ -34,7 +34,7 @@ class HousekeepingController extends Controller
             'room_id' => ['nullable', 'exists:hospitality_rooms,id'],
             'task_type' => ['required', Rule::in(HousekeepingTask::TYPES)],
             'status' => ['required', Rule::in(HousekeepingTask::STATUSES)],
-            'assigned_to' => ['nullable', 'exists:users,id'],
+            'assigned_to' => ['nullable', $this->activeBusinessUserExistsRule()],
             'notes' => ['nullable', 'string'],
         ]);
 

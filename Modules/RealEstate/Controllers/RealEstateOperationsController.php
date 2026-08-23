@@ -105,7 +105,7 @@ class RealEstateOperationsController extends Controller
     {
         $service->createAgent($request->validate([
             'branch_id' => ['nullable', Rule::exists('branches', 'id')->where('business_id', ActiveBusiness::id())],
-            'user_id' => ['nullable', 'exists:users,id'],
+            'user_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'agent_number' => ['nullable', 'string', 'max:50'],
             'name' => ['required', 'string', 'max:255'],
             'license_number' => ['nullable', 'string', 'max:100'],
@@ -305,7 +305,7 @@ class RealEstateOperationsController extends Controller
             'real_estate_property_id' => ['required', Rule::exists('real_estate_properties', 'id')->where('business_id', ActiveBusiness::id())],
             'real_estate_unit_id' => ['nullable', Rule::exists('real_estate_units', 'id')->where('business_id', ActiveBusiness::id())],
             'real_estate_tenant_id' => ['nullable', Rule::exists('real_estate_tenants', 'id')->where('business_id', ActiveBusiness::id())],
-            'technician_id' => ['nullable', 'exists:users,id'],
+            'technician_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'supplier_id' => ['nullable', Rule::exists('suppliers', 'id')->where('business_id', ActiveBusiness::id())],
             'maintenance_type' => ['required', 'in:Preventive,Corrective,Emergency'],
             'category' => ['nullable', 'string', 'max:100'],
@@ -325,7 +325,7 @@ class RealEstateOperationsController extends Controller
             'real_estate_tenant_id' => ['nullable', Rule::exists('real_estate_tenants', 'id')->where('business_id', ActiveBusiness::id())],
             'real_estate_property_id' => ['nullable', Rule::exists('real_estate_properties', 'id')->where('business_id', ActiveBusiness::id())],
             'real_estate_unit_id' => ['nullable', Rule::exists('real_estate_units', 'id')->where('business_id', ActiveBusiness::id())],
-            'assigned_to' => ['nullable', 'exists:users,id'],
+            'assigned_to' => ['nullable', $this->activeBusinessUserExistsRule()],
             'request_type' => ['required', 'in:Plumbing Issues,Electrical Issues,Security Issues,Cleaning Requests,Repairs'],
             'description' => ['required', 'string'],
             'status' => ['required', 'in:Open,Assigned,In Progress,Resolved,Closed'],
@@ -570,9 +570,9 @@ class RealEstateOperationsController extends Controller
     private function simpleRules(Request $request, string $type): array
     {
         return match ($type) {
-            'inspection' => $request->validate(['real_estate_property_id' => ['required', Rule::exists('real_estate_properties', 'id')->where('business_id', ActiveBusiness::id())], 'real_estate_unit_id' => ['nullable', Rule::exists('real_estate_units', 'id')->where('business_id', ActiveBusiness::id())], 'inspector_id' => ['nullable', 'exists:users,id'], 'inspection_type' => ['required', 'in:Move In Inspection,Move Out Inspection,Routine Inspection,Maintenance Inspection,Valuation Inspection'], 'inspection_date' => ['required', 'date'], 'findings' => ['nullable', 'string'], 'recommendations' => ['nullable', 'string'], 'photos' => ['nullable', 'string'], 'status' => ['required', 'in:Draft,Completed,Approved']]),
-            'service-request' => $request->validate(['real_estate_tenant_id' => ['nullable', Rule::exists('real_estate_tenants', 'id')->where('business_id', ActiveBusiness::id())], 'real_estate_property_id' => ['nullable', Rule::exists('real_estate_properties', 'id')->where('business_id', ActiveBusiness::id())], 'real_estate_unit_id' => ['nullable', Rule::exists('real_estate_units', 'id')->where('business_id', ActiveBusiness::id())], 'assigned_to' => ['nullable', 'exists:users,id'], 'request_type' => ['required', 'in:Plumbing Issues,Electrical Issues,Security Issues,Cleaning Requests,Repairs'], 'description' => ['required', 'string'], 'status' => ['required', 'in:Open,Assigned,In Progress,Resolved,Closed']]),
-            'valuation' => $request->validate(['real_estate_property_id' => ['required', Rule::exists('real_estate_properties', 'id')->where('business_id', ActiveBusiness::id())], 'valuer_id' => ['nullable', 'exists:users,id'], 'valuation_date' => ['required', 'date'], 'market_value' => ['required', 'numeric', 'min:0'], 'rental_value' => ['nullable', 'numeric', 'min:0'], 'notes' => ['nullable', 'string'], 'status' => ['required', 'in:Draft,Approved,Archived']]),
+            'inspection' => $request->validate(['real_estate_property_id' => ['required', Rule::exists('real_estate_properties', 'id')->where('business_id', ActiveBusiness::id())], 'real_estate_unit_id' => ['nullable', Rule::exists('real_estate_units', 'id')->where('business_id', ActiveBusiness::id())], 'inspector_id' => ['nullable', $this->activeBusinessUserExistsRule()], 'inspection_type' => ['required', 'in:Move In Inspection,Move Out Inspection,Routine Inspection,Maintenance Inspection,Valuation Inspection'], 'inspection_date' => ['required', 'date'], 'findings' => ['nullable', 'string'], 'recommendations' => ['nullable', 'string'], 'photos' => ['nullable', 'string'], 'status' => ['required', 'in:Draft,Completed,Approved']]),
+            'service-request' => $request->validate(['real_estate_tenant_id' => ['nullable', Rule::exists('real_estate_tenants', 'id')->where('business_id', ActiveBusiness::id())], 'real_estate_property_id' => ['nullable', Rule::exists('real_estate_properties', 'id')->where('business_id', ActiveBusiness::id())], 'real_estate_unit_id' => ['nullable', Rule::exists('real_estate_units', 'id')->where('business_id', ActiveBusiness::id())], 'assigned_to' => ['nullable', $this->activeBusinessUserExistsRule()], 'request_type' => ['required', 'in:Plumbing Issues,Electrical Issues,Security Issues,Cleaning Requests,Repairs'], 'description' => ['required', 'string'], 'status' => ['required', 'in:Open,Assigned,In Progress,Resolved,Closed']]),
+            'valuation' => $request->validate(['real_estate_property_id' => ['required', Rule::exists('real_estate_properties', 'id')->where('business_id', ActiveBusiness::id())], 'valuer_id' => ['nullable', $this->activeBusinessUserExistsRule()], 'valuation_date' => ['required', 'date'], 'market_value' => ['required', 'numeric', 'min:0'], 'rental_value' => ['nullable', 'numeric', 'min:0'], 'notes' => ['nullable', 'string'], 'status' => ['required', 'in:Draft,Approved,Archived']]),
             'land' => $request->validate(['real_estate_property_id' => ['nullable', Rule::exists('real_estate_properties', 'id')->where('business_id', ActiveBusiness::id())], 'parcel_number' => ['required', 'string', 'max:100'], 'title_number' => ['nullable', 'string', 'max:100'], 'land_size' => ['required', 'numeric', 'min:0'], 'land_size_unit' => ['required', 'in:Acres,Hectares,Sq Ft,Sq M'], 'zoning' => ['nullable', 'string', 'max:100'], 'ownership_status' => ['required', 'in:Owned,Leased,Under Transfer,Disputed'], 'ownership_history' => ['nullable', 'string'], 'sales_history' => ['nullable', 'string']]),
             'development' => $request->validate(['project_id' => ['nullable', Rule::exists('projects', 'id')->where('business_id', ActiveBusiness::id())], 'real_estate_property_id' => ['nullable', Rule::exists('real_estate_properties', 'id')->where('business_id', ActiveBusiness::id())], 'development_number' => ['nullable', 'string', 'max:50'], 'name' => ['required', 'string', 'max:255'], 'phase' => ['nullable', 'string', 'max:100'], 'budget' => ['nullable', 'numeric', 'min:0'], 'actual_cost' => ['nullable', 'numeric', 'min:0'], 'progress_percent' => ['nullable', 'integer', 'min:0', 'max:100'], 'contractor' => ['nullable', 'string', 'max:255'], 'status' => ['required', 'in:Planning,Approval,Construction,Completed']]),
         };

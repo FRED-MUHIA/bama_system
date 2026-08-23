@@ -58,17 +58,19 @@
 <style>
     .doc-sheet{--doc-primary:{{ $primaryColor }};--doc-secondary:{{ $secondaryColor }};--doc-accent:{{ $accentColor }};max-width:920px;margin:0 auto 1rem;background:#fff;border:1px solid #dce3ec;border-radius:8px;box-shadow:0 12px 34px rgba(15,23,42,.08);overflow:hidden;color:#101828}
     .doc-sheet *{letter-spacing:0}
-    .doc-sheet__bar{height:7px;background:var(--doc-primary)}
+    .doc-sheet__bar{height:8px;background:linear-gradient(90deg,var(--doc-primary) 0 68%,var(--doc-secondary) 68% 90%,var(--doc-accent) 90% 100%)}
     .doc-sheet__inner{padding:28px}
-    .doc-sheet__head{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start;margin-bottom:24px}
-    .doc-company{display:flex;gap:14px;align-items:flex-start}
-    .doc-logo{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--doc-primary);color:#fff;font-weight:900;overflow:hidden;flex:0 0 48px}
-    .doc-logo img{width:100%;height:100%;object-fit:contain;background:#fff}
-    .doc-company h2{font-size:1.02rem;margin:0 0 2px;color:#111827;font-weight:900}
+    .doc-sheet__head{display:grid;grid-template-columns:1fr auto;gap:22px;align-items:start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #111827}
+    .doc-company{display:flex;gap:16px;align-items:flex-start}
+    .doc-logo{width:64px;height:64px;border-radius:4px;border:1px solid #d0d7e2;display:grid;place-items:center;background:#fff;color:#fff;font-weight:900;overflow:hidden;flex:0 0 64px}
+    .doc-logo span{display:grid;place-items:center;width:100%;height:100%;background:var(--doc-primary);font-size:1rem}
+    .doc-logo img{width:100%;height:100%;object-fit:contain;background:#fff;padding:6px}
+    .doc-company h2{font-size:1.18rem;margin:0 0 3px;color:#111827;font-weight:900;text-transform:uppercase;line-height:1.12}
+    .doc-company__subtitle{color:var(--doc-primary)!important;font-size:.68rem!important;font-weight:900;text-transform:uppercase;letter-spacing:.08em!important;margin-bottom:7px!important}
     .doc-company p,.doc-meta p,.doc-box p{margin:0;color:#344054;font-size:.76rem;line-height:1.45}
-    .doc-meta{text-align:right;min-width:170px}
-    .doc-type{color:var(--doc-primary);font-size:.68rem;font-weight:900;letter-spacing:.16em;text-transform:uppercase;margin-bottom:2px}
-    .doc-number{font-size:.88rem;font-weight:900;color:#111827}
+    .doc-meta{text-align:right;min-width:190px}
+    .doc-type{display:inline-block;background:var(--doc-primary);color:#fff;font-size:.64rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;padding:6px 10px;border-radius:3px}
+    .doc-number{font-size:.98rem;font-weight:900;color:#111827;margin-bottom:4px}
     .doc-grid{display:grid;grid-template-columns:1.35fr .85fr;gap:18px;margin-bottom:22px}
     .doc-box{border:1px solid #dbe4ef;background:#f9fbfd;border-radius:8px;padding:16px;min-height:152px}
     .doc-box__label{font-size:.62rem;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#475467;margin-bottom:10px}
@@ -109,16 +111,21 @@
                     @if($logoUrl)
                         <img src="{{ $logoUrl }}" alt="{{ $companyName }} logo">
                     @else
-                        {{ strtoupper($initials) }}
+                        <span>{{ strtoupper($initials) }}</span>
                     @endif
                 </div>
                 <div>
                     <h2>{{ $companyName }}</h2>
-                    <p>{{ $companySubtitle }}</p>
-                    @if($issuerProfile['phone'] ?? $settings?->phone)<p>{{ $issuerProfile['phone'] ?? $settings?->phone }}</p>@endif
-                    @if($issuerProfile['email'] ?? $settings?->email)<p>{{ $issuerProfile['email'] ?? $settings?->email }}</p>@endif
+                    <p class="doc-company__subtitle">{{ $companySubtitle }}</p>
                     @if($issuerProfile['address'] ?? $settings?->address)<p>{{ $issuerProfile['address'] ?? $settings?->address }}</p>@endif
                     @if($settings?->location)<p>{{ $settings->location }}</p>@endif
+                    @if(($issuerProfile['phone'] ?? $settings?->phone) || ($issuerProfile['email'] ?? $settings?->email))
+                        <p>
+                            @if($issuerProfile['phone'] ?? $settings?->phone){{ $issuerProfile['phone'] ?? $settings?->phone }}@endif
+                            @if(($issuerProfile['phone'] ?? $settings?->phone) && ($issuerProfile['email'] ?? $settings?->email)) | @endif
+                            @if($issuerProfile['email'] ?? $settings?->email){{ $issuerProfile['email'] ?? $settings?->email }}@endif
+                        </p>
+                    @endif
                 </div>
             </div>
             <div class="doc-meta">

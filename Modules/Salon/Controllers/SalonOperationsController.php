@@ -101,7 +101,7 @@ class SalonOperationsController extends Controller
 
         return $this->view('Staff Scheduling', 'Teams, shifts, capacity, services, commissions, and branch assignment.', [
             'staff' => StaffProfile::with('schedules')->latest()->paginate(20),
-            'users' => User::where('role', '!=', 'client_portal')->orderBy('name')->get(),
+            'users' => $this->activeBusinessUsers()->orderBy('name')->get(),
             'schedules' => StaffSchedule::with('staff')->whereDate('work_date', '>=', today())->orderBy('work_date')->limit(50)->get(),
         ]);
     }
@@ -110,7 +110,7 @@ class SalonOperationsController extends Controller
     {
         $salon->createStaffProfile($request->validate([
             'display_name' => ['required', 'string', 'max:255'],
-            'user_id' => ['nullable', 'exists:users,id'],
+            'user_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'branch_id' => ['nullable', 'integer'],
             'role_title' => ['nullable', 'string', 'max:120'],
             'commission_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],

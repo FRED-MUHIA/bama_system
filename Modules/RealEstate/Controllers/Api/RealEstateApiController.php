@@ -52,7 +52,7 @@ class RealEstateApiController extends Controller
             'real_estate_property_id' => ['nullable', Rule::exists('real_estate_properties', 'id')->where('business_id', ActiveBusiness::id())],
             'real_estate_unit_id' => ['nullable', Rule::exists('real_estate_units', 'id')->where('business_id', ActiveBusiness::id())],
             'real_estate_tenant_id' => ['nullable', Rule::exists('real_estate_tenants', 'id')->where('business_id', ActiveBusiness::id())],
-            'assigned_to' => ['nullable', 'exists:users,id'],
+            'assigned_to' => ['nullable', $this->activeBusinessUserExistsRule()],
             'request_type' => ['required', 'in:Plumbing Issues,Electrical Issues,Security Issues,Cleaning Requests,Repairs'],
             'description' => ['required', 'string'],
             'status' => ['nullable', 'in:Open,Assigned,In Progress,Resolved,Closed'],

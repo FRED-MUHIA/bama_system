@@ -43,7 +43,7 @@ class MemberController extends Controller
         return view('fitness.members', [
             'members' => $members,
             'clients' => Client::orderBy('name')->limit(250)->get(),
-            'trainers' => User::where('role', '!=', 'client_portal')->where('is_active', true)->orderBy('name')->get(),
+            'trainers' => $this->activeBusinessUsers()->where('is_active', true)->orderBy('name')->get(),
             'plans' => MembershipPlan::where('status', 'Active')->orderBy('name')->get(),
             'memberships' => MemberMembership::with('member.client', 'plan')->latest()->limit(50)->get(),
             'attendanceHistory' => $this->attendanceHistory($memberIds),
@@ -64,7 +64,7 @@ class MemberController extends Controller
             'client.email' => ['nullable', 'email', 'max:255'],
             'client.phone' => ['nullable', 'string', 'max:100'],
             'client.address' => ['nullable', 'string'],
-            'assigned_trainer_id' => ['nullable', 'exists:users,id'],
+            'assigned_trainer_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'gender' => ['nullable', 'string', 'max:30'],
             'date_of_birth' => ['nullable', 'date', 'before:today'],
             'address' => ['nullable', 'string', 'max:500'],
@@ -90,7 +90,7 @@ class MemberController extends Controller
         $gate->authorize('members');
 
         $data = $request->validate([
-            'assigned_trainer_id' => ['nullable', 'exists:users,id'],
+            'assigned_trainer_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'gender' => ['nullable', 'string', 'max:30'],
             'date_of_birth' => ['nullable', 'date', 'before:today'],
             'address' => ['nullable', 'string', 'max:500'],

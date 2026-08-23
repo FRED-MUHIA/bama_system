@@ -15,7 +15,7 @@ class RealEstateValidationRules
     {
         return [
             'branch_id' => ['nullable', Rule::exists('branches', 'id')->where('business_id', ActiveBusiness::id())],
-            'property_manager_id' => ['nullable', 'exists:users,id'],
+            'property_manager_id' => ['nullable', self::activeBusinessUserRule()],
             'property_code' => ['nullable', 'string', 'max:50'],
             'property_name' => ['required', 'string', 'max:255'],
             'property_type' => ['required', Rule::in(self::$propertyTypes)],
@@ -60,5 +60,16 @@ class RealEstateValidationRules
             'email' => ['nullable', 'email', 'max:255'],
             "{$prefix}_number" => ['nullable', 'string', 'max:50'],
         ];
+    }
+
+    private static function activeBusinessUserRule()
+    {
+        return Rule::exists('users', 'id')
+            ->where(fn ($query) => $query->whereIn('id', function ($subquery) {
+                $subquery->select('user_id')
+                    ->from('business_user')
+                    ->where('business_id', ActiveBusiness::id())
+                    ->whereIn('status', ['Active', 'Pending Invitation']);
+            }));
     }
 }

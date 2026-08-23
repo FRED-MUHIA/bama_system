@@ -291,7 +291,7 @@ class ConstructionOperationsController extends Controller
         $rfi = $service->rfi($request->validate([
             'project_id' => ['required', 'exists:projects,id'],
             'site_id' => ['nullable', 'exists:construction_sites,id'],
-            'assigned_to' => ['nullable', 'exists:users,id'],
+            'assigned_to' => ['nullable', $this->activeBusinessUserExistsRule()],
             'question' => ['required', 'string'],
             'drawing_reference' => ['nullable', 'string', 'max:120'],
             'boq_reference' => ['nullable', 'string', 'max:120'],
@@ -308,7 +308,7 @@ class ConstructionOperationsController extends Controller
         $instruction = $service->instruction($request->validate([
             'project_id' => ['required', 'exists:projects,id'],
             'site_id' => ['nullable', 'exists:construction_sites,id'],
-            'recipient_id' => ['nullable', 'exists:users,id'],
+            'recipient_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'instruction' => ['required', 'string'],
             'instruction_date' => ['required', 'date'],
             'priority' => ['nullable', 'string', 'max:80'],
@@ -611,7 +611,7 @@ class ConstructionOperationsController extends Controller
         $equipment = ConstructionEquipment::create($request->validate([
             'project_id' => ['nullable', 'exists:projects,id'],
             'site_id' => ['nullable', 'exists:construction_sites,id'],
-            'operator_id' => ['nullable', 'exists:users,id'],
+            'operator_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'equipment_code' => ['required', 'string', 'max:120'],
             'name' => ['required', 'string', 'max:255'],
             'equipment_type' => ['nullable', 'string', 'max:120'],
@@ -692,7 +692,7 @@ class ConstructionOperationsController extends Controller
             'materialsList' => ConstructionMaterial::orderBy('name')->limit(120)->get(),
             'contractorsList' => ConstructionContractor::orderBy('company_name')->limit(120)->get(),
             'suppliers' => Supplier::orderBy('name')->limit(120)->get(),
-            'users' => User::where('role', '!=', 'client_portal')->orderBy('name')->limit(120)->get(),
+            'users' => $this->activeBusinessUsers()->orderBy('name')->limit(120)->get(),
         ], $data));
     }
 

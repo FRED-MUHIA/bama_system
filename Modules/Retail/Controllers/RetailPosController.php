@@ -61,7 +61,7 @@ class RetailPosController extends Controller
         $data = $request->validate([
             'client_id' => ['nullable', 'exists:clients,id'],
             'branch_id' => ['nullable', 'exists:branches,id'],
-            'cashier_id' => ['nullable', 'exists:users,id'],
+            'cashier_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'retail_cash_drawer_id' => ['nullable', 'exists:retail_cash_drawers,id'],
             'retail_promotion_id' => ['nullable', 'exists:retail_promotions,id'],
             'customer_name' => ['nullable', 'string', 'max:255'],
@@ -99,7 +99,7 @@ class RetailPosController extends Controller
     {
         $pos->openDrawer($request->validate([
             'branch_id' => ['nullable', 'exists:branches,id'],
-            'cashier_id' => ['nullable', 'exists:users,id'],
+            'cashier_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'drawer_number' => ['required', 'string', 'max:100'],
             'opening_float' => ['nullable', 'numeric', 'min:0'],
         ]));

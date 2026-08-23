@@ -33,7 +33,7 @@ class FitnessOperationsController extends Controller
         $gate->authorize('trainers');
 
         $data = $request->validate([
-            'user_id' => ['required', 'exists:users,id'],
+            'user_id' => ['required', $this->activeBusinessUserExistsRule()],
             'trainer_code' => ['nullable', 'string', 'max:50'],
             'specialization' => ['nullable', 'string', 'max:1000'],
             'certifications' => ['nullable', 'string', 'max:2000'],
@@ -218,7 +218,7 @@ class FitnessOperationsController extends Controller
 
         $data = $request->validate([
             'fitness_class_type_id' => ['nullable', 'exists:fitness_class_types,id'],
-            'trainer_id' => ['nullable', 'exists:users,id'],
+            'trainer_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'name' => ['required', 'string', 'max:255'],
             'room' => ['nullable', 'string', 'max:100'],
             'level' => ['nullable', 'string', 'max:100'],
@@ -240,7 +240,7 @@ class FitnessOperationsController extends Controller
 
         $data = $request->validate([
             'fitness_class_id' => ['required', Rule::exists('fitness_classes', 'id')->where('business_id', $this->businessId())],
-            'trainer_id' => ['nullable', 'exists:users,id'],
+            'trainer_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'starts_at' => ['required', 'date'],
             'ends_at' => ['required', 'date', 'after:starts_at'],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:1000'],
@@ -344,7 +344,7 @@ class FitnessOperationsController extends Controller
         $gate->authorize('programs');
 
         $data = $request->validate([
-            'trainer_id' => ['nullable', 'exists:users,id'],
+            'trainer_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'name' => ['required', 'string', 'max:255'],
             'program_type' => ['required', 'in:Weight Loss,Muscle Gain,Strength,Cardio,Rehabilitation,Athletic Performance'],
             'difficulty' => ['required', 'in:Beginner,Intermediate,Advanced'],
@@ -370,7 +370,7 @@ class FitnessOperationsController extends Controller
         $data = $request->validate([
             'fitness_program_id' => ['required', Rule::exists('fitness_programs', 'id')->where('business_id', $this->businessId())],
             'fitness_member_id' => ['required', Rule::exists('fitness_members', 'id')->where('business_id', $this->businessId())],
-            'trainer_id' => ['nullable', 'exists:users,id'],
+            'trainer_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'starts_at' => ['required', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'adherence_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
@@ -468,7 +468,7 @@ class FitnessOperationsController extends Controller
 
         $data = $request->validate([
             'fitness_member_id' => ['required', Rule::exists('fitness_members', 'id')->where('business_id', $this->businessId())],
-            'trainer_id' => ['nullable', 'exists:users,id'],
+            'trainer_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'assessment_date' => ['required', 'date'],
             'weight_kg' => ['nullable', 'numeric', 'min:0', 'max:600'],
             'bmi' => ['nullable', 'numeric', 'min:0', 'max:200'],
@@ -520,7 +520,7 @@ class FitnessOperationsController extends Controller
 
         $data = $request->validate([
             'fitness_member_id' => ['required', Rule::exists('fitness_members', 'id')->where('business_id', $this->businessId())],
-            'trainer_id' => ['required', 'exists:users,id'],
+            'trainer_id' => ['required', $this->activeBusinessUserExistsRule()],
             'fitness_pt_package_id' => ['nullable', Rule::exists('fitness_pt_packages', 'id')->where('business_id', $this->businessId())],
             'scheduled_at' => ['required', 'date'],
             'duration_minutes' => ['required', 'integer', 'min:15', 'max:480'],
@@ -550,7 +550,7 @@ class FitnessOperationsController extends Controller
         $gate->authorize('nutrition');
 
         $data = $request->validate([
-            'trainer_id' => ['nullable', 'exists:users,id'],
+            'trainer_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'name' => ['required', 'string', 'max:255'],
             'calories' => ['nullable', 'integer', 'min:0', 'max:20000'],
             'protein' => ['nullable', 'integer', 'min:0', 'max:2000'],
@@ -576,7 +576,7 @@ class FitnessOperationsController extends Controller
         $data = $request->validate([
             'fitness_nutrition_plan_id' => ['required', Rule::exists('fitness_nutrition_plans', 'id')->where('business_id', $this->businessId())],
             'fitness_member_id' => ['required', Rule::exists('fitness_members', 'id')->where('business_id', $this->businessId())],
-            'trainer_id' => ['nullable', 'exists:users,id'],
+            'trainer_id' => ['nullable', $this->activeBusinessUserExistsRule()],
             'starts_at' => ['required', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'compliance_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
@@ -749,7 +749,7 @@ class FitnessOperationsController extends Controller
     {
         return [
             'members' => Member::with('client')->orderBy('member_number')->limit(500)->get(),
-            'staffUsers' => User::where('role', '!=', 'client_portal')->where('is_active', true)->orderBy('name')->get(),
+            'staffUsers' => $this->activeBusinessUsers()->where('is_active', true)->orderBy('name')->get(),
             'trainers' => $this->trainerQuery()->limit(500)->get(),
             'classTypes' => DB::table('fitness_class_types')->where(function ($query) {
                 $query->whereNull('business_id')->orWhere('business_id', $this->businessId());
