@@ -22,6 +22,12 @@ class ProductionSchedulingService
             abort_if($conflict, 422, 'Machine is already booked for that time window.');
         }
 
-        return ProductionSchedule::create($data + ['job_id' => $job->id]);
+        $schedule = ProductionSchedule::create($data + ['job_id' => $job->id]);
+
+        if (! in_array($job->status, ['In Production', 'Printing', 'Finishing', 'Quality Control', 'Ready for Dispatch', 'Dispatched', 'Completed', 'Cancelled'], true)) {
+            $job->update(['status' => 'Queued']);
+        }
+
+        return $schedule;
     }
 }

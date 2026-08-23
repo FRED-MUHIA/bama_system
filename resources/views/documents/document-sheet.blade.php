@@ -56,11 +56,11 @@
 @endphp
 
 <style>
-    .doc-sheet{--doc-primary:{{ $primaryColor }};--doc-secondary:{{ $secondaryColor }};--doc-accent:{{ $accentColor }};max-width:920px;margin:0 auto 1rem;background:#fff;border:1px solid #dce3ec;border-radius:8px;box-shadow:0 12px 34px rgba(15,23,42,.08);overflow:hidden;color:#101828}
+    .doc-sheet{--doc-primary:{{ $primaryColor }};--doc-secondary:{{ $secondaryColor }};--doc-accent:{{ $accentColor }};width:min(100%,760px);min-height:1075px;margin:0 auto 1rem;background:#fff;border:1px solid #dce3ec;border-radius:8px;box-shadow:0 12px 34px rgba(15,23,42,.08);overflow:hidden;color:#101828}
     .doc-sheet *{letter-spacing:0}
     .doc-sheet__bar{height:8px;background:linear-gradient(90deg,var(--doc-primary) 0 68%,var(--doc-secondary) 68% 90%,var(--doc-accent) 90% 100%)}
     .doc-sheet__inner{padding:28px}
-    .doc-sheet__head{display:grid;grid-template-columns:1fr auto;gap:22px;align-items:start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #111827}
+    .doc-sheet__head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:start;margin-bottom:22px;padding-bottom:16px;border-bottom:2px solid #111827}
     .doc-company{display:flex;gap:16px;align-items:flex-start}
     .doc-logo{width:64px;height:64px;border-radius:4px;border:1px solid #d0d7e2;display:grid;place-items:center;background:#fff;color:#fff;font-weight:900;overflow:hidden;flex:0 0 64px}
     .doc-logo span{display:grid;place-items:center;width:100%;height:100%;background:var(--doc-primary);font-size:1rem}
@@ -68,11 +68,11 @@
     .doc-company h2{font-size:1.18rem;margin:0 0 3px;color:#111827;font-weight:900;text-transform:uppercase;line-height:1.12}
     .doc-company__subtitle{color:var(--doc-primary)!important;font-size:.68rem!important;font-weight:900;text-transform:uppercase;letter-spacing:.08em!important;margin-bottom:7px!important}
     .doc-company p,.doc-meta p,.doc-box p{margin:0;color:#344054;font-size:.76rem;line-height:1.45}
-    .doc-meta{text-align:right;min-width:190px}
+    .doc-meta{text-align:right;min-width:160px}
     .doc-type{display:inline-block;background:var(--doc-primary);color:#fff;font-size:.64rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;padding:6px 10px;border-radius:3px}
     .doc-number{font-size:.98rem;font-weight:900;color:#111827;margin-bottom:4px}
-    .doc-grid{display:grid;grid-template-columns:1.35fr .85fr;gap:18px;margin-bottom:22px}
-    .doc-box{border:1px solid #dbe4ef;background:#f9fbfd;border-radius:8px;padding:16px;min-height:152px}
+    .doc-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:20px}
+    .doc-box{border:1px solid #dbe4ef;background:#f9fbfd;border-radius:8px;padding:16px}
     .doc-box__label{font-size:.62rem;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#475467;margin-bottom:10px}
     .doc-box strong{display:block;color:#111827;margin-bottom:3px}
     .doc-summary-row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #e7edf4;padding:6px 0;font-size:.78rem}
@@ -80,13 +80,13 @@
     .doc-balance{margin-top:8px;background:#101828;color:#fff;border-radius:6px;padding:8px 10px;text-align:center;font-weight:900;font-size:.76rem}
     .doc-verify{display:flex;gap:10px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid #e7edf4}
     .doc-verify img{width:72px;height:72px;border:1px solid #d0d7e2;background:#fff;padding:4px}
-    .doc-verify a{color:var(--doc-primary);font-size:.72rem}
+    .doc-verify a{color:var(--doc-primary);font-size:.72rem;overflow-wrap:anywhere;word-break:break-word}
     .doc-table{width:100%;border-collapse:collapse;margin-bottom:20px}
     .doc-table th{background:var(--doc-primary);color:#fff;font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;padding:9px 10px;text-align:left}
     .doc-table th:last-child,.doc-table td:last-child{text-align:right}
     .doc-table td{padding:10px;border-bottom:1px solid #edf1f6;font-size:.78rem;vertical-align:top}
     .doc-table td:nth-child(3),.doc-table td:nth-child(4){white-space:nowrap}
-    .doc-lower{display:grid;grid-template-columns:1.35fr .85fr;gap:18px;align-items:start}
+    .doc-lower{display:grid;grid-template-columns:1fr;gap:14px;align-items:start}
     .doc-methods{display:grid;gap:8px}
     .doc-method{border:1px solid #dbe4ef;border-radius:6px;padding:8px 10px;font-size:.74rem;background:#fff}
     .doc-method strong{display:block;margin-bottom:2px}
@@ -99,7 +99,7 @@
     .doc-signature__assets{display:flex;gap:10px;align-items:end;margin-bottom:8px}
     .doc-signature img{object-fit:contain}.doc-signature__sig{max-width:130px;max-height:52px}.doc-signature__stamp{max-width:92px;max-height:68px}
     .doc-signature__line{width:150px;border-top:1px solid #98a2b3;margin-bottom:6px}
-    @media(max-width:760px){.doc-sheet__inner{padding:18px}.doc-sheet__head,.doc-grid,.doc-lower{grid-template-columns:1fr}.doc-meta{text-align:left}.doc-table{min-width:640px}.doc-table-wrap{overflow-x:auto}}
+    @media(max-width:760px){.doc-sheet{min-height:auto}.doc-sheet__inner{padding:18px}.doc-sheet__head{grid-template-columns:1fr}.doc-meta{text-align:left}.doc-table{min-width:640px}.doc-table-wrap{overflow-x:auto}}
 </style>
 
 <article class="doc-sheet">

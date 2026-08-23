@@ -614,6 +614,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/production-board', [PrintingOperationsController::class, 'board'])->middleware('permission:production_jobs.view')->name('board');
             Route::get('/job-tickets', [PrintingOperationsController::class, 'tickets'])->middleware('permission:production_jobs.view')->name('tickets');
             Route::get('/job-tickets/{job}', [PrintingOperationsController::class, 'ticket'])->middleware('permission:production_jobs.view')->name('tickets.show');
+            Route::get('/job-tickets/{job}/pdf', [PrintingOperationsController::class, 'ticketPdf'])->middleware('permission:production_jobs.view')->name('tickets.pdf');
+            Route::get('/job-tickets/{job}/download', [PrintingOperationsController::class, 'ticketDownload'])->middleware('permission:production_jobs.view')->name('tickets.download');
             Route::get('/schedule', [PrintingOperationsController::class, 'schedule'])->middleware('permission:production.schedule')->name('schedule');
             Route::post('/schedule', [PrintingOperationsController::class, 'storeSchedule'])->middleware('permission:production.schedule')->name('schedule.store');
             Route::get('/artwork', [PrintingOperationsController::class, 'artwork'])->middleware('permission:artwork.view')->name('artwork');

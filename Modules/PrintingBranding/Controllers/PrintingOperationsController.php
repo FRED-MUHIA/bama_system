@@ -13,8 +13,10 @@ use App\Models\Supplier;
 use App\Models\TermsCondition;
 use App\Models\User;
 use App\Support\ActiveBusiness;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Modules\PrintingBranding\Models\Artwork;
 use Modules\PrintingBranding\Models\Dispatch;
@@ -233,6 +235,20 @@ class PrintingOperationsController extends Controller
         return view('printing-branding.ticket', ['job' => $job->load('client', 'ticket', 'machine')]);
     }
 
+    public function ticketPdf(ProductionJob $job, PrintingFeatureGate $gate)
+    {
+        $gate->authorize('production_jobs.view');
+
+        return $this->ticketPdfFor($job)->stream($this->ticketPdfFilename($job));
+    }
+
+    public function ticketDownload(ProductionJob $job, PrintingFeatureGate $gate)
+    {
+        $gate->authorize('production_jobs.view');
+
+        return $this->ticketPdfFor($job)->download($this->ticketPdfFilename($job));
+    }
+
     public function artwork(PrintingFeatureGate $gate)
     {
         $gate->authorize('artwork.view');
@@ -299,7 +315,7 @@ class PrintingOperationsController extends Controller
         ]);
     }
 
-    public function storeOperation(Request $request, PrintingFeatureGate $gate)
+    public function storeOperation(Request $request, ProductionJobService $service, PrintingFeatureGate $gate)
     {
         $gate->authorize('production.execute');
         $data = $request->validate([
@@ -313,12 +329,13 @@ class PrintingOperationsController extends Controller
             'notes' => ['nullable', 'string'],
             'status' => ['nullable', 'string', 'max:80'],
         ]);
-        ProductionOperation::create($this->withoutNullValues($data) + ['status' => $data['status'] ?? 'Pending']);
+        $operation = ProductionOperation::create($this->withoutNullValues($data) + ['status' => $data['status'] ?? 'Pending']);
+        $service->syncStatusFromOperation($operation);
 
         return back()->with('success', 'Production stage recorded.');
     }
 
-    public function updateOperation(Request $request, ProductionOperation $operation, PrintingFeatureGate $gate)
+    public function updateOperation(Request $request, ProductionOperation $operation, ProductionJobService $service, PrintingFeatureGate $gate)
     {
         $gate->authorize('production.execute');
         $data = $request->validate(['action' => ['required', 'in:start,pause,complete']]);
@@ -327,6 +344,7 @@ class PrintingOperationsController extends Controller
             'pause' => ['status' => 'Paused', 'paused_at' => now()],
             'complete' => ['status' => 'Completed', 'completed_at' => now()],
         });
+        $service->syncStatusFromOperation($operation->refresh(), $data['action']);
 
         return back()->with('success', 'Production stage updated.');
     }
@@ -778,6 +796,23 @@ class PrintingOperationsController extends Controller
             ['business_id' => ActiveBusiness::id()],
             $defaults,
         );
+    }
+
+    private function ticketPdfFor(ProductionJob $job)
+    {
+        $job->loadMissing('client', 'ticket', 'machine');
+
+        return Pdf::loadView('printing-branding.ticket-pdf', [
+            'job' => $job,
+            'settings' => $this->activeCompanySettings(),
+        ])->setPaper('a4', 'portrait');
+    }
+
+    private function ticketPdfFilename(ProductionJob $job): string
+    {
+        $number = $job->ticket?->ticket_number ?: $job->job_number;
+
+        return Str::slug($number.' job ticket').'.pdf';
     }
 
     private function jobStatuses(): array

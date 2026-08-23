@@ -3,12 +3,13 @@
 
 @section('content')
 <style>
-    .ticket{background:#fff;border:1px solid #d8dde6;border-radius:12px;padding:24px;max-width:920px;margin:auto}
+    .ticket{background:#fff;border:1px solid #d8dde6;border-radius:12px;padding:24px;max-width:760px;min-height:1060px;margin:auto}
     .ticket-head{display:flex;justify-content:space-between;gap:16px;border-bottom:3px solid #00A651;padding-bottom:16px;margin-bottom:16px}
     .ticket-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     .ticket-field{border:1px solid #edf0f4;border-radius:10px;padding:12px}
     .ticket-label{font-size:.72rem;font-weight:900;text-transform:uppercase;color:#667085}
-    @media print{nav,.sidebar,.btn{display:none!important}.ticket{border:0;box-shadow:none}}
+    .ticket-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+    @media print{nav,.sidebar,.btn,.ticket-actions{display:none!important}.ticket{border:0;box-shadow:none;max-width:none;min-height:auto}}
     @media(max-width:700px){.ticket-grid{grid-template-columns:1fr}.ticket-head{display:grid}}
 </style>
 <div class="ticket">
@@ -49,6 +50,10 @@
         <div class="ticket-label">Production Notes / Special Instructions</div>
         <p class="mb-0">{{ $job->production_notes ?: '-' }}</p>
     </div>
-    <button class="btn btn-dark mt-3" onclick="window.print()">Print Ticket</button>
+    <div class="ticket-actions">
+        <button class="btn btn-dark" onclick="window.print()"><i class="bi bi-printer"></i> Print Ticket</button>
+        <a class="btn btn-outline-dark" href="{{ route('printing-branding.tickets.pdf', $job) }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Open PDF</a>
+        <a class="btn btn-outline-warning" href="{{ route('printing-branding.tickets.download', $job) }}"><i class="bi bi-download"></i> Download PDF</a>
+    </div>
 </div>
 @endsection

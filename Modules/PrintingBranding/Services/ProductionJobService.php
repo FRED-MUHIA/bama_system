@@ -11,6 +11,7 @@ use Modules\PrintingBranding\Models\Estimate;
 use Modules\PrintingBranding\Models\Material;
 use Modules\PrintingBranding\Models\MaterialReservation;
 use Modules\PrintingBranding\Models\ProductionJob;
+use Modules\PrintingBranding\Models\ProductionOperation;
 
 class ProductionJobService
 {
@@ -90,6 +91,38 @@ class ProductionJobService
 
             return $job->refresh();
         });
+    }
+
+    public function syncStatusFromOperation(ProductionOperation $operation, ?string $action = null): ProductionJob
+    {
+        $operation->loadMissing('job');
+
+        return $this->updateStatus($operation->job, $this->statusForOperation($operation, $action));
+    }
+
+    private function statusForOperation(ProductionOperation $operation, ?string $action = null): string
+    {
+        if ($action === 'pause' || $operation->status === 'Paused') {
+            return 'On Hold';
+        }
+
+        if ($action === 'complete' || $operation->status === 'Completed') {
+            return match ($operation->stage) {
+                'Prepress', 'Printing' => 'Finishing',
+                'Cutting', 'Lamination', 'Binding', 'Folding', 'Creasing', 'Embroidery', 'Heat Press', 'Mounting', 'Signage Fabrication', 'Packaging' => 'Quality Control',
+                'Quality Check' => 'Ready for Dispatch',
+                'Dispatch' => 'Dispatched',
+                default => 'In Production',
+            };
+        }
+
+        return match ($operation->stage) {
+            'Printing' => 'Printing',
+            'Cutting', 'Lamination', 'Binding', 'Folding', 'Creasing', 'Embroidery', 'Heat Press', 'Mounting', 'Signage Fabrication', 'Packaging' => 'Finishing',
+            'Quality Check' => 'Quality Control',
+            'Dispatch' => 'Ready for Dispatch',
+            default => 'In Production',
+        };
     }
 
     public function reserveRequiredMaterials(ProductionJob $job): void

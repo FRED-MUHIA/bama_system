@@ -60,7 +60,7 @@
 <head>
     <meta charset="utf-8">
     <style>
-        @page { margin: 24px 28px 30px; }
+        @page { size:A4 portrait; margin: 24px 28px 30px; }
         body { font-family: DejaVu Sans, sans-serif; color:#101828; font-size:9.5px; line-height:1.35; }
         .sheet { border:1px solid #d9e1ec; }
         .top-bar { width:100%; height:8px; border-collapse:collapse; }
@@ -86,8 +86,8 @@
         .meta-line { color:#344054; font-size:9px; line-height:1.45; }
         .meta-line strong { color:#111827; }
         .box-table { margin-bottom:16px; }
-        .box { border:1px solid #dbe4ef; background:#f9fbfd; border-radius:7px; padding:12px; min-height:118px; vertical-align:top; }
-        .gap { width:14px; }
+        .box { border:1px solid #dbe4ef; background:#f9fbfd; border-radius:7px; padding:12px; vertical-align:top; }
+        .box-spacer td { height:10px; padding:0; border:0; }
         .label { font-size:7px; font-weight:bold; letter-spacing:1.4px; text-transform:uppercase; color:#475467; margin-bottom:7px; }
         .muted { color:#475467; }
         .summary td { border-bottom:1px solid #e7edf4; padding:4px 0; }
@@ -95,6 +95,7 @@
         .balance { margin-top:7px; background:#101828; color:#fff; border-radius:5px; padding:7px; text-align:center; font-weight:bold; }
         .verify { margin-top:10px; padding-top:10px; border-top:1px solid #e7edf4; }
         .verify img { width:62px; height:62px; border:1px solid #d0d7e2; padding:3px; vertical-align:middle; margin-right:7px; }
+        .verify-text { word-break:break-word; }
         .items { margin-bottom:15px; }
         .items th { background:{{ $primaryColor }}; color:#fff; font-size:7px; text-transform:uppercase; letter-spacing:1.2px; padding:7px; text-align:left; }
         .items th:last-child, .items td:last-child { text-align:right; }
@@ -161,7 +162,7 @@
 
         <table class="box-table">
             <tr>
-                <td class="box" style="width:60%;">
+                <td class="box">
                     <div class="label">{{ $isReceipt ? 'Received from' : 'Bill to' }}</div>
                     <strong>{{ $recipientProfile['name'] ?? $client?->name }}</strong><br>
                     @if($client?->company_name){{ $client->company_name }}<br>@endif
@@ -173,8 +174,10 @@
                     @if(!empty($industryContext['job_number']))<br>Job: {{ $industryContext['job_number'] }}@endif
                     @if(!empty($industryContext['property_name']))<br>Property: {{ $industryContext['property_name'] }}@endif
                 </td>
-                <td class="gap"></td>
-                <td class="box" style="width:40%;">
+            </tr>
+            <tr class="box-spacer"><td></td></tr>
+            <tr>
+                <td class="box">
                     <table class="summary">
                         <tr><td>Status</td><td>{{ $status ?: '-' }}</td></tr>
                         @if($isReceipt)
@@ -201,7 +204,7 @@
                     @endif
                     @if($type === 'Invoice' && $qrCode)
                         <div class="verify">
-                            <img src="{{ $qrCode }}"> Verify invoice origin
+                            <img src="{{ $qrCode }}"> <span class="verify-text">Verify invoice origin</span>
                         </div>
                     @endif
                 </td>

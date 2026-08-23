@@ -10,13 +10,20 @@
     .pb-card{background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:16px;box-shadow:0 12px 28px rgba(15,23,42,.05)}
     .pb-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
     .pb-list{display:grid;gap:10px}
-    .pb-row{display:flex;justify-content:space-between;gap:12px;border:1px solid #ecedf0;border-radius:10px;padding:12px;background:#fff}
+    .pb-row{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid #ecedf0;border-radius:10px;padding:12px;background:#fff}
     .pb-pill{display:inline-flex;align-items:center;border-radius:999px;padding:.28rem .65rem;background:#e9fff2;color:#007a3b;font-size:.78rem;font-weight:800}
     .pb-actions{display:flex;gap:8px;flex-wrap:wrap}
     .pb-actions a{border-radius:999px}
+    .pb-board-row{display:grid;grid-template-columns:1fr;gap:10px}
+    .pb-board-main{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;min-width:0}
+    .pb-board-title{min-width:0}
+    .pb-board-title strong,.pb-board-title .small{overflow-wrap:anywhere}
+    .pb-board-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+    .pb-board-form .form-select{height:38px;min-height:38px;padding-top:.375rem;padding-bottom:.375rem}
+    .pb-board-form .btn{height:38px;display:inline-flex;align-items:center;justify-content:center;padding-left:14px;padding-right:14px}
     .pb-specifics{border-top:1px solid #edf0f4;margin-top:12px;padding-top:12px}
     .pb-metric{border:1px solid #ecedf0;border-radius:10px;padding:12px;background:#fbfffc}
-    @media(max-width:900px){.pb-grid{grid-template-columns:1fr}.pb-row{display:grid}}
+    @media(max-width:900px){.pb-grid{grid-template-columns:1fr}.pb-row{display:grid}.pb-board-main{display:grid}.pb-board-form{grid-template-columns:1fr}.pb-board-form .btn{width:100%}}
 </style>
 
 <div class="pb-shell">
@@ -139,10 +146,12 @@
                     <h2 class="h6">{{ $column }}</h2>
                     <div class="pb-list">
                         @forelse($jobs as $job)
-                            <div class="pb-row">
-                                <div><strong>{{ $job->job_number }}</strong><div class="text-muted small">{{ $job->client?->name }} · {{ $job->product_name }}</div></div>
-                                <span class="pb-pill">{{ $job->priority }}</span>
-                                <form method="post" action="{{ route('printing-branding.jobs.status', $job) }}" class="d-flex gap-2">
+                            <div class="pb-row pb-board-row">
+                                <div class="pb-board-main">
+                                    <div class="pb-board-title"><strong>{{ $job->job_number }}</strong><div class="text-muted small">{{ $job->client?->name }} · {{ $job->product_name }}</div></div>
+                                    <span class="pb-pill">{{ $job->priority }}</span>
+                                </div>
+                                <form method="post" action="{{ route('printing-branding.jobs.status', $job) }}" class="pb-board-form">
                                     @csrf
                                     <select name="status" class="form-select form-select-sm">
                                         @foreach(['Awaiting Artwork','Awaiting Approval','Approved','Queued','In Production','Printing','Finishing','Quality Control','Ready for Dispatch','Completed','On Hold'] as $status)
@@ -163,9 +172,13 @@
         <div class="pb-card pb-list">
             @foreach($jobs as $job)
                 <div class="pb-row">
-                    <div><strong>{{ $job->ticket?->ticket_number ?? 'No ticket' }}</strong><div class="text-muted small">{{ $job->job_number }} · {{ $job->client?->name }}</div></div>
+                    <div><strong>{{ $job->ticket?->ticket_number ?? 'No ticket' }}</strong><div class="text-muted small">{{ $job->job_number }} · {{ $job->client?->name }} · Job: {{ $job->status ?: '-' }}</div></div>
                     <span class="pb-pill">{{ $job->ticket?->barcode ?? $job->job_number }}</span>
-                    <a class="btn btn-sm btn-outline-dark" href="{{ route('printing-branding.tickets.show', $job) }}">Print</a>
+                    <div class="d-flex flex-wrap gap-2 justify-content-end">
+                        <a class="btn btn-sm btn-outline-dark" href="{{ route('printing-branding.tickets.show', $job) }}">View</a>
+                        <a class="btn btn-sm btn-outline-dark" href="{{ route('printing-branding.tickets.pdf', $job) }}" target="_blank" rel="noopener">Open PDF</a>
+                        <a class="btn btn-sm btn-outline-warning" href="{{ route('printing-branding.tickets.download', $job) }}">Download</a>
+                    </div>
                 </div>
             @endforeach
             {{ $jobs->links() }}
@@ -250,7 +263,7 @@
         <div class="pb-card pb-list">
             @foreach($schedules as $schedule)
                 <div class="pb-row">
-                    <div><strong>{{ $schedule->job?->job_number }}</strong><div class="text-muted small">{{ $schedule->view_type }}</div></div>
+                    <div><strong>{{ $schedule->job?->job_number }}</strong><div class="text-muted small">{{ $schedule->view_type }} · Job: {{ $schedule->job?->status ?: '-' }}</div></div>
                     <span>{{ $schedule->starts_at?->format('d M H:i') }} - {{ $schedule->ends_at?->format('H:i') }}</span>
                     <span class="pb-pill">{{ $schedule->status }}</span>
                 </div>
@@ -274,7 +287,7 @@
         <div class="pb-card pb-list">
             @foreach($operations as $operation)
                 <div class="pb-row">
-                    <div><strong>{{ $operation->stage }}</strong><div class="text-muted small">{{ $operation->job?->job_number }} · Produced {{ number_format((float) $operation->quantity_produced, 3) }}</div></div>
+                    <div><strong>{{ $operation->stage }}</strong><div class="text-muted small">{{ $operation->job?->job_number }} · Job: {{ $operation->job?->status ?: '-' }} · Produced {{ number_format((float) $operation->quantity_produced, 3) }}</div></div>
                     <span class="pb-pill">{{ $operation->status }}</span>
                     <div class="pb-actions">
                         @foreach(['start' => 'Start', 'pause' => 'Pause', 'complete' => 'Complete'] as $action => $label)
@@ -332,7 +345,7 @@
         <div class="pb-card pb-list">
             @foreach($checks as $check)
                 <div class="pb-row">
-                    <div><strong>{{ $check->job?->job_number }}</strong><div class="text-muted small">{{ $check->reason ?: 'Inspection' }}</div></div>
+                    <div><strong>{{ $check->job?->job_number }}</strong><div class="text-muted small">{{ $check->reason ?: 'Inspection' }} · Job: {{ $check->job?->status ?: '-' }}</div></div>
                     <span class="pb-pill">{{ $check->result }}</span>
                     <span>{{ $check->inspection_date?->format('d M Y H:i') }}</span>
                 </div>
@@ -380,7 +393,7 @@
         <div class="pb-card pb-list">
             @foreach($dispatches as $dispatch)
                 <div class="pb-row">
-                    <div><strong>{{ $dispatch->dispatch_number }}</strong><div class="text-muted small">{{ $dispatch->job?->job_number }} · {{ $dispatch->delivery_address }}</div></div>
+                    <div><strong>{{ $dispatch->dispatch_number }}</strong><div class="text-muted small">{{ $dispatch->job?->job_number }} · Job: {{ $dispatch->job?->status ?: '-' }} · {{ $dispatch->delivery_address }}</div></div>
                     <span class="pb-pill">{{ $dispatch->status }}</span>
                     <form method="post" action="{{ route('printing-branding.delivery-notes.store', $dispatch) }}">@csrf<button class="btn btn-sm btn-outline-dark">Delivery Note</button></form>
                 </div>
