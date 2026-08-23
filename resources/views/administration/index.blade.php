@@ -45,16 +45,15 @@
             <p class="text-muted mb-0">Administration changes made here apply only to this profile/business.</p>
         </div>
         <div class="col-lg-5">
-            <form method="post" action="{{ route('businesses.store') }}" class="row g-2">
-                @csrf
+            <div class="row g-2" title="Adding more profiles is coming soon. Each profile manages one business for now.">
                 <div class="col">
                     <label class="form-label">Add another profile</label>
-                    <input class="form-control" name="name" placeholder="Profile or business name" required>
+                    <input class="form-control" value="Coming soon" disabled aria-label="Add profile coming soon">
                 </div>
                 <div class="col-auto align-self-end">
-                    <button class="btn btn-outline-warning">Add Profile</button>
+                    <button class="btn btn-outline-secondary" type="button" disabled>Coming Soon</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>

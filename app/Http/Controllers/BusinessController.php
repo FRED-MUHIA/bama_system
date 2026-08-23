@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Business;
-use App\Services\IamService;
 use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
 
@@ -11,17 +10,9 @@ class BusinessController extends Controller
 {
     public function store(Request $request)
     {
-        $data = $request->validate(['name' => ['required', 'string', 'max:255']]);
-
-        $business = Business::create([
-            'name' => $data['name'],
-            'slug' => ActiveBusiness::slug($data['name']),
+        return back()->withErrors([
+            'business' => 'Adding more business profiles is coming soon. Each profile manages one business for now.',
         ]);
-
-        ActiveBusiness::switchTo($business);
-        app(IamService::class)->bootstrapBusinessDefaults($request->user());
-
-        return back()->with('status', 'Business added and selected.');
     }
 
     public function switch(Request $request)
@@ -34,6 +25,6 @@ class BusinessController extends Controller
         $business = Business::where('is_active', true)->findOrFail($data['business_id']);
         ActiveBusiness::switchTo($business);
 
-        return redirect()->route('dashboard')->with('status', 'Business switched to ' . $business->name . '.');
+        return redirect()->route('dashboard')->with('status', 'Business switched to '.$business->name.'.');
     }
 }

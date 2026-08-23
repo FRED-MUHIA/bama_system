@@ -440,11 +440,10 @@
                             @endforeach
                         </select>
                     </form>
-                    <form method="post" action="{{ route('businesses.store') }}" class="d-flex gap-1">
-                        @csrf
-                        <input class="form-control form-control-sm" name="name" placeholder="Add business">
-                        <button class="btn btn-warning btn-sm" title="Add business"><i class="bi bi-plus"></i></button>
-                    </form>
+                    <div class="d-flex gap-1" title="Adding more businesses is coming soon. Each profile manages one business for now.">
+                        <input class="form-control form-control-sm" value="Coming soon" disabled aria-label="Add business coming soon">
+                        <button class="btn btn-secondary btn-sm" type="button" disabled title="Coming soon"><i class="bi bi-lock"></i></button>
+                    </div>
                 </div>
                 <nav class="d-grid gap-1">
                     @foreach($platformMenu ?? [] as $item)

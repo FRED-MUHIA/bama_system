@@ -94,8 +94,8 @@ class ActiveBusiness
 
         $tenantBusinesses = Business::withoutGlobalScopes()->where('tenant_id', $tenantId);
         if (! $tenantBusinesses->exists()) {
-            Business::create(['tenant_id' => $tenantId, 'name' => 'BAMA', 'slug' => self::slug('BAMA')]);
-            Business::create(['tenant_id' => $tenantId, 'name' => 'BAMA INTERIORS', 'slug' => self::slug('BAMA INTERIORS')]);
+            $name = ActiveTenant::current()?->name ?? 'BAMA';
+            Business::create(['tenant_id' => $tenantId, 'name' => $name, 'slug' => self::slug($name)]);
         }
 
         return self::$default = Business::where('is_active', true)->orderBy('id')->first();
