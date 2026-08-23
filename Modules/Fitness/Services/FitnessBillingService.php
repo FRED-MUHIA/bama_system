@@ -162,6 +162,7 @@ class FitnessBillingService
                 $message,
                 fn ($mail) => $mail->attachData($this->invoicePdf($invoice)->output(), $invoice->invoice_number.'.pdf', ['mime' => 'application/pdf']),
                 $invoice->business_id,
+                requireProfileSender: true,
             );
 
             $invoice->emailLogs()->create([

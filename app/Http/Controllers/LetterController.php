@@ -195,6 +195,7 @@ class LetterController extends Controller
                     $data['message'] ?: $letter->subject,
                     fn ($mail) => $mail->attachData($this->letters->pdf($letter)->output(), $letter->letter_number.'.pdf', ['mime' => 'application/pdf']),
                     $letter->business_id,
+                    requireProfileSender: true,
                 );
                 $letter->update(['recipient' => $recipient, 'sent_at' => now(), 'delivery_status' => 'sent', 'status' => 'Sent']);
             } catch (\Throwable $e) {
