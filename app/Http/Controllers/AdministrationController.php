@@ -14,11 +14,13 @@ use App\Models\User;
 use App\Models\UserDevice;
 use App\Models\UserInvitation;
 use App\Services\IamService;
+use App\Services\ModuleRegistry;
 use App\Services\OutgoingMailService;
 use App\Support\ActiveBusiness;
 use App\Support\ActiveTenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password as PasswordBroker;
@@ -26,10 +28,33 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class AdministrationController extends Controller
 {
-    public function __construct(private IamService $iam, private OutgoingMailService $outgoingMail) {}
+    private ?Collection $profilePermissionsCache = null;
+
+    private ?array $profilePermissionIdsCache = null;
+
+    private const SHARED_PERMISSION_NAMES = [
+        'administration.view', 'users.view', 'users.create', 'users.edit', 'users.deactivate',
+        'roles.manage', 'permissions.manage', 'branches.manage', 'teams.manage', 'approvals.manage',
+        'security.manage', 'audit.view', 'clients.view', 'clients.create', 'clients.edit', 'clients.delete',
+        'projects.view', 'projects.create', 'projects.edit', 'projects.close', 'finance.view',
+        'finance.coa.manage', 'finance.gl.view', 'finance.gl.post', 'finance.gl.reverse', 'finance.gl.unreverse',
+        'finance.ar.view', 'finance.ar.manage', 'finance.ap.view', 'finance.ap.approve', 'finance.ap.manage',
+        'finance.banking.manage', 'finance.reconciliation.manage', 'finance.assets.manage',
+        'finance.periods.manage', 'finance.reports.view', 'letters.view', 'letters.create', 'letters.edit', 'letters.delete',
+        'inventory.view', 'inventory.adjust', 'reports.view', 'reports.export',
+        'etims.view', 'etims.manage', 'etims.reports', 'etims.retry',
+        'communication.view', 'communication.send', 'communication.create_group', 'communication.manage_group',
+        'communication.create_channel', 'communication.manage_channel', 'communication.upload', 'communication.delete_own',
+        'communication.moderate', 'communication.announcements.create', 'communication.announcements.manage',
+        'communication.mass_mention', 'communication.audit', 'communication.settings',
+        'communication.manage', 'communication.admin', 'communication.announce', 'communication.reports',
+    ];
+
+    public function __construct(private IamService $iam, private OutgoingMailService $outgoingMail, private ModuleRegistry $modules) {}
 
     public function index()
     {
@@ -49,10 +74,11 @@ class AdministrationController extends Controller
             'presence' => $presence,
             'memberships' => DB::table('business_user')->where('business_id', $this->businessId())->get()->keyBy('user_id'),
             'roles' => IamRole::where('business_id', $this->businessId())->with('permissions')->orderBy('name')->get(),
-            'permissions' => IamPermission::orderBy('module')->orderBy('name')->get()->groupBy('module'),
-            'departments' => Department::orderBy('name')->get(),
-            'branches' => Branch::orderBy('name')->get(),
-            'teams' => Team::with('users', 'manager')->orderBy('name')->get(),
+            'permissions' => $this->profilePermissions(),
+            'permissionScope' => $this->permissionScopeLabel(),
+            'departments' => Department::where('business_id', $this->businessId())->orderBy('name')->get(),
+            'branches' => Branch::where('business_id', $this->businessId())->orderBy('name')->get(),
+            'teams' => Team::with('users', 'manager')->where('business_id', $this->businessId())->orderBy('name')->get(),
             'invitations' => UserInvitation::with('user')->where('business_id', $this->businessId())->latest()->get(),
             'activities' => DB::table('login_activities')->whereIn('user_id', $userIds)->latest()->limit(100)->get(),
             'auditLogs' => AdminAuditLog::where('business_id', $this->businessId())->latest()->limit(100)->get(),
@@ -97,10 +123,11 @@ class AdministrationController extends Controller
         return view('administration.user-wizard', [
             'users' => $this->profileUsers()->with('teams', 'directPermissions')->orderBy('name')->get(),
             'roles' => IamRole::where('business_id', $this->businessId())->orderBy('name')->get(),
-            'permissions' => IamPermission::orderBy('module')->orderBy('name')->get()->groupBy('module'),
-            'departments' => Department::orderBy('name')->get(),
-            'branches' => Branch::orderBy('name')->get(),
-            'teams' => Team::orderBy('name')->get(),
+            'permissions' => $this->profilePermissions(),
+            'permissionScope' => $this->permissionScopeLabel(),
+            'departments' => Department::where('business_id', $this->businessId())->orderBy('name')->get(),
+            'branches' => Branch::where('business_id', $this->businessId())->orderBy('name')->get(),
+            'teams' => Team::where('business_id', $this->businessId())->orderBy('name')->get(),
         ]);
     }
 
@@ -131,6 +158,7 @@ class AdministrationController extends Controller
             'permissions.*' => ['exists:iam_permissions,id'],
         ]);
 
+        $data['permissions'] = $this->validatedProfilePermissionIds($data['permissions'] ?? []);
         $user = $this->createOrAttachUser($data + ['setup_mode' => 'default']);
         if (! empty($data['permissions'])) {
             $role = $this->roleForEmailPermissions($data['email'], $data['permissions']);
@@ -338,6 +366,7 @@ class AdministrationController extends Controller
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['exists:iam_permissions,id'],
         ]);
+        $data['permissions'] = $this->validatedProfilePermissionIds($data['permissions'] ?? []);
         $role = IamRole::create(collect($data)->except('permissions')->all() + ['business_id' => $this->businessId()]);
         $role->permissions()->sync($data['permissions'] ?? []);
         $this->iam->audit('role.created', $role);
@@ -531,6 +560,8 @@ class AdministrationController extends Controller
             abort(422, 'That username is already used by another account.');
         }
 
+        $data['permissions'] = $this->validatedProfilePermissionIds($data['permissions'] ?? []);
+
         return $data;
     }
 
@@ -592,7 +623,7 @@ class AdministrationController extends Controller
             }
 
             if ($mode === 'clone' && isset($source)) {
-                $profileTeamIds = Team::pluck('id')->all();
+                $profileTeamIds = Team::where('business_id', $this->businessId())->pluck('id')->all();
                 $user->teams()->sync($source->teams->pluck('id')->intersect($profileTeamIds));
                 $user->update(['dashboard_layout' => $source->dashboard_layout, 'notification_preferences' => $source->notification_preferences]);
             } else {
@@ -618,6 +649,7 @@ class AdministrationController extends Controller
 
     private function roleForEmailPermissions(string $email, array $permissions): IamRole
     {
+        $permissions = $this->validatedProfilePermissionIds($permissions);
         $slug = 'email-access-'.Str::slug(Str::before($email, '@')).'-'.$this->businessId();
         $role = IamRole::updateOrCreate(
             ['business_id' => $this->businessId(), 'slug' => $slug],
@@ -703,7 +735,7 @@ class AdministrationController extends Controller
 
     private function detachFromCurrentProfile(User $user): void
     {
-        $teamIds = Team::pluck('id')->all();
+        $teamIds = Team::where('business_id', $this->businessId())->pluck('id')->all();
         $user->teams()->detach($teamIds);
         DB::table('business_user')->where(['business_id' => $this->businessId(), 'user_id' => $user->id])->delete();
 
@@ -722,6 +754,136 @@ class AdministrationController extends Controller
     {
         return IamRole::where('business_id', $this->businessId())->whereIn('slug', ['viewer', 'receptionist', 'staff'])->value('id')
             ?: IamRole::where('business_id', $this->businessId())->value('id');
+    }
+
+    private function profilePermissions(): Collection
+    {
+        if ($this->profilePermissionsCache) {
+            return $this->profilePermissionsCache;
+        }
+
+        $names = $this->profilePermissionNames();
+
+        return $this->profilePermissionsCache = IamPermission::query()
+            ->whereIn('name', $names)
+            ->orderBy('module')
+            ->orderBy('name')
+            ->get()
+            ->groupBy('module');
+    }
+
+    private function profilePermissionIds(): array
+    {
+        if ($this->profilePermissionIdsCache !== null) {
+            return $this->profilePermissionIdsCache;
+        }
+
+        return $this->profilePermissionIdsCache = $this->profilePermissions()
+            ->flatten(1)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    private function profilePermissionNames(): array
+    {
+        $names = collect(self::SHARED_PERMISSION_NAMES);
+        $enabledModules = $this->profileEnabledModules();
+
+        foreach ($enabledModules as $module) {
+            $modulePermissions = collect($module->permissions ?? [])
+                ->filter(fn ($permission) => is_string($permission) && $permission !== '');
+
+            if ($modulePermissions->isEmpty()) {
+                $modulePermissions = collect($this->permissionNamesForModuleSlug($module->slug));
+            }
+
+            $names = $names->merge($modulePermissions);
+        }
+
+        if ($enabledModules->isEmpty() && ! ActiveTenant::current()) {
+            $names = collect(IamService::PERMISSIONS);
+        }
+
+        return $names->unique()->values()->all();
+    }
+
+    private function permissionNamesForModuleSlug(string $slug): array
+    {
+        $prefixes = collect([
+            $slug,
+            Str::before($slug, '-'),
+            str_replace('-', '_', $slug),
+        ])->filter()->unique()->values();
+
+        return collect(IamService::PERMISSIONS)
+            ->filter(fn ($permission) => $prefixes->contains(fn ($prefix) => Str::startsWith($permission, $prefix.'.')))
+            ->values()
+            ->all();
+    }
+
+    private function profileEnabledModules(): Collection
+    {
+        $tenant = ActiveTenant::current();
+        $industry = ActiveBusiness::current()?->industry ?: $tenant?->industry;
+        $modules = $this->modules->enabled($tenant);
+
+        if (! $industry) {
+            return $modules;
+        }
+
+        return $modules
+            ->filter(fn ($module) => $module->type !== 'industry' || $this->moduleMatchesIndustry($module, $industry))
+            ->values();
+    }
+
+    private function moduleMatchesIndustry(object $module, string $industry): bool
+    {
+        $industryKey = Str::slug(str_replace('_', '-', $industry));
+        $moduleIndustryKey = $module->industry ? Str::slug(str_replace('_', '-', $module->industry)) : null;
+        $moduleSlugKey = Str::slug(str_replace('_', '-', $module->slug));
+
+        return $moduleIndustryKey === $industryKey
+            || $moduleSlugKey === $industryKey
+            || Str::startsWith($moduleSlugKey, $industryKey.'-')
+            || Str::startsWith($industryKey, $moduleSlugKey.'-');
+    }
+
+    private function validatedProfilePermissionIds(array $permissions): array
+    {
+        $requested = collect($permissions)
+            ->filter(fn ($id) => $id !== null && $id !== '')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        $invalid = $requested->diff($this->profilePermissionIds());
+
+        if ($invalid->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'permissions' => 'One or more selected permissions are not available for this profile or industry.',
+            ]);
+        }
+
+        return $requested->all();
+    }
+
+    private function permissionScopeLabel(): string
+    {
+        $business = ActiveBusiness::current();
+        $tenant = ActiveTenant::current();
+        $industry = $business?->industry ?: $tenant?->industry;
+        $enabled = $this->profileEnabledModules()
+            ->where('type', 'industry')
+            ->pluck('name')
+            ->filter()
+            ->values();
+
+        if ($enabled->isNotEmpty()) {
+            return $enabled->join(', ');
+        }
+
+        return $industry ? Str::headline(str_replace(['_', '-'], ' ', $industry)) : 'Shared business modules';
     }
 
     private function uniqueUsername(string $name): string

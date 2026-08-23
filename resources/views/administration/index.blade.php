@@ -6,6 +6,7 @@
     $roleById = $roles->keyBy('id');
     $departmentById = $departments->keyBy('id');
     $branchById = $branches->keyBy('id');
+    $permissionScope = $permissionScope ?? 'Shared business modules';
 @endphp
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
@@ -112,7 +113,13 @@
             <div class="col-xl-7">
                 <div class="card p-3">
                     <h3 class="h5">Feature Permissions</h3>
-                    <p class="text-muted">Tick permissions here to create an email-specific access role for this profile.</p>
+                    <p class="text-muted mb-2">Create an email-specific access role for {{ $profileName }}.</p>
+                    <div class="permission-scope mb-3">
+                        <span>Profile</span>
+                        <strong>{{ $profileName }}</strong>
+                        <span>Modules</span>
+                        <strong>{{ $permissionScope }}</strong>
+                    </div>
                     <form method="post" action="{{ route('administration.access.assign') }}">
                         @csrf
                         <div class="row g-2 mb-3">
@@ -136,21 +143,29 @@
                             </div>
                             <div class="col-md-4"><input class="form-control" name="approval_level" placeholder="Approval level"></div>
                         </div>
-                        <div class="permissions-panel">
-                            @foreach($permissions as $module=>$items)
-                                <div class="border rounded p-3 mb-2">
-                                    <strong class="d-block mb-2">{{ ucfirst($module) }}</strong>
-                                    <div class="row">
+                        <div class="permissions-toolbar mb-2">
+                            <input class="form-control form-control-sm permissions-search" type="search" placeholder="Search permissions" aria-label="Search permissions">
+                            <span class="text-muted small">{{ $permissions->flatten(1)->count() }} available</span>
+                        </div>
+                        <div class="permissions-panel" data-permissions-panel>
+                            @forelse($permissions as $module=>$items)
+                                <section class="permission-group" data-permission-group>
+                                    <strong>{{ \Illuminate\Support\Str::headline(str_replace(['-', '_'], ' ', $module)) }}</strong>
+                                    <div class="permission-grid">
                                         @foreach($items as $permission)
-                                            <label class="col-md-6 col-xl-4 mb-2">
-                                                <input type="checkbox" name="permissions[]" value="{{ $permission->id }}"> {{ $permission->name }}
+                                            <label class="permission-option" data-permission-option>
+                                                <input type="checkbox" name="permissions[]" value="{{ $permission->id }}">
+                                                <span>{{ $permission->name }}</span>
                                             </label>
                                         @endforeach
                                     </div>
-                                </div>
-                            @endforeach
+                                </section>
+                            @empty
+                                <div class="alert alert-warning mb-0">No permissions are available for this profile yet.</div>
+                            @endforelse
+                            <div class="permissions-empty text-muted small d-none">No matching permissions.</div>
                         </div>
-                        <button class="btn btn-warning mt-2">Save Custom Feature Access</button>
+                        <button class="btn btn-warning mt-3 w-100">Save Custom Feature Access</button>
                     </form>
                 </div>
             </div>
@@ -244,16 +259,34 @@
                     <div class="col-md-4"><input class="form-control" name="slug" placeholder="role-slug" required></div>
                     <div class="col-md-4"><input class="form-control" name="landing_route" value="dashboard" required></div>
                 </div>
-                @foreach($permissions as $module=>$items)
-                    <div class="mt-3">
-                        <strong>{{ ucfirst($module) }}</strong>
-                        <div class="row mt-2">
-                            @foreach($items as $permission)
-                                <label class="col-md-4 mb-2"><input type="checkbox" name="permissions[]" value="{{ $permission->id }}"> {{ $permission->name }}</label>
-                            @endforeach
-                        </div>
-                    </div>
-                @endforeach
+                <div class="permission-scope mt-3">
+                    <span>Profile</span>
+                    <strong>{{ $profileName }}</strong>
+                    <span>Modules</span>
+                    <strong>{{ $permissionScope }}</strong>
+                </div>
+                <div class="permissions-toolbar mt-3 mb-2">
+                    <input class="form-control form-control-sm permissions-search" type="search" placeholder="Search permissions" aria-label="Search permissions">
+                    <span class="text-muted small">{{ $permissions->flatten(1)->count() }} available</span>
+                </div>
+                <div class="permissions-panel permissions-panel--roles" data-permissions-panel>
+                    @forelse($permissions as $module=>$items)
+                        <section class="permission-group" data-permission-group>
+                            <strong>{{ \Illuminate\Support\Str::headline(str_replace(['-', '_'], ' ', $module)) }}</strong>
+                            <div class="permission-grid">
+                                @foreach($items as $permission)
+                                    <label class="permission-option" data-permission-option>
+                                        <input type="checkbox" name="permissions[]" value="{{ $permission->id }}">
+                                        <span>{{ $permission->name }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </section>
+                    @empty
+                        <div class="alert alert-warning mb-0">No permissions are available for this profile yet.</div>
+                    @endforelse
+                    <div class="permissions-empty text-muted small d-none">No matching permissions.</div>
+                </div>
                 <button class="btn btn-warning mt-3">Create Role</button>
             </form>
         </div>
@@ -512,6 +545,50 @@
     .presence-dot{width:10px;height:10px;border-radius:50%;flex:0 0 10px}
     .presence-dot.online{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.13)}
     .presence-dot.offline{background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.1)}
-    .permissions-panel{max-height:420px;overflow:auto}
+    .permission-scope{display:flex;flex-wrap:wrap;gap:.35rem .55rem;align-items:center;padding:.65rem .75rem;border:1px solid rgba(0,0,0,.08);border-radius:.5rem;background:rgba(0,166,81,.06)}
+    .permission-scope span{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:#6c757d;font-weight:700}
+    .permission-scope strong{font-size:.88rem}
+    .permissions-toolbar{display:flex;align-items:center;gap:.75rem}
+    .permissions-toolbar .permissions-search{max-width:340px}
+    .permissions-panel{max-height:420px;overflow:auto;padding-right:.15rem}
+    .permissions-panel--roles{max-height:520px}
+    .permission-group{border:1px solid rgba(0,0,0,.1);border-radius:.5rem;padding:1rem;margin-bottom:.75rem;background:#fff}
+    .permission-group strong{display:block;margin-bottom:.75rem}
+    .permission-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.55rem}
+    .permission-option{display:grid;grid-template-columns:18px minmax(0,1fr);gap:.5rem;align-items:start;min-height:40px;padding:.55rem .65rem;border:1px solid rgba(0,0,0,.07);border-radius:.45rem;background:#fafafa;cursor:pointer}
+    .permission-option input{margin-top:.18rem}
+    .permission-option span{overflow-wrap:anywhere;line-height:1.25}
+    .permission-option:hover{border-color:rgba(0,166,81,.28);background:rgba(0,166,81,.05)}
+    @media (max-width: 575.98px){
+        .permissions-toolbar{align-items:stretch;flex-direction:column}
+        .permissions-toolbar .permissions-search{max-width:none}
+        .permission-grid{grid-template-columns:1fr}
+    }
 </style>
+<script>
+    document.querySelectorAll('.permissions-search').forEach((search) => {
+        const wrapper = search.closest('form') || document;
+        const panel = wrapper.querySelector('[data-permissions-panel]');
+        if (!panel) return;
+
+        const empty = panel.querySelector('.permissions-empty');
+        search.addEventListener('input', () => {
+            const query = search.value.trim().toLowerCase();
+            let visibleOptions = 0;
+
+            panel.querySelectorAll('[data-permission-group]').forEach((group) => {
+                let groupVisible = false;
+                group.querySelectorAll('[data-permission-option]').forEach((option) => {
+                    const visible = !query || option.textContent.toLowerCase().includes(query);
+                    option.classList.toggle('d-none', !visible);
+                    groupVisible ||= visible;
+                    if (visible) visibleOptions++;
+                });
+                group.classList.toggle('d-none', !groupVisible);
+            });
+
+            empty?.classList.toggle('d-none', visibleOptions > 0);
+        });
+    });
+</script>
 @endsection
