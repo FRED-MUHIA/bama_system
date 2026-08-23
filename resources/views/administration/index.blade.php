@@ -427,7 +427,7 @@
             </div>
             <div class="alert alert-info">
                 Simple mode sends through the configured BAMA mail server and shows this profile email as the sender. Gmail recipients may display it as this sender via {{ $serverMailDomain }}.
-                <div class="mt-2">Turn on corporate integration only when this profile has its own mailbox and should send through that mailbox login.</div>
+                <div class="mt-2">Turn on mailbox SMTP when this profile should send directly through Gmail, Yahoo, Google Workspace, Microsoft 365 or its own webmail account.</div>
                 <div class="mt-2 d-flex flex-wrap gap-2">
                     <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener" class="alert-link">Gmail app password help</a>
                     <a href="https://help.yahoo.com/kb/SLN15241.html" target="_blank" rel="noopener" class="alert-link">Yahoo app password help</a>
@@ -440,22 +440,22 @@
                 <div class="col-md-6"><label class="form-label">From name</label><input class="form-control" name="from_name" value="{{ $mailFromName }}" placeholder="{{ $profileName }}" required></div>
                 <div class="col-md-6">
                     <label class="form-label">Mail login</label>
-                    <input class="form-control" value="{{ $usesOwnSmtp ? 'Own corporate mailbox connected' : 'Server mail, no password needed' }}" disabled>
-                    <div class="form-text">{{ $usesOwnSmtp ? 'This profile sends through its own saved SMTP mailbox.' : 'Clients do not enter or see any mail password in simple mode.' }}</div>
+                    <input class="form-control" value="{{ $usesOwnSmtp ? 'Mailbox SMTP connected' : 'Server mail, no password needed' }}" disabled>
+                    <div class="form-text">{{ $usesOwnSmtp ? 'This profile sends through its saved Gmail, Yahoo or SMTP mailbox.' : 'Clients do not enter or see any mail password in simple mode.' }}</div>
                 </div>
                 <div class="col-12">
                     <label class="form-check">
                         <input class="form-check-input" type="checkbox" name="use_own_smtp" value="1" data-corporate-mail-toggle @checked($usesOwnSmtp)>
-                        <span class="form-check-label">Connect own corporate email server</span>
+                        <span class="form-check-label">Send through Gmail, Yahoo or own SMTP mailbox</span>
                     </label>
                 </div>
                 <div class="col-12 {{ $usesOwnSmtp ? '' : 'd-none' }}" data-corporate-mail-panel>
                     <div class="border rounded-2 p-3">
                         <div class="d-flex flex-wrap gap-2 mb-3">
                             <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="mail" data-port="465" data-scheme="ssl">cPanel/Webmail</button>
-                            <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="smtp.gmail.com" data-port="465" data-scheme="ssl">Google Workspace</button>
+                            <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="smtp.gmail.com" data-port="465" data-scheme="ssl">Gmail / Google</button>
                             <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="smtp.office365.com" data-port="587" data-scheme="tls">Microsoft 365</button>
-                            <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="smtp.mail.yahoo.com" data-port="465" data-scheme="ssl">Yahoo Business</button>
+                            <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="smtp.mail.yahoo.com" data-port="465" data-scheme="ssl">Yahoo Mail</button>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6"><label class="form-label">SMTP host</label><input class="form-control" id="mail-host" name="host" value="{{ old('host',$mailSetting?->host) }}" placeholder="mail.example.com"></div>

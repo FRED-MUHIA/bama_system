@@ -461,6 +461,18 @@ class AdministrationController extends Controller
         $setting = MailSetting::firstOrNew(['business_id' => $this->businessId()]);
         $useOwnSmtp = $request->boolean('use_own_smtp');
 
+        if ($useOwnSmtp) {
+            $fromAddress = Str::lower((string) $request->input('from_address'));
+            $providerDefaults = $this->mailProviderDefaults($fromAddress);
+
+            $request->merge(array_filter([
+                'username' => $request->filled('username') ? $request->input('username') : $request->input('from_address'),
+                'host' => $providerDefaults['host'] ?? $request->input('host'),
+                'port' => $providerDefaults['port'] ?? $request->input('port'),
+                'scheme' => $providerDefaults['scheme'] ?? $request->input('scheme'),
+            ], fn ($value) => filled($value)));
+        }
+
         $rules = [
             'enabled' => ['nullable', 'boolean'],
             'from_address' => ['required', 'email'],
@@ -512,6 +524,17 @@ class AdministrationController extends Controller
         $this->iam->audit('mail.settings.updated', $setting);
 
         return back()->with('status', 'Mail settings saved securely.');
+    }
+
+    private function mailProviderDefaults(string $fromAddress): array
+    {
+        $domain = Str::of($fromAddress)->after('@')->lower()->toString();
+
+        return match ($domain) {
+            'gmail.com', 'googlemail.com' => ['host' => 'smtp.gmail.com', 'port' => 465, 'scheme' => 'ssl'],
+            'yahoo.com', 'ymail.com', 'rocketmail.com' => ['host' => 'smtp.mail.yahoo.com', 'port' => 465, 'scheme' => 'ssl'],
+            default => [],
+        };
     }
 
     public function testMail(Request $request)

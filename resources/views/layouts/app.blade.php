@@ -136,6 +136,9 @@
                 bottom:0;
                 z-index:1070;
                 display:block;
+                max-height:calc(100dvh - 10px);
+                overflow-y:auto;
+                overscroll-behavior:contain;
                 padding:10px 14px calc(18px + env(safe-area-inset-bottom));
                 background:#101828;
                 color:#fff;
@@ -147,6 +150,7 @@
                 transform:translateY(105%);
                 transition:transform .24s ease, opacity .18s ease;
                 will-change:transform, opacity;
+                -webkit-overflow-scrolling:touch;
             }
             .mobile-overflow-sheet .sheet-handle {
                 width:42px;
@@ -163,6 +167,8 @@
                 margin:0 0 8px;
             }
             .mobile-overflow-sheet a,.mobile-overflow-sheet button {
+                position:relative;
+                z-index:1;
                 width:100%;
                 min-height:52px;
                 border:0;
@@ -176,6 +182,9 @@
                 padding:0 12px;
                 font-size:1rem;
                 font-weight:700;
+                cursor:pointer;
+                touch-action:manipulation;
+                pointer-events:auto;
                 -webkit-tap-highlight-color:transparent;
             }
             .mobile-overflow-sheet a.active {
@@ -825,7 +834,9 @@
         $mobileRouteMatches = fn ($item) => ! empty($item['section'])
             ? (request()->routeIs($item['route']) && request()->query('section', 'dashboard') === $item['section'])
             : (request()->routeIs($item['match']) || request()->routeIs($item['route']));
-        $mobileRouteParams = fn ($item) => ! empty($item['section']) ? ['section' => $item['section']] : ($item['params'] ?? []);
+        $mobileRouteParams = fn ($item) => ! empty($item['section'])
+            ? array_merge($item['params'] ?? [], ['section' => $item['section']])
+            : ($item['params'] ?? []);
         $mobilePrimaryItems = collect($mobileContextItems)->filter($mobileItemAvailable)->take(4)->values();
         $mobileOverflowItems = collect($mobileOverflowItems)
             ->merge($utilityOverflowItems)
@@ -909,7 +920,20 @@ document.addEventListener('DOMContentLoaded', () => {
     sheet.addEventListener('touchend', () => {
         if (currentY - startY > 55) closeSheet();
     });
-    sheet.querySelectorAll('a, button[type="submit"]').forEach((item) => {
+    sheet.querySelectorAll('a[href]').forEach((link) => {
+        link.addEventListener('click', (event) => {
+            const href = link.getAttribute('href');
+            if (!href || href === '#' || event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                closeSheet();
+                return;
+            }
+
+            event.preventDefault();
+            closeSheet();
+            window.location.assign(href);
+        });
+    });
+    sheet.querySelectorAll('button[type="submit"]').forEach((item) => {
         item.addEventListener('click', closeSheet);
     });
 });

@@ -60,61 +60,60 @@
 <head>
     <meta charset="utf-8">
     <style>
-        @page { size:A4 portrait; margin: 24px 28px 30px; }
-        body { font-family: DejaVu Sans, sans-serif; color:#101828; font-size:9.5px; line-height:1.35; }
-        .sheet { border:1px solid #d9e1ec; }
+        @page { size:A4 portrait; margin: 20px 24px 28px; }
+        body { font-family: DejaVu Sans, sans-serif; color:#020617; font-size:9px; line-height:1.35; }
+        .sheet { border:1px solid #e3e8ef; border-radius:12px; overflow:hidden; }
         .top-bar { width:100%; height:8px; border-collapse:collapse; }
         .top-bar td { padding:0; }
-        .top-primary { width:68%; background:{{ $primaryColor }}; }
-        .top-secondary { width:22%; background:{{ $secondaryColor }}; }
-        .top-accent { width:10%; background:{{ $accentColor }}; }
+        .top-primary { width:100%; background:{{ $primaryColor }}; }
+        .top-secondary, .top-accent { width:0; background:{{ $primaryColor }}; }
         .inner { padding:22px 24px 24px; }
         table { width:100%; border-collapse:collapse; }
-        .letterhead { margin-bottom:20px; padding-bottom:13px; border-bottom:2px solid #111827; }
+        .letterhead { margin-bottom:24px; }
         .brand-cell { width:68%; vertical-align:top; }
         .meta-cell { width:32%; vertical-align:top; text-align:right; }
         .brand-table td { vertical-align:top; }
-        .logo-cell { width:74px; }
-        .logo-frame { width:60px; height:60px; border:1px solid #d0d7e2; background:#fff; text-align:center; vertical-align:middle; }
-        .logo { max-width:52px; max-height:52px; object-fit:contain; margin-top:4px; }
-        .logo-fallback { width:60px; height:60px; background:{{ $primaryColor }}; color:#fff; text-align:center; line-height:60px; font-size:14px; font-weight:bold; }
-        .company h2 { margin:0 0 3px; font-size:18px; color:#111827; line-height:1.1; text-transform:uppercase; }
-        .company-subtitle { color:{{ $primaryColor }}; font-size:9px; font-weight:bold; letter-spacing:.9px; text-transform:uppercase; margin-bottom:7px; }
-        .company-detail { color:#344054; font-size:9px; line-height:1.45; }
-        .doc-type { display:inline-block; color:#fff; background:{{ $primaryColor }}; font-size:8px; font-weight:bold; letter-spacing:1.4px; text-transform:uppercase; padding:5px 8px; margin-bottom:7px; }
-        .doc-number { font-size:13px; font-weight:bold; color:#111827; margin-bottom:6px; }
-        .meta-line { color:#344054; font-size:9px; line-height:1.45; }
-        .meta-line strong { color:#111827; }
-        .box-table { margin-bottom:16px; }
-        .box { border:1px solid #dbe4ef; background:#f9fbfd; border-radius:7px; padding:12px; vertical-align:top; }
-        .box-spacer td { height:10px; padding:0; border:0; }
-        .label { font-size:7px; font-weight:bold; letter-spacing:1.4px; text-transform:uppercase; color:#475467; margin-bottom:7px; }
-        .muted { color:#475467; }
-        .summary td { border-bottom:1px solid #e7edf4; padding:4px 0; }
+        .logo-cell { width:54px; }
+        .logo-frame { width:42px; height:42px; background:#fff; text-align:center; vertical-align:middle; }
+        .logo { max-width:42px; max-height:42px; object-fit:contain; }
+        .logo-fallback { width:42px; height:42px; border-radius:21px; background:{{ $primaryColor }}; color:#fff; text-align:center; line-height:42px; font-size:11px; font-weight:bold; }
+        .company h2 { margin:0 0 4px; font-size:15px; color:#020617; line-height:1.1; }
+        .company-subtitle { display:none; }
+        .company-detail { color:#020617; font-size:8px; line-height:1.45; }
+        .doc-type { color:{{ $primaryColor }}; font-size:7px; font-weight:bold; letter-spacing:4px; text-transform:uppercase; margin-bottom:4px; }
+        .doc-number { font-size:13px; font-weight:bold; color:#020617; margin-bottom:5px; }
+        .meta-line { color:#020617; font-size:8px; line-height:1.45; }
+        .meta-line strong { color:#020617; font-weight:normal; }
+        .box-table { margin-bottom:20px; }
+        .box { border:1px solid #dbe3ee; background:#f8fafc; border-radius:9px; padding:12px; vertical-align:top; }
+        .gap { width:16px; }
+        .label { font-size:7px; font-weight:bold; letter-spacing:3px; text-transform:uppercase; color:#020617; margin-bottom:9px; }
+        .muted { color:#020617; }
+        .summary td { border-bottom:1px solid #e4eaf2; padding:4px 0; color:#020617; }
         .summary td:last-child { text-align:right; font-weight:bold; }
-        .balance { margin-top:7px; background:#101828; color:#fff; border-radius:5px; padding:7px; text-align:center; font-weight:bold; }
-        .verify { margin-top:10px; padding-top:10px; border-top:1px solid #e7edf4; }
-        .verify img { width:62px; height:62px; border:1px solid #d0d7e2; padding:3px; vertical-align:middle; margin-right:7px; }
+        .balance { margin-top:7px; background:#0f172a; color:#fff; border-radius:8px; padding:7px; text-align:center; font-weight:bold; }
+        .verify { margin-top:12px; padding-top:10px; border-top:1px solid #e4eaf2; }
+        .verify img { width:54px; height:54px; border:1px solid #d0d7e2; padding:3px; vertical-align:middle; margin-right:8px; }
         .verify-text { word-break:break-word; }
-        .items { margin-bottom:15px; }
-        .items th { background:{{ $primaryColor }}; color:#fff; font-size:7px; text-transform:uppercase; letter-spacing:1.2px; padding:7px; text-align:left; }
+        .items { margin-bottom:22px; }
+        .items th { background:{{ $primaryColor }}; color:#fff; font-size:7px; text-transform:uppercase; letter-spacing:2px; padding:8px; text-align:left; }
         .items th:last-child, .items td:last-child { text-align:right; }
-        .items td { border-bottom:1px solid #edf1f6; padding:7px; vertical-align:top; }
+        .items td { border-bottom:0; padding:10px 8px; vertical-align:top; color:#020617; }
         .lower-cell { vertical-align:top; }
-        .methods { width:58%; padding-right:14px; }
-        .totals-cell { width:42%; }
-        .method { border:1px solid #dbe4ef; border-radius:5px; padding:7px; margin-bottom:6px; }
-        .note { border:1px solid #dbe4ef; border-radius:7px; background:#f9fbfd; padding:10px; margin-top:10px; white-space:pre-line; }
-        .totals { border:1px solid #dbe4ef; border-radius:7px; background:#f9fbfd; }
-        .totals th, .totals td { padding:5px 8px; border-bottom:1px solid #e7edf4; }
+        .methods { width:61%; padding-right:16px; }
+        .totals-cell { width:39%; }
+        .method { border:1px solid #dbe3ee; border-radius:8px; padding:7px 10px; margin-bottom:6px; color:#020617; }
+        .note { border:1px solid #dbe3ee; border-radius:9px; background:#f8fafc; padding:10px; margin-top:10px; white-space:pre-line; color:#020617; }
+        .totals { border:1px solid #dbe3ee; border-radius:9px; background:#f8fafc; }
+        .totals th, .totals td { padding:5px 8px; border-bottom:0; color:#020617; }
         .totals th { text-align:left; font-weight:normal; }
         .totals td { text-align:right; }
-        .totals tr:last-child th, .totals tr:last-child td { border-bottom:0; font-weight:bold; color:#111827; }
-        .signature { margin-top:14px; color:#475467; }
+        .totals tr:last-child th, .totals tr:last-child td { border-top:1px solid #e4eaf2; padding-top:8px; font-weight:bold; color:#020617; }
+        .signature { margin-top:14px; color:#020617; }
         .signature-line { width:140px; border-top:1px solid #98a2b3; margin-bottom:5px; }
         .sig-img { max-height:45px; max-width:120px; margin-right:8px; vertical-align:bottom; }
         .stamp-img { max-height:58px; max-width:82px; vertical-align:bottom; }
-        .footer { position:fixed; bottom:-12px; left:24px; right:24px; text-align:center; color:#667085; font-size:8px; }
+        .footer { position:fixed; bottom:-12px; left:24px; right:24px; text-align:center; color:#020617; font-size:8px; }
     </style>
 </head>
 <body>
@@ -138,8 +137,6 @@
                             <td class="company">
                                 <h2>{{ $companyName }}</h2>
                                 <div class="company-subtitle">{{ $companySubtitle }}</div>
-                                @if($issuerProfile['address'] ?? $settings?->address)<div class="company-detail">{{ $issuerProfile['address'] ?? $settings?->address }}</div>@endif
-                                @if($settings?->location)<div class="company-detail">{{ $settings->location }}</div>@endif
                                 @if(($issuerProfile['phone'] ?? $settings?->phone) || ($issuerProfile['email'] ?? $settings?->email))
                                     <div class="company-detail">
                                         @if($issuerProfile['phone'] ?? $settings?->phone){{ $issuerProfile['phone'] ?? $settings?->phone }}@endif
@@ -147,6 +144,8 @@
                                         @if($issuerProfile['email'] ?? $settings?->email){{ $issuerProfile['email'] ?? $settings?->email }}@endif
                                     </div>
                                 @endif
+                                @if($issuerProfile['address'] ?? $settings?->address)<div class="company-detail">{{ $issuerProfile['address'] ?? $settings?->address }}</div>@endif
+                                @if($settings?->location)<div class="company-detail">{{ $settings->location }}</div>@endif
                             </td>
                         </tr>
                     </table>
@@ -162,7 +161,7 @@
 
         <table class="box-table">
             <tr>
-                <td class="box">
+                <td class="box" style="width:61%;">
                     <div class="label">{{ $isReceipt ? 'Received from' : 'Bill to' }}</div>
                     <strong>{{ $recipientProfile['name'] ?? $client?->name }}</strong><br>
                     @if($client?->company_name){{ $client->company_name }}<br>@endif
@@ -174,10 +173,8 @@
                     @if(!empty($industryContext['job_number']))<br>Job: {{ $industryContext['job_number'] }}@endif
                     @if(!empty($industryContext['property_name']))<br>Property: {{ $industryContext['property_name'] }}@endif
                 </td>
-            </tr>
-            <tr class="box-spacer"><td></td></tr>
-            <tr>
-                <td class="box">
+                <td class="gap"></td>
+                <td class="box" style="width:39%;">
                     <table class="summary">
                         <tr><td>Status</td><td>{{ $status ?: '-' }}</td></tr>
                         @if($isReceipt)
@@ -204,7 +201,7 @@
                     @endif
                     @if($type === 'Invoice' && $qrCode)
                         <div class="verify">
-                            <img src="{{ $qrCode }}"> <span class="verify-text">Verify invoice origin</span>
+                            <img src="{{ $qrCode }}"> <span class="verify-text">Scan to verify invoice origin.@if($verificationUrl)<br>{{ $verificationUrl }}@endif</span>
                         </div>
                     @endif
                 </td>

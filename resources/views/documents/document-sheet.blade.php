@@ -5,6 +5,8 @@
     $signatory ??= null;
     $qrCode ??= null;
     $verificationUrl ??= null;
+    $publicDownloadUrl ??= null;
+    $publicPayUrl ??= null;
 
     $isReceipt = $type === 'Receipt';
     $sourceInvoice = $isReceipt ? $document->invoice : null;
@@ -56,50 +58,56 @@
 @endphp
 
 <style>
-    .doc-sheet{--doc-primary:{{ $primaryColor }};--doc-secondary:{{ $secondaryColor }};--doc-accent:{{ $accentColor }};width:min(100%,760px);min-height:1075px;margin:0 auto 1rem;background:#fff;border:1px solid #dce3ec;border-radius:8px;box-shadow:0 12px 34px rgba(15,23,42,.08);overflow:hidden;color:#101828}
+    .doc-sheet{--doc-primary:{{ $primaryColor }};--doc-secondary:{{ $secondaryColor }};--doc-accent:{{ $accentColor }};width:min(100%,760px);min-height:1075px;margin:0 auto 1rem;background:#fff;border:1px solid #e3e8ef;border-radius:16px;box-shadow:0 18px 42px rgba(15,23,42,.12);overflow:hidden;color:#020617}
     .doc-sheet *{letter-spacing:0}
-    .doc-sheet__bar{height:8px;background:linear-gradient(90deg,var(--doc-primary) 0 68%,var(--doc-secondary) 68% 90%,var(--doc-accent) 90% 100%)}
-    .doc-sheet__inner{padding:28px}
-    .doc-sheet__head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:start;margin-bottom:22px;padding-bottom:16px;border-bottom:2px solid #111827}
-    .doc-company{display:flex;gap:16px;align-items:flex-start}
-    .doc-logo{width:64px;height:64px;border-radius:4px;border:1px solid #d0d7e2;display:grid;place-items:center;background:#fff;color:#fff;font-weight:900;overflow:hidden;flex:0 0 64px}
+    .doc-sheet__bar{height:7px;background:var(--doc-primary)}
+    .doc-sheet__inner{padding:26px}
+    .doc-sheet__head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px;align-items:start;margin-bottom:26px}
+    .doc-company{display:flex;gap:14px;align-items:flex-start}
+    .doc-logo{width:54px;height:54px;border-radius:999px;border:0;display:grid;place-items:center;background:#fff;color:#fff;font-weight:900;overflow:hidden;flex:0 0 54px}
     .doc-logo span{display:grid;place-items:center;width:100%;height:100%;background:var(--doc-primary);font-size:1rem}
-    .doc-logo img{width:100%;height:100%;object-fit:contain;background:#fff;padding:6px}
-    .doc-company h2{font-size:1.18rem;margin:0 0 3px;color:#111827;font-weight:900;text-transform:uppercase;line-height:1.12}
-    .doc-company__subtitle{color:var(--doc-primary)!important;font-size:.68rem!important;font-weight:900;text-transform:uppercase;letter-spacing:.08em!important;margin-bottom:7px!important}
-    .doc-company p,.doc-meta p,.doc-box p{margin:0;color:#344054;font-size:.76rem;line-height:1.45}
+    .doc-logo img{width:100%;height:100%;object-fit:contain;background:#fff}
+    .doc-company h2{font-size:1.18rem;margin:0 0 4px;color:#020617;font-weight:800;line-height:1.12}
+    .doc-company__subtitle{display:none}
+    .doc-company p,.doc-meta p,.doc-box p{margin:0;color:#020617;font-size:.68rem;line-height:1.45}
     .doc-meta{text-align:right;min-width:160px}
-    .doc-type{display:inline-block;background:var(--doc-primary);color:#fff;font-size:.64rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;padding:6px 10px;border-radius:3px}
-    .doc-number{font-size:.98rem;font-weight:900;color:#111827;margin-bottom:4px}
-    .doc-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:20px}
-    .doc-box{border:1px solid #dbe4ef;background:#f9fbfd;border-radius:8px;padding:16px}
-    .doc-box__label{font-size:.62rem;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#475467;margin-bottom:10px}
-    .doc-box strong{display:block;color:#111827;margin-bottom:3px}
-    .doc-summary-row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #e7edf4;padding:6px 0;font-size:.78rem}
+    .doc-type{color:var(--doc-primary);font-size:.58rem;font-weight:800;letter-spacing:.45em;text-transform:uppercase;margin-bottom:4px}
+    .doc-number{font-size:1.05rem;font-weight:900;color:#020617;margin-bottom:6px}
+    .doc-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:18px;margin-bottom:24px}
+    .doc-box{border:1px solid #dbe3ee;background:#f8fafc;border-radius:10px;padding:16px;min-height:168px}
+    .doc-box__label{font-size:.58rem;font-weight:900;letter-spacing:.32em;text-transform:uppercase;color:#020617;margin-bottom:10px}
+    .doc-box strong{display:block;color:#020617;margin-bottom:3px}
+    .doc-summary-row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #e4eaf2;padding:5px 0;font-size:.72rem;color:#020617}
     .doc-summary-row:last-child{border-bottom:0}
-    .doc-balance{margin-top:8px;background:#101828;color:#fff;border-radius:6px;padding:8px 10px;text-align:center;font-weight:900;font-size:.76rem}
-    .doc-verify{display:flex;gap:10px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid #e7edf4}
-    .doc-verify img{width:72px;height:72px;border:1px solid #d0d7e2;background:#fff;padding:4px}
-    .doc-verify a{color:var(--doc-primary);font-size:.72rem;overflow-wrap:anywhere;word-break:break-word}
-    .doc-table{width:100%;border-collapse:collapse;margin-bottom:20px}
-    .doc-table th{background:var(--doc-primary);color:#fff;font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;padding:9px 10px;text-align:left}
+    .doc-balance{margin-top:8px;background:#0f172a;color:#fff;border-radius:9px;padding:8px 10px;text-align:center;font-weight:900;font-size:.72rem}
+    .doc-verify{display:flex;gap:12px;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid #e4eaf2}
+    .doc-verify img{width:62px;height:62px;border:1px solid #d0d7e2;background:#fff;padding:4px}
+    .doc-verify strong{font-size:.72rem}
+    .doc-verify a{color:var(--doc-primary);font-size:.64rem;overflow-wrap:anywhere;word-break:break-word}
+    .doc-table{width:100%;border-collapse:collapse;margin-bottom:26px}
+    .doc-table th{background:var(--doc-primary);color:#fff;font-size:.58rem;text-transform:uppercase;letter-spacing:.2em;padding:9px 10px;text-align:left}
     .doc-table th:last-child,.doc-table td:last-child{text-align:right}
-    .doc-table td{padding:10px;border-bottom:1px solid #edf1f6;font-size:.78rem;vertical-align:top}
+    .doc-table td{padding:12px 10px;border-bottom:0;font-size:.72rem;vertical-align:top;color:#020617}
     .doc-table td:nth-child(3),.doc-table td:nth-child(4){white-space:nowrap}
-    .doc-lower{display:grid;grid-template-columns:1fr;gap:14px;align-items:start}
+    .doc-lower{display:grid;grid-template-columns:1.55fr 1fr;gap:18px;align-items:start}
     .doc-methods{display:grid;gap:8px}
-    .doc-method{border:1px solid #dbe4ef;border-radius:6px;padding:8px 10px;font-size:.74rem;background:#fff}
+    .doc-method{border:1px solid #dbe3ee;border-radius:9px;padding:8px 10px;font-size:.68rem;background:#fff;color:#020617}
     .doc-method strong{display:block;margin-bottom:2px}
-    .doc-note{border:1px solid #dbe4ef;border-radius:8px;background:#f9fbfd;padding:14px;margin-top:14px;font-size:.74rem;color:#344054;white-space:pre-line}
-    .doc-totals{border:1px solid #dbe4ef;border-radius:8px;padding:14px;background:#f9fbfd}
+    .doc-note{border:1px solid #dbe3ee;border-radius:10px;background:#f8fafc;padding:14px;margin-top:14px;font-size:.68rem;color:#020617;white-space:pre-line}
+    .doc-totals{border:1px solid #dbe3ee;border-radius:10px;padding:14px;background:#f8fafc}
     .doc-totals table{width:100%;border-collapse:collapse}
-    .doc-totals th,.doc-totals td{font-size:.76rem;padding:5px 0;border-bottom:1px solid #e7edf4}
-    .doc-totals th{text-align:left;font-weight:500}.doc-totals td{text-align:right}.doc-totals tr:last-child th,.doc-totals tr:last-child td{border-bottom:0;font-weight:900;color:#111827}
-    .doc-signature{margin-top:16px;font-size:.75rem;color:#475467}
+    .doc-totals th,.doc-totals td{font-size:.72rem;padding:6px 0;border-bottom:0;color:#020617}
+    .doc-totals th{text-align:left;font-weight:500}.doc-totals td{text-align:right}.doc-totals tr:last-child th,.doc-totals tr:last-child td{border-top:1px solid #e4eaf2;padding-top:9px;font-weight:900;color:#020617}
+    .doc-actions{display:grid;gap:8px;margin-top:14px}
+    .doc-action{display:flex;align-items:center;justify-content:center;min-height:34px;border-radius:999px;padding:8px 14px;color:#fff;text-decoration:none;font-size:.72rem;font-weight:900}
+    .doc-action:hover{color:#fff;text-decoration:none;filter:brightness(.96)}
+    .doc-action--primary{background:var(--doc-primary)}
+    .doc-action--success{background:#10b981}
+    .doc-signature{margin-top:16px;font-size:.68rem;color:#020617}
     .doc-signature__assets{display:flex;gap:10px;align-items:end;margin-bottom:8px}
     .doc-signature img{object-fit:contain}.doc-signature__sig{max-width:130px;max-height:52px}.doc-signature__stamp{max-width:92px;max-height:68px}
     .doc-signature__line{width:150px;border-top:1px solid #98a2b3;margin-bottom:6px}
-    @media(max-width:760px){.doc-sheet{min-height:auto}.doc-sheet__inner{padding:18px}.doc-sheet__head{grid-template-columns:1fr}.doc-meta{text-align:left}.doc-table{min-width:640px}.doc-table-wrap{overflow-x:auto}}
+    @media(max-width:760px){.doc-sheet{min-height:auto;border-radius:12px}.doc-sheet__inner{padding:18px}.doc-sheet__head,.doc-grid,.doc-lower{grid-template-columns:1fr}.doc-meta{text-align:left}.doc-table{min-width:640px}.doc-table-wrap{overflow-x:auto}}
 </style>
 
 <article class="doc-sheet">
@@ -117,8 +125,6 @@
                 <div>
                     <h2>{{ $companyName }}</h2>
                     <p class="doc-company__subtitle">{{ $companySubtitle }}</p>
-                    @if($issuerProfile['address'] ?? $settings?->address)<p>{{ $issuerProfile['address'] ?? $settings?->address }}</p>@endif
-                    @if($settings?->location)<p>{{ $settings->location }}</p>@endif
                     @if(($issuerProfile['phone'] ?? $settings?->phone) || ($issuerProfile['email'] ?? $settings?->email))
                         <p>
                             @if($issuerProfile['phone'] ?? $settings?->phone){{ $issuerProfile['phone'] ?? $settings?->phone }}@endif
@@ -126,6 +132,8 @@
                             @if($issuerProfile['email'] ?? $settings?->email){{ $issuerProfile['email'] ?? $settings?->email }}@endif
                         </p>
                     @endif
+                    @if($issuerProfile['address'] ?? $settings?->address)<p>{{ $issuerProfile['address'] ?? $settings?->address }}</p>@endif
+                    @if($settings?->location)<p>{{ $settings->location }}</p>@endif
                 </div>
             </div>
             <div class="doc-meta">
@@ -261,6 +269,16 @@
                         <tr><th>Total</th><td>{{ $money($document->total) }}</td></tr>
                     @endif
                 </table>
+                @if(!empty($publicDownloadUrl) || !empty($publicPayUrl))
+                    <div class="doc-actions">
+                        @if(!empty($publicDownloadUrl))
+                            <a class="doc-action doc-action--primary" href="{{ $publicDownloadUrl }}">Download PDF</a>
+                        @endif
+                        @if(!empty($publicPayUrl))
+                            <a class="doc-action doc-action--success" href="{{ $publicPayUrl }}">Pay</a>
+                        @endif
+                    </div>
+                @endif
             </div>
         </section>
     </div>
