@@ -92,24 +92,32 @@ class QuotationController extends Controller
 
     public function sendEmail(Request $request, Quotation $quotation)
     {
-        $data = $request->validate(['subject' => ['required', 'string'], 'message' => ['required', 'string']]);
+        $data = $request->validate([
+            'to' => ['required', 'email'],
+            'cc' => ['nullable', 'string', 'max:2000'],
+            'subject' => ['required', 'string'],
+            'message' => ['required', 'string'],
+        ]);
+        $cc = $this->validatedEmailList($data['cc'] ?? null);
+        $logData = collect($data)->only(['subject', 'message'])->all();
         $quotation->load('client');
 
         try {
             $this->outgoingMail->sendRaw(
-                $quotation->client->email,
+                $data['to'],
                 $data['subject'],
                 $data['message'],
                 fn ($mail) => $mail->attachData($this->pdf($quotation)->output(), $quotation->quotation_number.'.pdf', ['mime' => 'application/pdf']),
                 $quotation->business_id,
                 requireProfileSender: true,
+                cc: $cc,
             );
-            $quotation->emailLogs()->create($data + ['recipient_email' => $quotation->client->email, 'status' => 'sent', 'sent_at' => now()]);
+            $quotation->emailLogs()->create($logData + ['recipient_email' => $data['to'], 'status' => 'sent', 'sent_at' => now()]);
             $quotation->update(['sent_at' => now(), 'status' => 'sent']);
 
             return redirect()->route('quotations.show', $quotation)->with('status', 'Quotation emailed.');
         } catch (\Throwable $e) {
-            $quotation->emailLogs()->create($data + ['recipient_email' => $quotation->client->email, 'status' => 'failed', 'error' => $e->getMessage()]);
+            $quotation->emailLogs()->create($logData + ['recipient_email' => $data['to'], 'status' => 'failed', 'error' => $e->getMessage()]);
 
             return back()->withErrors(['email' => 'Email failed: '.$this->outgoingMail->userFacingError($e)]);
         }

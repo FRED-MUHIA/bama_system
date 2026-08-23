@@ -22,13 +22,10 @@
         </div>
     @endunless
     <form method="post" action="{{ route($type.'s.email.send', $document) }}">@csrf
-        <div class="mb-3"><label class="form-label">To</label><input class="form-control" value="{{ $client->email }}" disabled></div>
-        <div class="mb-3"><label class="form-label">Subject</label><input class="form-control" name="subject" value="{{ ucfirst($type) }} {{ $number }} from {{ $profileName }}" required></div>
-        <div class="mb-3"><label class="form-label">Message</label><textarea class="form-control" name="message" rows="7" required>Hello {{ $client->name }},
-
-Please find attached {{ $type }} {{ $number }} from {{ $profileName }}.
-
-Thank you.</textarea></div>
+        <div class="mb-3"><label class="form-label">To</label><input class="form-control" name="to" type="email" value="{{ old('to', $client->email) }}" required></div>
+        <div class="mb-3"><label class="form-label">CC</label><input class="form-control" name="cc" value="{{ old('cc') }}" placeholder="name@example.com, accounts@example.com"></div>
+        <div class="mb-3"><label class="form-label">Subject</label><input class="form-control" name="subject" value="{{ old('subject', ucfirst($type).' '.$number.' from '.$profileName) }}" required></div>
+        <div class="mb-3"><label class="form-label">Message</label><textarea class="form-control" name="message" rows="7" required>{{ old('message', "Hello {$client->name},\n\nPlease find attached {$type} {$number} from {$profileName}.\n\nThank you.") }}</textarea></div>
         <button class="btn btn-warning"><i class="bi bi-send"></i> Send Email</button>
     </form>
 </div></div>

@@ -179,6 +179,7 @@ class LetterController extends Controller
         $data = $request->validate([
             'mode' => ['required', 'in:generate,email,portal'],
             'recipient' => ['nullable', 'email', 'max:255'],
+            'cc' => ['nullable', 'string', 'max:2000'],
             'message' => ['nullable', 'string'],
         ]);
 
@@ -188,6 +189,8 @@ class LetterController extends Controller
                 return back()->withErrors(['recipient' => 'A recipient email is required.']);
             }
 
+            $cc = $this->validatedEmailList($data['cc'] ?? null);
+
             try {
                 $this->outgoingMail->sendRaw(
                     $recipient,
@@ -196,6 +199,7 @@ class LetterController extends Controller
                     fn ($mail) => $mail->attachData($this->letters->pdf($letter)->output(), $letter->letter_number.'.pdf', ['mime' => 'application/pdf']),
                     $letter->business_id,
                     requireProfileSender: true,
+                    cc: $cc,
                 );
                 $letter->update(['recipient' => $recipient, 'sent_at' => now(), 'delivery_status' => 'sent', 'status' => 'Sent']);
             } catch (\Throwable $e) {

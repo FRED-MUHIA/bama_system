@@ -38,20 +38,25 @@ class OutgoingMailService
         return $setting;
     }
 
-    public function sendRaw(string $to, string $subject, string $body, ?callable $configure = null, ?int $businessId = null, bool $requireProfileSender = false): void
+    public function sendRaw(string $to, string $subject, string $body, ?callable $configure = null, ?int $businessId = null, bool $requireProfileSender = false, array|string|null $cc = null): void
     {
         if (blank($to)) {
             throw new InvalidArgumentException('Recipient email address is required.');
         }
 
+        $ccRecipients = $this->normalizeEmailList($cc);
         $setting = $this->apply($businessId);
 
         if ($requireProfileSender && ! $setting) {
             throw new RuntimeException('Enable SMTP mail settings for this profile before emailing documents.');
         }
 
-        Mail::raw($body, function ($mail) use ($to, $subject, $configure, $setting) {
+        Mail::raw($body, function ($mail) use ($to, $subject, $configure, $setting, $ccRecipients) {
             $mail->to($to)->subject($subject);
+
+            if ($ccRecipients) {
+                $mail->cc($ccRecipients);
+            }
 
             if ($setting) {
                 $mail->from(config('mail.from.address'), $setting->from_name);
@@ -64,6 +69,22 @@ class OutgoingMailService
                 $configure($mail);
             }
         });
+    }
+
+    private function normalizeEmailList(array|string|null $emails): array
+    {
+        if (blank($emails)) {
+            return [];
+        }
+
+        if (is_string($emails)) {
+            $emails = preg_split('/[\s,;]+/', $emails, -1, PREG_SPLIT_NO_EMPTY);
+        }
+
+        return array_values(array_unique(array_filter(array_map(
+            fn ($email) => trim((string) $email),
+            $emails
+        ))));
     }
 
     public function userFacingError(Throwable $e): string
