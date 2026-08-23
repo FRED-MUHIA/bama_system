@@ -26,8 +26,9 @@ class MailSetting extends Model
 
         if (! $usesOwnSmtp) {
             config([
-                'mail.from.address' => $this->from_address,
+                'mail.from.address' => config('mail.from.address'),
                 'mail.from.name' => $this->from_name,
+                'mail.mailers.smtp.local_domain' => config('mail.required_sender_domain') ?: config('mail.mailers.smtp.local_domain'),
             ]);
             app('mail.manager')->forgetMailers();
 

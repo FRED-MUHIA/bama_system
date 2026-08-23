@@ -60,7 +60,7 @@
 <style>
     .doc-sheet{--doc-primary:{{ $primaryColor }};--doc-secondary:{{ $secondaryColor }};--doc-accent:{{ $accentColor }};width:min(100%,760px);min-height:1075px;margin:0 auto 1rem;background:#fff;border:1px solid #e3e8ef;border-radius:16px;box-shadow:0 18px 42px rgba(15,23,42,.12);overflow:hidden;color:#020617}
     .doc-sheet *{letter-spacing:0}
-    .doc-sheet__bar{height:7px;background:var(--doc-primary)}
+    .doc-sheet__bar{height:7px;background:linear-gradient(90deg,var(--doc-primary) 0 78%,var(--doc-secondary) 78% 100%)}
     .doc-sheet__inner{padding:26px}
     .doc-sheet__head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px;align-items:start;margin-bottom:26px}
     .doc-company{display:flex;gap:14px;align-items:flex-start}
@@ -74,12 +74,12 @@
     .doc-type{color:var(--doc-primary);font-size:.58rem;font-weight:800;letter-spacing:.45em;text-transform:uppercase;margin-bottom:4px}
     .doc-number{font-size:1.05rem;font-weight:900;color:#020617;margin-bottom:6px}
     .doc-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:18px;margin-bottom:24px}
-    .doc-box{border:1px solid #dbe3ee;background:#f8fafc;border-radius:10px;padding:16px;min-height:168px}
+    .doc-box{border:1px solid color-mix(in srgb,var(--doc-primary) 22%,#dbe3ee);background:var(--doc-accent);border-radius:10px;padding:16px;min-height:168px}
     .doc-box__label{font-size:.58rem;font-weight:900;letter-spacing:.32em;text-transform:uppercase;color:#020617;margin-bottom:10px}
     .doc-box strong{display:block;color:#020617;margin-bottom:3px}
     .doc-summary-row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #e4eaf2;padding:5px 0;font-size:.72rem;color:#020617}
     .doc-summary-row:last-child{border-bottom:0}
-    .doc-balance{margin-top:8px;background:#0f172a;color:#fff;border-radius:9px;padding:8px 10px;text-align:center;font-weight:900;font-size:.72rem}
+    .doc-balance{margin-top:8px;background:var(--doc-secondary);color:#fff;border-radius:9px;padding:8px 10px;text-align:center;font-weight:900;font-size:.72rem}
     .doc-verify{display:flex;gap:12px;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid #e4eaf2}
     .doc-verify img{width:62px;height:62px;border:1px solid #d0d7e2;background:#fff;padding:4px}
     .doc-verify strong{font-size:.72rem}
@@ -91,10 +91,10 @@
     .doc-table td:nth-child(3),.doc-table td:nth-child(4){white-space:nowrap}
     .doc-lower{display:grid;grid-template-columns:1.55fr 1fr;gap:18px;align-items:start}
     .doc-methods{display:grid;gap:8px}
-    .doc-method{border:1px solid #dbe3ee;border-radius:9px;padding:8px 10px;font-size:.68rem;background:#fff;color:#020617}
+    .doc-method{border:1px solid color-mix(in srgb,var(--doc-primary) 18%,#dbe3ee);border-radius:9px;padding:8px 10px;font-size:.68rem;background:#fff;color:#020617}
     .doc-method strong{display:block;margin-bottom:2px}
-    .doc-note{border:1px solid #dbe3ee;border-radius:10px;background:#f8fafc;padding:14px;margin-top:14px;font-size:.68rem;color:#020617;white-space:pre-line}
-    .doc-totals{border:1px solid #dbe3ee;border-radius:10px;padding:14px;background:#f8fafc}
+    .doc-note{border:1px solid color-mix(in srgb,var(--doc-primary) 22%,#dbe3ee);border-radius:10px;background:var(--doc-accent);padding:14px;margin-top:14px;font-size:.68rem;color:#020617;white-space:pre-line}
+    .doc-totals{border:1px solid color-mix(in srgb,var(--doc-primary) 22%,#dbe3ee);border-radius:10px;padding:14px;background:var(--doc-accent)}
     .doc-totals table{width:100%;border-collapse:collapse}
     .doc-totals th,.doc-totals td{font-size:.72rem;padding:6px 0;border-bottom:0;color:#020617}
     .doc-totals th{text-align:left;font-weight:500}.doc-totals td{text-align:right}.doc-totals tr:last-child th,.doc-totals tr:last-child td{border-top:1px solid #e4eaf2;padding-top:9px;font-weight:900;color:#020617}
@@ -102,7 +102,7 @@
     .doc-action{display:flex;align-items:center;justify-content:center;min-height:34px;border-radius:999px;padding:8px 14px;color:#fff;text-decoration:none;font-size:.72rem;font-weight:900}
     .doc-action:hover{color:#fff;text-decoration:none;filter:brightness(.96)}
     .doc-action--primary{background:var(--doc-primary)}
-    .doc-action--success{background:#10b981}
+    .doc-action--success{background:var(--doc-secondary)}
     .doc-signature{margin-top:16px;font-size:.68rem;color:#020617}
     .doc-signature__assets{display:flex;gap:10px;align-items:end;margin-bottom:8px}
     .doc-signature img{object-fit:contain}.doc-signature__sig{max-width:130px;max-height:52px}.doc-signature__stamp{max-width:92px;max-height:68px}

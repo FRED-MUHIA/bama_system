@@ -9,7 +9,7 @@
         ?: config('app.name', 'BAMA');
     $mailSetting = \App\Models\MailSetting::withoutGlobalScopes()->where('business_id', $document->business_id)->where('enabled', true)->first();
     $usesOwnSmtp = filled($mailSetting?->username) && filled($mailSetting?->password);
-    $serverMailDomain = config('mail.mailers.smtp.local_domain') ?: (
+    $serverMailDomain = config('mail.required_sender_domain') ?: config('mail.mailers.smtp.local_domain') ?: (
         str_contains((string) config('mail.from.address'), '@')
             ? \Illuminate\Support\Str::after(config('mail.from.address'), '@')
             : 'bama.co.ke'
@@ -23,7 +23,7 @@
         </div>
     @else
         <div class="alert alert-success">
-            Sending as {{ $mailSetting->from_name }} &lt;{{ $mailSetting->from_address }}&gt; {{ $usesOwnSmtp ? 'through its saved mailbox' : 'via '.$serverMailDomain.' server mail' }}.
+            Sending as {{ $mailSetting->from_name }} {{ $usesOwnSmtp ? '<'.$mailSetting->from_address.'> through its saved mailbox' : 'via '.$serverMailDomain.' server mail. Replies go to <'.$mailSetting->from_address.'>' }}.
         </div>
     @endunless
     <form method="post" action="{{ route($type.'s.email.send', $document) }}">@csrf

@@ -65,8 +65,9 @@
         .sheet { border:1px solid #e3e8ef; border-radius:12px; overflow:hidden; }
         .top-bar { width:100%; height:8px; border-collapse:collapse; }
         .top-bar td { padding:0; }
-        .top-primary { width:100%; background:{{ $primaryColor }}; }
-        .top-secondary, .top-accent { width:0; background:{{ $primaryColor }}; }
+        .top-primary { width:78%; background:{{ $primaryColor }}; }
+        .top-secondary { width:22%; background:{{ $secondaryColor }}; }
+        .top-accent { width:0; background:{{ $accentColor }}; }
         .inner { padding:22px 24px 24px; }
         table { width:100%; border-collapse:collapse; }
         .letterhead { margin-bottom:24px; }
@@ -85,13 +86,13 @@
         .meta-line { color:#020617; font-size:8px; line-height:1.45; }
         .meta-line strong { color:#020617; font-weight:normal; }
         .box-table { margin-bottom:20px; }
-        .box { border:1px solid #dbe3ee; background:#f8fafc; border-radius:9px; padding:12px; vertical-align:top; }
+        .box { border:1px solid #dbe3ee; background:{{ $accentColor }}; border-radius:9px; padding:12px; vertical-align:top; }
         .gap { width:16px; }
         .label { font-size:7px; font-weight:bold; letter-spacing:3px; text-transform:uppercase; color:#020617; margin-bottom:9px; }
         .muted { color:#020617; }
         .summary td { border-bottom:1px solid #e4eaf2; padding:4px 0; color:#020617; }
         .summary td:last-child { text-align:right; font-weight:bold; }
-        .balance { margin-top:7px; background:#0f172a; color:#fff; border-radius:8px; padding:7px; text-align:center; font-weight:bold; }
+        .balance { margin-top:7px; background:{{ $secondaryColor }}; color:#fff; border-radius:8px; padding:7px; text-align:center; font-weight:bold; }
         .verify { margin-top:12px; padding-top:10px; border-top:1px solid #e4eaf2; }
         .verify img { width:54px; height:54px; border:1px solid #d0d7e2; padding:3px; vertical-align:middle; margin-right:8px; }
         .verify-text { word-break:break-word; }
@@ -103,8 +104,8 @@
         .methods { width:61%; padding-right:16px; }
         .totals-cell { width:39%; }
         .method { border:1px solid #dbe3ee; border-radius:8px; padding:7px 10px; margin-bottom:6px; color:#020617; }
-        .note { border:1px solid #dbe3ee; border-radius:9px; background:#f8fafc; padding:10px; margin-top:10px; white-space:pre-line; color:#020617; }
-        .totals { border:1px solid #dbe3ee; border-radius:9px; background:#f8fafc; }
+        .note { border:1px solid #dbe3ee; border-radius:9px; background:{{ $accentColor }}; padding:10px; margin-top:10px; white-space:pre-line; color:#020617; }
+        .totals { border:1px solid #dbe3ee; border-radius:9px; background:{{ $accentColor }}; }
         .totals th, .totals td { padding:5px 8px; border-bottom:0; color:#020617; }
         .totals th { text-align:left; font-weight:normal; }
         .totals td { text-align:right; }

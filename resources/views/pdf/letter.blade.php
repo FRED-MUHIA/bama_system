@@ -23,8 +23,9 @@
         .inner { padding:22px 24px 24px; }
         .accent-strip { width:100%; height:8px; border-collapse:collapse; margin-bottom:0; }
         .accent-strip td { padding:0; }
-        .accent-primary { width:100%; background:{{ $primaryColor }}; }
-        .accent-secondary, .accent-soft { width:0; background:{{ $primaryColor }}; }
+        .accent-primary { width:78%; background:{{ $primaryColor }}; }
+        .accent-secondary { width:22%; background:{{ $secondaryColor }}; }
+        .accent-soft { width:0; background:{{ $accentColor }}; }
         .header { display:table; width:100%; margin-bottom:24px; }
         .company-info, .logo-wrap { display:table-cell; vertical-align:top; }
         .logo-wrap { width:54px; text-align:left; }
@@ -43,11 +44,11 @@
         .doc-title { font-size:13px; font-weight:700; color:#020617; margin-bottom:4px; line-height:1.25; }
         .meta-label { color:#020617; font-size:8px; }
         .meta-value { font-size:9px; color:#020617; font-weight:bold; }
-        .recipient-block { margin-bottom:18px; border:1px solid #dbe3ee; background:#f8fafc; border-radius:9px; padding:12px; }
+        .recipient-block { margin-bottom:18px; border:1px solid #dbe3ee; background:{{ $accentColor }}; border-radius:9px; padding:12px; }
         .recipient-label { color:#020617; font-size:7px; text-transform:uppercase; letter-spacing:3px; margin-bottom:7px; font-weight:bold; }
         .recipient-name { font-size:12px; font-weight:700; color:#020617; }
         .recipient-detail { font-size:9px; color:#020617; line-height:1.45; }
-        .subject-line { font-size:13px; font-weight:700; color:#020617; margin-bottom:18px; padding:10px 14px; background:#f8fafc; border:1px solid #dbe3ee; border-radius:9px; }
+        .subject-line { font-size:13px; font-weight:700; color:#020617; margin-bottom:18px; padding:10px 14px; background:{{ $accentColor }}; border:1px solid #dbe3ee; border-radius:9px; }
         .content { font-size:10px; line-height:1.7; color:#020617; margin-bottom:28px; }
         .content p { margin:0 0 10px; }
         .signature-block { margin-top:28px; padding-top:16px; border-top:1px solid #e4eaf2; page-break-inside:avoid; }

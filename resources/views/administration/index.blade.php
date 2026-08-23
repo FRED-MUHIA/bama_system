@@ -13,7 +13,7 @@
     $usesOwnSmtp = old('use_own_smtp') !== null
         ? old('use_own_smtp') === '1'
         : filled($mailSetting?->username) && filled($mailSetting?->password);
-    $serverMailDomain = config('mail.mailers.smtp.local_domain') ?: (
+    $serverMailDomain = config('mail.required_sender_domain') ?: config('mail.mailers.smtp.local_domain') ?: (
         str_contains((string) config('mail.from.address'), '@')
             ? \Illuminate\Support\Str::after(config('mail.from.address'), '@')
             : 'bama.co.ke'
@@ -426,7 +426,7 @@
                 @endif
             </div>
             <div class="alert alert-info">
-                Simple mode sends through the configured BAMA mail server and shows this profile email as the sender. Gmail recipients may display it as this sender via {{ $serverMailDomain }}.
+                Simple mode sends through the configured BAMA mail server and uses this profile email for replies. Recipients may display the message as {{ config('mail.from.address') }} on behalf of this profile via {{ $serverMailDomain }}.
                 <div class="mt-2">Turn on mailbox SMTP when this profile should send directly through Gmail, Yahoo, Google Workspace, Microsoft 365 or its own webmail account.</div>
                 <div class="mt-2 d-flex flex-wrap gap-2">
                     <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener" class="alert-link">Gmail app password help</a>

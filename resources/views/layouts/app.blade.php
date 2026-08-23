@@ -502,6 +502,92 @@
                 opacity:.82;
             }
         }
+        @media (max-width:991px) {
+            html,body {
+                width:100%;
+                max-width:100%;
+                overflow-x:hidden;
+                -webkit-text-size-adjust:100%;
+                text-size-adjust:100%;
+            }
+            .container-fluid,
+            .container-fluid > .row,
+            main,
+            main > section {
+                width:100%;
+                max-width:100%;
+                min-width:0;
+                overflow-x:hidden;
+            }
+            main > section > *,
+            .card,
+            .card-body,
+            .panel-card,
+            .pb-card,
+            .modal-dialog,
+            .dropdown-menu {
+                max-width:100%;
+                min-width:0;
+            }
+            input,
+            select,
+            textarea,
+            .form-control,
+            .form-select,
+            .form-control-sm,
+            .form-select-sm,
+            .input-group .form-control,
+            .input-group .form-select {
+                font-size:16px !important;
+                line-height:1.35;
+            }
+            .btn,
+            .btn-sm {
+                min-height:42px;
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                gap:.35rem;
+                white-space:normal;
+            }
+            .input-group,
+            .d-flex,
+            .row {
+                min-width:0;
+            }
+            .input-group {
+                flex-wrap:wrap;
+            }
+            .input-group > .form-control,
+            .input-group > .form-select {
+                flex:1 1 180px;
+                min-width:0;
+            }
+            .table-responsive,
+            .card:has(> table),
+            .doc-table-wrap {
+                width:100%;
+                max-width:100%;
+                overflow-x:auto;
+                -webkit-overflow-scrolling:touch;
+            }
+            .table {
+                max-width:100%;
+            }
+            img,
+            svg,
+            canvas,
+            video {
+                max-width:100%;
+                height:auto;
+            }
+            pre,
+            code,
+            .text-break {
+                white-space:pre-wrap;
+                overflow-wrap:anywhere;
+            }
+        }
         @media (prefers-reduced-motion:reduce) {
             *,*::before,*::after { scroll-behavior:auto !important;transition-duration:.01ms !important;animation-duration:.01ms !important;animation-iteration-count:1 !important; }
         }
