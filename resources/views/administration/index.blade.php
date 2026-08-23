@@ -421,7 +421,7 @@
                 @endif
             </div>
             <div class="alert alert-info">
-                Simple mode uses the hidden server mail login, but clients see this profile email as the sender. Turn on corporate integration when this profile has its own mailbox and wants emails to send through that mailbox.
+                Simple mode uses the server mail service and shows this profile email as the sender. Turn on corporate integration only when this profile has its own mailbox and wants to send through that mailbox.
                 <div class="mt-2 d-flex flex-wrap gap-2">
                     <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener" class="alert-link">Gmail app password help</a>
                     <a href="https://help.yahoo.com/kb/SLN15241.html" target="_blank" rel="noopener" class="alert-link">Yahoo app password help</a>
@@ -434,8 +434,8 @@
                 <div class="col-md-6"><label class="form-label">From name</label><input class="form-control" name="from_name" value="{{ $mailFromName }}" placeholder="{{ $profileName }}" required></div>
                 <div class="col-md-6">
                     <label class="form-label">Mail login</label>
-                    <input class="form-control" value="{{ $usesOwnSmtp ? 'Own corporate mailbox connected' : 'Hidden server mail' }}" disabled>
-                    <div class="form-text">{{ $usesOwnSmtp ? 'This profile sends through its own saved SMTP mailbox.' : 'The server uses MAIL_HOST, MAIL_USERNAME and MAIL_PASSWORD from .env.' }}</div>
+                    <input class="form-control" value="{{ $usesOwnSmtp ? 'Own corporate mailbox connected' : 'Server mail, no password needed' }}" disabled>
+                    <div class="form-text">{{ $usesOwnSmtp ? 'This profile sends through its own saved SMTP mailbox.' : 'Clients do not enter or see any mail password in simple mode.' }}</div>
                 </div>
                 <div class="col-12">
                     <label class="form-check">

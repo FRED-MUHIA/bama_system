@@ -76,15 +76,19 @@ class OutgoingMailService
             || str_contains($lower, 'invalidsecondfactor')
             || str_contains($lower, '534-5.7.9')
         ) {
-            return 'Gmail needs an App Password. Ask the system owner to set the Gmail App Password in the hidden server mail settings.';
+            return 'Gmail rejected this mailbox login. Connect this profile with its own Gmail App Password, or switch off corporate integration and use server mail.';
         }
 
         if (str_contains($lower, 'yahoo') && (str_contains($lower, 'authenticate') || str_contains($lower, 'password') || str_contains($lower, '535'))) {
-            return 'Yahoo needs an App Password. Ask the system owner to set the Yahoo App Password in the hidden server mail settings.';
+            return 'Yahoo rejected this mailbox login. Connect this profile with its own Yahoo App Password, or switch off corporate integration and use server mail.';
         }
 
         if (str_contains($lower, '535') || str_contains($lower, 'failed to authenticate')) {
-            return 'The email username or hidden server password is not accepted. Check the username, then ask the system owner to confirm the server mail password.';
+            return 'This mailbox login was rejected. Check the email address and app password, or switch off corporate integration and use server mail.';
+        }
+
+        if (str_contains($lower, 'sendmail') || str_contains($lower, 'proc_open') || str_contains($lower, 'no such file') || str_contains($lower, 'not found')) {
+            return 'The server mail service is not available. Ask the system owner to enable server mail, or connect this profile with its own corporate email server.';
         }
 
         if (str_contains($lower, 'connection could not be established') || str_contains($lower, 'connection refused') || str_contains($lower, 'timed out')) {

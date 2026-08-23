@@ -22,10 +22,21 @@ class MailSetting extends Model
             return;
         }
 
-        $smtp = config('mail.mailers.smtp', []);
         $usesOwnSmtp = filled($this->username) && filled($this->password);
-        $port = (int) ($usesOwnSmtp ? $this->port : ($smtp['port'] ?? $this->port ?? 587));
-        $scheme = match ($usesOwnSmtp ? $this->scheme : ($smtp['scheme'] ?? $this->scheme)) {
+
+        if (! $usesOwnSmtp) {
+            config([
+                'mail.default' => 'sendmail',
+                'mail.from.address' => $this->from_address,
+                'mail.from.name' => $this->from_name,
+            ]);
+            app('mail.manager')->forgetMailers();
+
+            return;
+        }
+
+        $port = (int) ($this->port ?? 587);
+        $scheme = match ($this->scheme) {
             'ssl', 'smtps' => 'smtps',
             'tls', 'smtp' => 'smtp',
             default => $port === 465 ? 'smtps' : 'smtp',
@@ -34,11 +45,11 @@ class MailSetting extends Model
 
         config([
             'mail.default' => 'smtp',
-            'mail.mailers.smtp.host' => $usesOwnSmtp ? $this->host : ($smtp['host'] ?? $this->host),
+            'mail.mailers.smtp.host' => $this->host,
             'mail.mailers.smtp.port' => $port,
             'mail.mailers.smtp.scheme' => $scheme,
-            'mail.mailers.smtp.username' => $usesOwnSmtp ? $this->username : ($smtp['username'] ?? $this->username),
-            'mail.mailers.smtp.password' => $usesOwnSmtp ? $this->password : ($smtp['password'] ?? $this->password),
+            'mail.mailers.smtp.username' => $this->username,
+            'mail.mailers.smtp.password' => $this->password,
             'mail.from.address' => $fromAddress,
             'mail.from.name' => $this->from_name,
         ]);
