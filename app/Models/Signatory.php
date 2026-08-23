@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToBusiness;
+use App\Support\PublicUpload;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class Signatory extends Model
 {
@@ -25,15 +25,7 @@ class Signatory extends Model
             return null;
         }
 
-        if (Storage::disk('public')->exists($this->signature_path)) {
-            return Storage::url($this->signature_path);
-        }
-
-        if (file_exists(public_path($this->signature_path))) {
-            return asset($this->signature_path);
-        }
-
-        return null;
+        return PublicUpload::url($this->signature_path);
     }
 
     public function signatureFilePath(): ?string
@@ -42,13 +34,7 @@ class Signatory extends Model
             return null;
         }
 
-        if (Storage::disk('public')->exists($this->signature_path)) {
-            return Storage::disk('public')->path($this->signature_path);
-        }
-
-        $publicPath = public_path($this->signature_path);
-
-        return file_exists($publicPath) ? $publicPath : null;
+        return PublicUpload::filePath($this->signature_path);
     }
 
     public function stampUrl(): ?string
@@ -57,15 +43,7 @@ class Signatory extends Model
             return null;
         }
 
-        if (Storage::disk('public')->exists($this->stamp_path)) {
-            return Storage::url($this->stamp_path);
-        }
-
-        if (file_exists(public_path($this->stamp_path))) {
-            return asset($this->stamp_path);
-        }
-
-        return null;
+        return PublicUpload::url($this->stamp_path);
     }
 
     public function stampFilePath(): ?string
@@ -74,12 +52,6 @@ class Signatory extends Model
             return null;
         }
 
-        if (Storage::disk('public')->exists($this->stamp_path)) {
-            return Storage::disk('public')->path($this->stamp_path);
-        }
-
-        $publicPath = public_path($this->stamp_path);
-
-        return file_exists($publicPath) ? $publicPath : null;
+        return PublicUpload::filePath($this->stamp_path);
     }
 }

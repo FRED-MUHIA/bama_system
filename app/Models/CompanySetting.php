@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToBusiness;
+use App\Support\PublicUpload;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class CompanySetting extends Model
 {
@@ -27,15 +27,7 @@ class CompanySetting extends Model
             return null;
         }
 
-        if (Storage::disk('public')->exists($this->logo_path)) {
-            return Storage::url($this->logo_path);
-        }
-
-        if (file_exists(public_path($this->logo_path))) {
-            return asset($this->logo_path);
-        }
-
-        return null;
+        return PublicUpload::url($this->logo_path);
     }
 
     public function logoFilePath(): ?string
@@ -44,13 +36,7 @@ class CompanySetting extends Model
             return null;
         }
 
-        if (Storage::disk('public')->exists($this->logo_path)) {
-            return Storage::disk('public')->path($this->logo_path);
-        }
-
-        $publicPath = public_path($this->logo_path);
-
-        return file_exists($publicPath) ? $publicPath : null;
+        return PublicUpload::filePath($this->logo_path);
     }
 
     public function documentColors(): array

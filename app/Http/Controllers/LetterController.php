@@ -16,10 +16,10 @@ use App\Models\Warranty;
 use App\Services\LetterService;
 use App\Services\OutgoingMailService;
 use App\Support\ActiveBusiness;
+use App\Support\PublicUpload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -303,7 +303,7 @@ class LetterController extends Controller
             ]);
         }
 
-        return response()->json(['location' => Storage::url($path)]);
+        return response()->json(['location' => PublicUpload::url($path)]);
     }
 
     private function validated(Request $request, ?Letter $letter = null): array

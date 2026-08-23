@@ -19,6 +19,7 @@ use App\Http\Controllers\PosOrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\PublicUploadController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\RegistrationController;
@@ -73,6 +74,8 @@ use Modules\Salon\Controllers\SalonDashboardController;
 use Modules\Salon\Controllers\SalonOperationsController;
 use Shared\Communication\Controllers\CommunicationCenterController;
 use Shared\Compliance\Etims\Controllers\EtimsComplianceController;
+
+Route::get('/uploads/{path}', PublicUploadController::class)->where('path', '.*')->name('uploads.public');
 
 Route::get('/', LandingController::class)->name('landing');
 Route::get('/industries/{industry}', [LandingController::class, 'industry'])->name('industries.show');

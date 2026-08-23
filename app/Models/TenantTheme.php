@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use App\Support\PublicUpload;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class TenantTheme extends Model
 {
@@ -14,6 +14,13 @@ class TenantTheme extends Model
 
     protected $casts = ['dark_mode_enabled' => 'boolean', 'custom_colors' => 'array'];
 
-    public function logoUrl(): ?string { return $this->logo_path ? Storage::url($this->logo_path) : null; }
-    public function faviconUrl(): ?string { return $this->favicon_path ? Storage::url($this->favicon_path) : null; }
+    public function logoUrl(): ?string
+    {
+        return PublicUpload::url($this->logo_path);
+    }
+
+    public function faviconUrl(): ?string
+    {
+        return PublicUpload::url($this->favicon_path);
+    }
 }
