@@ -538,6 +538,122 @@
             </div>
         </div>
     @elseif(($section ?? '') === 'settings')
+        @php($settings = $companySettings ?? null)
+        @if($settings)
+            <div class="pb-card">
+                <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                    <div>
+                        <div class="pb-kicker">Profile, invoices & documents</div>
+                        <h2 class="h5 mb-1">Business identity and invoice appearance</h2>
+                        <p class="text-muted mb-0">These details print on invoices, quotations, receipts and downloadable PDFs for this profile.</p>
+                    </div>
+                    @if($settings->logoUrl())
+                        <img src="{{ $settings->logoUrl() }}" alt="{{ $settings->company_name }} logo" style="width:74px;height:74px;object-fit:contain;border:1px solid #e5e7eb;border-radius:10px;background:#fff;padding:6px">
+                    @endif
+                </div>
+                <form method="post" action="{{ route('settings.update') }}" enctype="multipart/form-data" class="row g-3">
+                    @csrf
+                    @method('PUT')
+                    <div class="col-md-4"><label class="form-label">Company name</label><input class="form-control" name="company_name" value="{{ old('company_name',$settings->company_name) }}" required></div>
+                    <div class="col-md-4"><label class="form-label">Phone</label><input class="form-control" name="phone" value="{{ old('phone',$settings->phone) }}"></div>
+                    <div class="col-md-4"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="{{ old('email',$settings->email) }}"></div>
+                    <div class="col-md-4"><label class="form-label">Website</label><input class="form-control" name="website" value="{{ old('website',$settings->website) }}"></div>
+                    <div class="col-md-4"><label class="form-label">Location</label><input class="form-control" name="location" value="{{ old('location',$settings->location) }}" placeholder="City, town, branch or site"></div>
+                    <div class="col-md-2"><label class="form-label">Currency</label><input class="form-control" name="currency_code" maxlength="3" value="{{ old('currency_code',$settings->currency_code ?? 'KES') }}" required></div>
+                    <div class="col-md-2"><label class="form-label">Locale</label><input class="form-control" name="locale" value="{{ old('locale',$settings->locale ?? 'en_KE') }}" required></div>
+                    <div class="col-md-6"><label class="form-label">Address</label><textarea class="form-control" name="address" rows="3">{{ old('address',$settings->address) }}</textarea></div>
+                    <div class="col-md-6"><label class="form-label">Default invoice / quotation terms</label><textarea class="form-control" name="default_terms" rows="3">{{ old('default_terms',$settings->default_terms) }}</textarea></div>
+                    <div class="col-md-4"><label class="form-label">Tax name</label><input class="form-control" name="tax_name" value="{{ old('tax_name',$settings->tax_name) }}" placeholder="VAT, GST, optional"></div>
+                    <div class="col-md-4"><label class="form-label">Tax rate %</label><input class="form-control" type="number" step="0.01" min="0" name="tax_rate" value="{{ old('tax_rate',$settings->tax_rate) }}"></div>
+                    <div class="col-md-4"><label class="form-label">Logo</label><input class="form-control" type="file" name="logo" accept="image/*"></div>
+                    <div class="col-md-4">
+                        <label class="form-label">Invoice primary color</label>
+                        <div class="input-group"><input class="form-control form-control-color" type="color" name="primary_color" value="{{ old('primary_color',$settings->primary_color ?? \App\Models\CompanySetting::DEFAULT_PRIMARY_COLOR) }}"><input class="form-control" value="{{ old('primary_color',$settings->primary_color ?? \App\Models\CompanySetting::DEFAULT_PRIMARY_COLOR) }}" disabled></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Invoice secondary color</label>
+                        <div class="input-group"><input class="form-control form-control-color" type="color" name="secondary_color" value="{{ old('secondary_color',$settings->secondary_color ?? \App\Models\CompanySetting::DEFAULT_SECONDARY_COLOR) }}"><input class="form-control" value="{{ old('secondary_color',$settings->secondary_color ?? \App\Models\CompanySetting::DEFAULT_SECONDARY_COLOR) }}" disabled></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Invoice accent color</label>
+                        <div class="input-group"><input class="form-control form-control-color" type="color" name="accent_color" value="{{ old('accent_color',$settings->accent_color ?? \App\Models\CompanySetting::DEFAULT_ACCENT_COLOR) }}"><input class="form-control" value="{{ old('accent_color',$settings->accent_color ?? \App\Models\CompanySetting::DEFAULT_ACCENT_COLOR) }}" disabled></div>
+                    </div>
+                    <div class="col-12"><button class="btn btn-dark">Save Profile & Invoice Settings</button></div>
+                </form>
+            </div>
+        @endif
+
+        <div class="pb-grid">
+            <div class="pb-card">
+                <h2 class="h5">Invoice payment methods</h2>
+                <form method="post" action="{{ route('payment-methods.store') }}" class="row g-2">
+                    @csrf
+                    <div class="col-md-7"><input class="form-control" name="name" placeholder="Bank, M-Pesa, Cash" required></div>
+                    <div class="col-md-5"><select class="form-select" name="type"><option value="bank">Bank</option><option value="mpesa">M-Pesa</option><option value="cash">Cash</option><option value="custom">Other</option></select></div>
+                    <div class="col-12"><textarea class="form-control" name="details" rows="3" placeholder="Account name, account number, Paybill/Till, branch, payment instructions"></textarea></div>
+                    <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_active" value="1" checked> <span class="form-check-label">Show on invoices</span></label></div>
+                    <div class="col-12"><button class="btn btn-outline-dark btn-sm">Add Payment Method</button></div>
+                </form>
+                <div class="pb-list mt-3">
+                    @forelse(($paymentMethods ?? collect()) as $method)
+                        <div class="pb-row">
+                            <div><strong>{{ $method->name }}</strong><div class="text-muted small">{{ $method->type }} · {{ $method->details }}</div></div>
+                            <form method="post" action="{{ route('payment-methods.destroy',$method) }}">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                        </div>
+                    @empty
+                        <div class="text-muted">No payment methods yet.</div>
+                    @endforelse
+                </div>
+            </div>
+            <div class="pb-card">
+                <h2 class="h5">Signatures & stamps</h2>
+                <form method="post" action="{{ route('signatories.store') }}" enctype="multipart/form-data" class="row g-2">
+                    @csrf
+                    <div class="col-md-6"><input class="form-control" name="name" placeholder="Full name" required></div>
+                    <div class="col-md-6"><input class="form-control" name="title" placeholder="Title"></div>
+                    <div class="col-md-6"><label class="form-label">Signature</label><input class="form-control" type="file" name="signature" accept="image/*"></div>
+                    <div class="col-md-6"><label class="form-label">Stamp</label><input class="form-control" type="file" name="stamp" accept="image/*"></div>
+                    <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_default" value="1"> <span class="form-check-label">Default on documents</span></label></div>
+                    <div class="col-12"><button class="btn btn-outline-dark btn-sm">Add Signatory</button></div>
+                </form>
+                <div class="pb-list mt-3">
+                    @forelse(($signatories ?? collect()) as $sig)
+                        <div class="pb-row">
+                            <div class="d-flex align-items-center gap-2">
+                                @if($sig->signatureUrl())<img src="{{ $sig->signatureUrl() }}" alt="Signature" style="max-height:34px;max-width:80px;object-fit:contain">@endif
+                                @if($sig->stampUrl())<img src="{{ $sig->stampUrl() }}" alt="Stamp" style="max-height:42px;max-width:74px;object-fit:contain">@endif
+                                <div><strong>{{ $sig->name }}</strong><div class="text-muted small">{{ $sig->title }} @if($sig->is_default) · Default @endif</div></div>
+                            </div>
+                            <form method="post" action="{{ route('signatories.destroy',$sig) }}">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                        </div>
+                    @empty
+                        <div class="text-muted">No signatories or stamps yet.</div>
+                    @endforelse
+                </div>
+            </div>
+            <div class="pb-card">
+                <h2 class="h5">Reusable terms</h2>
+                <form method="post" action="{{ route('terms.store') }}" class="row g-2">
+                    @csrf
+                    <div class="col-12"><input class="form-control" name="title" placeholder="Title" required></div>
+                    <div class="col-12"><textarea class="form-control" name="content" rows="4" placeholder="Terms content" required></textarea></div>
+                    <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_default" value="1"> <span class="form-check-label">Use as default</span></label></div>
+                    <div class="col-12"><button class="btn btn-outline-dark btn-sm">Add Terms</button></div>
+                </form>
+                <div class="pb-list mt-3">
+                    @forelse(($terms ?? collect()) as $term)
+                        <div class="pb-row">
+                            <div><strong>{{ $term->title }}</strong>@if($term->is_default)<span class="pb-pill ms-1">Default</span>@endif<div class="text-muted small">{{ $term->content }}</div></div>
+                            <form method="post" action="{{ route('terms.destroy',$term) }}">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                        </div>
+                    @empty
+                        <div class="text-muted">No reusable terms yet.</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        <div class="pb-kicker mt-2">Printing production settings</div>
         <div class="pb-grid">
             <div class="pb-card">
                 <h2 class="h5">Product template</h2>

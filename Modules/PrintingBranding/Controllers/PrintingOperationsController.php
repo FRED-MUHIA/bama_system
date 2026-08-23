@@ -4,28 +4,37 @@ namespace Modules\PrintingBranding\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
+use App\Models\CompanySetting;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\Quotation;
+use App\Models\Signatory;
 use App\Models\Supplier;
+use App\Models\TermsCondition;
 use App\Models\User;
+use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Modules\PrintingBranding\Models\Artwork;
 use Modules\PrintingBranding\Models\Dispatch;
 use Modules\PrintingBranding\Models\Estimate;
 use Modules\PrintingBranding\Models\FinishingOption;
 use Modules\PrintingBranding\Models\Machine;
+use Modules\PrintingBranding\Models\MachineMaintenance;
 use Modules\PrintingBranding\Models\Material;
 use Modules\PrintingBranding\Models\MaterialReservation;
 use Modules\PrintingBranding\Models\OutsourcingOrder;
 use Modules\PrintingBranding\Models\PricingRule;
-use Modules\PrintingBranding\Models\PrintMethod;
 use Modules\PrintingBranding\Models\PrintingClientProfile;
-use Modules\PrintingBranding\Models\ProductTemplate;
+use Modules\PrintingBranding\Models\PrintMethod;
 use Modules\PrintingBranding\Models\ProductionJob;
 use Modules\PrintingBranding\Models\ProductionOperation;
+use Modules\PrintingBranding\Models\ProductionSchedule;
+use Modules\PrintingBranding\Models\ProductTemplate;
 use Modules\PrintingBranding\Models\ProofApproval;
+use Modules\PrintingBranding\Models\QualityCheck;
+use Modules\PrintingBranding\Models\Waste;
 use Modules\PrintingBranding\Services\ArtworkService;
 use Modules\PrintingBranding\Services\DispatchService;
 use Modules\PrintingBranding\Services\EstimateService;
@@ -377,7 +386,7 @@ class PrintingOperationsController extends Controller
 
         return $this->view('Production Schedule', 'Calendar planning by machine, staff, deadline, priority, and estimated production time.', [
             'section' => 'schedule',
-            'schedules' => \Modules\PrintingBranding\Models\ProductionSchedule::with('job')->latest()->paginate(20),
+            'schedules' => ProductionSchedule::with('job')->latest()->paginate(20),
             'jobs' => ProductionJob::latest()->limit(100)->get(),
             'machines' => Machine::orderBy('name')->get(),
             'staff' => User::where('role', '!=', 'client_portal')->orderBy('name')->get(),
@@ -446,7 +455,7 @@ class PrintingOperationsController extends Controller
             'downtime_minutes' => ['nullable', 'integer', 'min:0'],
             'notes' => ['nullable', 'string'],
         ]);
-        $data['maintenance_number'] = app(PrintingNumberService::class)->next('MNT', \Modules\PrintingBranding\Models\MachineMaintenance::class, 'maintenance_number');
+        $data['maintenance_number'] = app(PrintingNumberService::class)->next('MNT', MachineMaintenance::class, 'maintenance_number');
         $service->recordMaintenance($machine, $this->withoutNullValues($data));
 
         return back()->with('success', 'Machine maintenance recorded.');
@@ -476,7 +485,7 @@ class PrintingOperationsController extends Controller
 
         return $this->view('Quality Control', 'Print color, alignment, size, material, artwork accuracy, quantity, finishing, and packaging checks.', [
             'section' => 'quality',
-            'checks' => \Modules\PrintingBranding\Models\QualityCheck::with('job')->latest()->paginate(20),
+            'checks' => QualityCheck::with('job')->latest()->paginate(20),
             'jobs' => ProductionJob::latest()->limit(100)->get(),
             'inspectors' => User::where('role', '!=', 'client_portal')->orderBy('name')->get(),
         ]);
@@ -503,7 +512,7 @@ class PrintingOperationsController extends Controller
 
         return $this->view('Waste Tracking', 'Waste percentage, waste cost, and waste by department or machine.', [
             'section' => 'waste',
-            'wastes' => \Modules\PrintingBranding\Models\Waste::with('job')->latest()->paginate(20),
+            'wastes' => Waste::with('job')->latest()->paginate(20),
             'jobs' => ProductionJob::latest()->limit(100)->get(),
             'materials' => Material::orderBy('name')->get(),
             'machines' => Machine::orderBy('name')->get(),
@@ -712,6 +721,10 @@ class PrintingOperationsController extends Controller
             'finishing' => FinishingOption::latest()->get(),
             'pricingRules' => PricingRule::latest()->get(),
             'machines' => Machine::latest()->limit(20)->get(),
+            'companySettings' => $this->activeCompanySettings(),
+            'paymentMethods' => Schema::hasTable('payment_methods') ? PaymentMethod::where('is_active', true)->latest()->get() : collect(),
+            'terms' => Schema::hasTable('terms_conditions') ? TermsCondition::latest()->get() : collect(),
+            'signatories' => Schema::hasTable('signatories') ? Signatory::where('is_active', true)->orderBy('name')->get() : collect(),
         ]);
     }
 
@@ -745,6 +758,26 @@ class PrintingOperationsController extends Controller
     private function view(string $title, string $description, array $data = [])
     {
         return view('printing-branding.operations', $data + compact('title', 'description'));
+    }
+
+    private function activeCompanySettings(): CompanySetting
+    {
+        $defaults = ['company_name' => ActiveBusiness::current()?->name ?? 'BAMA'];
+
+        foreach ([
+            'primary_color' => CompanySetting::DEFAULT_PRIMARY_COLOR,
+            'secondary_color' => CompanySetting::DEFAULT_SECONDARY_COLOR,
+            'accent_color' => CompanySetting::DEFAULT_ACCENT_COLOR,
+        ] as $colorColumn => $default) {
+            if (Schema::hasColumn('company_settings', $colorColumn)) {
+                $defaults[$colorColumn] = $default;
+            }
+        }
+
+        return CompanySetting::firstOrCreate(
+            ['business_id' => ActiveBusiness::id()],
+            $defaults,
+        );
     }
 
     private function jobStatuses(): array
