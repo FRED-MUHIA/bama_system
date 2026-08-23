@@ -12,6 +12,7 @@ use App\Support\ActiveBusiness;
 use App\Support\ActiveTenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
@@ -133,7 +134,12 @@ class AuthController extends Controller
         ]);
 
         try {
-            app(OutgoingMailService::class)->sendRaw($user->email, 'BAMA login OTP', 'Your BAMA login OTP is '.$otp->code);
+            app(OutgoingMailService::class)->sendRaw(
+                $user->email,
+                'BAMA login OTP for '.$this->profileLabelFor($user, $context),
+                $this->otpEmailBody($user, $otp->code, $context),
+                businessId: $this->businessIdFor($user, $context),
+            );
         } catch (\Throwable $e) {
             $otp->delete();
             report($e);
@@ -190,7 +196,12 @@ class AuthController extends Controller
         ]);
 
         try {
-            app(OutgoingMailService::class)->sendRaw($user->email, 'BAMA magic login link', 'Login here: '.route('login.magic.consume', ['token' => $token->token, 'context' => $context]));
+            app(OutgoingMailService::class)->sendRaw(
+                $user->email,
+                'BAMA magic login link for '.$this->profileLabelFor($user, $context),
+                $this->magicLinkEmailBody($user, route('login.magic.consume', ['token' => $token->token, 'context' => $context]), $context),
+                businessId: $this->businessIdFor($user, $context),
+            );
         } catch (\Throwable $e) {
             $token->delete();
             report($e);
@@ -322,6 +333,97 @@ class AuthController extends Controller
             'super_admin' => route('platform.dashboard'),
             'client_portal' => route('portal.dashboard'),
             default => route('dashboard'),
+        };
+    }
+
+    private function otpEmailBody(User $user, string $code, string $context): string
+    {
+        return implode("\n", [
+            'Hello '.$user->name.',',
+            '',
+            'Use this one-time password to sign in to BAMA.',
+            'Workspace/profile: '.$this->profileLabelFor($user, $context),
+            'Account email: '.$user->email,
+            'Login area: '.$this->contextLabel($context),
+            '',
+            'OTP: '.$code,
+            'Expires in: 10 minutes',
+            '',
+            'If you did not request this login, do not share this code with anyone.',
+            '',
+            'BAMA secure workspace access',
+        ]);
+    }
+
+    private function magicLinkEmailBody(User $user, string $url, string $context): string
+    {
+        return implode("\n", [
+            'Hello '.$user->name.',',
+            '',
+            'Use this secure link to sign in to BAMA.',
+            'Workspace/profile: '.$this->profileLabelFor($user, $context),
+            'Account email: '.$user->email,
+            'Login area: '.$this->contextLabel($context),
+            '',
+            'Login link:',
+            $url,
+            '',
+            'This link expires in 15 minutes and can be used once.',
+            'If you did not request this login, do not click the link.',
+            '',
+            'BAMA secure workspace access',
+        ]);
+    }
+
+    private function profileLabelFor(User $user, string $context): string
+    {
+        if ($context === 'owner') {
+            return 'BAMA owner console';
+        }
+
+        if ($context === 'portal') {
+            return 'BAMA client portal';
+        }
+
+        if ($businessId = $this->businessIdFor($user, $context)) {
+            $businessName = DB::table('businesses')->where('id', $businessId)->value('name');
+            if ($businessName) {
+                return $businessName;
+            }
+        }
+
+        if ($user->currentTenant?->name) {
+            return $user->currentTenant->name;
+        }
+
+        return config('app.name', 'BAMA');
+    }
+
+    private function businessIdFor(User $user, string $context): ?int
+    {
+        if ($context !== 'business' || ! Schema::hasTable('business_user') || ! Schema::hasTable('businesses')) {
+            return null;
+        }
+
+        if (ActiveBusiness::id()) {
+            return ActiveBusiness::id();
+        }
+
+        $businessId = DB::table('business_user')
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['Active', 'Pending Invitation'])
+            ->orderBy('business_id')
+            ->value('business_id');
+
+        return $businessId ? (int) $businessId : null;
+    }
+
+    private function contextLabel(string $context): string
+    {
+        return match ($context) {
+            'owner' => 'Owner management',
+            'portal' => 'Client portal',
+            default => 'Business workspace',
         };
     }
 

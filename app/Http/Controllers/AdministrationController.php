@@ -680,7 +680,12 @@ class AdministrationController extends Controller
         ]);
 
         try {
-            $this->outgoingMail->sendRaw($user->email, 'Activate your account', 'Welcome to '.$this->profileName().'. Activate your account: '.$this->activationUrl($invite), businessId: $this->businessId());
+            $this->outgoingMail->sendRaw(
+                $user->email,
+                'Activate '.$user->email.' for '.$this->profileName(),
+                $this->activationEmailBody($user, $invite),
+                businessId: $this->businessId(),
+            );
 
             return true;
         } catch (\Throwable $e) {
@@ -693,6 +698,38 @@ class AdministrationController extends Controller
     private function activationUrl(UserInvitation $invitation): string
     {
         return route('administration.activate', $invitation->token);
+    }
+
+    private function activationEmailBody(User $user, UserInvitation $invitation): string
+    {
+        $membership = DB::table('business_user')
+            ->where('business_id', $this->businessId())
+            ->where('user_id', $user->id)
+            ->first();
+        $role = $membership?->iam_role_id ? IamRole::where('business_id', $this->businessId())->find($membership->iam_role_id)?->name : null;
+        $department = $membership?->department_id ? Department::where('business_id', $this->businessId())->find($membership->department_id)?->name : null;
+        $branch = $membership?->branch_id ? Branch::where('business_id', $this->businessId())->find($membership->branch_id)?->name : null;
+        $expiresAt = $invitation->expires_at?->format('M d, Y H:i');
+
+        return implode("\n", array_filter([
+            'Hello '.$user->name.',',
+            '',
+            'You were invited to access a BAMA workspace.',
+            'Workspace/profile: '.$this->profileName(),
+            'Account email: '.$user->email,
+            $role ? 'Profile access role: '.$role : null,
+            $department ? 'Department: '.$department : null,
+            $branch ? 'Branch: '.$branch : null,
+            'Invited by: '.(auth()->user()?->name ?? config('app.name')),
+            '',
+            'Use this secure activation link to set your password and open only this profile:',
+            $this->activationUrl($invitation),
+            '',
+            $expiresAt ? 'This link expires on '.$expiresAt.'.' : null,
+            'If you were not expecting access to '.$this->profileName().', do not click the link.',
+            '',
+            'BAMA secure workspace access',
+        ], fn ($line) => $line !== null));
     }
 
     private function profileUsers()
