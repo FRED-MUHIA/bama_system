@@ -7,6 +7,7 @@ use App\Models\CompanySetting;
 use App\Models\Invoice;
 use App\Models\PaymentMethod;
 use App\Models\Quotation;
+use App\Models\Signatory;
 use App\Services\DocumentService;
 use App\Services\InvoicePosOrderService;
 use App\Services\OutgoingMailService;
@@ -253,6 +254,7 @@ class QuotationController extends Controller
             'type' => 'Quotation',
             'document' => $quotation->load(array_filter(['client', 'items', Quotation::supportsProjectLinks() ? 'site' : null, Quotation::supportsProjectLinks() ? 'project' : null, Quotation::supportsProjectLinks() ? 'contact' : null])),
             'settings' => $this->companySettingsForBusiness($quotation->business_id),
+            'signatory' => $this->defaultSignatoryForBusiness($quotation->business_id),
             'paymentMethods' => PaymentMethod::withoutGlobalScope('business')->where('business_id', $quotation->business_id)->where('is_active', true)->get(),
             'verificationUrl' => null,
             'qrCode' => null,
@@ -286,5 +288,18 @@ class QuotationController extends Controller
         }
 
         return $defaults;
+    }
+
+    private function defaultSignatoryForBusiness(?int $businessId): ?Signatory
+    {
+        if (! Schema::hasTable('signatories')) {
+            return null;
+        }
+
+        $query = $businessId
+            ? Signatory::withoutGlobalScope('business')->where('business_id', $businessId)
+            : Signatory::query();
+
+        return $query->where('is_default', true)->where('is_active', true)->first();
     }
 }

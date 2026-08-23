@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CompanySetting;
 use App\Models\PaymentMethod;
 use App\Models\Receipt;
+use App\Models\Signatory;
 use App\Services\OutgoingMailService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -70,6 +71,7 @@ class ReceiptController extends Controller
         return Pdf::loadView('pdf.receipt', [
             'receipt' => $receipt,
             'settings' => $this->companySettingsForBusiness($receipt->business_id),
+            'signatory' => $this->defaultSignatoryForBusiness($receipt->business_id),
             'paymentMethods' => PaymentMethod::withoutGlobalScope('business')->where('business_id', $receipt->business_id)->where('is_active', true)->get(),
         ]);
     }
@@ -101,5 +103,18 @@ class ReceiptController extends Controller
         }
 
         return $defaults;
+    }
+
+    private function defaultSignatoryForBusiness(?int $businessId): ?Signatory
+    {
+        if (! Schema::hasTable('signatories')) {
+            return null;
+        }
+
+        $query = $businessId
+            ? Signatory::withoutGlobalScope('business')->where('business_id', $businessId)
+            : Signatory::query();
+
+        return $query->where('is_default', true)->where('is_active', true)->first();
     }
 }

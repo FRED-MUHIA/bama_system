@@ -7,6 +7,7 @@
     $primaryColor = $documentColors['primary'];
     $secondaryColor = $documentColors['secondary'];
     $accentColor = $documentColors['accent'];
+    $signatory ??= null;
 @endphp
 <!doctype html>
 <html>
@@ -50,6 +51,11 @@
         p { margin:0 0 8px; }
         .signature { margin-top:44px; }
         .signature-line { width:150px; border-top:1px solid {{ $secondaryColor }}; margin-bottom:5px; }
+        .signature-assets { margin-bottom:6px; }
+        .sig-img { max-height:52px; max-width:130px; margin-right:10px; vertical-align:bottom; }
+        .stamp-img { max-height:68px; max-width:92px; vertical-align:bottom; }
+        .sig-name { font-weight:bold; color:{{ $secondaryColor }}; }
+        .sig-title { color:#6b7280; font-size:10px; }
         .footer { position:fixed; bottom:-20px; left:0; right:0; text-align:center; color:#6b7280; font-size:10px; }
     </style>
 </head>
@@ -61,6 +67,7 @@
         <h2>{{ $companyName }}</h2>
         <div class="subtitle">Business Services</div>
         @if($settings?->address)<div>{{ $settings->address }}</div>@endif
+        @if($settings?->location)<div>{{ $settings->location }}</div>@endif
         @if($settings?->phone)<div>{{ $settings->phone }}</div>@endif
         @if($settings?->email)<div>{{ $settings->email }}</div>@endif
         @if($settings?->website)<div>{{ $settings->website }}</div>@endif
@@ -112,9 +119,16 @@
         <h3>Terms and Conditions :</h3>
         <p>This receipt confirms payment received against the invoice shown above. Please keep it for your records.</p>
         <div class="signature">
-            <div class="signature-line"></div>
-            <strong>{{ $companyName }}</strong><br>
-            <span>Authorized Representative</span>
+            @if($signatory?->signatureFilePath() || $signatory?->stampFilePath())
+                <div class="signature-assets">
+                    @if($signatory?->signatureFilePath())<img class="sig-img" src="{{ $signatory->signatureFilePath() }}">@endif
+                    @if($signatory?->stampFilePath())<img class="stamp-img" src="{{ $signatory->stampFilePath() }}">@endif
+                </div>
+            @else
+                <div class="signature-line"></div>
+            @endif
+            <span class="sig-name">{{ $signatory?->name ?? $companyName }}</span><br>
+            <span class="sig-title">{{ $signatory?->title ?? 'Authorized Representative' }}</span>
         </div>
     </div>
     <div class="totals-wrap">

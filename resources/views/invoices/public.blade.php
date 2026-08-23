@@ -17,6 +17,7 @@
         $primaryColor = $documentColors['primary'];
         $secondaryColor = $documentColors['secondary'];
         $accentColor = $documentColors['accent'];
+        $signatory ??= null;
     @endphp
     <title>{{ $invoice->invoice_number }} - {{ $companyName }}</title>
     <style>
@@ -60,6 +61,11 @@
         .totals .grand th, .totals .grand td { font-weight:800; }
         .signature { margin-top:48px; }
         .signature-line { width:160px; border-top:1px solid {{ $secondaryColor }}; margin-bottom:6px; }
+        .signature-assets { margin-bottom:8px; display:flex; align-items:end; gap:12px; }
+        .sig-img { max-height:58px; max-width:140px; object-fit:contain; }
+        .stamp-img { max-height:76px; max-width:100px; object-fit:contain; }
+        .sig-name { font-weight:800; color:{{ $secondaryColor }}; }
+        .sig-title { color:#4b5563; }
         .footer { position:absolute; left:64px; right:64px; bottom:42px; text-align:center; color:#6b7280; font-size:12px; }
         @media (max-width: 760px) {
             .sheet { margin:0; min-height:auto; padding:46px 18px 64px; }
@@ -83,6 +89,7 @@
             <h2>{{ $companyName }}</h2>
             <div class="subtitle">{{ $companySubtitle }}</div>
             @if($issuerProfile['address'] ?? $settings?->address)<div class="muted">{{ $issuerProfile['address'] ?? $settings?->address }}</div>@endif
+            @if($settings?->location)<div class="muted">{{ $settings->location }}</div>@endif
             @if($issuerProfile['phone'] ?? $settings?->phone)<div class="muted">{{ $issuerProfile['phone'] ?? $settings?->phone }}</div>@endif
             @if($issuerProfile['email'] ?? $settings?->email)<div class="muted">{{ $issuerProfile['email'] ?? $settings?->email }}</div>@endif
             @if($issuerProfile['website'] ?? $settings?->website)<div class="muted">{{ $issuerProfile['website'] ?? $settings?->website }}</div>@endif
@@ -177,9 +184,16 @@
                 <p>{{ $invoice->terms }}</p>
             @endif
             <div class="signature">
-                <div class="signature-line"></div>
-                <strong>{{ $companyName }}</strong><br>
-                <span class="muted">Authorized Representative</span>
+                @if($signatory?->signatureUrl() || $signatory?->stampUrl())
+                    <div class="signature-assets">
+                        @if($signatory?->signatureUrl())<img class="sig-img" src="{{ $signatory->signatureUrl() }}" alt="Signature">@endif
+                        @if($signatory?->stampUrl())<img class="stamp-img" src="{{ $signatory->stampUrl() }}" alt="Stamp">@endif
+                    </div>
+                @else
+                    <div class="signature-line"></div>
+                @endif
+                <span class="sig-name">{{ $signatory?->name ?? $companyName }}</span><br>
+                <span class="sig-title">{{ $signatory?->title ?? 'Authorized Representative' }}</span>
             </div>
         </div>
         <div>

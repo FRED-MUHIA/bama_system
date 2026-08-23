@@ -11,7 +11,7 @@ class Signatory extends Model
     use BelongsToBusiness;
 
     protected $fillable = [
-        'business_id', 'name', 'title', 'signature_path', 'is_default', 'is_active',
+        'business_id', 'name', 'title', 'signature_path', 'stamp_path', 'is_default', 'is_active',
     ];
 
     protected $casts = [
@@ -47,6 +47,38 @@ class Signatory extends Model
         }
 
         $publicPath = public_path($this->signature_path);
+
+        return file_exists($publicPath) ? $publicPath : null;
+    }
+
+    public function stampUrl(): ?string
+    {
+        if (! $this->stamp_path) {
+            return null;
+        }
+
+        if (Storage::disk('public')->exists($this->stamp_path)) {
+            return Storage::url($this->stamp_path);
+        }
+
+        if (file_exists(public_path($this->stamp_path))) {
+            return asset($this->stamp_path);
+        }
+
+        return null;
+    }
+
+    public function stampFilePath(): ?string
+    {
+        if (! $this->stamp_path) {
+            return null;
+        }
+
+        if (Storage::disk('public')->exists($this->stamp_path)) {
+            return Storage::disk('public')->path($this->stamp_path);
+        }
+
+        $publicPath = public_path($this->stamp_path);
 
         return file_exists($publicPath) ? $publicPath : null;
     }

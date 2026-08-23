@@ -36,6 +36,7 @@ class CompanySettingsController extends Controller
             'phone' => ['nullable', 'string', 'max:100'],
             'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string'],
+            'location' => ['nullable', 'string', 'max:255'],
             'website' => ['nullable', 'string', 'max:255'],
             'tax_name' => ['nullable', 'string', 'max:50'],
             'tax_rate' => ['nullable', 'numeric', 'min:0'],
@@ -56,6 +57,9 @@ class CompanySettingsController extends Controller
             if (! Schema::hasColumn('company_settings', $colorColumn)) {
                 unset($data[$colorColumn]);
             }
+        }
+        if (! Schema::hasColumn('company_settings', 'location')) {
+            unset($data['location']);
         }
         $data['tax_name'] = $data['tax_name'] ?? '';
         $data['tax_rate'] = $data['tax_rate'] ?? 0;
@@ -121,6 +125,7 @@ class CompanySettingsController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'title' => ['nullable', 'string', 'max:255'],
             'signature' => ['nullable', 'image', 'max:2048'],
+            'stamp' => ['nullable', 'image', 'max:2048'],
             'is_default' => ['nullable', 'boolean'],
         ]);
 
@@ -137,6 +142,10 @@ class CompanySettingsController extends Controller
 
         if ($request->hasFile('signature')) {
             $signatory->update(['signature_path' => $request->file('signature')->store('signatures', 'public')]);
+        }
+
+        if ($request->hasFile('stamp') && Schema::hasColumn('signatories', 'stamp_path')) {
+            $signatory->update(['stamp_path' => $request->file('stamp')->store('stamps', 'public')]);
         }
 
         return back()->with('status', 'Signatory saved.');

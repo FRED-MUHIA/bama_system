@@ -18,7 +18,7 @@ class CompanySetting extends Model
 
     protected $fillable = [
         'business_id', 'company_name', 'logo_path', 'primary_color', 'secondary_color', 'accent_color', 'phone', 'email', 'address', 'website',
-        'tax_name', 'tax_rate', 'currency_code', 'locale', 'default_terms',
+        'location', 'tax_name', 'tax_rate', 'currency_code', 'locale', 'default_terms',
     ];
 
     public function logoUrl(): ?string

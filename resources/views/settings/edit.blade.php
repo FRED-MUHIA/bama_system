@@ -44,6 +44,7 @@
                 <div class="col-md-3"><label class="form-label">Tax rate %</label><input class="form-control" type="number" step="0.01" min="0" name="tax_rate" value="{{ old('tax_rate',$settings->tax_rate) }}" placeholder="0"></div>
                 <div class="col-md-3"><label class="form-label">Currency</label><input class="form-control" name="currency_code" maxlength="3" value="{{ old('currency_code',$settings->currency_code ?? 'KES') }}" required></div>
                 <div class="col-md-3"><label class="form-label">Locale</label><input class="form-control" name="locale" value="{{ old('locale',$settings->locale ?? 'en_KE') }}" required></div>
+                <div class="col-md-6"><label class="form-label">Location</label><input class="form-control" name="location" value="{{ old('location',$settings->location) }}" placeholder="City, town, branch or site location"></div>
                 <div class="col-12"><label class="form-label">Address</label><textarea class="form-control" name="address">{{ old('address',$settings->address) }}</textarea></div>
                 <div class="col-12"><label class="form-label">Default terms and conditions</label><textarea class="form-control" name="default_terms" rows="4">{{ old('default_terms',$settings->default_terms) }}</textarea></div>
             </div>
@@ -59,10 +60,11 @@
         </form>
         @foreach($methods as $method)<div class="border-top py-2 d-flex justify-content-between"><div><strong>{{ $method->name }}</strong><div class="small text-muted">{{ $method->type }} · {{ $method->details }}</div></div><form method="post" action="{{ route('payment-methods.destroy',$method) }}">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form></div>@endforeach
     </div></div>
-    <div class="card mb-4"><div class="card-body"><h2 class="h5">Signatories</h2>
+    <div class="card mb-4"><div class="card-body"><h2 class="h5">Signatures & Stamps</h2>
         <form method="post" action="{{ route('signatories.store') }}" class="border-bottom pb-3 mb-3" enctype="multipart/form-data">@csrf
             <div class="row g-2"><div class="col-md-6"><input class="form-control" name="name" placeholder="Full name" required></div><div class="col-md-6"><input class="form-control" name="title" placeholder="Title (e.g. Managing Director)"></div></div>
-            <input class="form-control mt-2" type="file" name="signature" accept="image/*">
+            <label class="form-label mt-2">Signature</label><input class="form-control" type="file" name="signature" accept="image/*">
+            <label class="form-label mt-2">Stamp</label><input class="form-control" type="file" name="stamp" accept="image/*">
             <label class="form-check mt-2"><input class="form-check-input" type="checkbox" name="is_default" value="1"> <span class="form-check-label">Make default signatory</span></label>
             <button class="btn btn-outline-warning btn-sm mt-2">Add Signatory</button>
         </form>
@@ -70,6 +72,7 @@
             <div class="border-top py-2 d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2">
                     @if($sig->signatureUrl())<img src="{{ $sig->signatureUrl() }}" style="max-height:36px;">@endif
+                    @if($sig->stampUrl())<img src="{{ $sig->stampUrl() }}" style="max-height:42px;max-width:70px;object-fit:contain;">@endif
                     <div><strong>{{ $sig->name }}</strong><div class="small text-muted">{{ $sig->title }}</div></div>
                     @if($sig->is_default)<span class="badge bg-warning text-dark ms-1">Default</span>@endif
                 </div>

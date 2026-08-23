@@ -10,6 +10,7 @@ use App\Models\InvoiceAllocation;
 use App\Models\PaymentMethod;
 use App\Models\Project;
 use App\Models\ReceiptAllocation;
+use App\Models\Signatory;
 use App\Models\Site;
 use App\Services\CostAccountingService;
 use App\Services\DocumentService;
@@ -141,6 +142,7 @@ class InvoiceController extends Controller
         return view('invoices.public', [
             'invoice' => $invoice,
             'settings' => $settings,
+            'signatory' => $this->defaultSignatoryForBusiness($invoice->business_id),
             'paymentMethods' => PaymentMethod::withoutGlobalScope('business')->where('business_id', $invoice->business_id)->where('is_active', true)->get(),
             'verificationUrl' => $this->verification->url($invoice),
             'qrCode' => $this->verification->qrCodeDataUri($invoice, 170),
@@ -622,6 +624,7 @@ class InvoiceController extends Controller
             'type' => 'Invoice',
             'document' => $invoice,
             'settings' => $this->companySettingsForBusiness($invoice->business_id),
+            'signatory' => $this->defaultSignatoryForBusiness($invoice->business_id),
             'paymentMethods' => PaymentMethod::withoutGlobalScope('business')->where('business_id', $invoice->business_id)->where('is_active', true)->get(),
             'verificationUrl' => $this->verification->url($invoice),
             'qrCode' => $this->verification->qrCodeDataUri($invoice, 150),
@@ -655,5 +658,18 @@ class InvoiceController extends Controller
         }
 
         return $defaults;
+    }
+
+    private function defaultSignatoryForBusiness(?int $businessId): ?Signatory
+    {
+        if (! Schema::hasTable('signatories')) {
+            return null;
+        }
+
+        $query = $businessId
+            ? Signatory::withoutGlobalScope('business')->where('business_id', $businessId)
+            : Signatory::query();
+
+        return $query->where('is_default', true)->where('is_active', true)->first();
     }
 }
