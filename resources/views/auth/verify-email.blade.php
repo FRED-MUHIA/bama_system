@@ -4,8 +4,7 @@
 <main class="min-h-screen bg-zinc-950 px-5 py-12 text-white">
     <section class="mx-auto max-w-xl rounded-3xl border border-white/10 bg-white/[.04] p-8 shadow-2xl">
         <a href="{{ route('landing') }}" class="inline-flex items-center gap-3">
-            <span class="grid h-11 w-11 place-items-center rounded-xl bg-[#00A651] font-black">BA</span>
-            <span class="font-bold">BAMA</span>
+            <img src="{{ asset('images/bama-logo.png') }}" alt="BAMA" class="h-9 w-auto rounded-lg bg-white px-2 py-1">
         </a>
         <h1 class="mt-10 text-3xl font-black">Verify your email</h1>
         <p class="mt-3 text-zinc-300">Use the verification link sent to your inbox to secure your new workspace.</p>

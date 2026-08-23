@@ -62,8 +62,7 @@
     <div class="registration-page mx-auto grid min-h-screen max-w-7xl lg:grid-cols-[.72fr_1.28fr]">
         <aside class="relative hidden overflow-hidden border-r border-zinc-200 bg-white px-8 py-7 lg:block">
             <a href="{{ route('landing') }}" class="inline-flex items-center gap-3">
-                <span class="grid h-10 w-10 place-items-center rounded-lg bg-[#00A651] font-black text-white">BA</span>
-                <span class="text-lg font-bold text-black">BAMA</span>
+                <img src="{{ asset('images/bama-logo.png') }}" alt="BAMA" class="h-9 w-auto">
             </a>
             <div class="mt-14">
                 <p class="text-xs font-semibold uppercase text-[#00A651]">Workspace setup</p>
@@ -84,8 +83,7 @@
             <div class="w-full max-w-4xl">
                 <div class="mb-5 flex items-center justify-between lg:hidden">
                     <a href="{{ route('landing') }}" class="inline-flex items-center gap-3">
-                        <span class="grid h-10 w-10 place-items-center rounded-lg bg-[#00A651] font-black text-white">BA</span>
-                        <span class="font-bold text-black">BAMA</span>
+                        <img src="{{ asset('images/bama-logo.png') }}" alt="BAMA" class="h-9 w-auto">
                     </a>
                     <span class="rounded-lg border border-zinc-200 bg-white px-3 py-1 text-sm text-black">Step {{ $step }} of 5</span>
                 </div>

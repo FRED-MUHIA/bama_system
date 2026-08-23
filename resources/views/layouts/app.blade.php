@@ -606,13 +606,18 @@
         @auth
         @unless(auth()->user()->role === 'client_portal')
             <aside class="col-lg-2 sidebar p-3">
+                @php($sidebarBrandName = $activeTenant?->name ?? $activeBusiness?->name ?? 'BAMA')
                 <div class="sidebar-brand d-flex align-items-center gap-2 text-white mb-3">
                     @if(!empty($tenantTheme?->logoUrl()))
                         <img src="{{ $tenantTheme->logoUrl() }}" alt="{{ $activeTenant?->name ?? 'Tenant' }}" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
+                    @elseif(strcasecmp($sidebarBrandName, 'BAMA') === 0)
+                        <img src="{{ asset('images/bama-logo.png') }}" alt="BAMA" style="width:86px;height:auto;object-fit:contain;border-radius:6px;background:#fff;padding:4px;">
                     @else
-                        <div class="brand-mark">{{ strtoupper(substr($activeTenant?->name ?? $activeBusiness?->name ?? 'BA', 0, 1)) }}{{ strtoupper(substr(strstr($activeTenant?->name ?? $activeBusiness?->name ?? 'BAMA', ' ') ?: 'A', 1, 1)) }}</div>
+                        <div class="brand-mark">{{ strtoupper(substr($sidebarBrandName, 0, 1)) }}{{ strtoupper(substr(strstr($sidebarBrandName, ' ') ?: 'A', 1, 1)) }}</div>
                     @endif
-                    <strong>{{ $activeTenant?->name ?? $activeBusiness?->name ?? 'BAMA' }}</strong>
+                    @unless(strcasecmp($sidebarBrandName, 'BAMA') === 0 && empty($tenantTheme?->logoUrl()))
+                        <strong>{{ $sidebarBrandName }}</strong>
+                    @endunless
                 </div>
                 <div class="business-switcher">
                     <form method="post" action="{{ route('businesses.switch') }}" class="mb-2">
