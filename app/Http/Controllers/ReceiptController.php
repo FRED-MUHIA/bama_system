@@ -62,6 +62,7 @@ class ReceiptController extends Controller
                 $data['message'],
                 fn ($mail) => $mail->attachData($this->pdf($receipt)->output(), $receipt->receipt_number.'.pdf', ['mime' => 'application/pdf']),
                 $receipt->business_id,
+                requireProfileSender: true,
             );
             $receipt->emailLogs()->create($data + ['recipient_email' => $email, 'status' => 'sent', 'sent_at' => now()]);
             $receipt->update(['sent_at' => now()]);

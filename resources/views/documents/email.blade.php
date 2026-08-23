@@ -4,14 +4,23 @@
 @php
     $number = $type === 'quotation' ? $document->quotation_number : ($type === 'invoice' ? $document->invoice_number : $document->receipt_number);
     $client = $type === 'receipt' ? $document->invoice->client : $document->client;
+    $profileName = \App\Models\CompanySetting::withoutGlobalScopes()->where('business_id', $document->business_id)->value('company_name')
+        ?: \App\Models\Business::withoutGlobalScopes()->where('id', $document->business_id)->value('name')
+        ?: config('app.name', 'BAMA');
+    $mailSetting = \App\Models\MailSetting::withoutGlobalScopes()->where('business_id', $document->business_id)->where('enabled', true)->first();
 @endphp
 <div class="card"><div class="card-body">
+    @unless($mailSetting)
+        <div class="alert alert-warning">Enable this profile's SMTP mail settings before sending {{ $type }} emails.</div>
+    @else
+        <div class="alert alert-success">Sending from {{ $mailSetting->from_name }} &lt;{{ $mailSetting->from_address }}&gt;</div>
+    @endunless
     <form method="post" action="{{ route($type.'s.email.send', $document) }}">@csrf
         <div class="mb-3"><label class="form-label">To</label><input class="form-control" value="{{ $client->email }}" disabled></div>
-        <div class="mb-3"><label class="form-label">Subject</label><input class="form-control" name="subject" value="{{ ucfirst($type) }} {{ $number }} from BAMA" required></div>
+        <div class="mb-3"><label class="form-label">Subject</label><input class="form-control" name="subject" value="{{ ucfirst($type) }} {{ $number }} from {{ $profileName }}" required></div>
         <div class="mb-3"><label class="form-label">Message</label><textarea class="form-control" name="message" rows="7" required>Hello {{ $client->name }},
 
-Please find attached {{ $type }} {{ $number }} from BAMA.
+Please find attached {{ $type }} {{ $number }} from {{ $profileName }}.
 
 Thank you.</textarea></div>
         <button class="btn btn-warning"><i class="bi bi-send"></i> Send Email</button>

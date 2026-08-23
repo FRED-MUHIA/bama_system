@@ -487,7 +487,7 @@ class AdministrationController extends Controller
 
         try {
             $setting->apply();
-            $this->outgoingMail->sendRaw($data['test_email'], 'SMTP configuration test', 'Your '.$this->profileName().' SMTP settings are working.');
+            $this->outgoingMail->sendRaw($data['test_email'], 'SMTP configuration test', 'Your '.$this->profileName().' SMTP settings are working.', businessId: $this->businessId());
             $this->iam->audit('mail.settings.test_succeeded', $setting);
 
             return back()->with('status', 'Test email sent successfully.');

@@ -102,6 +102,7 @@ class QuotationController extends Controller
                 $data['message'],
                 fn ($mail) => $mail->attachData($this->pdf($quotation)->output(), $quotation->quotation_number.'.pdf', ['mime' => 'application/pdf']),
                 $quotation->business_id,
+                requireProfileSender: true,
             );
             $quotation->emailLogs()->create($data + ['recipient_email' => $quotation->client->email, 'status' => 'sent', 'sent_at' => now()]);
             $quotation->update(['sent_at' => now(), 'status' => 'sent']);

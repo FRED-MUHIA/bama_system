@@ -169,6 +169,7 @@ class InvoiceController extends Controller
                 $data['message'],
                 fn ($mail) => $mail->attachData($this->pdf($invoice)->output(), $invoice->invoice_number.'.pdf', ['mime' => 'application/pdf']),
                 $invoice->business_id,
+                requireProfileSender: true,
             );
             $invoice->emailLogs()->create($data + ['recipient_email' => $invoice->client->email, 'status' => 'sent', 'sent_at' => now()]);
             $invoice->update(['sent_at' => now()]);

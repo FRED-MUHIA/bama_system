@@ -7,6 +7,7 @@ use App\Support\ActiveBusiness;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
+use RuntimeException;
 
 class OutgoingMailService
 {
@@ -20,13 +21,14 @@ class OutgoingMailService
             $businessId = ActiveBusiness::id();
         }
 
-        $query = MailSetting::query()->where('enabled', true);
-
-        if ($businessId) {
-            $query->where('business_id', $businessId);
+        if (! $businessId) {
+            return null;
         }
 
-        $setting = $query->first();
+        $setting = MailSetting::withoutGlobalScopes()
+            ->where('enabled', true)
+            ->where('business_id', $businessId)
+            ->first();
 
         if ($setting) {
             $setting->apply();
@@ -35,16 +37,25 @@ class OutgoingMailService
         return $setting;
     }
 
-    public function sendRaw(string $to, string $subject, string $body, ?callable $configure = null, ?int $businessId = null): void
+    public function sendRaw(string $to, string $subject, string $body, ?callable $configure = null, ?int $businessId = null, bool $requireProfileSender = false): void
     {
         if (blank($to)) {
             throw new InvalidArgumentException('Recipient email address is required.');
         }
 
-        $this->apply($businessId);
+        $setting = $this->apply($businessId);
 
-        Mail::raw($body, function ($mail) use ($to, $subject, $configure) {
+        if ($requireProfileSender && ! $setting) {
+            throw new RuntimeException('Enable SMTP mail settings for this profile before emailing documents.');
+        }
+
+        Mail::raw($body, function ($mail) use ($to, $subject, $configure, $setting) {
             $mail->to($to)->subject($subject);
+
+            if ($setting) {
+                $mail->from($setting->from_address, $setting->from_name);
+                $mail->replyTo($setting->from_address, $setting->from_name);
+            }
 
             if ($configure) {
                 $configure($mail);
