@@ -24,8 +24,7 @@
         </div>
     </div>
 </div></div>
-@include('documents.summary', ['type'=>'Invoice','document'=>$invoice,'number'=>$invoice->invoice_number,'date'=>$invoice->invoice_date,'status'=>$invoice->payment_status])
-@include('documents.payment-methods', ['paymentMethods' => $paymentMethods])
+@include('documents.document-sheet', ['type' => 'Invoice', 'document' => $invoice])
 @if(\Illuminate\Support\Facades\Schema::hasTable('letters'))
 <div class="card mt-3"><div class="card-body"><h2 class="h5">Letters</h2>@forelse($invoice->letters as $letter)<div class="border-top py-2"><a href="{{ route('letters.show',$letter) }}">{{ $letter->letter_number }}</a><span class="float-end">{{ $letter->type }} · {{ $letter->status }}</span><div class="small text-muted">{{ $letter->subject }}</div></div>@empty<div class="text-muted">No letters linked to this invoice.</div>@endforelse</div></div>
 @endif

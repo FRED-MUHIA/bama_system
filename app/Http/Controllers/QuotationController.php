@@ -44,6 +44,8 @@ class QuotationController extends Controller
 
         return view('quotations.show', [
             'quotation' => $quotation->load($relationships),
+            'settings' => $this->companySettingsForBusiness($quotation->business_id),
+            'signatory' => $this->defaultSignatoryForBusiness($quotation->business_id),
             'paymentMethods' => PaymentMethod::withoutGlobalScope('business')
                 ->where('business_id', $quotation->business_id)
                 ->where('is_active', true)

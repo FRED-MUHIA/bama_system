@@ -66,6 +66,8 @@ class InvoiceController extends Controller
             'invoice' => $invoice->load($this->invoiceRelationships()),
             'methods' => $methods,
             'paymentMethods' => $methods,
+            'settings' => $this->companySettingsForBusiness($invoice->business_id),
+            'signatory' => $this->defaultSignatoryForBusiness($invoice->business_id),
             'remainingPartPaymentBalance' => Invoice::supportsPartPayments() && ! $invoice->isPartPayment() ? $this->partPayments->getRemainingBalance($invoice->id) : null,
             'sourceInvoices' => Invoice::supportsInvoiceTypes() ? Invoice::source()->whereKeyNot($invoice->id)->orderByDesc('id')->limit(30)->get() : collect(),
             'verificationUrl' => $this->verification->url($invoice),

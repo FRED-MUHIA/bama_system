@@ -7,6 +7,7 @@ use App\Models\PaymentMethod;
 use App\Models\Receipt;
 use App\Models\Signatory;
 use App\Services\OutgoingMailService;
+use App\Support\ActiveBusiness;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -27,7 +28,16 @@ class ReceiptController extends Controller
             $relationships[] = 'letters';
         }
 
-        return view('receipts.show', ['receipt' => $receipt->load($relationships)]);
+        return view('receipts.show', [
+            'receipt' => $receipt->load($relationships),
+            'settings' => $this->companySettingsForBusiness($receipt->business_id),
+            'signatory' => $this->defaultSignatoryForBusiness($receipt->business_id),
+            'paymentMethods' => PaymentMethod::withoutGlobalScope('business')
+                ->where('business_id', $receipt->business_id)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(),
+        ]);
     }
 
     public function download(Receipt $receipt)
@@ -68,8 +78,9 @@ class ReceiptController extends Controller
     {
         $receipt->load('invoice.client');
 
-        return Pdf::loadView('pdf.receipt', [
-            'receipt' => $receipt,
+        return Pdf::loadView('pdf.document', [
+            'type' => 'Receipt',
+            'document' => $receipt,
             'settings' => $this->companySettingsForBusiness($receipt->business_id),
             'signatory' => $this->defaultSignatoryForBusiness($receipt->business_id),
             'paymentMethods' => PaymentMethod::withoutGlobalScope('business')->where('business_id', $receipt->business_id)->where('is_active', true)->get(),
@@ -90,7 +101,7 @@ class ReceiptController extends Controller
 
     private function defaultCompanySettings(): array
     {
-        $defaults = ['company_name' => 'BAMA'];
+        $defaults = ['company_name' => ActiveBusiness::current()?->name ?? 'BAMA'];
 
         foreach ([
             'primary_color' => CompanySetting::DEFAULT_PRIMARY_COLOR,

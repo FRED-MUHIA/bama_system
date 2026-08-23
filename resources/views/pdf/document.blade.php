@@ -1,4 +1,16 @@
 @php
+    $settings ??= null;
+    $paymentMethods ??= collect();
+    $signatory ??= null;
+    $qrCode ??= null;
+    $verificationUrl ??= null;
+
+    $isReceipt = $type === 'Receipt';
+    $sourceInvoice = $isReceipt ? $document->invoice : null;
+    $client = $isReceipt ? $sourceInvoice?->client : $document->client;
+    $issuerProfile = ! $isReceipt && $type === 'Invoice' ? ($document->issuer_profile ?? []) : [];
+    $recipientProfile = ! $isReceipt && $type === 'Invoice' ? ($document->recipient_profile ?? []) : [];
+    $industryContext = ! $isReceipt && $type === 'Invoice' ? ($document->industry_context ?? []) : [];
     $documentColors = $settings?->documentColors() ?? [
         'primary' => \App\Models\CompanySetting::DEFAULT_PRIMARY_COLOR,
         'secondary' => \App\Models\CompanySetting::DEFAULT_SECONDARY_COLOR,
@@ -7,207 +19,258 @@
     $primaryColor = $documentColors['primary'];
     $secondaryColor = $documentColors['secondary'];
     $accentColor = $documentColors['accent'];
-    $signatory ??= null;
+    $companyName = $issuerProfile['name'] ?? $settings?->company_name ?? 'BAMA';
+    $companySubtitle = $issuerProfile['subtitle'] ?? 'Business Services';
+    $currency = $settings?->currency_code ?: 'KES';
+    $money = fn ($value) => $currency.' '.number_format((float) $value, 2);
+    $number = match ($type) {
+        'Quotation' => $document->quotation_number,
+        'Receipt' => $document->receipt_number,
+        default => $document->invoice_number,
+    };
+    $date = match ($type) {
+        'Quotation' => $document->quotation_date,
+        'Receipt' => $document->payment_date,
+        default => $document->invoice_date,
+    };
+    $secondaryDateLabel = match ($type) {
+        'Quotation' => 'Valid until',
+        'Receipt' => 'Invoice',
+        default => 'Due',
+    };
+    $secondaryDate = match ($type) {
+        'Quotation' => $document->valid_until?->format('M d, Y') ?: '-',
+        'Receipt' => $sourceInvoice?->invoice_number ?: '-',
+        default => $document->due_date?->format('M d, Y') ?: '-',
+    };
+    $status = match ($type) {
+        'Receipt' => $document->status ?: 'Paid',
+        'Quotation' => $document->status,
+        default => $document->payment_status,
+    };
+    $logoPath = $settings?->logoFilePath();
+    $signaturePath = $signatory?->signatureFilePath();
+    $stampPath = $signatory?->stampFilePath();
+    $isAllocationInvoice = $type === 'Invoice' && $document->isAllocationInvoice();
+    $title = $isAllocationInvoice ? 'ALLOCATION INVOICE' : strtoupper($type);
 @endphp
 <!doctype html>
 <html>
 <head>
     <meta charset="utf-8">
     <style>
-        @page { margin: 32px 34px 42px; }
-        body { font-family: DejaVu Sans, sans-serif; color:#1f2937; font-size:10.5px; line-height:1.42; }
-        .accent-top { position:fixed; top:-32px; left:-34px; width:360px; height:22px; background:{{ $primaryColor }}; }
-        .accent-top-dark { position:fixed; top:-32px; left:270px; width:130px; height:22px; background:{{ $secondaryColor }}; }
-        .accent-bottom { position:fixed; bottom:-42px; right:-34px; width:360px; height:24px; background:{{ $primaryColor }}; }
-        .accent-bottom-dark { position:fixed; bottom:-42px; left:-34px; width:150px; height:24px; background:{{ $secondaryColor }}; }
-        .header { display:table; width:100%; margin-top:4px; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid #e5e7eb; }
-        .company, .logo-wrap { display:table-cell; vertical-align:top; }
-        .company { width:72%; }
-        .logo-wrap { width:28%; text-align:right; }
-        .company h2 { color:{{ $secondaryColor }}; font-size:21px; margin:0 0 3px; line-height:1.05; }
-        .company .subtitle { color:{{ $primaryColor }}; font-weight:bold; font-size:12px; margin-bottom:6px; }
-        .company div { color:#4b5563; }
-        .logo { max-height:72px; max-width:110px; }
-        .logo-fallback { display:inline-block; width:72px; height:72px; border-radius:50%; background:{{ $secondaryColor }}; color:#fff; text-align:center; line-height:72px; font-size:12px; font-weight:bold; }
-        .verify-box { margin-top:10px; text-align:right; font-size:9px; color:#4b5563; }
-        .verify-box img { width:86px; height:86px; display:inline-block; border:1px solid #e5e7eb; padding:4px; }
-        .doc-title { display:table; width:100%; margin-bottom:18px; background:{{ $accentColor }}; border-left:4px solid {{ $primaryColor }}; padding:10px 12px; }
-        .doc-title h1 { font-size:18px; letter-spacing:1px; margin:0 0 3px; color:{{ $secondaryColor }}; }
-        .doc-title div { font-size:10px; color:#374151; }
-        .parties { display:table; width:100%; margin-bottom:18px; border:1px solid #e5e7eb; }
-        .bill-to, .dates { display:table-cell; vertical-align:top; width:50%; padding:12px; }
-        .dates { text-align:right; border-left:1px solid #e5e7eb; }
-        .section-label { font-weight:bold; color:{{ $secondaryColor }}; }
+        @page { margin: 22px 24px 28px; }
+        body { font-family: DejaVu Sans, sans-serif; color:#101828; font-size:9.5px; line-height:1.35; }
+        .sheet { border:1px solid #d9e1ec; border-radius:7px; overflow:hidden; }
+        .top-bar { height:7px; background:{{ $primaryColor }}; }
+        .inner { padding:22px; }
         table { width:100%; border-collapse:collapse; }
-        .items { margin-top:0; }
-        .items th { background:{{ $accentColor }}; color:{{ $secondaryColor }}; padding:8px 8px; font-size:9.5px; text-align:left; border:1px solid #d1d5db; }
-        .items th:nth-child(1) { width:52%; }
-        .items th:nth-child(2) { width:16%; text-align:right; }
-        .items th:nth-child(3) { width:10%; text-align:center; }
-        .items th:nth-child(4) { width:22%; text-align:right; }
-        .items td { border:1px solid #d1d5db; padding:8px; vertical-align:top; }
-        .items .text { text-align:left; }
-        .items .number { text-align:right; white-space:nowrap; }
-        .items td:nth-child(3) { text-align:center; }
-        .totals-wrap { width:42%; margin-left:auto; margin-top:12px; page-break-inside:avoid; }
-        .totals td, .totals th { border:1px solid #d1d5db; padding:8px; }
-        .totals th { font-weight:normal; background:#fff; text-align:left; }
+        .head { margin-bottom:18px; }
+        .brand-cell { width:66%; vertical-align:top; }
+        .meta-cell { width:34%; vertical-align:top; text-align:right; }
+        .brand-table td { vertical-align:top; }
+        .logo-cell { width:48px; }
+        .logo { width:42px; max-height:42px; object-fit:contain; }
+        .logo-fallback { width:42px; height:42px; border-radius:21px; background:{{ $primaryColor }}; color:#fff; text-align:center; line-height:42px; font-weight:bold; }
+        .company h2 { margin:0 0 2px; font-size:15px; color:#111827; }
+        .company div { color:#344054; }
+        .doc-type { color:{{ $primaryColor }}; font-size:8px; font-weight:bold; letter-spacing:1.5px; text-transform:uppercase; }
+        .doc-number { font-size:10px; font-weight:bold; color:#111827; margin-bottom:3px; }
+        .box-table { margin-bottom:16px; }
+        .box { border:1px solid #dbe4ef; background:#f9fbfd; border-radius:7px; padding:12px; min-height:118px; vertical-align:top; }
+        .gap { width:14px; }
+        .label { font-size:7px; font-weight:bold; letter-spacing:1.4px; text-transform:uppercase; color:#475467; margin-bottom:7px; }
+        .muted { color:#475467; }
+        .summary td { border-bottom:1px solid #e7edf4; padding:4px 0; }
+        .summary td:last-child { text-align:right; font-weight:bold; }
+        .balance { margin-top:7px; background:#101828; color:#fff; border-radius:5px; padding:7px; text-align:center; font-weight:bold; }
+        .verify { margin-top:10px; padding-top:10px; border-top:1px solid #e7edf4; }
+        .verify img { width:62px; height:62px; border:1px solid #d0d7e2; padding:3px; vertical-align:middle; margin-right:7px; }
+        .items { margin-bottom:15px; }
+        .items th { background:{{ $primaryColor }}; color:#fff; font-size:7px; text-transform:uppercase; letter-spacing:1.2px; padding:7px; text-align:left; }
+        .items th:last-child, .items td:last-child { text-align:right; }
+        .items td { border-bottom:1px solid #edf1f6; padding:7px; vertical-align:top; }
+        .lower-cell { vertical-align:top; }
+        .methods { width:58%; padding-right:14px; }
+        .totals-cell { width:42%; }
+        .method { border:1px solid #dbe4ef; border-radius:5px; padding:7px; margin-bottom:6px; }
+        .note { border:1px solid #dbe4ef; border-radius:7px; background:#f9fbfd; padding:10px; margin-top:10px; white-space:pre-line; }
+        .totals { border:1px solid #dbe4ef; border-radius:7px; background:#f9fbfd; }
+        .totals th, .totals td { padding:5px 8px; border-bottom:1px solid #e7edf4; }
+        .totals th { text-align:left; font-weight:normal; }
         .totals td { text-align:right; }
-        .totals .grand th, .totals .grand td { font-weight:bold; color:{{ $secondaryColor }}; background:{{ $accentColor }}; }
-        .notes { margin-top:18px; page-break-inside:avoid; }
-        .notes h3 { font-size:11px; margin:0 0 5px; color:{{ $secondaryColor }}; text-transform:uppercase; letter-spacing:.04em; }
-        .note-grid { display:table; width:100%; }
-        .note-col { display:table-cell; width:50%; vertical-align:top; padding-right:18px; }
-        p { margin:0 0 7px; }
-        .signature { margin-top:26px; page-break-inside:avoid; }
-        .signature-line { width:150px; border-top:1px solid {{ $secondaryColor }}; margin-bottom:5px; }
-        .signature-assets { margin-bottom:6px; }
-        .sig-img { max-height:52px; max-width:130px; margin-right:10px; vertical-align:bottom; }
-        .stamp-img { max-height:68px; max-width:92px; vertical-align:bottom; }
-        .sig-name { font-weight:bold; color:{{ $secondaryColor }}; }
-        .sig-title { color:#6b7280; font-size:10px; }
-        .footer { position:fixed; bottom:-22px; left:0; right:0; text-align:center; color:#6b7280; font-size:9px; }
+        .totals tr:last-child th, .totals tr:last-child td { border-bottom:0; font-weight:bold; color:#111827; }
+        .signature { margin-top:14px; color:#475467; }
+        .signature-line { width:140px; border-top:1px solid #98a2b3; margin-bottom:5px; }
+        .sig-img { max-height:45px; max-width:120px; margin-right:8px; vertical-align:bottom; }
+        .stamp-img { max-height:58px; max-width:82px; vertical-align:bottom; }
+        .footer { position:fixed; bottom:-12px; left:24px; right:24px; text-align:center; color:#667085; font-size:8px; }
     </style>
 </head>
 <body>
-@php
-    $companyName = $settings?->company_name ?? 'BAMA';
-    $isPartPaymentInvoice = $type === 'Invoice' && $document->isAllocationInvoice();
-    $number = $type === 'Quotation' ? $document->quotation_number : $document->invoice_number;
-    $date = $type === 'Quotation' ? $document->quotation_date : $document->invoice_date;
-    $secondaryDateLabel = $type === 'Quotation' ? 'Valid Until' : 'Due Date';
-    $secondaryDate = $type === 'Quotation' ? $document->valid_until : $document->due_date;
-    $issuerProfile = $type === 'Invoice' ? ($document->issuer_profile ?? []) : [];
-    $recipientProfile = $type === 'Invoice' ? ($document->recipient_profile ?? []) : [];
-    $industryContext = $type === 'Invoice' ? ($document->industry_context ?? []) : [];
-    $companyName = $issuerProfile['name'] ?? $companyName;
-    $companySubtitle = $issuerProfile['subtitle'] ?? 'Business Services';
-@endphp
-<div class="accent-top"></div><div class="accent-top-dark"></div><div class="accent-bottom"></div><div class="accent-bottom-dark"></div>
-<div class="header">
-    <div class="company">
-        <h2>{{ $companyName }}</h2>
-        <div class="subtitle">{{ $companySubtitle }}</div>
-        @if($issuerProfile['address'] ?? $settings?->address)<div>{{ $issuerProfile['address'] ?? $settings?->address }}</div>@endif
-        @if($settings?->location)<div>{{ $settings->location }}</div>@endif
-        @if($issuerProfile['phone'] ?? $settings?->phone)<div>{{ $issuerProfile['phone'] ?? $settings?->phone }}</div>@endif
-        @if($issuerProfile['email'] ?? $settings?->email)<div>{{ $issuerProfile['email'] ?? $settings?->email }}</div>@endif
-        @if($issuerProfile['website'] ?? $settings?->website)<div>{{ $issuerProfile['website'] ?? $settings?->website }}</div>@endif
-    </div>
-    <div class="logo-wrap">
-        @if($settings?->logoFilePath())
-            <img class="logo" src="{{ $settings->logoFilePath() }}">
-        @else
-            <span class="logo-fallback">LOGO<br>HERE</span>
-        @endif
-        @if($type === 'Invoice' && !empty($qrCode))
-            <div class="verify-box">
-                <img src="{{ $qrCode }}"><br>
-                Scan to verify invoice
-            </div>
-        @endif
-    </div>
-</div>
-<div class="doc-title">
-    <h1>{{ $isPartPaymentInvoice ? 'PART PAYMENT INVOICE' : strtoupper($type) }}</h1>
-    <div>{{ $type }} Number: {{ $number }}</div>
-    @if($type === 'Invoice' && $document->industry_reference)<div>Reference Code: {{ $document->industry_reference }}</div>@endif
-    @if($isPartPaymentInvoice && $document->parentInvoice)<div>Parent Invoice: {{ $document->parentInvoice->invoice_number }}</div>@endif
-</div>
-<div class="parties">
-    <div class="bill-to">
-        <div class="section-label">Bill to:</div>
-        <strong>{{ $recipientProfile['name'] ?? $document->client->name }}</strong><br>
-        {{ $document->client->company_name }}<br>
-        {{ $recipientProfile['address'] ?? $document->client->address }}<br>
-        {{ $recipientProfile['phone'] ?? $document->client->phone }} {{ $recipientProfile['email'] ?? $document->client->email }}
-        @if($type === 'Invoice' && $document->industry_module === 'real_estate')
-            <br><br>
-            @if(!empty($recipientProfile['tenant_number']))Tenant: {{ $recipientProfile['tenant_number'] }}<br>@endif
-            @if(!empty($recipientProfile['id_number']))ID Number: {{ $recipientProfile['id_number'] }}<br>@endif
-            @if(!empty($recipientProfile['passport_number']))Passport: {{ $recipientProfile['passport_number'] }}<br>@endif
-            @if(!empty($industryContext['property_name']))Property: {{ $industryContext['property_name'] }} @if(!empty($industryContext['property_code']))({{ $industryContext['property_code'] }})@endif<br>@endif
-            @if(!empty($industryContext['unit_number']))Unit: {{ $industryContext['unit_number'] }} @if(!empty($industryContext['unit_type']))- {{ $industryContext['unit_type'] }}@endif<br>@endif
-            @if(!empty($industryContext['lease_number']))Lease: {{ $industryContext['lease_number'] }}<br>@endif
-            @if(!empty($industryContext['source_reference']))Source: {{ $industryContext['source_reference'] }}@endif
-        @endif
-        @if($type === 'Invoice' && $document->industry_module === 'printing_branding')
-            <br><br>
-            @if(!empty($industryContext['job_number']))Job: {{ $industryContext['job_number'] }}<br>@endif
-            @if(!empty($industryContext['ticket_number']))Ticket: {{ $industryContext['ticket_number'] }}<br>@endif
-            @if(!empty($industryContext['invoice_type']))Invoice Type: {{ $industryContext['invoice_type'] }}<br>@endif
-            @if(!empty($industryContext['product_name']))Product: {{ $industryContext['product_name'] }}<br>@endif
-            @if(isset($industryContext['quantity']))Quantity: {{ number_format((float) $industryContext['quantity'], 3) }}<br>@endif
-            @if(!empty($industryContext['delivery_date']))Delivery Date: {{ $industryContext['delivery_date'] }}<br>@endif
-            @if(!empty($industryContext['job_status']))Production Status: {{ $industryContext['job_status'] }}@endif
-        @endif
-        @if($document->relationLoaded('project') && $document->project)<br><br><strong>Project:</strong> {{ $document->project->project_name }}@endif
-        @if($document->relationLoaded('site') && $document->site)<br><strong>Site:</strong> {{ $document->site->site_name }}@endif
-    </div>
-    <div class="dates">
-        <div><span class="section-label">{{ $secondaryDateLabel }}:</span><br>{{ $secondaryDate?->format('F j, Y') ?: '-' }}</div>
-        <br>
-        <div><span class="section-label">Date:</span><br>{{ $date?->format('F j, Y') }}</div>
-    </div>
-</div>
-<table class="items">
-    <thead><tr><th>Item Description</th><th>Price</th><th>Qty</th><th>Total</th></tr></thead>
-    <tbody>
-    @foreach($document->items as $item)
-        <tr>
-            <td class="text"><strong>{{ $item->title ?: $item->description }}</strong>@if($item->title)<br>{{ $item->description }}@endif</td>
-            <td class="number">{{ number_format($item->unit_price, 2) }}</td>
-            <td class="number">{{ rtrim(rtrim(number_format($item->quantity, 2), '0'), '.') }}</td>
-            <td class="number">{{ number_format($item->line_total, 2) }}</td>
-        </tr>
-    @endforeach
-    </tbody>
-</table>
-<div class="totals-wrap">
-    <table class="totals">
-        @if($isPartPaymentInvoice)
-            <tr class="grand"><th>Allocated Amount</th><td>{{ number_format($document->part_payment_amount, 2) }}</td></tr>
-            @if($document->parentInvoice)<tr><th>Source Invoice Total</th><td>{{ number_format($document->parentInvoice->total, 2) }}</td></tr>@endif
-        @else
-            <tr><th>Subtotal</th><td>{{ number_format($document->subtotal, 2) }}</td></tr>
-            <tr><th>Tax</th><td>{{ $document->tax_total > 0 ? number_format($document->tax_total, 2) : '-' }}</td></tr>
-            <tr><th>Discount</th><td>{{ $document->discount_total > 0 ? number_format($document->discount_total, 2) : '-' }}</td></tr>
-        @endif
-        @if($type === 'Invoice' && ! $isPartPaymentInvoice)
-            <tr><th>Paid</th><td>{{ number_format($document->amount_paid, 2) }}</td></tr>
-            <tr><th>Balance</th><td>{{ number_format($document->balance, 2) }}</td></tr>
-        @endif
-        @unless($isPartPaymentInvoice)<tr class="grand"><th>Grand Total</th><td>{{ number_format($document->total, 2) }}</td></tr>@endunless
-    </table>
-</div>
-<div class="notes">
-    <div class="note-grid">
-        <div class="note-col">
-            @if($paymentMethods->count())
-                <h3>Payment Methods</h3>
-                @foreach($paymentMethods as $method)
-                    <p><strong>{{ $method->name }}:</strong><br>{{ $method->details }}</p>
-                @endforeach
-            @endif
-        </div>
-        <div class="note-col">
-            @if($document->terms)
-                <h3>Terms and Conditions</h3>
-                <p>{{ $document->terms }}</p>
-            @endif
-        </div>
-    </div>
-    <div class="signature">
-        @if($signatory?->signatureFilePath() || $signatory?->stampFilePath())
-            <div class="signature-assets">
-                @if($signatory?->signatureFilePath())<img class="sig-img" src="{{ $signatory->signatureFilePath() }}">@endif
-                @if($signatory?->stampFilePath())<img class="stamp-img" src="{{ $signatory->stampFilePath() }}">@endif
-            </div>
-        @else
-            <div class="signature-line"></div>
-        @endif
-        <span class="sig-name">{{ $signatory?->name ?? $companyName }}</span><br>
-        <span class="sig-title">{{ $signatory?->title ?? 'Authorized Representative' }}</span>
+<div class="sheet">
+    <div class="top-bar"></div>
+    <div class="inner">
+        <table class="head">
+            <tr>
+                <td class="brand-cell">
+                    <table class="brand-table">
+                        <tr>
+                            <td class="logo-cell">
+                                @if($logoPath)
+                                    <img class="logo" src="{{ $logoPath }}">
+                                @else
+                                    <div class="logo-fallback">BA</div>
+                                @endif
+                            </td>
+                            <td class="company">
+                                <h2>{{ $companyName }}</h2>
+                                <div>{{ $companySubtitle }}</div>
+                                @if($issuerProfile['phone'] ?? $settings?->phone)<div>{{ $issuerProfile['phone'] ?? $settings?->phone }}</div>@endif
+                                @if($issuerProfile['email'] ?? $settings?->email)<div>{{ $issuerProfile['email'] ?? $settings?->email }}</div>@endif
+                                @if($issuerProfile['address'] ?? $settings?->address)<div>{{ $issuerProfile['address'] ?? $settings?->address }}</div>@endif
+                                @if($settings?->location)<div>{{ $settings->location }}</div>@endif
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td class="meta-cell">
+                    <div class="doc-type">{{ $title }}</div>
+                    <div class="doc-number">{{ $number }}</div>
+                    <div>Date: {{ $date?->format('M d, Y') ?: '-' }}</div>
+                    <div>{{ $secondaryDateLabel }}: {{ $secondaryDate }}</div>
+                </td>
+            </tr>
+        </table>
+
+        <table class="box-table">
+            <tr>
+                <td class="box" style="width:60%;">
+                    <div class="label">{{ $isReceipt ? 'Received from' : 'Bill to' }}</div>
+                    <strong>{{ $recipientProfile['name'] ?? $client?->name }}</strong><br>
+                    @if($client?->company_name){{ $client->company_name }}<br>@endif
+                    @if($recipientProfile['phone'] ?? $client?->phone){{ $recipientProfile['phone'] ?? $client?->phone }}<br>@endif
+                    @if($recipientProfile['email'] ?? $client?->email){{ $recipientProfile['email'] ?? $client?->email }}<br>@endif
+                    @if($recipientProfile['address'] ?? $client?->address){{ $recipientProfile['address'] ?? $client?->address }}<br>@endif
+                    @if(! $isReceipt && $document->relationLoaded('project') && $document->project)<br>Project: {{ $document->project->project_name }}@endif
+                    @if(! $isReceipt && $document->relationLoaded('site') && $document->site)<br>Site: {{ $document->site->site_name }}@endif
+                    @if(!empty($industryContext['job_number']))<br>Job: {{ $industryContext['job_number'] }}@endif
+                    @if(!empty($industryContext['property_name']))<br>Property: {{ $industryContext['property_name'] }}@endif
+                </td>
+                <td class="gap"></td>
+                <td class="box" style="width:40%;">
+                    <table class="summary">
+                        <tr><td>Status</td><td>{{ $status ?: '-' }}</td></tr>
+                        @if($isReceipt)
+                            <tr><td>Invoice total</td><td>{{ $money($sourceInvoice?->total) }}</td></tr>
+                            <tr><td>Paid</td><td>{{ $money($document->amount_paid) }}</td></tr>
+                            <tr><td>Balance</td><td>{{ $money($document->balance_remaining) }}</td></tr>
+                        @elseif($isAllocationInvoice)
+                            <tr><td>Allocated</td><td>{{ $money($document->part_payment_amount) }}</td></tr>
+                            @if($document->parentInvoice)<tr><td>Source total</td><td>{{ $money($document->parentInvoice->total) }}</td></tr>@endif
+                        @else
+                            <tr><td>Total</td><td>{{ $money($document->total) }}</td></tr>
+                            @if($type === 'Invoice')
+                                <tr><td>Paid</td><td>{{ $money($document->amount_paid) }}</td></tr>
+                                <tr><td>Balance</td><td>{{ $money($document->balance) }}</td></tr>
+                            @endif
+                        @endif
+                    </table>
+                    @if($isReceipt)
+                        <div class="balance">Receipt: {{ $money($document->amount_paid) }}</div>
+                    @elseif($isAllocationInvoice)
+                        <div class="balance">Allocation Due: {{ $money($document->part_payment_amount) }}</div>
+                    @elseif($type === 'Invoice')
+                        <div class="balance">Balance Due: {{ $money($document->balance) }}</div>
+                    @endif
+                    @if($type === 'Invoice' && $qrCode)
+                        <div class="verify">
+                            <img src="{{ $qrCode }}"> Verify invoice origin
+                        </div>
+                    @endif
+                </td>
+            </tr>
+        </table>
+
+        <table class="items">
+            <thead>
+                @if($isReceipt)
+                    <tr><th>Description</th><th>Method</th><th>Date</th><th>Total</th></tr>
+                @else
+                    <tr><th>Item</th><th>Description</th><th>Qty</th><th>Unit</th><th>Total</th></tr>
+                @endif
+            </thead>
+            <tbody>
+                @if($isReceipt)
+                    <tr>
+                        <td>Payment received for {{ $sourceInvoice?->invoice_number }}</td>
+                        <td>{{ $document->payment_method ?: '-' }}</td>
+                        <td>{{ $document->payment_date?->format('M d, Y') ?: '-' }}</td>
+                        <td>{{ $money($document->amount_paid) }}</td>
+                    </tr>
+                @else
+                    @foreach($document->items as $item)
+                        <tr>
+                            <td>{{ $item->title ?: '-' }}</td>
+                            <td>{{ $item->description }}</td>
+                            <td>{{ rtrim(rtrim(number_format((float) $item->quantity, 2), '0'), '.') }}</td>
+                            <td>{{ $money($item->unit_price) }}</td>
+                            <td>{{ $money($item->line_total) }}</td>
+                        </tr>
+                    @endforeach
+                @endif
+            </tbody>
+        </table>
+
+        <table>
+            <tr>
+                <td class="lower-cell methods">
+                    @if($paymentMethods->count())
+                        <div class="label">Payment methods</div>
+                        @foreach($paymentMethods as $method)
+                            <div class="method">
+                                <strong>{{ $method->name }}</strong><br>
+                                @if($method->details){{ $method->details }}@endif
+                            </div>
+                        @endforeach
+                    @endif
+                    @if($isReceipt || (! empty($document->terms)))
+                        <div class="note">{{ $isReceipt ? 'This receipt confirms payment received against the invoice shown above. Please keep it for your records.' : $document->terms }}</div>
+                    @endif
+                    <div class="signature">
+                        @if($signaturePath || $stampPath)
+                            @if($signaturePath)<img class="sig-img" src="{{ $signaturePath }}">@endif
+                            @if($stampPath)<img class="stamp-img" src="{{ $stampPath }}">@endif
+                        @else
+                            <div class="signature-line"></div>
+                        @endif
+                        <strong>{{ $signatory?->name ?? $companyName }}</strong><br>
+                        {{ $signatory?->title ?? 'Authorized Representative' }}
+                    </div>
+                </td>
+                <td class="lower-cell totals-cell">
+                    <table class="totals">
+                        @if($isReceipt)
+                            <tr><th>Invoice Total</th><td>{{ $money($sourceInvoice?->total) }}</td></tr>
+                            <tr><th>Amount Paid</th><td>{{ $money($document->amount_paid) }}</td></tr>
+                            <tr><th>Balance</th><td>{{ $money($document->balance_remaining) }}</td></tr>
+                        @elseif($isAllocationInvoice)
+                            <tr><th>Allocated Amount</th><td>{{ $money($document->part_payment_amount) }}</td></tr>
+                            @if($document->parentInvoice)<tr><th>Source Total</th><td>{{ $money($document->parentInvoice->total) }}</td></tr>@endif
+                        @else
+                            <tr><th>Subtotal</th><td>{{ $money($document->subtotal) }}</td></tr>
+                            <tr><th>Tax</th><td>{{ $money($document->tax_total) }}</td></tr>
+                            <tr><th>Discount</th><td>{{ $money($document->discount_total) }}</td></tr>
+                            @if($type === 'Invoice')
+                                <tr><th>Paid</th><td>{{ $money($document->amount_paid) }}</td></tr>
+                                <tr><th>Balance</th><td>{{ $money($document->balance) }}</td></tr>
+                            @endif
+                            <tr><th>Total</th><td>{{ $money($document->total) }}</td></tr>
+                        @endif
+                    </table>
+                </td>
+            </tr>
+        </table>
     </div>
 </div>
 <div class="footer">Thank you for choosing {{ $companyName }}.</div>
