@@ -90,6 +90,21 @@ Route::post('/portal/activate/{token}', [PortalController::class, 'activate'])->
 Route::get('/hospitality/menu', [HospitalityFrontController::class, 'menu'])->name('public.hospitality.menu');
 Route::post('/hospitality/menu/reserve', [HospitalityFrontController::class, 'reserve'])->name('public.hospitality.reserve');
 
+Route::prefix('public')->group(function () {
+    Route::get('/activate/{token}', [AdministrationController::class, 'activateForm']);
+    Route::post('/activate/{token}', [AdministrationController::class, 'activate']);
+    Route::get('/account-recovery/{token}', [AdministrationController::class, 'recoveryForm']);
+    Route::post('/account-recovery/{token}', [AdministrationController::class, 'recover']);
+    Route::get('/invoice/{token}', [InvoiceController::class, 'publicShow']);
+    Route::get('/invoice/{token}/download', [InvoiceController::class, 'publicDownload']);
+    Route::get('/track-order/{key}', [PosOrderController::class, 'track']);
+    Route::get('/verify/letter/{letter}', [LetterController::class, 'publicVerify']);
+    Route::get('/portal/activate/{token}', [PortalController::class, 'activateForm']);
+    Route::post('/portal/activate/{token}', [PortalController::class, 'activate']);
+    Route::get('/hospitality/menu', [HospitalityFrontController::class, 'menu']);
+    Route::post('/hospitality/menu/reserve', [HospitalityFrontController::class, 'reserve']);
+});
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
     Route::get('/owner/login', [AuthController::class, 'loginForm'])->name('platform.login');
