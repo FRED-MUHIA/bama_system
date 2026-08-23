@@ -4,7 +4,7 @@
 <div class="owner-card p-3">
     <div class="table-responsive">
         <table class="table owner-table align-middle">
-            <thead><tr><th>Client</th><th>Businesses</th><th>Users</th><th>Subscription</th><th>Update</th></tr></thead>
+            <thead><tr><th>Client</th><th>Businesses</th><th>Users</th><th>Subscription</th><th>Manage</th></tr></thead>
             <tbody>
             @forelse($tenants as $tenant)
                 <tr>
@@ -52,6 +52,14 @@
                             <div class="col-md-4"><input class="form-control form-control-sm" type="date" name="trial_ends_at" value="{{ $tenant->trial_ends_at?->toDateString() }}" title="Trial ends"></div>
                             <div class="col-md-4"><input class="form-control form-control-sm" type="date" name="renews_at" value="{{ $tenant->subscription?->renews_at?->toDateString() }}" title="Renews"></div>
                             <div class="col-md-4"><button class="btn btn-owner btn-sm w-100"><i class="bi bi-save"></i> Save</button></div>
+                        </form>
+                        <form method="post" action="{{ route('platform.tenants.destroy', $tenant) }}" class="mt-2" data-confirm-message="Delete {{ $tenant->name }}? This removes profile access, ends sessions, cancels the subscription, and hides its businesses." onsubmit="return confirm(this.dataset.confirmMessage);">
+                            @csrf @method('DELETE')
+                            <input type="hidden" name="confirm_delete" value="1">
+                            <button class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash"></i> Delete profile
+                            </button>
+                            <small class="text-muted ms-2">Users remain only if they belong to another profile.</small>
                         </form>
                     </td>
                 </tr>

@@ -146,6 +146,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [PlatformController::class, 'index'])->name('dashboard');
         Route::get('/tenants', [PlatformController::class, 'tenants'])->name('tenants');
         Route::put('/tenants/{tenant}', [PlatformController::class, 'updateTenant'])->name('tenants.update');
+        Route::delete('/tenants/{tenant}', [PlatformController::class, 'destroyTenant'])->name('tenants.destroy');
         Route::get('/plans', [PlatformController::class, 'plans'])->name('plans');
         Route::put('/plans/{plan}', [PlatformController::class, 'updatePlan'])->name('plans.update');
     });

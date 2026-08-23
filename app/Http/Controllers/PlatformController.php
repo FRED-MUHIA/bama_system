@@ -9,6 +9,7 @@ use App\Models\SubscriptionFeature;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class PlatformController extends Controller
@@ -17,6 +18,7 @@ class PlatformController extends Controller
     {
         return view('platform.index', [
             'tenants' => Tenant::withoutGlobalScopes()
+                ->whereNull('deleted_at')
                 ->with(['subscription' => fn ($query) => $query->withoutGlobalScopes()->with('plan')])
                 ->withCount([
                     'businesses' => fn ($query) => $query->withoutGlobalScopes(),
@@ -27,8 +29,10 @@ class PlatformController extends Controller
                 ->get(),
             'plans' => Plan::withCount('features')->orderBy('monthly_price')->get(),
             'metrics' => [
-                'tenants' => Tenant::withoutGlobalScopes()->count(),
-                'businesses' => Business::withoutGlobalScopes()->count(),
+                'tenants' => Tenant::withoutGlobalScopes()->whereNull('deleted_at')->count(),
+                'businesses' => Business::withoutGlobalScopes()
+                    ->whereHas('tenant', fn ($query) => $query->whereNull('deleted_at'))
+                    ->count(),
                 'users' => User::count(),
                 'activeSubscriptions' => Subscription::withoutGlobalScopes()->whereIn('status', ['active', 'trialing'])->count(),
             ],
@@ -39,6 +43,7 @@ class PlatformController extends Controller
     {
         return view('platform.tenants', [
             'tenants' => Tenant::withoutGlobalScopes()
+                ->whereNull('deleted_at')
                 ->with([
                     'businesses' => fn ($query) => $query->withoutGlobalScopes(),
                     'subscription' => fn ($query) => $query->withoutGlobalScopes()->with('plan'),
@@ -84,6 +89,63 @@ class PlatformController extends Controller
         );
 
         return back()->with('status', 'Tenant updated.');
+    }
+
+    public function destroyTenant(Request $request, Tenant $tenant)
+    {
+        $request->validate([
+            'confirm_delete' => ['accepted'],
+        ]);
+
+        abort_if(
+            $tenant->users()->where('users.role', 'super_admin')->exists(),
+            422,
+            'The owner management profile cannot be deleted from client management.'
+        );
+
+        DB::transaction(function () use ($tenant) {
+            $businessIds = Business::withoutGlobalScopes()
+                ->where('tenant_id', $tenant->id)
+                ->pluck('id');
+
+            $userIds = DB::table('tenant_user')
+                ->where('tenant_id', $tenant->id)
+                ->pluck('user_id');
+
+            if ($businessIds->isNotEmpty()) {
+                DB::table('business_user')->whereIn('business_id', $businessIds)->delete();
+
+                Business::withoutGlobalScopes()
+                    ->whereIn('id', $businessIds)
+                    ->update([
+                        'is_active' => false,
+                        'updated_at' => now(),
+                    ]);
+            }
+
+            if ($userIds->isNotEmpty()) {
+                DB::table('sessions')->whereIn('user_id', $userIds)->delete();
+                User::whereIn('id', $userIds)
+                    ->where('current_tenant_id', $tenant->id)
+                    ->update(['current_tenant_id' => null]);
+            }
+
+            DB::table('tenant_user')->where('tenant_id', $tenant->id)->delete();
+
+            Subscription::withoutGlobalScopes()
+                ->where('tenant_id', $tenant->id)
+                ->whereNotIn('status', ['cancelled', 'paused'])
+                ->update([
+                    'status' => 'cancelled',
+                    'ends_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+            $tenant->update(['status' => 'cancelled']);
+            $tenant->delete();
+        });
+
+        return redirect()->route('platform.tenants')->with('status', "Profile {$tenant->name} deleted.");
     }
 
     public function plans()
