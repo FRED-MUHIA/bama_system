@@ -83,6 +83,29 @@
         font-weight: 800;
     }
 
+    .login-brand-panel a.login-brand,
+    .login-mobile-brand {
+        color: #000;
+        text-decoration: none;
+    }
+
+    .login-home-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        margin-top: 18px;
+        color: #000;
+        font-size: .78rem;
+        font-weight: 800;
+        text-decoration: none;
+        text-transform: uppercase;
+    }
+
+    .login-home-link:hover {
+        color: var(--green);
+    }
+
     .login-brand .brand-mark,
     .login-mobile-brand .brand-mark {
         display: grid;
@@ -456,10 +479,11 @@
 <div class="login-stage">
     <section class="login-brand-panel" aria-label="BAMA connected systems">
         <div>
-            <div class="login-brand">
+            <a href="{{ route('landing') }}" class="login-brand" aria-label="Back to BAMA home">
                 <div class="brand-mark">BA</div>
                 <span>BAMA</span>
-            </div>
+            </a>
+            <a href="{{ route('landing') }}" class="login-home-link"><i class="bi bi-arrow-left"></i> Back home</a>
         </div>
 
         <div class="login-copy">
@@ -500,10 +524,10 @@
 
     <section class="login-auth-panel">
         <div class="login-auth-wrap">
-            <div class="login-mobile-brand">
+            <a href="{{ route('landing') }}" class="login-mobile-brand" aria-label="Back to BAMA home">
                 <div class="brand-mark">BA</div>
                 BAMA
-            </div>
+            </a>
 
             <div class="login-auth-label">{{ $loginCopy['label'] }}</div>
             <h2>{{ $loginCopy['title'] }}</h2>
