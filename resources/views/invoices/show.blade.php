@@ -1,11 +1,18 @@
 @extends('layouts.app')
 @section('title',$invoice->invoice_number)
 @section('content')
-@php $publicLink = route('public.invoices.show', $invoice->public_token); @endphp
+@php
+    $publicLink = route('public.invoices.show', $invoice->public_token);
+    $invoiceWasEmailed = $invoice->sent_at || $invoice->emailLogs->where('status', 'sent')->isNotEmpty();
+@endphp
 <div class="d-flex gap-2 flex-wrap justify-content-end mb-3">
     @unless($invoice->isPartPayment())<a class="btn btn-outline-dark" href="{{ route('invoices.edit',$invoice) }}"><i class="bi bi-pencil"></i> Edit</a>@endunless
     <a class="btn btn-outline-warning" href="{{ route('invoices.download',$invoice) }}"><i class="bi bi-download"></i> PDF</a>
-    <a class="btn btn-outline-primary" href="{{ route('invoices.email',$invoice) }}"><i class="bi bi-envelope"></i> Email</a>
+    @if($invoiceWasEmailed)
+        <span class="btn btn-outline-success disabled"><i class="bi bi-envelope-check"></i> Email sent</span>
+    @else
+        <a class="btn btn-outline-primary" href="{{ route('invoices.email',$invoice) }}"><i class="bi bi-envelope"></i> Email</a>
+    @endif
     @if(\Illuminate\Support\Facades\Schema::hasTable('letters'))<a class="btn btn-outline-warning" href="{{ route('letters.from-invoice',$invoice) }}"><i class="bi bi-envelope-paper"></i> Balance Letter</a>@endif
     <a class="btn btn-warning" href="{{ $publicLink }}" target="_blank"><i class="bi bi-link-45deg"></i> Open Link</a>
     <button class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#deleteInvoiceModal"><i class="bi bi-trash"></i> Delete</button>
