@@ -13,6 +13,7 @@
     $usesOwnSmtp = old('use_own_smtp') !== null
         ? old('use_own_smtp') === '1'
         : filled($mailSetting?->username) && filled($mailSetting?->password);
+    $requiredSenderDomain = config('mail.required_sender_domain');
 @endphp
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
@@ -422,6 +423,9 @@
             </div>
             <div class="alert alert-info">
                 Simple mode uses the server mail service and shows this profile email as the sender. Turn on corporate integration only when this profile has its own mailbox and wants to send through that mailbox.
+                @if($requiredSenderDomain)
+                    <div class="mt-2">Document email senders must use a {{ $requiredSenderDomain }} mailbox.</div>
+                @endif
                 <div class="mt-2 d-flex flex-wrap gap-2">
                     <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener" class="alert-link">Gmail app password help</a>
                     <a href="https://help.yahoo.com/kb/SLN15241.html" target="_blank" rel="noopener" class="alert-link">Yahoo app password help</a>

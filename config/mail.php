@@ -115,4 +115,6 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    'required_sender_domain' => env('MAIL_REQUIRED_SENDER_DOMAIN'),
+
 ];

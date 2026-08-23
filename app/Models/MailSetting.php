@@ -42,6 +42,7 @@ class MailSetting extends Model
             default => $port === 465 ? 'smtps' : 'smtp',
         };
         $fromAddress = $this->from_address;
+        $fromDomain = str($fromAddress)->after('@')->lower()->toString();
 
         config([
             'mail.default' => 'smtp',
@@ -50,6 +51,7 @@ class MailSetting extends Model
             'mail.mailers.smtp.scheme' => $scheme,
             'mail.mailers.smtp.username' => $this->username,
             'mail.mailers.smtp.password' => $this->password,
+            'mail.mailers.smtp.local_domain' => $fromDomain ?: config('mail.mailers.smtp.local_domain'),
             'mail.from.address' => $fromAddress,
             'mail.from.name' => $this->from_name,
         ]);
