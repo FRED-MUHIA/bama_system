@@ -27,7 +27,7 @@
     <header class="sticky top-0 z-50 border-b border-zinc-200 bg-[#FBFCFA]/95 backdrop-blur-xl">
         <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-3">
             <a href="{{ route('landing') }}" class="flex items-center gap-3 text-black no-underline">
-                <img src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA" class="h-12 w-auto">
+                <img src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA" class="block h-auto w-[92px] max-w-[24vw]" style="width:92px;height:auto;max-width:24vw;">
             </a>
             <div class="hidden items-center gap-6 text-sm font-bold text-zinc-700 md:flex">
                 <a href="{{ route('landing') }}#industries" class="hover:text-[var(--accent)]">Industries</a>
