@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Console\Commands\CreateSuperAdminCommand;
 use App\Console\Commands\MailTestCommand;
 use App\Console\Commands\PostgresWipeCommand;
+use App\Console\Commands\PurgeNonSuperAdminUsersCommand;
 use App\Models\Business;
 use App\Services\NavigationManager;
 use App\Services\ThemeManager;
@@ -44,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
                 CreateSuperAdminCommand::class,
                 MailTestCommand::class,
                 PostgresWipeCommand::class,
+                PurgeNonSuperAdminUsersCommand::class,
             ]);
         }
 
