@@ -30,10 +30,7 @@ class MailSetting extends Model
             'tls', 'smtp' => 'smtp',
             default => $port === 465 ? 'smtps' : 'smtp',
         };
-        $fromAddress = $usesOwnSmtp ? $this->from_address : config('mail.from.address');
-        if (! $usesOwnSmtp && (blank($fromAddress) || $fromAddress === 'hello@example.com')) {
-            $fromAddress = $smtp['username'] ?? $this->from_address;
-        }
+        $fromAddress = $this->from_address;
 
         config([
             'mail.default' => 'smtp',

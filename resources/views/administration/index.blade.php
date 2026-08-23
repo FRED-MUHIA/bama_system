@@ -412,7 +412,7 @@
             <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
                 <div>
                     <h3 class="h5 mb-1">Business Email</h3>
-                    <p class="text-muted mb-0">Invoices, quotations, receipts, invitations, OTPs and reset links use this profile name and reply email.</p>
+                    <p class="text-muted mb-0">Invoices, quotations, receipts, invitations, OTPs and reset links use this profile sender name and email.</p>
                 </div>
                 @if($mailSetting?->enabled)
                     <span class="badge text-bg-success align-self-start">Enabled</span>
@@ -421,7 +421,7 @@
                 @endif
             </div>
             <div class="alert alert-info">
-                Simple mode uses the hidden server mail login. Turn on corporate integration only when this profile has its own mailbox and wants emails to send through that mailbox.
+                Simple mode uses the hidden server mail login, but clients see this profile email as the sender. Turn on corporate integration when this profile has its own mailbox and wants emails to send through that mailbox.
                 <div class="mt-2 d-flex flex-wrap gap-2">
                     <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener" class="alert-link">Gmail app password help</a>
                     <a href="https://help.yahoo.com/kb/SLN15241.html" target="_blank" rel="noopener" class="alert-link">Yahoo app password help</a>
@@ -430,7 +430,7 @@
             <form method="post" action="{{ route('administration.mail.update') }}" class="row g-3">
                 @csrf @method('PUT')
                 <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="enabled" value="1" @checked($mailSetting?->enabled)> <span class="form-check-label">Enable business email for this profile</span></label></div>
-                <div class="col-md-6"><label class="form-label">Reply-to business email</label><input class="form-control" type="email" name="from_address" value="{{ $mailFromAddress }}" placeholder="info@example.com" required></div>
+                <div class="col-md-6"><label class="form-label">Business sender email</label><input class="form-control" type="email" name="from_address" value="{{ $mailFromAddress }}" placeholder="info@example.com" required></div>
                 <div class="col-md-6"><label class="form-label">From name</label><input class="form-control" name="from_name" value="{{ $mailFromName }}" placeholder="{{ $profileName }}" required></div>
                 <div class="col-md-6">
                     <label class="form-label">Mail login</label>

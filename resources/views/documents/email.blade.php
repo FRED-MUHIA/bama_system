@@ -18,7 +18,7 @@
         </div>
     @else
         <div class="alert alert-success">
-            Sending as {{ $mailSetting->from_name }}{{ $usesOwnSmtp ? ' through its corporate mailbox' : ' through server mail' }}. Replies go to {{ $mailSetting->from_address }}.
+            Sending as {{ $mailSetting->from_name }} &lt;{{ $mailSetting->from_address }}&gt;{{ $usesOwnSmtp ? ' through its corporate mailbox' : ' through server mail' }}.
         </div>
     @endunless
     <form method="post" action="{{ route($type.'s.email.send', $document) }}">@csrf
