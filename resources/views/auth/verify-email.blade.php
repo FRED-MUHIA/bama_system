@@ -21,7 +21,7 @@
             @csrf
             <button class="w-full rounded-2xl bg-[#00A651] px-5 py-4 font-bold text-white shadow-xl shadow-[#00A651]/20">Resend verification email</button>
         </form>
-        <a href="{{ route('dashboard') }}" class="mt-5 block text-center text-sm font-semibold text-zinc-300">Continue to dashboard</a>
+        <a href="{{ route('register.welcome') }}" class="mt-5 block text-center text-sm font-semibold text-zinc-300">Back to workspace status</a>
     </section>
 </main>
 @endsection

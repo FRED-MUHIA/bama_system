@@ -160,7 +160,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/portal', [PortalController::class, 'dashboard'])->name('portal.dashboard');
 
-    Route::middleware(['admin', 'subscription.active'])->group(function () {
+    Route::middleware(['admin', 'subscription.active', 'verified'])->group(function () {
         Route::get('/onboarding/tenant', [OnboardingController::class, 'create'])->name('onboarding.tenant');
         Route::post('/onboarding/tenant', [OnboardingController::class, 'store'])->name('onboarding.tenant.store');
         Route::post('/businesses', [BusinessController::class, 'store'])->name('businesses.store');

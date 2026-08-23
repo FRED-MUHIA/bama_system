@@ -2,13 +2,19 @@
 
 @section('body')
 <x-registration-shell :step="5">
+    @php($emailVerified = auth()->user()?->hasVerifiedEmail())
     <div class="rounded-[18px] border border-zinc-200 bg-white p-5 shadow-2xl shadow-zinc-200/70 sm:p-6">
         @if (session('status'))
             <div class="mb-4 rounded-lg border border-[#00A651]/25 bg-[#EAF8F0] p-3 text-sm text-[#007A3B]">{{ session('status') }}</div>
         @endif
-        <p class="text-xs font-bold uppercase text-[#00A651]">Workspace ready</p>
+        <p class="text-xs font-bold uppercase text-[#00A651]">{{ $emailVerified ? 'Workspace ready' : 'Email verification required' }}</p>
         <h1 class="mt-2 text-3xl font-black">Welcome to {{ $tenant?->name ?? 'your workspace' }}</h1>
-        <p class="mt-2 text-sm text-black">Your tenant, business, admin user, trial subscription, theme, enabled modules, and dashboard foundation are now initialized.</p>
+        <p class="mt-2 text-sm text-black">
+            Your tenant, business, admin user, trial subscription, theme, enabled modules, and dashboard foundation are now initialized.
+            @unless($emailVerified)
+                Verify your email before opening the dashboard.
+            @endunless
+        </p>
 
         @if (! empty($industryDashboard))
             <section class="mt-4 rounded-[18px] border border-[#00A651]/20 bg-[#EAF8F0] p-4">
@@ -31,9 +37,9 @@
             </section>
         @endif
 
-        @if (auth()->user() && ! auth()->user()->hasVerifiedEmail())
+        @if (! $emailVerified)
             <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                Verify your email to protect this workspace.
+                Check your inbox and click the verification link to activate dashboard access.
                 <form method="POST" action="{{ route('verification.send') }}" class="mt-2">
                     @csrf
                     <button class="font-bold text-amber-900 underline">Resend verification link</button>
@@ -50,8 +56,16 @@
             @endforeach
         </div>
         <div class="mt-5 flex flex-col gap-3 sm:flex-row">
-            <a href="{{ route('dashboard') }}" class="flex-1 rounded-lg bg-[#00A651] px-6 py-3 text-center font-black text-white shadow-xl shadow-[#00A651]/20">Open dashboard</a>
-            <a href="{{ route('settings.edit') }}" class="rounded-lg border border-zinc-300 bg-white px-6 py-3 text-center font-bold text-black">Configure branding</a>
+            @if ($emailVerified)
+                <a href="{{ route('dashboard') }}" class="flex-1 rounded-lg bg-[#00A651] px-6 py-3 text-center font-black text-white shadow-xl shadow-[#00A651]/20">Open dashboard</a>
+                <a href="{{ route('settings.edit') }}" class="rounded-lg border border-zinc-300 bg-white px-6 py-3 text-center font-bold text-black">Configure branding</a>
+            @else
+                <form method="POST" action="{{ route('verification.send') }}" class="flex-1">
+                    @csrf
+                    <button class="w-full rounded-lg bg-[#00A651] px-6 py-3 text-center font-black text-white shadow-xl shadow-[#00A651]/20">Resend verification link</button>
+                </form>
+                <a href="{{ route('verification.notice') }}" class="rounded-lg border border-zinc-300 bg-white px-6 py-3 text-center font-bold text-black">Verification instructions</a>
+            @endif
         </div>
     </div>
 </x-registration-shell>
