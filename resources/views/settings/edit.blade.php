@@ -50,10 +50,10 @@
             <button class="btn btn-warning mt-3">Save Settings</button>
         </form>
     </div></div></div>
-    <div class="col-lg-5"><div class="card mb-4"><div class="card-body"><h2 class="h5">Payment Methods</h2>
+    <div class="col-lg-5"><div class="card mb-4"><div class="card-body"><h2 class="h5">Invoice Payment Methods</h2>
         <form method="post" action="{{ route('payment-methods.store') }}" class="border-bottom pb-3 mb-3">@csrf
             <div class="row g-2"><div class="col-md-7"><input class="form-control" name="name" placeholder="Bank, M-Pesa, Cash" required></div><div class="col-md-5"><select class="form-select" name="type"><option value="bank">Bank</option><option value="mpesa">M-Pesa</option><option value="cash">Cash</option><option value="custom">Other</option></select></div></div>
-            <textarea class="form-control mt-2" name="details" placeholder="Account number, Paybill/Till, instructions"></textarea>
+            <textarea class="form-control mt-2" name="details" rows="3" placeholder="Account name, account number, Paybill/Till, branch, payment instructions"></textarea>
             <label class="form-check mt-2"><input class="form-check-input" type="checkbox" name="is_active" value="1" checked> <span class="form-check-label">Active</span></label>
             <button class="btn btn-outline-warning btn-sm mt-2">Add Method</button>
         </form>

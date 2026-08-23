@@ -8,4 +8,5 @@
     @unless($quotation->invoice)<form method="post" action="{{ route('quotations.convert',$quotation) }}">@csrf<button class="btn btn-warning"><i class="bi bi-arrow-right-circle"></i> Convert</button></form>@endunless
 </div>
 @include('documents.summary', ['type'=>'Quotation','document'=>$quotation,'number'=>$quotation->quotation_number,'date'=>$quotation->quotation_date,'status'=>$quotation->status])
+@include('documents.payment-methods', ['paymentMethods' => $paymentMethods])
 @endsection

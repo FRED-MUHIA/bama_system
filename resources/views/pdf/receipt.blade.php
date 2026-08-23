@@ -104,7 +104,7 @@
 <div class="lower">
     <div class="notes">
         @if($paymentMethods->count())
-            <h3>Payment Method</h3>
+            <h3>Payment Methods</h3>
             @foreach($paymentMethods as $method)
                 <p><strong>{{ $method->name }}:</strong><br>{{ $method->details }}</p>
             @endforeach

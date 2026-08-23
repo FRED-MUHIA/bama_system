@@ -41,7 +41,14 @@ class QuotationController extends Controller
             $relationships[] = 'contact';
         }
 
-        return view('quotations.show', ['quotation' => $quotation->load($relationships)]);
+        return view('quotations.show', [
+            'quotation' => $quotation->load($relationships),
+            'paymentMethods' => PaymentMethod::withoutGlobalScope('business')
+                ->where('business_id', $quotation->business_id)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(),
+        ]);
     }
 
     public function edit(Quotation $quotation)

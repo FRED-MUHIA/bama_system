@@ -55,9 +55,16 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice)
     {
+        $methods = PaymentMethod::withoutGlobalScope('business')
+            ->where('business_id', $invoice->business_id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
         return view('invoices.show', [
             'invoice' => $invoice->load($this->invoiceRelationships()),
-            'methods' => PaymentMethod::where('is_active', true)->get(),
+            'methods' => $methods,
+            'paymentMethods' => $methods,
             'remainingPartPaymentBalance' => Invoice::supportsPartPayments() && ! $invoice->isPartPayment() ? $this->partPayments->getRemainingBalance($invoice->id) : null,
             'sourceInvoices' => Invoice::supportsInvoiceTypes() ? Invoice::source()->whereKeyNot($invoice->id)->orderByDesc('id')->limit(30)->get() : collect(),
             'verificationUrl' => $this->verification->url($invoice),
