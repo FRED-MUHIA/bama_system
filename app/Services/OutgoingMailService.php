@@ -74,19 +74,19 @@ class OutgoingMailService
             || str_contains($lower, 'invalidsecondfactor')
             || str_contains($lower, '534-5.7.9')
         ) {
-            return 'Gmail rejected the normal account password. Turn on 2-Step Verification, create a Gmail App Password, then paste that app password in Business Email settings. Use smtp.gmail.com, port 465, SSL/TLS, and the full Gmail address as username.';
+            return 'Gmail needs an App Password. Open your Gmail account security settings, turn on 2-Step Verification, create an App Password, then paste that App Password here. Do not use your normal Gmail password.';
         }
 
         if (str_contains($lower, 'yahoo') && (str_contains($lower, 'authenticate') || str_contains($lower, 'password') || str_contains($lower, '535'))) {
-            return 'Yahoo rejected the mailbox password. Create a Yahoo third-party app password, then paste that app password in Business Email settings. Use smtp.mail.yahoo.com, port 465, SSL/TLS, and the full Yahoo address as username.';
+            return 'Yahoo needs an App Password. Open your Yahoo account security settings, create a third-party App Password, then paste that App Password here. Do not use your normal Yahoo password.';
         }
 
         if (str_contains($lower, '535') || str_contains($lower, 'failed to authenticate')) {
-            return 'The email provider rejected the username or password. Use the full mailbox address as username and, for Gmail or Yahoo, use an app password instead of the normal login password.';
+            return 'The email username or password is not accepted. Use the full email address as username. For Gmail or Yahoo, paste an App Password, not the normal email password.';
         }
 
         if (str_contains($lower, 'connection could not be established') || str_contains($lower, 'connection refused') || str_contains($lower, 'timed out')) {
-            return 'The SMTP server could not be reached. Check the host, port, security setting, and whether the hosting provider allows outgoing SMTP.';
+            return 'The email server could not be reached. Check the mail host, port and security option, or ask the email provider for the correct outgoing mail settings.';
         }
 
         return $message;
