@@ -11,7 +11,10 @@
 @endphp
 <div class="card"><div class="card-body">
     @unless($mailSetting)
-        <div class="alert alert-warning">Enable this profile's SMTP mail settings before sending {{ $type }} emails.</div>
+        <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span>Enable this profile's business email before sending {{ $type }} emails.</span>
+            <a class="btn btn-sm btn-outline-dark" href="{{ route('administration.index') }}#profile-email">Set Business Email</a>
+        </div>
     @else
         <div class="alert alert-success">Sending from {{ $mailSetting->from_name }} &lt;{{ $mailSetting->from_address }}&gt;</div>
     @endunless

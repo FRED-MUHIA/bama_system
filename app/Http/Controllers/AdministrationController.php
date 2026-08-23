@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AdminAuditLog;
 use App\Models\Branch;
+use App\Models\CompanySetting;
 use App\Models\Department;
 use App\Models\IamPermission;
 use App\Models\IamRole;
@@ -63,6 +64,9 @@ class AdministrationController extends Controller
         $users = $this->profileUsers()->with('manager', 'devices', 'teams')->orderBy('name')->get();
         $userIds = $users->pluck('id');
         $mailSettingsReady = Schema::hasTable('mail_settings');
+        $companySetting = Schema::hasTable('company_settings')
+            ? CompanySetting::where('business_id', $this->businessId())->first()
+            : null;
         $presence = DB::table('sessions')
             ->whereIn('user_id', $userIds)
             ->selectRaw('user_id, MAX(last_activity) as last_activity')
@@ -83,6 +87,7 @@ class AdministrationController extends Controller
             'activities' => DB::table('login_activities')->whereIn('user_id', $userIds)->latest()->limit(100)->get(),
             'auditLogs' => AdminAuditLog::where('business_id', $this->businessId())->latest()->limit(100)->get(),
             'settings' => SecuritySetting::firstOrCreate(['business_id' => $this->businessId()]),
+            'companySetting' => $companySetting,
             'mailSetting' => $mailSettingsReady ? MailSetting::where('business_id', $this->businessId())->first() : null,
             'mailSettingsReady' => $mailSettingsReady,
             'workflows' => DB::table('approval_workflows')->where('business_id', $this->businessId())->get(),

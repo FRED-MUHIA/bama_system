@@ -7,6 +7,10 @@
     $departmentById = $departments->keyBy('id');
     $branchById = $branches->keyBy('id');
     $permissionScope = $permissionScope ?? 'Shared business modules';
+    $profileEmail = $companySetting?->email ?: auth()->user()->email;
+    $mailFromAddress = old('from_address', $mailSetting?->from_address ?? $profileEmail);
+    $mailUsername = old('username', $mailSetting?->username ?? $mailFromAddress);
+    $mailFromName = old('from_name', $mailSetting?->from_name ?? $companySetting?->company_name ?? $profileName);
 @endphp
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
@@ -60,7 +64,7 @@
 </div>
 
 <ul class="nav nav-tabs mb-3">
-    @foreach(['access'=>'Profile Access','users'=>'Users','roles'=>'Roles & Permissions','structure'=>'Departments & Teams','approvals'=>'Approvals','activity'=>'Login & Devices','security'=>'Security','audit'=>'Audit'] as $id=>$label)
+    @foreach(['access'=>'Profile Access','users'=>'Users','roles'=>'Roles & Permissions','structure'=>'Departments & Teams','approvals'=>'Approvals','activity'=>'Login & Devices','security'=>'Email & Security','audit'=>'Audit'] as $id=>$label)
         <li class="nav-item">
             <button class="nav-link {{ $loop->first ? 'active' : '' }}" data-bs-toggle="tab" data-bs-target="#a-{{ $id }}">{{ $label }}</button>
         </li>
@@ -402,20 +406,37 @@
                 <div class="col-12"><button class="btn btn-warning">Save Policy</button></div>
             </form>
         </div>
-        <div class="card p-3">
-            <h3 class="h5">Outgoing Email (SMTP)</h3>
-            <p class="text-muted">Credentials are encrypted. The saved password is never displayed. Database credentials cannot be changed here.</p>
+        <div class="card p-3" id="profile-email">
+            <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                <div>
+                    <h3 class="h5 mb-1">Business Email</h3>
+                    <p class="text-muted mb-0">Invoices, quotations, receipts, invitations, OTPs and reset links for {{ $profileName }} use this sender.</p>
+                </div>
+                @if($mailSetting?->enabled)
+                    <span class="badge text-bg-success align-self-start">Enabled</span>
+                @else
+                    <span class="badge text-bg-warning align-self-start">Not enabled</span>
+                @endif
+            </div>
+            <div class="alert alert-info">
+                Use the mailbox email as the username. For Gmail or Yahoo, create an app password in that email account and paste the app password here, not the normal login password.
+            </div>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="smtp.gmail.com" data-port="465" data-scheme="ssl">Use Gmail</button>
+                <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="smtp.mail.yahoo.com" data-port="465" data-scheme="ssl">Use Yahoo</button>
+                <button type="button" class="btn btn-sm btn-outline-dark" data-mail-preset data-host="mail.{{ parse_url(config('app.url'), PHP_URL_HOST) ?: 'yourdomain.com' }}" data-port="465" data-scheme="ssl">Use cPanel/Webmail</button>
+            </div>
             <form method="post" action="{{ route('administration.mail.update') }}" class="row g-3">
                 @csrf @method('PUT')
-                <div class="col-12"><label><input type="checkbox" name="enabled" value="1" @checked($mailSetting?->enabled)> Use these settings</label></div>
-                <div class="col-md-6"><label class="form-label">SMTP host</label><input class="form-control" name="host" value="{{ old('host',$mailSetting?->host ?? config('mail.mailers.smtp.host')) }}" required></div>
-                <div class="col-md-3"><label class="form-label">Port</label><input class="form-control" type="number" name="port" value="{{ old('port',$mailSetting?->port ?? config('mail.mailers.smtp.port', 465)) }}" required></div>
-                <div class="col-md-3"><label class="form-label">Encryption</label><select class="form-select" name="scheme"><option value="ssl" @selected(($mailSetting?->scheme ?? 'ssl') === 'ssl')>SSL/TLS</option><option value="tls" @selected($mailSetting?->scheme === 'tls')>STARTTLS</option></select></div>
-                <div class="col-md-6"><label class="form-label">Username</label><input class="form-control" name="username" value="{{ old('username',$mailSetting?->username ?? config('mail.mailers.smtp.username')) }}" autocomplete="off"></div>
-                <div class="col-md-6"><label class="form-label">Password</label><input class="form-control" type="password" name="password" placeholder="{{ $mailSetting?->password ? 'Saved - leave blank to keep' : 'Enter SMTP password' }}" autocomplete="new-password"></div>
-                <div class="col-md-6"><label class="form-label">From address</label><input class="form-control" type="email" name="from_address" value="{{ old('from_address',$mailSetting?->from_address ?? config('mail.from.address')) }}" required></div>
-                <div class="col-md-6"><label class="form-label">From name</label><input class="form-control" name="from_name" value="{{ old('from_name',$mailSetting?->from_name ?? config('app.name')) }}" required></div>
-                <div class="col-12"><button class="btn btn-warning">Save Encrypted Settings</button></div>
+                <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="enabled" value="1" @checked($mailSetting?->enabled)> <span class="form-check-label">Send emails from this profile address</span></label></div>
+                <div class="col-md-6"><label class="form-label">From address</label><input class="form-control" id="mail-from" type="email" name="from_address" value="{{ $mailFromAddress }}" placeholder="info@example.com" required></div>
+                <div class="col-md-6"><label class="form-label">From name</label><input class="form-control" name="from_name" value="{{ $mailFromName }}" placeholder="{{ $profileName }}" required></div>
+                <div class="col-md-6"><label class="form-label">Username</label><input class="form-control" id="mail-username" name="username" value="{{ $mailUsername }}" placeholder="Same as from address" autocomplete="off"></div>
+                <div class="col-md-6"><label class="form-label">Password / App password</label><input class="form-control" type="password" name="password" placeholder="{{ $mailSetting?->password ? 'Saved - leave blank to keep' : 'Paste mailbox or app password' }}" autocomplete="new-password"></div>
+                <div class="col-md-6"><label class="form-label">SMTP host</label><input class="form-control" id="mail-host" name="host" value="{{ old('host',$mailSetting?->host ?? 'mail.'.(parse_url(config('app.url'), PHP_URL_HOST) ?: 'yourdomain.com')) }}" required></div>
+                <div class="col-md-3"><label class="form-label">Port</label><input class="form-control" id="mail-port" type="number" name="port" value="{{ old('port',$mailSetting?->port ?? 465) }}" required></div>
+                <div class="col-md-3"><label class="form-label">Security</label><select class="form-select" id="mail-scheme" name="scheme"><option value="ssl" @selected(($mailSetting?->scheme ?? 'ssl') === 'ssl')>SSL/TLS</option><option value="tls" @selected($mailSetting?->scheme === 'tls')>STARTTLS</option></select></div>
+                <div class="col-12"><button class="btn btn-warning">Save Business Email</button></div>
             </form>
             @if($mailSetting)
                 <hr>
@@ -585,3 +606,43 @@
     });
 </script>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const activateSecurityTab = () => {
+        if (window.location.hash !== '#profile-email') return;
+
+        const trigger = document.querySelector('[data-bs-target="#a-security"]');
+        if (trigger && window.bootstrap) {
+            window.bootstrap.Tab.getOrCreateInstance(trigger).show();
+        }
+
+        setTimeout(() => document.getElementById('profile-email')?.scrollIntoView({ behavior:'smooth', block:'start' }), 150);
+    };
+
+    activateSecurityTab();
+    window.addEventListener('hashchange', activateSecurityTab);
+
+    const host = document.getElementById('mail-host');
+    const port = document.getElementById('mail-port');
+    const scheme = document.getElementById('mail-scheme');
+    const from = document.getElementById('mail-from');
+    const username = document.getElementById('mail-username');
+
+    document.querySelectorAll('[data-mail-preset]').forEach((button) => {
+        button.addEventListener('click', () => {
+            let nextHost = button.dataset.host;
+            if (nextHost?.startsWith('mail.') && from?.value.includes('@')) {
+                nextHost = 'mail.' + from.value.split('@').pop().trim();
+            }
+
+            if (host && nextHost) host.value = nextHost;
+            if (port && button.dataset.port) port.value = button.dataset.port;
+            if (scheme && button.dataset.scheme) scheme.value = button.dataset.scheme;
+            if (username && !username.value && from?.value) username.value = from.value;
+        });
+    });
+});
+</script>
+@endpush
