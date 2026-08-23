@@ -611,7 +611,7 @@
                     @if(!empty($tenantTheme?->logoUrl()))
                         <img src="{{ $tenantTheme->logoUrl() }}" alt="{{ $activeTenant?->name ?? 'Tenant' }}" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
                     @elseif(strcasecmp($sidebarBrandName, 'BAMA') === 0)
-                        <img src="{{ asset('images/bama-logo.png') }}" alt="BAMA" style="width:86px;height:auto;object-fit:contain;border-radius:6px;background:#fff;padding:4px;">
+                        <img src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA" style="width:124px;height:auto;object-fit:contain;border-radius:6px;background:#fff;padding:4px;">
                     @else
                         <div class="brand-mark">{{ strtoupper(substr($sidebarBrandName, 0, 1)) }}{{ strtoupper(substr(strstr($sidebarBrandName, ' ') ?: 'A', 1, 1)) }}</div>
                     @endif

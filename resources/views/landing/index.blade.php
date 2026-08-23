@@ -319,7 +319,7 @@
     <header class="sticky top-0 z-50 border-b border-zinc-200 bg-[#FBFCFA]/95 backdrop-blur-xl">
         <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-2">
             <a href="#top" class="flex items-center gap-3">
-                <img src="{{ asset('images/bama-logo.png') }}" alt="BAMA" class="h-8 w-auto">
+                <img src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA" class="h-12 w-auto">
             </a>
 
             <div class="hidden items-center gap-6 text-sm font-bold text-zinc-700 lg:flex">
@@ -736,7 +736,7 @@
         <div class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.2fr_2fr]">
             <div>
                 <div class="flex items-center gap-3">
-                    <img src="{{ asset('images/bama-logo.png') }}" alt="BAMA" class="h-9 w-auto">
+                    <img src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA" class="h-12 w-auto">
                 </div>
                 <p class="mt-4 max-w-sm leading-7">Enterprise SaaS for ERP, CRM, finance, projects, documents, and industry operations.</p>
                 <p class="mt-3 text-sm">sales@bama.co.ke<br>+254 700 000 000</p>

@@ -109,7 +109,7 @@
     .login-brand .brand-mark,
     .login-mobile-brand .brand-mark {
         display: block;
-        width: 108px;
+        width: 148px;
         height: auto;
         object-fit: contain;
     }
@@ -475,7 +475,7 @@
     <section class="login-brand-panel" aria-label="BAMA connected systems">
         <div>
             <a href="{{ route('landing') }}" class="login-brand" aria-label="Back to BAMA home">
-                <img class="brand-mark" src="{{ asset('images/bama-logo.png') }}" alt="BAMA">
+                <img class="brand-mark" src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA">
             </a>
             <a href="{{ route('landing') }}" class="login-home-link"><i class="bi bi-arrow-left"></i> Back home</a>
         </div>
@@ -519,7 +519,7 @@
     <section class="login-auth-panel">
         <div class="login-auth-wrap">
             <a href="{{ route('landing') }}" class="login-mobile-brand" aria-label="Back to BAMA home">
-                <img class="brand-mark" src="{{ asset('images/bama-logo.png') }}" alt="BAMA">
+                <img class="brand-mark" src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA">
             </a>
 
             <div class="login-auth-label">{{ $loginCopy['label'] }}</div>
