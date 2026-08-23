@@ -105,6 +105,11 @@ Route::prefix('public')->group(function () {
     Route::post('/hospitality/menu/reserve', [HospitalityFrontController::class, 'reserve'])->name('public.alias.hospitality.reserve');
 });
 
+Route::prefix('public/public')->group(function () {
+    Route::get('/activate/{token}', [AdministrationController::class, 'activateForm']);
+    Route::post('/activate/{token}', [AdministrationController::class, 'activate']);
+});
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
     Route::get('/owner/login', [AuthController::class, 'loginForm'])->name('platform.login');

@@ -483,9 +483,7 @@ class AdministrationController extends Controller
     {
         $invitation = UserInvitation::where('token', $token)->where('status', 'Pending')->whereNull('accepted_at')->whereNull('cancelled_at')->where('expires_at', '>', now())->firstOrFail();
 
-        $activationAction = request()->is('public/*')
-            ? route('public.administration.activate.store', $invitation->token)
-            : route('administration.activate.store', $invitation->token);
+        $activationAction = route('administration.activate.store', $invitation->token);
 
         return view('administration.activate', compact('activationAction', 'invitation'));
     }
@@ -662,7 +660,7 @@ class AdministrationController extends Controller
 
     private function activationUrl(UserInvitation $invitation): string
     {
-        return route('public.administration.activate', $invitation->token);
+        return route('administration.activate', $invitation->token);
     }
 
     private function profileUsers()
