@@ -157,7 +157,9 @@
                             <input type="hidden" name="footer_columns_json" data-footer-columns-json value="{{ $json($footerColumns) }}">
                             <div class="d-grid gap-3" data-footer-columns>
                                 @foreach($footerColumns as $column)
-                                    @php($links = is_array($column) ? ($column['links'] ?? []) : [])
+                                    @php
+                                        $links = is_array($column) ? ($column['links'] ?? []) : [];
+                                    @endphp
                                     <div class="border rounded-3 p-3" data-footer-column>
                                         <div class="row g-2 align-items-end">
                                             <div class="col-md-11"><label class="form-label small">Column Heading</label><input class="form-control" data-footer-heading value="{{ is_array($column) ? ($column['heading'] ?? '') : '' }}"></div>

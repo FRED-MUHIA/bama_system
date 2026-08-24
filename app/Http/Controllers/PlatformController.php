@@ -154,9 +154,16 @@ class PlatformController extends Controller
     {
         return view('platform.plans', [
             'plans' => Plan::with('features')->orderBy('monthly_price')->get(),
+        ]);
+    }
+
+    public function paymentSettings()
+    {
+        return view('platform.payments', [
             'paymentSettings' => Schema::hasTable('platform_payment_settings')
                 ? PlatformPaymentSetting::all()->keyBy('provider')
                 : collect(),
+            'billingTablesReady' => Schema::hasTable('platform_payment_settings'),
         ]);
     }
 

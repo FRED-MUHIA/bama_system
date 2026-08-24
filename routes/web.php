@@ -156,6 +156,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/tenants/{tenant}', [PlatformController::class, 'destroyTenant'])->name('tenants.destroy');
         Route::get('/plans', [PlatformController::class, 'plans'])->name('plans');
         Route::put('/plans/{plan}', [PlatformController::class, 'updatePlan'])->name('plans.update');
+        Route::get('/payments', [PlatformController::class, 'paymentSettings'])->name('payments');
         Route::put('/payment-settings', [PlatformController::class, 'updatePaymentSettings'])->name('payment-settings.update');
         Route::resource('pages', MarketingPageController::class)->except(['show']);
     });
