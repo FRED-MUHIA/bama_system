@@ -1,26 +1,26 @@
 @extends('layouts.marketing', ['title' => 'Verify Email'])
 
 @section('body')
-<main class="min-h-screen bg-zinc-950 px-5 py-12 text-white">
-    <section class="mx-auto max-w-xl rounded-3xl border border-white/10 bg-white/[.04] p-8 shadow-2xl">
+<main class="bama-page min-h-screen px-5 py-12">
+    <section class="bama-card mx-auto max-w-xl p-8">
         <a href="{{ route('landing') }}" class="inline-flex items-center gap-3">
-            <img src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA" class="h-12 w-auto rounded-lg bg-white px-2 py-1">
+            <img src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA" class="bama-logo">
         </a>
         <h1 class="mt-10 text-3xl font-black">Verify your email</h1>
-        <p class="mt-3 text-zinc-300">Use the verification link sent to your inbox to secure your new workspace.</p>
+        <p class="mt-3 text-black">Use the verification link sent to your inbox to secure your new workspace.</p>
 
         @if (session('status'))
-            <div class="mt-6 rounded-2xl border border-[#00A651]/40 bg-[#00A651]/10 p-4 text-sm text-[#BDF2D4]">{{ session('status') }}</div>
+            <div class="mt-6 rounded-lg border border-[#00A651]/40 bg-[#EAF8F0] p-4 text-sm text-[#007A3B]">{{ session('status') }}</div>
         @endif
         @if ($errors->any())
-            <div class="mt-6 rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-100">{{ $errors->first() }}</div>
+            <div class="mt-6 rounded-lg border border-red-500/40 bg-red-50 p-4 text-sm text-red-700">{{ $errors->first() }}</div>
         @endif
 
         <form method="POST" action="{{ route('verification.send') }}" class="mt-8">
             @csrf
-            <button class="w-full rounded-2xl bg-[#00A651] px-5 py-4 font-bold text-white shadow-xl shadow-[#00A651]/20">Resend verification email</button>
+            <button class="w-full rounded-lg bg-[#00A651] px-5 py-4 font-bold text-white shadow-xl shadow-[#00A651]/20">Resend verification email</button>
         </form>
-        <a href="{{ route('register.welcome') }}" class="mt-5 block text-center text-sm font-semibold text-zinc-300">Back to workspace status</a>
+        <a href="{{ route('register.welcome') }}" class="mt-5 block text-center text-sm font-semibold text-black hover:text-[#00A651]">Back to workspace status</a>
     </section>
 </main>
 @endsection

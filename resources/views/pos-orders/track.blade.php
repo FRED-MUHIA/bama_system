@@ -6,11 +6,11 @@
     <title>Track {{ $order->order_number }} - BAMA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background:#f5f7fb; }
+        body { background:#F7F8F5; color:#000; font-family:'Inter Tight',system-ui,sans-serif; }
         .page { max-width:860px; margin:38px auto; }
         .card { border:0; border-radius:8px; box-shadow:0 8px 24px rgba(15,23,42,.08); }
-        .brand { color:#f97316; font-weight:800; }
-        .status-pill { border-radius:999px; padding:.35rem .75rem; background:#fff7ed; color:#9a3412; display:inline-block; }
+        .brand { color:#00A651; font-weight:800; }
+        .status-pill { border-radius:999px; padding:.35rem .75rem; background:#EAF8F0; color:#007A3B; display:inline-block; }
     </style>
 </head>
 <body>

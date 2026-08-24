@@ -19,7 +19,7 @@
     <meta charset="utf-8">
     <style>
         @page { size:A4 portrait; margin:24px 28px 32px; }
-        body { font-family: DejaVu Sans, sans-serif; color:#101828; font-size:10px; line-height:1.45; }
+        body { font-family: DejaVu Sans, sans-serif; color:#000; font-size:10px; line-height:1.45; }
         .sheet { border:1px solid #d9e1ec; }
         .top-bar { width:100%; height:8px; border-collapse:collapse; }
         .top-bar td { padding:0; }

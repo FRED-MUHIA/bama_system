@@ -16,14 +16,29 @@
 }
 
 @theme {
-    --font-brand: 'McQueen', 'Inter Tight', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-brand: 'McQueen', 'tt_normsregular', 'TT Norms', 'Inter Tight', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'tt_normsregular', 'TT Norms', 'Inter Tight', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
 @layer base {
     :root {
-        --font-brand: 'McQueen', 'Inter Tight', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+        --font-brand: 'McQueen', 'tt_normsregular', 'TT Norms', 'Inter Tight', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+        --font-body: 'tt_normsregular', 'TT Norms', 'Inter Tight', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+        --bama-green: #00A651;
+        --bama-green-dark: #007A3B;
+        --bama-soft: #EAF8F0;
+        --bama-page: #F7F8F5;
+        --bama-ink: #000000;
+        --bama-line: #e5e7eb;
+    }
+
+    html,
+    body {
+        background: var(--bama-page);
+        color: var(--bama-ink);
+        font-family: var(--font-body) !important;
+        letter-spacing: 0;
     }
 
     h1,

@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
         padding: 6px;
     }
     .letter-editor-canvas blockquote {
-        border-left: 3px solid #f97316;
+        border-left: 3px solid #00A651;
         margin-left: 0;
         padding-left: 12px;
         color: #4b5563;

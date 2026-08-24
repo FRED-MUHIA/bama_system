@@ -8,9 +8,9 @@
 @endphp
 <style>
     .fitness-card-wrap{max-width:900px;margin:0 auto}
-    .membership-card{width:520px;max-width:100%;aspect-ratio:1.58;background:#101828;color:#fff;border-radius:18px;padding:28px;box-shadow:0 18px 48px rgba(15,23,42,.24);position:relative;overflow:hidden}
+    .membership-card{width:520px;max-width:100%;aspect-ratio:1.58;background:#071B12;color:#fff;border-radius:18px;padding:28px;box-shadow:0 18px 48px rgba(15,23,42,.24);position:relative;overflow:hidden}
     .membership-card:before{content:"";position:absolute;inset:auto -90px -140px auto;width:280px;height:280px;border-radius:50%;background:#00A651;opacity:.9}
-    .membership-card:after{content:"";position:absolute;inset:-110px auto auto -120px;width:270px;height:270px;border-radius:50%;background:#f97316;opacity:.32}
+    .membership-card:after{content:"";position:absolute;inset:-110px auto auto -120px;width:270px;height:270px;border-radius:50%;background:#79D9A3;opacity:.24}
     .membership-card-inner{position:relative;z-index:1;display:grid;grid-template-columns:1fr 154px;gap:18px;height:100%}
     .card-kicker{font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;color:#b7f7d3;font-weight:800;overflow-wrap:anywhere}
     .member-name{font-size:1.65rem;font-weight:900;line-height:1.08;margin:.35rem 0 .15rem;overflow-wrap:anywhere}
