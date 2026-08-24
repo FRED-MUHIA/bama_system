@@ -338,7 +338,7 @@
     <header class="sticky top-0 z-50 border-b border-zinc-200 bg-[#FBFCFA]/95 backdrop-blur-xl">
         <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-2">
             <a href="#top" class="flex items-center gap-3">
-                <img src="{{ $brandLogoUrl }}" alt="{{ $brandAlt }}" class="block h-auto w-[92px] max-w-[24vw]" style="width:92px;height:auto;max-width:24vw;">
+                <img src="{{ $brandLogoUrl }}" alt="{{ $brandAlt }}" class="block h-auto w-[124px] max-w-[32vw]" style="width:124px;height:auto;max-width:32vw;">
             </a>
 
             <div class="hidden items-center gap-6 text-sm font-bold text-zinc-700 lg:flex">
