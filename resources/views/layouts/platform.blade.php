@@ -43,7 +43,7 @@
     <div class="owner-shell">
         <aside class="owner-sidebar">
             <div class="owner-brand">
-                <img class="owner-logo" src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA">
+                <img class="owner-logo" src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions">
                 <div>
                     <small class="text-white-50">Owner Console</small>
                 </div>

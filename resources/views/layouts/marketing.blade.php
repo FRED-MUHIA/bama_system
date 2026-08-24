@@ -8,7 +8,12 @@
     @isset($metaDescription)
         <meta name="description" content="{{ $metaDescription }}">
     @endisset
-    <link rel="icon" href="{{ asset('images/bama-logo-cropped.png') }}">
+    @php
+        $marketingSiteContent = $marketingSiteContent ?? \App\Models\MarketingPage::resolve('home')->sections ?? \App\Models\MarketingPage::defaultSections('home');
+        $marketingBrand = array_replace_recursive(\App\Models\MarketingPage::defaultSections('home')['brand'], (array) data_get($marketingSiteContent, 'brand', []));
+        $marketingFaviconUrl = \App\Support\PublicUpload::url(data_get($marketingBrand, 'favicon_path')) ?: asset('images/bama-solutions-02.png');
+    @endphp
+    <link rel="icon" href="{{ $marketingFaviconUrl }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:opsz,wght@14..32,100..900&display=swap" rel="stylesheet">

@@ -601,19 +601,21 @@
     <style>:root { {!! $tenantCssVariables ?? '--tenant-primary:#00A651; --tenant-secondary:#000000; --tenant-accent:#00A651;' !!} }</style>
 </head>
 <body>
+@php
+    $currentUser = auth()->user();
+    $isClientPortal = $currentUser?->role === 'client_portal';
+    $mainColumnClass = $currentUser && ! $isClientPortal ? 'col-lg-10' : 'col-12';
+    $sidebarBrandName = $activeTenant?->name ?? $activeBusiness?->name ?? 'BAMA';
+@endphp
 <div class="container-fluid">
     <div class="row">
-        @auth
-        @unless(auth()->user()->role === 'client_portal')
+        @if($currentUser && ! $isClientPortal)
             <aside class="col-lg-2 sidebar p-3">
-                @php
-                    $sidebarBrandName = $activeTenant?->name ?? $activeBusiness?->name ?? 'BAMA';
-                @endphp
                 <div class="sidebar-brand d-flex align-items-center gap-2 text-white mb-3">
                     @if(!empty($tenantTheme?->logoUrl()))
                         <img src="{{ $tenantTheme->logoUrl() }}" alt="{{ $activeTenant?->name ?? 'Tenant' }}" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
                     @elseif(strcasecmp($sidebarBrandName, 'BAMA') === 0)
-                        <img src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA" style="width:124px;height:auto;object-fit:contain;border-radius:6px;background:#fff;padding:4px;">
+                        <img src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions" style="width:124px;height:auto;object-fit:contain;border-radius:6px;background:#fff;padding:4px;">
                     @else
                         <div class="brand-mark">{{ strtoupper(substr($sidebarBrandName, 0, 1)) }}{{ strtoupper(substr(strstr($sidebarBrandName, ' ') ?: 'A', 1, 1)) }}</div>
                     @endif
@@ -694,14 +696,13 @@
                     @endforeach
                 </nav>
             </aside>
-        @endunless
-        @endauth
-        <main class="@auth {{ auth()->user()->role === 'client_portal' ? 'col-12' : 'col-lg-10' }} @else col-12 @endauth p-0">
-            @auth
+        @endif
+        <main class="{{ $mainColumnClass }} p-0">
+            @if($currentUser)
                 <header class="app-header border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
                     <div class="mobile-header-identity">
-                        <div class="mobile-header-avatar">{{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}</div>
-                        <div class="mobile-header-name">{{ $activeBusiness?->name ?? $activeTenant?->name ?? auth()->user()->name }}</div>
+                        <div class="mobile-header-avatar">{{ strtoupper(substr($currentUser->name ?? 'U', 0, 1)) }}</div>
+                        <div class="mobile-header-name">{{ $activeBusiness?->name ?? $activeTenant?->name ?? $currentUser->name }}</div>
                     </div>
                     <div class="app-header-title">
                         <div class="text-muted small">Admin dashboard</div>
@@ -709,12 +710,12 @@
                     </div>
                     <div class="app-header-actions">
                         @yield('header-actions')
-                        @unless(auth()->user()->role === 'client_portal')
+                        @if(! $isClientPortal)
                             <div class="header-greeting">
                                 <i class="bi bi-person-circle text-success"></i>
                                 <span>
                                     <span class="hello">Hello</span>
-                                    <span class="tenant-name">{{ $activeBusiness?->name ?? $activeTenant?->name ?? auth()->user()->name }}</span>
+                                    <span class="tenant-name">{{ $activeBusiness?->name ?? $activeTenant?->name ?? $currentUser->name }}</span>
                                 </span>
                             </div>
                             <div class="dropdown">
@@ -758,13 +759,13 @@
                                     </div>
                                 </div>
                             </div>
-                        @endunless
+                        @endif
                         <button type="button" class="btn btn-outline-dark btn-sm theme-toggle" data-theme-toggle aria-label="Switch colour theme"><i class="bi bi-moon-stars"></i></button>
                         <a class="btn btn-outline-dark btn-sm profile-link" href="{{route('profile.edit')}}"><i class="bi bi-person"></i> <span>My Profile</span></a>
                         <form method="post" action="{{ route('logout') }}">@csrf<button class="btn btn-outline-dark btn-sm"><i class="bi bi-box-arrow-right"></i> <span>Logout</span></button></form>
                     </div>
                 </header>
-            @endauth
+            @endif
             <section class="p-4">
                 @if(session('status')) <div class="alert alert-success">{{ session('status') }}</div> @endif
                 @if(session('warning')) <div class="alert alert-warning">{{ session('warning') }}</div> @endif
@@ -774,9 +775,8 @@
         </main>
     </div>
 </div>
-@guest<button type="button" class="btn btn-outline-dark theme-toggle guest-theme-toggle" data-theme-toggle aria-label="Switch colour theme"><i class="bi bi-moon-stars"></i></button>@endguest
-@auth
-@unless(auth()->user()->role === 'client_portal')
+@if(! $currentUser)<button type="button" class="btn btn-outline-dark theme-toggle guest-theme-toggle" data-theme-toggle aria-label="Switch colour theme"><i class="bi bi-moon-stars"></i></button>@endif
+@if($currentUser && ! $isClientPortal)
     @php
         $genericMobileItems = [
             ['label' => 'Dashboard', 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'bi-grid-fill', 'aria' => 'Dashboard'],
@@ -858,7 +858,7 @@
         $utilityOverflowItems = [
             ['label' => 'Settings', 'route' => 'settings.edit', 'match' => 'settings.*', 'icon' => 'bi-gear'],
             ['label' => 'My Profile', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'bi-person'],
-            ['label' => 'Administration', 'route' => 'administration.index', 'match' => 'administration.*', 'icon' => 'bi-shield-lock', 'condition' => \App\Support\SchemaCache::hasTable('iam_roles') && auth()->user()->hasPermission('administration.view')],
+            ['label' => 'Administration', 'route' => 'administration.index', 'match' => 'administration.*', 'icon' => 'bi-shield-lock', 'condition' => \App\Support\SchemaCache::hasTable('iam_roles') && $currentUser->hasPermission('administration.view')],
         ];
 
         $mobileContextLabel = 'More';
@@ -957,8 +957,7 @@
             <button type="submit"><i class="bi bi-box-arrow-right"></i> Logout</button>
         </form>
     </div>
-@endunless
-@endauth
+@endif
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded',()=>{

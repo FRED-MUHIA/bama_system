@@ -71,6 +71,26 @@ class MarketingPage extends Model
         }
 
         return [
+            'brand' => [
+                'logo_path' => 'images/bama-solutions-02.png',
+                'favicon_path' => null,
+                'logo_alt' => 'Bama Solutions',
+            ],
+            'header' => [
+                'nav_links' => [
+                    ['label' => 'Features', 'url' => '#features'],
+                    ['label' => 'Industries', 'url' => '#industries'],
+                    ['label' => 'Solutions', 'url' => '#solutions'],
+                    ['label' => 'Pricing', 'url' => '#pricing'],
+                    ['label' => 'Resources', 'url' => '#faq'],
+                ],
+                'login_label' => 'Login',
+                'login_url' => '/login',
+                'demo_label' => 'Book Demo',
+                'demo_url' => 'mailto:sales@bama.co.ke?subject=Demo%20Request',
+                'cta_label' => 'Start Free Trial',
+                'cta_url' => '/register/account',
+            ],
             'hero' => [
                 'eyebrow' => 'One Platform to Manage Every Business Operation',
                 'title' => 'Run Your Entire Business From One Unified Platform',
@@ -115,6 +135,12 @@ class MarketingPage extends Model
                 'body' => 'Enterprise SaaS for ERP, CRM, finance, projects, documents, and industry operations.',
                 'email' => 'sales@bama.co.ke',
                 'phone' => '+254 700 000 000',
+                'columns' => [
+                    ['heading' => 'Products', 'links' => ['CRM', 'Finance', 'Projects', 'Inventory']],
+                    ['heading' => 'Industries', 'links' => ['Construction', 'Real Estate', 'Retail', 'Hospitality']],
+                    ['heading' => 'Company', 'links' => ['Pricing', 'Documentation', 'Support', 'Social Media']],
+                    ['heading' => 'Legal', 'links' => ['Privacy Policy', 'Terms']],
+                ],
             ],
             'blocks' => [],
         ];

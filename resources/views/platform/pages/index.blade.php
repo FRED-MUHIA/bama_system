@@ -6,8 +6,22 @@
         <p class="owner-title-eyebrow mb-1">Website Content</p>
         <h2 class="h4 mb-0">Marketing pages</h2>
     </div>
-    <a class="btn btn-owner" href="{{ route('platform.pages.create') }}"><i class="bi bi-plus-lg"></i> New Page</a>
+    @if($migrationMissing ?? false)
+        <button class="btn btn-owner" type="button" disabled><i class="bi bi-plus-lg"></i> New Page</button>
+    @else
+        <a class="btn btn-owner" href="{{ route('platform.pages.create') }}"><i class="bi bi-plus-lg"></i> New Page</a>
+    @endif
 </div>
+
+@if($migrationMissing ?? false)
+    <div class="alert alert-warning">
+        The page builder database table is missing. Run <code>php artisan migrate --force</code> on this environment, then refresh this page.
+    </div>
+@else
+    <div class="alert alert-info">
+        Header, footer, logo, favicon, and homepage content are edited from the <strong>Home</strong> page record.
+    </div>
+@endif
 
 <div class="owner-card p-3">
     <div class="table-responsive">

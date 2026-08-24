@@ -4,7 +4,7 @@
 <main class="bama-page min-h-screen px-5 py-12">
     <section class="bama-card mx-auto max-w-xl p-8">
         <a href="{{ route('landing') }}" class="inline-flex items-center gap-3">
-            <img src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA" class="bama-logo">
+            <img src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions" class="bama-logo">
         </a>
         <h1 class="mt-10 text-3xl font-black">Verify your email</h1>
         <p class="mt-3 text-black">Use the verification link sent to your inbox to secure your new workspace.</p>

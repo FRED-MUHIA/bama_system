@@ -6,9 +6,18 @@
     $slug = old('slug', $page->slug);
     $isHome = $slug === 'home';
     $json = fn ($value) => json_encode($value ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    $homeDefaults = \App\Models\MarketingPage::defaultSections('home');
+    $headerNavLinks = data_get($sections, 'header.nav_links', $homeDefaults['header']['nav_links']);
+    $footerColumns = data_get($sections, 'footer.columns', $homeDefaults['footer']['columns']);
+    $stats = data_get($sections, 'stats', $homeDefaults['stats']);
+    $insightBullets = data_get($sections, 'insight.bullets', $homeDefaults['insight']['bullets']);
+    $trustLogos = data_get($sections, 'trust.logos', $homeDefaults['trust']['logos']);
+    $trustBadges = data_get($sections, 'trust.badges', $homeDefaults['trust']['badges']);
+    $brandLogoUrl = \App\Support\PublicUpload::url(data_get($sections, 'brand.logo_path')) ?: asset('images/bama-solutions-02.png');
+    $faviconUrl = \App\Support\PublicUpload::url(data_get($sections, 'brand.favicon_path')) ?: asset('images/bama-solutions-02.png');
 @endphp
 
-<form method="post" action="{{ $isCreating ? route('platform.pages.store') : route('platform.pages.update', $page) }}" data-page-builder-form>
+<form method="post" action="{{ $isCreating ? route('platform.pages.store') : route('platform.pages.update', $page) }}" enctype="multipart/form-data" data-page-builder-form>
     @csrf
     @unless($isCreating) @method('PUT') @endunless
 
@@ -67,6 +76,49 @@
         <div class="col-xl-8">
             @if($isHome)
                 <div class="owner-card p-3 mb-4">
+                    <h3 class="h5">Site Header & Branding</h3>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Logo</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="{{ $brandLogoUrl }}" alt="Current logo" style="width:96px;height:54px;object-fit:contain;border:1px solid #dfe6e2;border-radius:8px;background:#fff;padding:6px">
+                                <input class="form-control" type="file" name="brand_logo" accept=".jpg,.jpeg,.png,.webp,.svg,image/*">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Favicon</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="{{ $faviconUrl }}" alt="Current favicon" style="width:42px;height:42px;object-fit:contain;border:1px solid #dfe6e2;border-radius:8px;background:#fff;padding:5px">
+                                <input class="form-control" type="file" name="brand_favicon" accept=".ico,.jpg,.jpeg,.png,.webp,.svg,image/*">
+                            </div>
+                        </div>
+                        <div class="col-md-6"><label class="form-label">Logo Alt Text</label><input class="form-control" name="sections[brand][logo_alt]" value="{{ data_get($sections, 'brand.logo_alt', 'Bama Solutions') }}"></div>
+                        <div class="col-md-6"><label class="form-label">Login URL</label><input class="form-control" name="sections[header][login_url]" value="{{ data_get($sections, 'header.login_url', '/login') }}"></div>
+                        <div class="col-md-3"><label class="form-label">Login Label</label><input class="form-control" name="sections[header][login_label]" value="{{ data_get($sections, 'header.login_label', 'Login') }}"></div>
+                        <div class="col-md-3"><label class="form-label">Demo Label</label><input class="form-control" name="sections[header][demo_label]" value="{{ data_get($sections, 'header.demo_label', 'Book Demo') }}"></div>
+                        <div class="col-md-6"><label class="form-label">Demo URL</label><input class="form-control" name="sections[header][demo_url]" value="{{ data_get($sections, 'header.demo_url', 'mailto:sales@bama.co.ke?subject=Demo%20Request') }}"></div>
+                        <div class="col-md-3"><label class="form-label">CTA Label</label><input class="form-control" name="sections[header][cta_label]" value="{{ data_get($sections, 'header.cta_label', 'Start Free Trial') }}"></div>
+                        <div class="col-md-9"><label class="form-label">CTA URL</label><input class="form-control" name="sections[header][cta_url]" value="{{ data_get($sections, 'header.cta_url', '/register/account') }}"></div>
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+                                <label class="form-label mb-0">Header Links</label>
+                                <button class="btn btn-sm btn-outline-dark" type="button" data-add-header-link><i class="bi bi-plus-lg"></i> Add Link</button>
+                            </div>
+                            <input type="hidden" name="header_nav_json" data-header-links-json value="{{ $json($headerNavLinks) }}">
+                            <div class="d-grid gap-2" data-header-links>
+                                @foreach($headerNavLinks as $link)
+                                    <div class="row g-2 align-items-end" data-header-link>
+                                        <div class="col-md-5"><label class="form-label small">Label</label><input class="form-control" data-header-label value="{{ is_array($link) ? ($link['label'] ?? '') : $link }}"></div>
+                                        <div class="col-md-6"><label class="form-label small">URL</label><input class="form-control" data-header-url value="{{ is_array($link) ? ($link['url'] ?? '') : '#top' }}"></div>
+                                        <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-row aria-label="Remove header link"><i class="bi bi-trash"></i></button></div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="owner-card p-3 mb-4">
                     <h3 class="h5">Homepage Hero</h3>
                     <div class="row g-3">
                         <div class="col-md-6"><label class="form-label">Eyebrow</label><input class="form-control" name="sections[hero][eyebrow]" value="{{ data_get($sections, 'hero.eyebrow') }}"></div>
@@ -97,20 +149,106 @@
                         <div class="col-md-4"><label class="form-label">Footer Body</label><textarea class="form-control" name="sections[footer][body]" rows="3">{{ data_get($sections, 'footer.body') }}</textarea></div>
                         <div class="col-md-4"><label class="form-label">Footer Email</label><input class="form-control" name="sections[footer][email]" value="{{ data_get($sections, 'footer.email') }}"></div>
                         <div class="col-md-4"><label class="form-label">Footer Phone</label><input class="form-control" name="sections[footer][phone]" value="{{ data_get($sections, 'footer.phone') }}"></div>
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+                                <label class="form-label mb-0">Footer Columns</label>
+                                <button class="btn btn-sm btn-outline-dark" type="button" data-add-footer-column><i class="bi bi-plus-lg"></i> Add Column</button>
+                            </div>
+                            <input type="hidden" name="footer_columns_json" data-footer-columns-json value="{{ $json($footerColumns) }}">
+                            <div class="d-grid gap-3" data-footer-columns>
+                                @foreach($footerColumns as $column)
+                                    @php($links = is_array($column) ? ($column['links'] ?? []) : [])
+                                    <div class="border rounded-3 p-3" data-footer-column>
+                                        <div class="row g-2 align-items-end">
+                                            <div class="col-md-11"><label class="form-label small">Column Heading</label><input class="form-control" data-footer-heading value="{{ is_array($column) ? ($column['heading'] ?? '') : '' }}"></div>
+                                            <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-row aria-label="Remove footer column"><i class="bi bi-trash"></i></button></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center gap-3 mt-3 mb-2">
+                                            <span class="small fw-bold text-muted">Links</span>
+                                            <button class="btn btn-sm btn-outline-dark" type="button" data-add-footer-link><i class="bi bi-plus-lg"></i> Add Link</button>
+                                        </div>
+                                        <div class="d-grid gap-2" data-footer-links>
+                                            @foreach($links as $link)
+                                                <div class="row g-2 align-items-end" data-footer-link>
+                                                    <div class="col-md-5"><label class="form-label small">Label</label><input class="form-control" data-footer-label value="{{ is_array($link) ? ($link['label'] ?? '') : $link }}"></div>
+                                                    <div class="col-md-6"><label class="form-label small">URL</label><input class="form-control" data-footer-url value="{{ is_array($link) ? ($link['url'] ?? '#top') : '#top' }}"></div>
+                                                    <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-row aria-label="Remove footer link"><i class="bi bi-trash"></i></button></div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="owner-card p-3 mb-4">
                     <h3 class="h5">Homepage Lists</h3>
-                    <p class="text-muted small">Use JSON arrays for repeated content.</p>
-                    <label class="form-label">Stats</label>
-                    <textarea class="form-control font-monospace" name="stats_json" rows="5">{{ $json(data_get($sections, 'stats')) }}</textarea>
-                    <label class="form-label mt-3">Insight Bullets</label>
-                    <textarea class="form-control font-monospace" name="insight_bullets_json" rows="5">{{ $json(data_get($sections, 'insight.bullets')) }}</textarea>
-                    <label class="form-label mt-3">Trust Logos</label>
-                    <textarea class="form-control font-monospace" name="logos_json" rows="4">{{ $json(data_get($sections, 'trust.logos')) }}</textarea>
-                    <label class="form-label mt-3">Trust Badges</label>
-                    <textarea class="form-control font-monospace" name="badges_json" rows="4">{{ $json(data_get($sections, 'trust.badges')) }}</textarea>
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+                                <label class="form-label mb-0">Stats</label>
+                                <button class="btn btn-sm btn-outline-dark" type="button" data-add-stat><i class="bi bi-plus-lg"></i> Add Stat</button>
+                            </div>
+                            <input type="hidden" name="stats_json" data-stats-json value="{{ $json($stats) }}">
+                            <div class="d-grid gap-2" data-stats>
+                                @foreach($stats as $stat)
+                                    <div class="row g-2 align-items-end" data-stat>
+                                        <div class="col-md-5"><label class="form-label small">Value</label><input class="form-control" data-stat-value value="{{ is_array($stat) ? ($stat['value'] ?? '') : $stat }}"></div>
+                                        <div class="col-md-6"><label class="form-label small">Label</label><input class="form-control" data-stat-label value="{{ is_array($stat) ? ($stat['label'] ?? '') : '' }}"></div>
+                                        <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-row aria-label="Remove stat"><i class="bi bi-trash"></i></button></div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+                                <label class="form-label mb-0">Insight Bullets</label>
+                                <button class="btn btn-sm btn-outline-dark" type="button" data-add-insight-bullet><i class="bi bi-plus-lg"></i> Add Bullet</button>
+                            </div>
+                            <input type="hidden" name="insight_bullets_json" data-insight-bullets-json value="{{ $json($insightBullets) }}">
+                            <div class="d-grid gap-2" data-insight-bullets>
+                                @foreach($insightBullets as $bullet)
+                                    <div class="row g-2 align-items-end" data-insight-bullet>
+                                        <div class="col-md-5"><label class="form-label small">Title</label><input class="form-control" data-bullet-title value="{{ is_array($bullet) ? ($bullet['title'] ?? '') : $bullet }}"></div>
+                                        <div class="col-md-6"><label class="form-label small">Copy</label><input class="form-control" data-bullet-copy value="{{ is_array($bullet) ? ($bullet['copy'] ?? '') : '' }}"></div>
+                                        <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-row aria-label="Remove bullet"><i class="bi bi-trash"></i></button></div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+                                <label class="form-label mb-0">Trust Logos</label>
+                                <button class="btn btn-sm btn-outline-dark" type="button" data-add-trust-logo><i class="bi bi-plus-lg"></i> Add Logo</button>
+                            </div>
+                            <input type="hidden" name="logos_json" data-trust-logos-json value="{{ $json($trustLogos) }}">
+                            <div class="d-grid gap-2" data-trust-logos>
+                                @foreach($trustLogos as $logo)
+                                    <div class="input-group" data-trust-logo>
+                                        <input class="form-control" data-trust-logo-value value="{{ is_array($logo) ? ($logo['label'] ?? '') : $logo }}">
+                                        <button class="btn btn-outline-danger" type="button" data-remove-row aria-label="Remove logo"><i class="bi bi-trash"></i></button>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+                                <label class="form-label mb-0">Trust Badges</label>
+                                <button class="btn btn-sm btn-outline-dark" type="button" data-add-trust-badge><i class="bi bi-plus-lg"></i> Add Badge</button>
+                            </div>
+                            <input type="hidden" name="badges_json" data-trust-badges-json value="{{ $json($trustBadges) }}">
+                            <div class="d-grid gap-2" data-trust-badges>
+                                @foreach($trustBadges as $badge)
+                                    <div class="input-group" data-trust-badge>
+                                        <input class="form-control" data-trust-badge-value value="{{ is_array($badge) ? ($badge['label'] ?? '') : $badge }}">
+                                        <button class="btn btn-outline-danger" type="button" data-remove-row aria-label="Remove badge"><i class="bi bi-trash"></i></button>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
                 </div>
             @endif
 
@@ -157,7 +295,25 @@
         const list = document.querySelector('[data-block-list]');
         const hidden = document.querySelector('[data-blocks-json]');
         const template = document.querySelector('[data-block-template]');
+        const headerLinks = document.querySelector('[data-header-links]');
+        const headerLinksHidden = document.querySelector('[data-header-links-json]');
+        const footerColumns = document.querySelector('[data-footer-columns]');
+        const footerColumnsHidden = document.querySelector('[data-footer-columns-json]');
+        const stats = document.querySelector('[data-stats]');
+        const statsHidden = document.querySelector('[data-stats-json]');
+        const insightBullets = document.querySelector('[data-insight-bullets]');
+        const insightBulletsHidden = document.querySelector('[data-insight-bullets-json]');
+        const trustLogos = document.querySelector('[data-trust-logos]');
+        const trustLogosHidden = document.querySelector('[data-trust-logos-json]');
+        const trustBadges = document.querySelector('[data-trust-badges]');
+        const trustBadgesHidden = document.querySelector('[data-trust-badges-json]');
         let blocks = [];
+
+        const escapeAttribute = (value = '') => String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
 
         const readInitial = () => {
             try { blocks = JSON.parse(hidden.value || '[]') || []; } catch (error) { blocks = []; }
@@ -195,10 +351,158 @@
             syncHidden();
         };
 
+        const headerLinkRow = (link = {}) => `
+            <div class="row g-2 align-items-end" data-header-link>
+                <div class="col-md-5"><label class="form-label small">Label</label><input class="form-control" data-header-label value="${escapeAttribute(link.label || '')}"></div>
+                <div class="col-md-6"><label class="form-label small">URL</label><input class="form-control" data-header-url value="${escapeAttribute(link.url || '')}"></div>
+                <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-row aria-label="Remove header link"><i class="bi bi-trash"></i></button></div>
+            </div>`;
+
+        const footerLinkRow = (link = {}) => `
+            <div class="row g-2 align-items-end" data-footer-link>
+                <div class="col-md-5"><label class="form-label small">Label</label><input class="form-control" data-footer-label value="${escapeAttribute(link.label || '')}"></div>
+                <div class="col-md-6"><label class="form-label small">URL</label><input class="form-control" data-footer-url value="${escapeAttribute(link.url || '')}"></div>
+                <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-row aria-label="Remove footer link"><i class="bi bi-trash"></i></button></div>
+            </div>`;
+
+        const footerColumnRow = () => `
+            <div class="border rounded-3 p-3" data-footer-column>
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-11"><label class="form-label small">Column Heading</label><input class="form-control" data-footer-heading></div>
+                    <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-row aria-label="Remove footer column"><i class="bi bi-trash"></i></button></div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center gap-3 mt-3 mb-2">
+                    <span class="small fw-bold text-muted">Links</span>
+                    <button class="btn btn-sm btn-outline-dark" type="button" data-add-footer-link><i class="bi bi-plus-lg"></i> Add Link</button>
+                </div>
+                <div class="d-grid gap-2" data-footer-links>${footerLinkRow()}</div>
+            </div>`;
+
+        const statRow = () => `
+            <div class="row g-2 align-items-end" data-stat>
+                <div class="col-md-5"><label class="form-label small">Value</label><input class="form-control" data-stat-value></div>
+                <div class="col-md-6"><label class="form-label small">Label</label><input class="form-control" data-stat-label></div>
+                <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-row aria-label="Remove stat"><i class="bi bi-trash"></i></button></div>
+            </div>`;
+
+        const insightBulletRow = () => `
+            <div class="row g-2 align-items-end" data-insight-bullet>
+                <div class="col-md-5"><label class="form-label small">Title</label><input class="form-control" data-bullet-title></div>
+                <div class="col-md-6"><label class="form-label small">Copy</label><input class="form-control" data-bullet-copy></div>
+                <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-row aria-label="Remove bullet"><i class="bi bi-trash"></i></button></div>
+            </div>`;
+
+        const smallListRow = (kind) => `
+            <div class="input-group" data-trust-${kind}>
+                <input class="form-control" data-trust-${kind}-value>
+                <button class="btn btn-outline-danger" type="button" data-remove-row aria-label="Remove ${kind}"><i class="bi bi-trash"></i></button>
+            </div>`;
+
+        const syncHeaderLinks = () => {
+            if (! headerLinks || ! headerLinksHidden) return;
+
+            headerLinksHidden.value = JSON.stringify([...headerLinks.querySelectorAll('[data-header-link]')]
+                .map((row) => ({
+                    label: row.querySelector('[data-header-label]').value.trim(),
+                    url: row.querySelector('[data-header-url]').value.trim(),
+                }))
+                .filter((link) => link.label || link.url));
+        };
+
+        const syncFooterColumns = () => {
+            if (! footerColumns || ! footerColumnsHidden) return;
+
+            footerColumnsHidden.value = JSON.stringify([...footerColumns.querySelectorAll('[data-footer-column]')]
+                .map((column) => ({
+                    heading: column.querySelector('[data-footer-heading]').value.trim(),
+                    links: [...column.querySelectorAll('[data-footer-link]')]
+                        .map((row) => ({
+                            label: row.querySelector('[data-footer-label]').value.trim(),
+                            url: row.querySelector('[data-footer-url]').value.trim(),
+                        }))
+                        .filter((link) => link.label || link.url),
+                }))
+                .filter((column) => column.heading || column.links.length));
+        };
+
+        const syncHomeLists = () => {
+            if (stats && statsHidden) {
+                statsHidden.value = JSON.stringify([...stats.querySelectorAll('[data-stat]')]
+                    .map((row) => ({
+                        value: row.querySelector('[data-stat-value]').value.trim(),
+                        label: row.querySelector('[data-stat-label]').value.trim(),
+                    }))
+                    .filter((item) => item.value || item.label));
+            }
+
+            if (insightBullets && insightBulletsHidden) {
+                insightBulletsHidden.value = JSON.stringify([...insightBullets.querySelectorAll('[data-insight-bullet]')]
+                    .map((row) => ({
+                        title: row.querySelector('[data-bullet-title]').value.trim(),
+                        copy: row.querySelector('[data-bullet-copy]').value.trim(),
+                    }))
+                    .filter((item) => item.title || item.copy));
+            }
+
+            if (trustLogos && trustLogosHidden) {
+                trustLogosHidden.value = JSON.stringify([...trustLogos.querySelectorAll('[data-trust-logo-value]')]
+                    .map((input) => input.value.trim())
+                    .filter(Boolean));
+            }
+
+            if (trustBadges && trustBadgesHidden) {
+                trustBadgesHidden.value = JSON.stringify([...trustBadges.querySelectorAll('[data-trust-badge-value]')]
+                    .map((input) => input.value.trim())
+                    .filter(Boolean));
+            }
+        };
+
+        const syncAll = () => {
+            syncHidden();
+            syncHeaderLinks();
+            syncFooterColumns();
+            syncHomeLists();
+        };
+
         readInitial();
         blocks.forEach(addBlock);
         document.querySelector('[data-add-block]').addEventListener('click', () => addBlock({ type: 'text' }));
-        form.addEventListener('submit', syncHidden);
+
+        form.addEventListener('click', (event) => {
+            const button = event.target.closest('button');
+            if (! button) return;
+
+            if (button.matches('[data-add-header-link]')) {
+                headerLinks?.insertAdjacentHTML('beforeend', headerLinkRow({ label: 'New Link', url: '#top' }));
+                syncAll();
+            } else if (button.matches('[data-add-footer-column]')) {
+                footerColumns?.insertAdjacentHTML('beforeend', footerColumnRow());
+                syncAll();
+            } else if (button.matches('[data-add-footer-link]')) {
+                button.closest('[data-footer-column]')?.querySelector('[data-footer-links]')?.insertAdjacentHTML('beforeend', footerLinkRow());
+                syncAll();
+            } else if (button.matches('[data-add-stat]')) {
+                stats?.insertAdjacentHTML('beforeend', statRow());
+                syncAll();
+            } else if (button.matches('[data-add-insight-bullet]')) {
+                insightBullets?.insertAdjacentHTML('beforeend', insightBulletRow());
+                syncAll();
+            } else if (button.matches('[data-add-trust-logo]')) {
+                trustLogos?.insertAdjacentHTML('beforeend', smallListRow('logo'));
+                syncAll();
+            } else if (button.matches('[data-add-trust-badge]')) {
+                trustBadges?.insertAdjacentHTML('beforeend', smallListRow('badge'));
+                syncAll();
+            } else if (button.matches('[data-remove-row]')) {
+                button.closest('[data-header-link], [data-footer-column], [data-footer-link], [data-stat], [data-insight-bullet], [data-trust-logo], [data-trust-badge]')?.remove();
+                syncAll();
+            }
+        });
+
+        form.addEventListener('input', syncAll);
+        form.addEventListener('change', syncAll);
+        form.addEventListener('submit', syncAll);
+        syncAll();
     })();
 </script>
 @endsection

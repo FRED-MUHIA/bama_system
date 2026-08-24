@@ -475,7 +475,7 @@
     <section class="login-brand-panel" aria-label="BAMA connected systems">
         <div>
             <a href="{{ route('landing') }}" class="login-brand" aria-label="Back to BAMA home">
-                <img class="brand-mark" src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA">
+                <img class="brand-mark" src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions">
             </a>
             <a href="{{ route('landing') }}" class="login-home-link"><i class="bi bi-arrow-left"></i> Back home</a>
         </div>
@@ -519,7 +519,7 @@
     <section class="login-auth-panel">
         <div class="login-auth-wrap">
             <a href="{{ route('landing') }}" class="login-mobile-brand" aria-label="Back to BAMA home">
-                <img class="brand-mark" src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA">
+                <img class="brand-mark" src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions">
             </a>
 
             <div class="login-auth-label">{{ $loginCopy['label'] }}</div>

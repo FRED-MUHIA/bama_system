@@ -5,13 +5,20 @@
 
 @php
     $content = $marketingContent ?? \App\Models\MarketingPage::defaultSections('home');
+    $defaults = \App\Models\MarketingPage::defaultSections('home');
+    $brand = array_replace_recursive($defaults['brand'], (array) data_get($content, 'brand', []));
+    $headerContent = array_replace_recursive($defaults['header'], (array) data_get($content, 'header', []));
     $hero = data_get($content, 'hero', []);
     $stats = data_get($content, 'stats', []);
     $insight = data_get($content, 'insight', []);
     $trust = data_get($content, 'trust', []);
     $finalCta = data_get($content, 'final_cta', []);
-    $footerContent = data_get($content, 'footer', []);
+    $footerContent = array_replace_recursive($defaults['footer'], (array) data_get($content, 'footer', []));
     $extraBlocks = data_get($content, 'blocks', []);
+    $brandLogoUrl = \App\Support\PublicUpload::url(data_get($brand, 'logo_path')) ?: asset('images/bama-solutions-02.png');
+    $brandAlt = data_get($brand, 'logo_alt', 'Bama Solutions');
+    $headerLinks = data_get($headerContent, 'nav_links', $defaults['header']['nav_links']);
+    $footerColumns = data_get($footerContent, 'columns', $defaults['footer']['columns']);
 
     $coreModules = [
         ['CRM', 'Manage customers, deals, activities, and sales pipeline.', 'C'],
@@ -331,37 +338,46 @@
     <header class="sticky top-0 z-50 border-b border-zinc-200 bg-[#FBFCFA]/95 backdrop-blur-xl">
         <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-2">
             <a href="#top" class="flex items-center gap-3">
-                <img src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA" class="block h-auto w-[92px] max-w-[24vw]" style="width:92px;height:auto;max-width:24vw;">
+                <img src="{{ $brandLogoUrl }}" alt="{{ $brandAlt }}" class="block h-auto w-[92px] max-w-[24vw]" style="width:92px;height:auto;max-width:24vw;">
             </a>
 
             <div class="hidden items-center gap-6 text-sm font-bold text-zinc-700 lg:flex">
-                <div class="group relative py-2">
-                    <a href="#features" class="hover:text-[#00A651]">Features</a>
-                    <div class="invisible absolute left-1/2 top-full w-[640px] -translate-x-1/2 rounded-lg border border-zinc-200 bg-white p-4 opacity-0 shadow-2xl transition group-hover:visible group-hover:opacity-100">
-                        <div class="grid grid-cols-2 gap-2">
-                            @foreach (array_slice($coreModules, 0, 8) as [$name, $copy, $icon])
-                                <a href="#features" class="rounded-lg p-3 hover:bg-[#EAF8F0]">
-                                    <span class="block font-black">{{ $name }}</span>
-                                    <span class="mt-1 block text-xs font-medium leading-5 text-zinc-500">{{ $copy }}</span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-                <a href="#industries" class="hover:text-[#00A651]">Industries</a>
-                <a href="#solutions" class="hover:text-[#00A651]">Solutions</a>
-                <a href="#pricing" class="hover:text-[#00A651]">Pricing</a>
-                <a href="#faq" class="hover:text-[#00A651]">Resources</a>
+                @foreach($headerLinks as $link)
+                    @if(is_array($link) && ($link['label'] ?? '') && ($link['url'] ?? ''))
+                        @if(strtolower($link['label']) === 'features')
+                            <div class="group relative py-2">
+                                <a href="{{ $link['url'] }}" class="hover:text-[#00A651]">{{ $link['label'] }}</a>
+                                <div class="invisible absolute left-1/2 top-full w-[640px] -translate-x-1/2 rounded-lg border border-zinc-200 bg-white p-4 opacity-0 shadow-2xl transition group-hover:visible group-hover:opacity-100">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        @foreach (array_slice($coreModules, 0, 8) as [$name, $copy, $icon])
+                                            <a href="{{ $link['url'] }}" class="rounded-lg p-3 hover:bg-[#EAF8F0]">
+                                                <span class="block font-black">{{ $name }}</span>
+                                                <span class="mt-1 block text-xs font-medium leading-5 text-zinc-500">{{ $copy }}</span>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <a href="{{ $link['url'] }}" class="hover:text-[#00A651]">{{ $link['label'] }}</a>
+                        @endif
+                    @endif
+                @endforeach
             </div>
 
             <div class="flex items-center gap-2 sm:gap-3">
-                <a href="{{ route('login') }}" class="hidden px-3 py-2 text-sm font-bold text-zinc-700 hover:text-[#00A651] sm:inline-flex">Login</a>
-                <a href="mailto:sales@bama.co.ke?subject=Demo%20Request" class="hidden rounded-lg border border-zinc-300 px-4 py-2 text-sm font-black hover:border-[#00A651] md:inline-flex">Book Demo</a>
-                <a href="{{ route('register.account') }}" class="rounded-lg bg-[#00A651] px-4 py-2 text-sm font-black text-white sm:px-5">Start Free Trial</a>
+                @if(data_get($headerContent, 'login_label'))
+                    <a href="{{ data_get($headerContent, 'login_url', route('login')) }}" class="hidden px-3 py-2 text-sm font-bold text-zinc-700 hover:text-[#00A651] sm:inline-flex">{{ data_get($headerContent, 'login_label', 'Login') }}</a>
+                @endif
+                @if(data_get($headerContent, 'demo_label'))
+                    <a href="{{ data_get($headerContent, 'demo_url', 'mailto:sales@bama.co.ke?subject=Demo%20Request') }}" class="hidden rounded-lg border border-zinc-300 px-4 py-2 text-sm font-black hover:border-[#00A651] md:inline-flex">{{ data_get($headerContent, 'demo_label', 'Book Demo') }}</a>
+                @endif
+                @if(data_get($headerContent, 'cta_label'))
+                    <a href="{{ data_get($headerContent, 'cta_url', route('register.account')) }}" class="rounded-lg bg-[#00A651] px-4 py-2 text-sm font-black text-white sm:px-5">{{ data_get($headerContent, 'cta_label', 'Start Free Trial') }}</a>
+                @endif
             </div>
         </nav>
     </header>
-
     <section class="hero-field relative isolate overflow-hidden bg-black px-5 py-12 text-white sm:py-14 lg:min-h-[590px] lg:py-0">
         <img
             src="{{ asset('images/hero-green-team.png') }}"
@@ -750,24 +766,33 @@
         <div class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.2fr_2fr]">
             <div>
                 <div class="flex items-center gap-3">
-                    <img src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA" class="block h-auto w-[104px] max-w-[32vw]" style="width:104px;height:auto;max-width:32vw;">
+                    <img src="{{ $brandLogoUrl }}" alt="{{ $brandAlt }}" class="block h-auto w-[104px] max-w-[32vw]" style="width:104px;height:auto;max-width:32vw;">
                 </div>
                 <p class="mt-4 max-w-sm leading-7">{{ data_get($footerContent, 'body', 'Enterprise SaaS for ERP, CRM, finance, projects, documents, and industry operations.') }}</p>
                 <p class="mt-3 text-sm">{{ data_get($footerContent, 'email', 'sales@bama.co.ke') }}<br>{{ data_get($footerContent, 'phone', '+254 700 000 000') }}</p>
             </div>
             <div class="grid gap-8 sm:grid-cols-4">
-                @foreach ([
-                    'Products' => ['CRM', 'Finance', 'Projects', 'Inventory'],
-                    'Industries' => ['Construction', 'Real Estate', 'Retail', 'Hospitality'],
-                    'Company' => ['Pricing', 'Documentation', 'Support', 'Social Media'],
-                    'Legal' => ['Privacy Policy', 'Terms'],
-                ] as $heading => $links)
+                @foreach ($footerColumns as $column)
+                    @php
+                        $heading = is_array($column) ? ($column['heading'] ?? '') : '';
+                        $links = is_array($column) ? ($column['links'] ?? []) : [];
+                    @endphp
+                    @continue(! $heading)
                     <div>
                         <h3 class="font-black text-black">{{ $heading }}</h3>
                         <div class="mt-3 grid gap-2 text-sm">
                             @foreach ($links as $link)
-                                @php($industryFooterSlug = str($link)->lower()->replace(' ', '-')->toString())
-                                <a href="{{ $heading === 'Industries' ? route('industries.show', ['industry' => $industryFooterSlug]) : '#top' }}" class="hover:text-[#00A651]">{{ $link }}</a>
+                                @php
+                                    $label = is_array($link) ? ($link['label'] ?? '') : $link;
+                                    $url = is_array($link) ? ($link['url'] ?? '#top') : '#top';
+
+                                    if (! is_array($link) && $heading === 'Industries') {
+                                        $url = route('industries.show', ['industry' => str($label)->lower()->replace(' ', '-')->toString()]);
+                                    }
+                                @endphp
+                                @if($label)
+                                    <a href="{{ $url }}" class="hover:text-[#00A651]">{{ $label }}</a>
+                                @endif
                             @endforeach
                         </div>
                     </div>
