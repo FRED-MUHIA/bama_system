@@ -770,6 +770,19 @@
                 @if(session('status')) <div class="alert alert-success">{{ session('status') }}</div> @endif
                 @if(session('warning')) <div class="alert alert-warning">{{ session('warning') }}</div> @endif
                 @if($errors->any()) <div class="alert alert-danger"><strong>Check the form:</strong><ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div> @endif
+                @if($currentUser && ! $isClientPortal && !empty($subscriptionBillingState['message']) && !request()->routeIs('billing.*'))
+                    <div class="alert {{ ($subscriptionBillingState['state'] ?? '') === 'locked' ? 'alert-danger' : 'alert-warning' }} d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                            <strong>{{ $subscriptionBillingState['message'] }}</strong>
+                            @if(!empty($subscriptionBillingState['expires_at']))
+                                <div class="small">Expires: {{ $subscriptionBillingState['expires_at']->format('d M Y') }} · Grace ends: {{ $subscriptionBillingState['grace_ends_at']?->format('d M Y') }}</div>
+                            @endif
+                        </div>
+                        @if(Route::has('billing.index'))
+                            <a class="btn btn-sm btn-warning" href="{{ route('billing.index') }}"><i class="bi bi-credit-card"></i> Renew</a>
+                        @endif
+                    </div>
+                @endif
                 @yield('content')
             </section>
         </main>

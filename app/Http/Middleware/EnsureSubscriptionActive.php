@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Services\SubscriptionManager;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 class EnsureSubscriptionActive
 {
@@ -14,7 +15,14 @@ class EnsureSubscriptionActive
             return $next($request);
         }
 
-        abort_unless(app(SubscriptionManager::class)->active(), 402, 'The active tenant subscription is not active.');
+        $manager = app(SubscriptionManager::class);
+        if (! $manager->active()) {
+            if (Route::has('billing.index')) {
+                return redirect()->route('billing.index')->with('warning', $manager->billingState()['message']);
+            }
+
+            abort(402, 'The active tenant subscription is not active.');
+        }
 
         return $next($request);
     }

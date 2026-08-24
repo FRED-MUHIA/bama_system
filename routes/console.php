@@ -24,3 +24,4 @@ Artisan::command('real-estate:billing-alerts {--date= : Date to evaluate in YYYY
 
 Schedule::command('fitness:expire-memberships --remind')->dailyAt('07:00');
 Schedule::command('real-estate:billing-alerts')->dailyAt('07:30');
+Schedule::command('subscriptions:billing-sweep')->dailyAt('08:00');

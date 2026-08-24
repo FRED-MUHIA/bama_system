@@ -58,6 +58,7 @@
         <div class="mt-5 flex flex-col gap-3 sm:flex-row">
             @if ($emailVerified)
                 <a href="{{ route('dashboard') }}" class="flex-1 rounded-lg bg-[#00A651] px-6 py-3 text-center font-black text-white shadow-xl shadow-[#00A651]/20">Open dashboard</a>
+                <a href="{{ route('billing.index') }}" class="rounded-lg border border-zinc-300 bg-white px-6 py-3 text-center font-bold text-black">Pay package</a>
                 <a href="{{ route('settings.edit') }}" class="rounded-lg border border-zinc-300 bg-white px-6 py-3 text-center font-bold text-black">Configure branding</a>
             @else
                 <form method="POST" action="{{ route('verification.send') }}" class="flex-1">

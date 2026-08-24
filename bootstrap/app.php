@@ -21,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->validateCsrfTokens(except: ['logout']);
+        $middleware->validateCsrfTokens(except: ['logout', 'billing/mpesa/callback']);
         $middleware->web(append: [IdentifyTenant::class, RecordMajorActivity::class, SecurityHeaders::class]);
         $middleware->alias([
             'admin' => EnsureAdminAccess::class,

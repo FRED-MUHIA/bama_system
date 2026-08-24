@@ -173,12 +173,18 @@ class ActiveTenant
             return null;
         }
 
-        $tenantId = DB::table('tenant_user')
+        $query = DB::table('tenant_user')
             ->join('tenants', 'tenants.id', '=', 'tenant_user.tenant_id')
             ->where('tenant_user.user_id', $user->id)
             ->where('tenant_user.status', 'active')
+            ->whereNull('tenants.deleted_at');
+
+        $tenantId = (clone $query)
             ->where('tenants.status', '!=', 'suspended')
-            ->whereNull('tenants.deleted_at')
+            ->orderBy('tenants.id')
+            ->value('tenants.id');
+
+        $tenantId ??= (clone $query)
             ->orderBy('tenants.id')
             ->value('tenants.id');
 

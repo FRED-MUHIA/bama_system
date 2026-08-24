@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Business;
 use App\Models\Plan;
+use App\Models\PlatformPaymentSetting;
 use App\Models\Subscription;
 use App\Models\SubscriptionFeature;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class PlatformController extends Controller
@@ -152,6 +154,9 @@ class PlatformController extends Controller
     {
         return view('platform.plans', [
             'plans' => Plan::with('features')->orderBy('monthly_price')->get(),
+            'paymentSettings' => Schema::hasTable('platform_payment_settings')
+                ? PlatformPaymentSetting::all()->keyBy('provider')
+                : collect(),
         ]);
     }
 
@@ -197,5 +202,55 @@ class PlatformController extends Controller
         }
 
         return back()->with('status', 'Plan updated.');
+    }
+
+    public function updatePaymentSettings(Request $request)
+    {
+        abort_unless(Schema::hasTable('platform_payment_settings'), 503, 'Run the billing migrations before saving payment settings.');
+
+        $data = $request->validate([
+            'providers' => ['required', 'array'],
+            'providers.*.is_enabled' => ['nullable', 'boolean'],
+            'providers.*.mode' => ['required', Rule::in(['sandbox', 'live'])],
+            'providers.*.public_key' => ['nullable', 'string', 'max:1000'],
+            'providers.*.secret_key' => ['nullable', 'string', 'max:2000'],
+            'providers.*.instructions' => ['nullable', 'string', 'max:4000'],
+            'providers.*.config' => ['nullable', 'array'],
+            'providers.*.config.shortcode' => ['nullable', 'string', 'max:80'],
+            'providers.*.config.passkey' => ['nullable', 'string', 'max:2000'],
+            'providers.*.config.callback_url' => ['nullable', 'url', 'max:1000'],
+            'providers.*.config.transaction_type' => ['nullable', 'string', 'max:80'],
+            'providers.*.config.checkout_url_template' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        foreach (['mpesa', 'paypal', 'card'] as $provider) {
+            $payload = $data['providers'][$provider] ?? null;
+            if (! $payload) {
+                continue;
+            }
+
+            $setting = PlatformPaymentSetting::firstOrNew(['provider' => $provider]);
+            $existingConfig = $setting->config ?? [];
+            $config = collect($payload['config'] ?? [])
+                ->map(fn ($value, $key) => blank($value) && array_key_exists($key, $existingConfig) ? $existingConfig[$key] : $value)
+                ->reject(fn ($value) => blank($value))
+                ->all();
+
+            $setting->fill([
+                'is_enabled' => (bool) ($payload['is_enabled'] ?? false),
+                'mode' => $payload['mode'],
+                'public_key' => $payload['public_key'] ?? null,
+                'instructions' => $payload['instructions'] ?? null,
+                'config' => $config,
+            ]);
+
+            if (filled($payload['secret_key'] ?? null)) {
+                $setting->secret_key = $payload['secret_key'];
+            }
+
+            $setting->save();
+        }
+
+        return back()->with('status', 'Payment integrations updated.');
     }
 }

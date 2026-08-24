@@ -1,0 +1,143 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Plan;
+use App\Models\PlatformPaymentSetting;
+use App\Models\SubscriptionInvoice;
+use App\Services\Billing\PaymentGatewayService;
+use App\Services\Billing\SubscriptionBillingService;
+use App\Services\SubscriptionManager;
+use App\Support\ActiveTenant;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
+use RuntimeException;
+
+class BillingController extends Controller
+{
+    public function index(SubscriptionBillingService $billing, SubscriptionManager $subscriptions)
+    {
+        $tenant = ActiveTenant::current();
+        abort_unless($tenant, 403, 'No organisation is assigned to this login.');
+
+        $invoice = $tenant->subscription && Schema::hasTable('subscription_invoices')
+            ? $billing->currentInvoiceFor($tenant)
+            : null;
+
+        return view('billing.index', [
+            'tenant' => $tenant->loadMissing('subscription.plan'),
+            'plans' => Plan::where('is_active', true)->orderBy('monthly_price')->get(),
+            'invoice' => $invoice?->loadMissing(['plan', 'payments' => fn ($query) => $query->latest()]),
+            'invoices' => Schema::hasTable('subscription_invoices')
+                ? SubscriptionInvoice::with('plan')->where('tenant_id', $tenant->id)->latest()->limit(10)->get()
+                : collect(),
+            'paymentSettings' => Schema::hasTable('platform_payment_settings')
+                ? PlatformPaymentSetting::all()->keyBy('provider')
+                : collect(),
+            'billingState' => $subscriptions->billingState($tenant),
+        ]);
+    }
+
+    public function invoice(Request $request, SubscriptionBillingService $billing)
+    {
+        $tenant = ActiveTenant::current();
+        abort_unless($tenant?->subscription, 403, 'No subscription is assigned to this profile.');
+
+        $data = $request->validate([
+            'plan_id' => ['required', Rule::exists('plans', 'id')],
+        ]);
+
+        $plan = Plan::where('is_active', true)->findOrFail($data['plan_id']);
+        abort_if((float) $plan->monthly_price <= 0, 422, 'Custom packages need sales approval before checkout.');
+
+        $invoice = $billing->createInvoice($tenant->subscription, $plan);
+
+        return redirect()->route('billing.index')->with('status', 'BAMA invoice '.$invoice->invoice_number.' is ready for payment.');
+    }
+
+    public function mpesa(Request $request, SubscriptionInvoice $invoice, PaymentGatewayService $gateway)
+    {
+        $this->authorizeInvoice($invoice);
+
+        $data = $request->validate([
+            'phone' => ['required', 'string', 'max:30'],
+        ]);
+
+        try {
+            $payment = $gateway->mpesaStkPush($invoice, $data['phone']);
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['mpesa' => $e->getMessage()]);
+        }
+
+        return back()->with('status', 'M-PESA STK prompt sent. Complete payment on your phone. Reference: '.$payment->checkout_request_id);
+    }
+
+    public function mpesaCallback(Request $request, PaymentGatewayService $gateway)
+    {
+        $payment = $gateway->handleMpesaCallback($request->all());
+
+        return response()->json([
+            'ResultCode' => 0,
+            'ResultDesc' => $payment ? 'Accepted' : 'No matching BAMA payment',
+        ]);
+    }
+
+    public function paypal(SubscriptionInvoice $invoice, PaymentGatewayService $gateway)
+    {
+        $this->authorizeInvoice($invoice);
+
+        try {
+            $payment = $gateway->createPayPalOrder($invoice);
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['paypal' => $e->getMessage()]);
+        }
+
+        if (! $payment->payment_url) {
+            return back()->withErrors(['paypal' => 'PayPal did not return an approval link.']);
+        }
+
+        return redirect()->away($payment->payment_url);
+    }
+
+    public function paypalReturn(Request $request, PaymentGatewayService $gateway)
+    {
+        $orderId = $request->query('token');
+        abort_unless($orderId, 422, 'PayPal order token is missing.');
+
+        try {
+            $payment = $gateway->capturePayPalOrder($orderId);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect()->route('billing.index')->withErrors(['paypal' => 'PayPal capture failed: '.$e->getMessage()]);
+        }
+
+        return redirect()->route('billing.index')->with('status', 'PayPal payment '.$payment->provider_receipt.' captured and subscription renewed.');
+    }
+
+    public function paypalCancel()
+    {
+        return redirect()->route('billing.index')->with('warning', 'PayPal payment was cancelled.');
+    }
+
+    public function card(SubscriptionInvoice $invoice, PaymentGatewayService $gateway)
+    {
+        $this->authorizeInvoice($invoice);
+
+        try {
+            $payment = $gateway->cardCheckout($invoice);
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['card' => $e->getMessage()]);
+        }
+
+        return redirect()->away($payment->payment_url);
+    }
+
+    private function authorizeInvoice(SubscriptionInvoice $invoice): void
+    {
+        abort_unless(ActiveTenant::id() && (int) $invoice->tenant_id === (int) ActiveTenant::id(), 403);
+        abort_if($invoice->status === 'paid', 422, 'This BAMA invoice is already paid.');
+        abort_if((float) $invoice->total <= 0, 422, 'This package needs sales approval before checkout.');
+    }
+}

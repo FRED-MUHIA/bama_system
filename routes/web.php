@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdministrationController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanySettingsController;
@@ -94,6 +95,7 @@ Route::get('/portal/activate/{token}', [PortalController::class, 'activateForm']
 Route::post('/portal/activate/{token}', [PortalController::class, 'activate'])->name('portal.activate.store');
 Route::get('/hospitality/menu', [HospitalityFrontController::class, 'menu'])->name('public.hospitality.menu');
 Route::post('/hospitality/menu/reserve', [HospitalityFrontController::class, 'reserve'])->name('public.hospitality.reserve');
+Route::post('/billing/mpesa/callback', [BillingController::class, 'mpesaCallback'])->name('billing.mpesa.callback');
 
 Route::prefix('public')->group(function () {
     Route::get('/activate/{token}', [AdministrationController::class, 'activateForm'])->name('public.administration.activate');
@@ -154,6 +156,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/tenants/{tenant}', [PlatformController::class, 'destroyTenant'])->name('tenants.destroy');
         Route::get('/plans', [PlatformController::class, 'plans'])->name('plans');
         Route::put('/plans/{plan}', [PlatformController::class, 'updatePlan'])->name('plans.update');
+        Route::put('/payment-settings', [PlatformController::class, 'updatePaymentSettings'])->name('payment-settings.update');
         Route::resource('pages', MarketingPageController::class)->except(['show']);
     });
 
@@ -166,6 +169,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/portal', [PortalController::class, 'dashboard'])->name('portal.dashboard');
+    Route::middleware(['admin', 'verified'])->prefix('billing')->name('billing.')->group(function () {
+        Route::get('/', [BillingController::class, 'index'])->name('index');
+        Route::post('/invoices', [BillingController::class, 'invoice'])->name('invoices.store');
+        Route::post('/invoices/{invoice}/mpesa', [BillingController::class, 'mpesa'])->name('invoices.mpesa');
+        Route::post('/invoices/{invoice}/paypal', [BillingController::class, 'paypal'])->name('invoices.paypal');
+        Route::post('/invoices/{invoice}/card', [BillingController::class, 'card'])->name('invoices.card');
+        Route::get('/paypal/return', [BillingController::class, 'paypalReturn'])->name('paypal.return');
+        Route::get('/paypal/cancel', [BillingController::class, 'paypalCancel'])->name('paypal.cancel');
+    });
 
     Route::middleware(['admin', 'subscription.active', 'verified'])->group(function () {
         Route::get('/onboarding/tenant', [OnboardingController::class, 'create'])->name('onboarding.tenant');

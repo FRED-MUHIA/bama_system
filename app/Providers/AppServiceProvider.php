@@ -6,8 +6,10 @@ use App\Console\Commands\CreateSuperAdminCommand;
 use App\Console\Commands\MailTestCommand;
 use App\Console\Commands\PostgresWipeCommand;
 use App\Console\Commands\PurgeNonSuperAdminUsersCommand;
+use App\Console\Commands\SubscriptionBillingSweepCommand;
 use App\Models\Business;
 use App\Services\NavigationManager;
+use App\Services\SubscriptionManager;
 use App\Services\ThemeManager;
 use App\Support\ActiveBusiness;
 use App\Support\ActiveTenant;
@@ -47,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
                 MailTestCommand::class,
                 PostgresWipeCommand::class,
                 PurgeNonSuperAdminUsersCommand::class,
+                SubscriptionBillingSweepCommand::class,
             ]);
         }
 
@@ -67,6 +70,7 @@ class AppServiceProvider extends ServiceProvider
             $headerNotifications = collect();
             $headerUnreadCount = 0;
             $headerMessageCount = 0;
+            $subscriptionBillingState = ['state' => 'active', 'message' => null];
 
             if ($showAdminShell && SchemaCache::hasTable('notifications')) {
                 $notificationQuery = DB::table('notifications')
@@ -84,6 +88,10 @@ class AppServiceProvider extends ServiceProvider
                     ->get();
             }
 
+            if ($showAdminShell && $activeTenant) {
+                $subscriptionBillingState = app(SubscriptionManager::class)->billingState($activeTenant);
+            }
+
             $view->with([
                 'activeTenant' => $activeTenant,
                 'activeBusiness' => $activeBusiness,
@@ -92,6 +100,7 @@ class AppServiceProvider extends ServiceProvider
                 'headerNotifications' => $headerNotifications,
                 'headerUnreadCount' => $headerUnreadCount,
                 'headerMessageCount' => $headerMessageCount,
+                'subscriptionBillingState' => $subscriptionBillingState,
                 'tenantTheme' => $activeTenant ? $themeManager->current($activeTenant) : null,
                 'tenantCssVariables' => $activeTenant ? $themeManager->cssVariables($activeTenant) : '--tenant-primary:#00A651; --tenant-secondary:#000000; --tenant-accent:#00A651;',
             ]);
