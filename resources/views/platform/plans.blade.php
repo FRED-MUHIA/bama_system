@@ -3,10 +3,15 @@
 @section('content')
 <div class="row g-4">
     @foreach($plans as $plan)
-        @php($limits = $plan->limits ?? [])
+        @php
+            $limits = $plan->limits ?? [];
+            $planUpdateUrl = route('platform.plans.update', $plan);
+            $apiAccessEnabled = (bool) ($limits['api_access'] ?? false);
+        @endphp
         <div class="col-xl-6">
-            <form method="post" action="{{ route('platform.plans.update', $plan) }}" class="owner-card p-3 h-100">
-                @csrf @method('PUT')
+            <form method="post" action="{{ $planUpdateUrl }}" class="owner-card p-3 h-100">
+                @csrf
+                @method('PUT')
                 <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
                     <div>
                         <h2 class="h5 mb-1">{{ $plan->name }}</h2>
@@ -25,7 +30,7 @@
                     <div class="col-md-3"><label class="form-label small">Branches</label><input class="form-control" type="number" min="0" name="limits[branches]" value="{{ data_get($limits, 'branches') }}"></div>
                     <div class="col-md-3"><label class="form-label small">Projects</label><input class="form-control" type="number" min="0" name="limits[projects]" value="{{ data_get($limits, 'projects') }}"></div>
                     <div class="col-12 d-flex justify-content-between align-items-center mt-2">
-                        <label class="form-check mb-0"><input class="form-check-input" type="checkbox" name="limits[api_access]" value="1" @checked((bool) ($limits['api_access'] ?? false))> API access</label>
+                        <label class="form-check mb-0"><input class="form-check-input" type="checkbox" name="limits[api_access]" value="1" @checked($apiAccessEnabled)> API access</label>
                         <button class="btn btn-owner"><i class="bi bi-save"></i> Save</button>
                     </div>
                 </div>
