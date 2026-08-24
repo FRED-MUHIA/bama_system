@@ -606,7 +606,9 @@
         @auth
         @unless(auth()->user()->role === 'client_portal')
             <aside class="col-lg-2 sidebar p-3">
-                @php($sidebarBrandName = $activeTenant?->name ?? $activeBusiness?->name ?? 'BAMA')
+                @php
+                    $sidebarBrandName = $activeTenant?->name ?? $activeBusiness?->name ?? 'BAMA';
+                @endphp
                 <div class="sidebar-brand d-flex align-items-center gap-2 text-white mb-3">
                     @if(!empty($tenantTheme?->logoUrl()))
                         <img src="{{ $tenantTheme->logoUrl() }}" alt="{{ $activeTenant?->name ?? 'Tenant' }}" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
