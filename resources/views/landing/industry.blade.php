@@ -10,6 +10,23 @@
     $roles = collect($industry['roles'] ?? []);
     $menus = collect($industry['dashboard']['menu_structure'] ?? $industry['menus'] ?? [])->map(fn ($menu) => is_array($menu) ? ($menu['label'] ?? $menu['module'] ?? 'Module') : $menu);
     $accent = ['#00A651', '#071B12'];
+    $featureIcon = function ($feature) {
+        $label = str($feature)->lower();
+
+        return match (true) {
+            $label->contains(['progress', 'milestone', 'status']) => 'bi-kanban',
+            $label->contains(['budget', 'actual', 'cost control']) => 'bi-calculator',
+            $label->contains(['revenue', 'profit', 'sales']) => 'bi-graph-up-arrow',
+            $label->contains(['cash', 'payment', 'receivable']) => 'bi-cash-coin',
+            $label->contains(['material', 'stock', 'inventory', 'consumption']) => 'bi-box-seam',
+            $label->contains(['tender', 'conversion', 'pipeline']) => 'bi-funnel',
+            $label->contains(['client', 'customer', 'guest', 'member']) => 'bi-people',
+            $label->contains(['booking', 'reservation', 'appointment']) => 'bi-calendar-check',
+            $label->contains(['compliance', 'quality', 'safety']) => 'bi-shield-check',
+            $label->contains(['report', 'analytics', 'dashboard']) => 'bi-bar-chart',
+            default => 'bi-speedometer2',
+        };
+    };
 @endphp
 
 @section('body')
@@ -70,7 +87,7 @@
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach($features->take(6) as $feature)
                     <article class="bama-card p-4">
-                        <span class="grid h-10 w-10 place-items-center rounded-lg text-white" style="background:var(--accent)"><i class="bi bi-speedometer2"></i></span>
+                        <span class="grid h-10 w-10 place-items-center rounded-lg text-white" style="background:var(--accent)"><i class="bi {{ $featureIcon($feature) }}"></i></span>
                         <h3 class="mt-4 font-black">{{ $feature }}</h3>
                         <p class="mt-2 text-sm leading-6 text-zinc-600">Track activity, responsibility, status, and performance from one controlled dashboard.</p>
                     </article>

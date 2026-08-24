@@ -870,8 +870,23 @@
         return `<div class="bama-tile rounded-lg border border-white/10 bg-white/[.08] px-3 py-2 text-sm font-bold text-white">${label}</div>`;
     }
 
+    function iconForDashboard(label) {
+        const text = String(label).toLowerCase();
+        if (/(progress|milestone|status)/.test(text)) return 'bi-kanban';
+        if (/(budget|actual|cost control)/.test(text)) return 'bi-calculator';
+        if (/(revenue|profit|sales)/.test(text)) return 'bi-graph-up-arrow';
+        if (/(cash|payment|receivable)/.test(text)) return 'bi-cash-coin';
+        if (/(material|stock|inventory|consumption)/.test(text)) return 'bi-box-seam';
+        if (/(tender|conversion|pipeline)/.test(text)) return 'bi-funnel';
+        if (/(client|customer|guest|member)/.test(text)) return 'bi-people';
+        if (/(booking|reservation|appointment)/.test(text)) return 'bi-calendar-check';
+        if (/(compliance|quality|safety)/.test(text)) return 'bi-shield-check';
+        if (/(report|analytics|dashboard)/.test(text)) return 'bi-bar-chart';
+        return 'bi-speedometer2';
+    }
+
     function lightTile(label) {
-        return `<div class="bama-tile rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm font-black">${label}</div>`;
+        return `<div class="bama-tile flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm font-black"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#00A651] text-white"><i class="bi ${iconForDashboard(label)}"></i></span><span>${label}</span></div>`;
     }
 
     function selectProductTab(name) {
