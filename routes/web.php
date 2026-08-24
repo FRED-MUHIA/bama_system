@@ -12,6 +12,7 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LetterController;
+use App\Http\Controllers\MarketingPageController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\PortalController;
@@ -79,6 +80,7 @@ Route::get('/uploads/{path}', PublicUploadController::class)->where('path', '.*'
 
 Route::get('/', LandingController::class)->name('landing');
 Route::get('/industries/{industry}', [LandingController::class, 'industry'])->name('industries.show');
+Route::get('/pages/{slug}', [MarketingPageController::class, 'show'])->name('marketing.pages.show');
 Route::get('/activate/{token}', [AdministrationController::class, 'activateForm'])->name('administration.activate');
 Route::post('/activate/{token}', [AdministrationController::class, 'activate'])->name('administration.activate.store');
 Route::get('/account-recovery/{token}', [AdministrationController::class, 'recoveryForm'])->name('administration.recovery');
@@ -152,6 +154,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/tenants/{tenant}', [PlatformController::class, 'destroyTenant'])->name('tenants.destroy');
         Route::get('/plans', [PlatformController::class, 'plans'])->name('plans');
         Route::put('/plans/{plan}', [PlatformController::class, 'updatePlan'])->name('plans.update');
+        Route::resource('pages', MarketingPageController::class)->except(['show']);
     });
 
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout.get');

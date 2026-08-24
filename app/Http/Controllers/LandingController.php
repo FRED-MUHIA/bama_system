@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MarketingPage;
 use App\Services\IndustrySetupService;
 use App\Services\PlanSelectionService;
 
@@ -9,9 +10,13 @@ class LandingController extends Controller
 {
     public function __invoke(IndustrySetupService $industries, PlanSelectionService $plans)
     {
+        $page = MarketingPage::resolve('home');
+
         return view('landing.index', [
             'industries' => $industries->implementedIndustries(),
             'plans' => $plans->all(),
+            'marketingPage' => $page,
+            'marketingContent' => $page->sections ?: MarketingPage::defaultSections('home'),
         ]);
     }
 

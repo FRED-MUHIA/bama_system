@@ -1,6 +1,18 @@
-@extends('layouts.marketing', ['title' => 'BAMA Business Cloud'])
+@extends('layouts.marketing', [
+    'title' => $marketingPage?->meta_title ?: 'BAMA Business Cloud',
+    'metaDescription' => $marketingPage?->meta_description,
+])
 
 @php
+    $content = $marketingContent ?? \App\Models\MarketingPage::defaultSections('home');
+    $hero = data_get($content, 'hero', []);
+    $stats = data_get($content, 'stats', []);
+    $insight = data_get($content, 'insight', []);
+    $trust = data_get($content, 'trust', []);
+    $finalCta = data_get($content, 'final_cta', []);
+    $footerContent = data_get($content, 'footer', []);
+    $extraBlocks = data_get($content, 'blocks', []);
+
     $coreModules = [
         ['CRM', 'Manage customers, deals, activities, and sales pipeline.', 'C'],
         ['Finance', 'Invoicing, receipts, expenses, cash flow, and collections.', 'F'],
@@ -361,22 +373,22 @@
 
         <div class="mx-auto flex max-w-7xl items-center lg:min-h-[590px]">
             <div class="max-w-2xl py-7">
-                <p class="text-sm font-black uppercase text-[#79D9A3]">One Platform to Manage Every Business Operation</p>
+                <p class="text-sm font-black uppercase text-[#79D9A3]">{{ data_get($hero, 'eyebrow', 'One Platform to Manage Every Business Operation') }}</p>
                 <h1 class="hero-title mt-5 max-w-4xl font-black text-white">
-                    Run Your Entire Business From One Unified Platform
+                    {{ data_get($hero, 'title', 'Run Your Entire Business From One Unified Platform') }}
                 </h1>
                 <p class="mt-6 max-w-2xl text-lg leading-8 text-white/85">
-                    Manage customers, projects, finances, inventory, operations, and industry-specific workflows from a single cloud platform.
+                    {{ data_get($hero, 'body', 'Manage customers, projects, finances, inventory, operations, and industry-specific workflows from a single cloud platform.') }}
                 </p>
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-                    <a href="{{ route('register.account') }}" class="rounded-full bg-white px-8 py-4 text-center text-sm font-black uppercase text-black transition hover:bg-[#EAF8F0]">Start Free Trial</a>
-                    <a href="mailto:sales@bama.co.ke?subject=Demo%20Request" class="rounded-full border border-white px-8 py-4 text-center text-sm font-black uppercase text-white transition hover:border-[#79D9A3] hover:text-[#79D9A3]">Book a Demo</a>
+                    <a href="{{ data_get($hero, 'primary_url', route('register.account')) }}" class="rounded-full bg-white px-8 py-4 text-center text-sm font-black uppercase text-black transition hover:bg-[#EAF8F0]">{{ data_get($hero, 'primary_label', 'Start Free Trial') }}</a>
+                    <a href="{{ data_get($hero, 'secondary_url', 'mailto:sales@bama.co.ke?subject=Demo%20Request') }}" class="rounded-full border border-white px-8 py-4 text-center text-sm font-black uppercase text-white transition hover:border-[#79D9A3] hover:text-[#79D9A3]">{{ data_get($hero, 'secondary_label', 'Book a Demo') }}</a>
                 </div>
                 <div class="mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
-                    @foreach ([['99.9%', 'Uptime'], ['1000s', 'Businesses'], ['Millions', 'Transactions'], ['Secure', 'Security']] as [$value, $label])
+                    @foreach ($stats ?: [['value' => '99.9%', 'label' => 'Uptime'], ['value' => '1000s', 'label' => 'Businesses'], ['value' => 'Millions', 'label' => 'Transactions'], ['value' => 'Secure', 'label' => 'Security']] as $stat)
                         <div class="rounded-lg border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-                            <p class="text-lg font-black">{{ $value }}</p>
-                            <p class="mt-1 text-[11px] font-bold uppercase text-white/60">{{ $label }}</p>
+                            <p class="text-lg font-black">{{ is_array($stat) ? ($stat['value'] ?? '') : $stat }}</p>
+                            <p class="mt-1 text-[11px] font-bold uppercase text-white/60">{{ is_array($stat) ? ($stat['label'] ?? '') : '' }}</p>
                         </div>
                     @endforeach
                 </div>
@@ -404,35 +416,35 @@
             </div>
             <div class="relative flex flex-col justify-center gap-5 bg-[#071B12] p-7 text-white sm:p-9 lg:p-10">
                 <div>
-                    <p class="text-xs font-black uppercase text-[#79D9A3]">Operational intelligence</p>
-                    <h2 class="mt-4 max-w-xl text-3xl font-black leading-tight sm:text-4xl">See every business signal clearly</h2>
+                    <p class="text-xs font-black uppercase text-[#79D9A3]">{{ data_get($insight, 'eyebrow', 'Operational intelligence') }}</p>
+                    <h2 class="mt-4 max-w-xl text-3xl font-black leading-tight sm:text-4xl">{{ data_get($insight, 'title', 'See every business signal clearly') }}</h2>
                     <p class="mt-5 max-w-xl text-base leading-7 text-white/80">
-                        Finance, CRM, projects, procurement, inventory, and industry dashboards come together in one connected operating view.
+                        {{ data_get($insight, 'body', 'Finance, CRM, projects, procurement, inventory, and industry dashboards come together in one connected operating view.') }}
                     </p>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    @foreach ([['Live KPIs', 'Real-time decisions'], ['Unified data', 'One operating view'], ['Executive clarity', 'Faster reporting']] as [$title, $copy])
+                    @foreach (data_get($insight, 'bullets', []) ?: [['title' => 'Live KPIs', 'copy' => 'Real-time decisions'], ['title' => 'Unified data', 'copy' => 'One operating view'], ['title' => 'Executive clarity', 'copy' => 'Faster reporting']] as $bullet)
                         <div class="rounded-lg border border-white/15 bg-white/5 px-4 py-3">
-                            <p class="text-sm font-black">{{ $title }}</p>
-                            <p class="mt-1 text-xs text-white/60">{{ $copy }}</p>
+                            <p class="text-sm font-black">{{ is_array($bullet) ? ($bullet['title'] ?? '') : $bullet }}</p>
+                            <p class="mt-1 text-xs text-white/60">{{ is_array($bullet) ? ($bullet['copy'] ?? '') : '' }}</p>
                         </div>
                     @endforeach
                 </div>
-                <a href="#solutions" class="inline-flex w-fit rounded-lg border border-white/70 px-5 py-3 text-sm font-black text-white transition hover:border-[#79D9A3] hover:text-[#79D9A3]">Explore dashboards</a>
+                <a href="{{ data_get($insight, 'button_url', '#solutions') }}" class="inline-flex w-fit rounded-lg border border-white/70 px-5 py-3 text-sm font-black text-white transition hover:border-[#79D9A3] hover:text-[#79D9A3]">{{ data_get($insight, 'button_label', 'Explore dashboards') }}</a>
             </div>
         </div>
     </section>
 
     <section class="bg-[#F7F8F5] px-5 py-8">
         <div class="mx-auto max-w-7xl">
-            <p class="text-center text-sm font-bold text-zinc-600">Trusted by organizations across multiple industries</p>
+            <p class="text-center text-sm font-bold text-zinc-600">{{ data_get($trust, 'heading', 'Trusted by organizations across multiple industries') }}</p>
             <div class="mt-5 grid gap-3 text-center sm:grid-cols-2 lg:grid-cols-5">
-                @foreach (['Apex Build Co.', 'MediCare Group', 'Urban Retail', 'Northline Logistics', 'Prime Properties'] as $logo)
+                @foreach (data_get($trust, 'logos', []) ?: ['Apex Build Co.', 'MediCare Group', 'Urban Retail', 'Northline Logistics', 'Prime Properties'] as $logo)
                     <div class="rounded-2xl border border-zinc-200 bg-white px-4 py-4 font-black text-zinc-700 shadow-sm">{{ $logo }}</div>
                 @endforeach
             </div>
             <div class="mt-4 flex flex-wrap justify-center gap-2">
-                @foreach (['Enterprise Security', 'Tenant Isolation', 'Role-Based Access', 'Audit Ready'] as $badge)
+                @foreach (data_get($trust, 'badges', []) ?: ['Enterprise Security', 'Tenant Isolation', 'Role-Based Access', 'Audit Ready'] as $badge)
                     <span class="rounded-full bg-[#EAF8F0] px-4 py-2 text-xs font-black uppercase text-[#007A3B]">{{ $badge }}</span>
                 @endforeach
             </div>
@@ -723,14 +735,16 @@
 
     <section class="px-5 py-14">
         <div class="mx-auto max-w-6xl rounded-[24px] bg-black p-6 text-center text-white sm:p-9">
-            <p class="eyebrow">Final CTA</p>
-            <h2 class="section-title mt-3 font-black">Ready to Transform the Way You Run Your Business?</h2>
+            <p class="eyebrow">{{ data_get($finalCta, 'eyebrow', 'Final CTA') }}</p>
+            <h2 class="section-title mt-3 font-black">{{ data_get($finalCta, 'title', 'Ready to Transform the Way You Run Your Business?') }}</h2>
             <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-                <a href="{{ route('register.account') }}" class="rounded-lg bg-[#00A651] px-6 py-3 text-sm font-black uppercase text-white">Start Free Trial</a>
-                <a href="mailto:sales@bama.co.ke?subject=Schedule%20Demo" class="rounded-lg border border-white/30 px-6 py-3 text-sm font-black uppercase text-white">Schedule Demo</a>
+                <a href="{{ data_get($finalCta, 'primary_url', route('register.account')) }}" class="rounded-lg bg-[#00A651] px-6 py-3 text-sm font-black uppercase text-white">{{ data_get($finalCta, 'primary_label', 'Start Free Trial') }}</a>
+                <a href="{{ data_get($finalCta, 'secondary_url', 'mailto:sales@bama.co.ke?subject=Schedule%20Demo') }}" class="rounded-lg border border-white/30 px-6 py-3 text-sm font-black uppercase text-white">{{ data_get($finalCta, 'secondary_label', 'Schedule Demo') }}</a>
             </div>
         </div>
     </section>
+
+    @include('landing.partials.page-blocks', ['blocks' => $extraBlocks])
 
     <footer class="border-t border-zinc-200 bg-[#F1F3EE] px-5 py-10 text-zinc-700">
         <div class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.2fr_2fr]">
@@ -738,8 +752,8 @@
                 <div class="flex items-center gap-3">
                     <img src="{{ asset('images/bama-logo-cropped.png') }}" alt="BAMA" class="block h-auto w-[104px] max-w-[32vw]" style="width:104px;height:auto;max-width:32vw;">
                 </div>
-                <p class="mt-4 max-w-sm leading-7">Enterprise SaaS for ERP, CRM, finance, projects, documents, and industry operations.</p>
-                <p class="mt-3 text-sm">sales@bama.co.ke<br>+254 700 000 000</p>
+                <p class="mt-4 max-w-sm leading-7">{{ data_get($footerContent, 'body', 'Enterprise SaaS for ERP, CRM, finance, projects, documents, and industry operations.') }}</p>
+                <p class="mt-3 text-sm">{{ data_get($footerContent, 'email', 'sales@bama.co.ke') }}<br>{{ data_get($footerContent, 'phone', '+254 700 000 000') }}</p>
             </div>
             <div class="grid gap-8 sm:grid-cols-4">
                 @foreach ([
