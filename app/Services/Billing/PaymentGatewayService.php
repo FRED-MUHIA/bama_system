@@ -269,8 +269,8 @@ class PaymentGatewayService
             $digits = '254'.$digits;
         }
 
-        if (! preg_match('/^254[17]\d{8}$/', $digits)) {
-            throw new RuntimeException('Enter a valid Safaricom phone number, for example 2547XXXXXXXX.');
+        if (! preg_match('/^254\d{9}$/', $digits)) {
+            throw new RuntimeException('Enter a valid M-PESA phone number, for example 2547XXXXXXXX.');
         }
 
         return $digits;

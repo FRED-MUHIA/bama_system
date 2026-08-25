@@ -47,6 +47,46 @@ class PaymentGatewayServiceTest extends TestCase
         });
     }
 
+    public function test_mpesa_stk_push_accepts_prefilled_kenyan_phone_number(): void
+    {
+        Http::fake([
+            'https://sandbox.safaricom.co.ke/oauth/v1/generate*' => Http::response([
+                'access_token' => 'test-token',
+            ]),
+            'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest' => Http::response([
+                'CheckoutRequestID' => 'ws_CO_prefilled',
+                'MerchantRequestID' => 'mr_prefilled',
+            ]),
+        ]);
+
+        $invoice = $this->mpesaFixture();
+
+        $payment = app(PaymentGatewayService::class)->mpesaStkPush($invoice, '254745506619');
+
+        $this->assertSame('pending', $payment->status);
+        $this->assertSame('254745506619', $payment->phone);
+    }
+
+    public function test_mpesa_stk_push_accepts_local_phone_number_format(): void
+    {
+        Http::fake([
+            'https://sandbox.safaricom.co.ke/oauth/v1/generate*' => Http::response([
+                'access_token' => 'test-token',
+            ]),
+            'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest' => Http::response([
+                'CheckoutRequestID' => 'ws_CO_local',
+                'MerchantRequestID' => 'mr_local',
+            ]),
+        ]);
+
+        $invoice = $this->mpesaFixture();
+
+        $payment = app(PaymentGatewayService::class)->mpesaStkPush($invoice, '0745506619');
+
+        $this->assertSame('pending', $payment->status);
+        $this->assertSame('254745506619', $payment->phone);
+    }
+
     public function test_mpesa_provider_400_is_reported_as_runtime_exception(): void
     {
         Http::fake([
