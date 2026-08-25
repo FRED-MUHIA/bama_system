@@ -78,6 +78,13 @@ class BillingController extends Controller
         return back()->with('status', 'M-PESA STK prompt sent. Complete payment on your phone. Reference: '.$payment->checkout_request_id);
     }
 
+    public function mpesaRedirect()
+    {
+        return redirect()
+            ->route('billing.index')
+            ->withErrors(['mpesa' => 'Use the Prompt Phone button to start an M-PESA STK request.']);
+    }
+
     public function mpesaCallback(Request $request, PaymentGatewayService $gateway)
     {
         $payment = $gateway->handleMpesaCallback($request->all());

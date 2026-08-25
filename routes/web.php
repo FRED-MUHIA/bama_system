@@ -173,6 +173,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['admin', 'verified'])->prefix('billing')->name('billing.')->group(function () {
         Route::get('/', [BillingController::class, 'index'])->name('index');
         Route::post('/invoices', [BillingController::class, 'invoice'])->name('invoices.store');
+        Route::get('/invoices/{invoice}/mpesa', [BillingController::class, 'mpesaRedirect'])->name('invoices.mpesa.show');
         Route::post('/invoices/{invoice}/mpesa', [BillingController::class, 'mpesa'])->name('invoices.mpesa');
         Route::post('/invoices/{invoice}/paypal', [BillingController::class, 'paypal'])->name('invoices.paypal');
         Route::post('/invoices/{invoice}/card', [BillingController::class, 'card'])->name('invoices.card');
