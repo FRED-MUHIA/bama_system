@@ -71,6 +71,10 @@ class SubscriptionBillingService
             $emails = [$invoice->billing_email];
         }
 
+        if ($emails && $invoice->billing_email !== $emails[0]) {
+            $invoice->forceFill(['billing_email' => $emails[0]])->save();
+        }
+
         $sent = 0;
         foreach ($emails as $email) {
             $subject = $this->subject($invoice, $kind);
@@ -107,7 +111,7 @@ class SubscriptionBillingService
 
     public function markPaid(SubscriptionPayment $payment): SubscriptionInvoice
     {
-        return DB::transaction(function () use ($payment) {
+        $invoice = DB::transaction(function () use ($payment) {
             $payment->refresh();
             $invoice = $payment->invoice()->lockForUpdate()->firstOrFail();
             $subscription = $invoice->subscription()->lockForUpdate()->first();
@@ -143,6 +147,10 @@ class SubscriptionBillingService
 
             return $invoice->refresh();
         });
+
+        $this->sendInvoice($invoice, 'paid');
+
+        return $invoice;
     }
 
     public function sweep(?Carbon $date = null): array
@@ -205,21 +213,53 @@ class SubscriptionBillingService
 
     public function billingEmails(Tenant $tenant): array
     {
-        $emails = $tenant->users()
+        $profileEmails = [];
+
+        if (Schema::hasTable('company_settings')) {
+            if (Schema::hasColumn('company_settings', 'tenant_id')) {
+                $profileEmails = array_merge($profileEmails, CompanySetting::withoutGlobalScopes()
+                    ->where('tenant_id', $tenant->id)
+                    ->pluck('email')
+                    ->filter()
+                    ->all());
+            }
+
+            if (Schema::hasColumn('company_settings', 'business_id') && Schema::hasTable('businesses')) {
+                $businessIds = $tenant->businesses()
+                    ->withoutGlobalScopes()
+                    ->pluck('id')
+                    ->all();
+
+                if ($businessIds) {
+                    $profileEmails = array_merge($profileEmails, CompanySetting::withoutGlobalScopes()
+                        ->whereIn('business_id', $businessIds)
+                        ->pluck('email')
+                        ->filter()
+                        ->all());
+                }
+            }
+        }
+
+        $settingsEmails = collect([
+            data_get($tenant->settings, 'billing_email'),
+            data_get($tenant->settings, 'email'),
+        ])->filter()->all();
+
+        $profileEmails = $this->normalizeEmails(array_merge($profileEmails, $settingsEmails));
+
+        if ($profileEmails) {
+            return $profileEmails;
+        }
+
+        return $this->normalizeEmails($tenant->users()
             ->where('users.is_active', true)
             ->pluck('users.email')
             ->filter()
-            ->all();
+            ->all());
+    }
 
-        if (Schema::hasTable('company_settings') && Schema::hasColumn('company_settings', 'tenant_id')) {
-            $profileEmails = CompanySetting::withoutGlobalScopes()
-                ->where('tenant_id', $tenant->id)
-                ->pluck('email')
-                ->filter()
-                ->all();
-            $emails = array_merge($emails, $profileEmails);
-        }
-
+    private function normalizeEmails(array $emails): array
+    {
         return collect($emails)
             ->map(fn ($email) => strtolower(trim((string) $email)))
             ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL))
@@ -261,6 +301,7 @@ class SubscriptionBillingService
         return match ($kind) {
             'renewal' => 'BAMA subscription renewal invoice '.$invoice->invoice_number,
             'grace' => 'BAMA subscription grace period reminder '.$invoice->invoice_number,
+            'paid' => 'BAMA subscription payment received '.$invoice->invoice_number,
             default => 'BAMA subscription invoice '.$invoice->invoice_number,
         };
     }
@@ -276,15 +317,25 @@ class SubscriptionBillingService
         $intro = match ($kind) {
             'renewal' => 'Your BAMA business package is due for renewal in 5 days.',
             'grace' => 'Your BAMA business package has expired and is now in the 2-day grace period.',
+            'paid' => 'Your BAMA business package payment has been received.',
             default => 'Your BAMA business package invoice is ready.',
         };
 
-        return "{$intro}\n\n"
+        $body = "{$intro}\n\n"
             ."Client: {$invoice->customer_name}\n"
             ."Invoice: {$invoice->invoice_number}\n"
             ."Package: {$planName}\n"
             ."Amount: {$amount}\n"
-            ."Due date: {$due}\n"
+            ."Due date: {$due}\n";
+
+        if ($kind === 'paid') {
+            return $body
+                ."Paid at: ".($invoice->paid_at?->format('d M Y H:i') ?? now()->format('d M Y H:i'))."\n\n"
+                ."Your workspace subscription is active.\n\n"
+                ."BAMA Solutions";
+        }
+
+        return $body
             ."Grace ends: {$grace}\n\n"
             ."Pay by card, M-PESA STK Push, or PayPal here:\n{$billingUrl}\n\n"
             ."If payment is not received by the end of the grace period, the workspace is locked automatically until renewal is completed.\n\n"

@@ -52,8 +52,13 @@ class BillingController extends Controller
         abort_if((float) $plan->monthly_price <= 0, 422, 'Custom packages need sales approval before checkout.');
 
         $invoice = $billing->createInvoice($tenant->subscription, $plan);
+        $sent = $billing->sendInvoice($invoice);
 
-        return redirect()->route('billing.index')->with('status', 'BAMA invoice '.$invoice->invoice_number.' is ready for payment.');
+        return redirect()->route('billing.index')->with(
+            'status',
+            'BAMA invoice '.$invoice->invoice_number.' is ready for payment.'
+                .($sent > 0 ? ' It was emailed to the billing profile email.' : ' Add a profile email to receive invoices automatically.')
+        );
     }
 
     public function mpesa(Request $request, SubscriptionInvoice $invoice, PaymentGatewayService $gateway)
