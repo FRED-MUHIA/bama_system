@@ -81,7 +81,20 @@ class SubscriptionBillingService
             $body = $this->emailBody($invoice, $kind);
 
             try {
-                Mail::raw($body, fn ($mail) => $mail->to($email)->subject($subject));
+                Mail::send(
+                    ['html' => 'emails.bama-system', 'text' => 'emails.bama-text'],
+                    [
+                        'appName' => config('mail.brand.name', 'BAMA'),
+                        'subject' => $subject,
+                        'headline' => $this->emailHeadline($kind),
+                        'body' => $body,
+                        'preheader' => str($body)->squish()->limit(140)->toString(),
+                        'actionUrl' => $kind === 'paid' ? null : route('billing.index'),
+                        'actionText' => 'Pay BAMA invoice',
+                        'footerNote' => $kind === 'paid' ? null : 'If the button does not work, copy and paste the payment link from this email into your browser.',
+                    ],
+                    fn ($mail) => $mail->to($email)->subject($subject)
+                );
                 $invoice->emailLogs()->create([
                     'recipient_email' => $email,
                     'subject' => $subject,
@@ -303,6 +316,16 @@ class SubscriptionBillingService
             'grace' => 'BAMA subscription grace period reminder '.$invoice->invoice_number,
             'paid' => 'BAMA subscription payment received '.$invoice->invoice_number,
             default => 'BAMA subscription invoice '.$invoice->invoice_number,
+        };
+    }
+
+    private function emailHeadline(string $kind): string
+    {
+        return match ($kind) {
+            'renewal' => 'Your BAMA renewal invoice is ready.',
+            'grace' => 'Your BAMA workspace is in grace period.',
+            'paid' => 'Your BAMA payment has been received.',
+            default => 'Your BAMA invoice is ready.',
         };
     }
 

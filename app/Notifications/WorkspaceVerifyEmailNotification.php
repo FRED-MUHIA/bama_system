@@ -37,6 +37,7 @@ class WorkspaceVerifyEmailNotification extends VerifyEmail
 
         return (new MailMessage)
             ->subject('Verify '.$notifiable->email.' for '.$profile)
+            ->theme('bama')
             ->greeting('Hello '.$notifiable->name.',')
             ->line('You are receiving this because a BAMA workspace was created or updated for this account.')
             ->line('Workspace/profile: '.$profile)

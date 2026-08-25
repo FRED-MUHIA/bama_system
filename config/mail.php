@@ -115,6 +115,18 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    'markdown' => [
+        'theme' => 'bama',
+
+        'paths' => [
+            resource_path('views/vendor/mail'),
+        ],
+    ],
+
+    'brand' => [
+        'name' => env('MAIL_BRAND_NAME', 'BAMA'),
+    ],
+
     'required_sender_domain' => env(
         'MAIL_REQUIRED_SENDER_DOMAIN',
         str_contains((string) env('MAIL_FROM_ADDRESS', ''), '@')

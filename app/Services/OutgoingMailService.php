@@ -51,7 +51,9 @@ class OutgoingMailService
             throw new RuntimeException('Enable SMTP mail settings for this profile before emailing documents.');
         }
 
-        Mail::raw($body, function ($mail) use ($to, $subject, $configure, $setting, $ccRecipients) {
+        $mailData = $this->brandedMailData($subject, $body, $setting);
+
+        Mail::send(['html' => 'emails.bama-system', 'text' => 'emails.bama-text'], $mailData, function ($mail) use ($to, $subject, $configure, $setting, $ccRecipients) {
             $mail->to($to)->subject($subject);
 
             if ($ccRecipients) {
@@ -69,6 +71,31 @@ class OutgoingMailService
                 $configure($mail);
             }
         });
+    }
+
+    private function brandedMailData(string $subject, string $body, ?MailSetting $setting): array
+    {
+        $actionUrl = $this->firstUrlIn($body);
+
+        return [
+            'appName' => $setting?->from_name ?: config('mail.brand.name', 'BAMA'),
+            'subject' => $subject,
+            'headline' => $subject,
+            'body' => $body,
+            'preheader' => str($body)->squish()->limit(140)->toString(),
+            'actionUrl' => $actionUrl,
+            'actionText' => 'Open secure link',
+            'footerNote' => $actionUrl ? 'If the button does not work, copy and paste the link from this email into your browser.' : null,
+        ];
+    }
+
+    private function firstUrlIn(string $body): ?string
+    {
+        if (! preg_match('/https?:\/\/[^\s<>"\']+/i', $body, $matches)) {
+            return null;
+        }
+
+        return rtrim($matches[0], '.,);]');
     }
 
     private function normalizeEmailList(array|string|null $emails): array

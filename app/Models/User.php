@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Notifications\WorkspaceVerifyEmailNotification;
+use App\Notifications\BamaResetPasswordNotification;
 use App\Services\IamService;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -110,5 +111,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification()
     {
         $this->notify(new WorkspaceVerifyEmailNotification);
+    }
+
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token)
+    {
+        $this->notify(new BamaResetPasswordNotification($token));
     }
 }
