@@ -28,13 +28,9 @@
     @media(max-width:700px){.finance-grid{grid-template-columns:1fr}.finance-row{display:grid}}
 </style>
 
-<div class="finance-head">
-    <div>
-        <div class="finance-kicker">{{ $financeCockpit['industry'] ?? 'Shared Finance' }}</div>
-        <h2 class="finance-title">Finance & General Ledger</h2>
-        <p class="finance-muted mb-0">Double-entry accounting, receivables, payables, cash, assets, tax, controls, and industry profitability.</p>
-    </div>
-    <div class="d-flex gap-2 flex-wrap">
+<div class="page-shell">
+<x-page-header title="Finance & General Ledger" :kicker="$financeCockpit['industry'] ?? 'Shared Finance'" subtitle="Double-entry accounting, receivables, payables, cash, assets, tax, controls, and industry profitability.">
+    <x-slot:actions>
         @if($canOpenEtims)
             <a class="btn btn-outline-dark" href="{{ route('etims.dashboard') }}"><i class="bi bi-receipt-cutoff"></i> Tax & ETIMS</a>
         @endif
@@ -42,8 +38,8 @@
             @csrf
             <button class="btn btn-dark"><i class="bi bi-arrow-repeat"></i> Sync existing transactions</button>
         </form>
-    </div>
-</div>
+    </x-slot:actions>
+</x-page-header>
 
 <div class="row g-3 mb-3">
     @foreach([
@@ -74,7 +70,7 @@
     @endforeach
 </div>
 
-<ul class="nav nav-tabs mb-3">
+<ul class="nav nav-tabs responsive-tabs mb-3">
     @foreach([
         'dash' => 'Dashboard',
         'industry' => 'Industry Finance',
@@ -535,5 +531,6 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 @endsection

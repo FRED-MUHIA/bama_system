@@ -50,7 +50,7 @@
         .business-switcher label { color:#94a3b8; font-size:.72rem; font-weight:700; text-transform:uppercase; }
         .business-switcher .form-select,.business-switcher .form-control { border-radius:4px; font-size:.82rem; }
         .app-header { background:#fff; }
-        .mobile-bottom-nav,.mobile-nav-backdrop,.mobile-overflow-sheet { display:none; }
+        .mobile-bottom-nav,.mobile-nav-backdrop,.mobile-overflow-sheet,.mobile-shell-backdrop,.mobile-shell-drawer { display:none; }
         .mobile-header-identity { display:none; }
         @media (max-width: 991px) { .sidebar { min-height:auto; } }
         @media (max-width: 991px) {
@@ -128,6 +128,121 @@
                 opacity:0;
                 pointer-events:none;
                 transition:opacity .22s ease;
+            }
+            .mobile-shell-backdrop {
+                position:fixed;
+                inset:0;
+                z-index:1080;
+                display:block;
+                background:rgba(2,6,23,.58);
+                opacity:0;
+                pointer-events:none;
+                transition:opacity .22s ease;
+            }
+            .mobile-shell-drawer {
+                position:fixed;
+                top:0;
+                bottom:0;
+                left:0;
+                z-index:1090;
+                display:flex;
+                flex-direction:column;
+                width:min(88vw,360px);
+                max-width:100%;
+                padding:14px 14px calc(20px + env(safe-area-inset-bottom));
+                background:#071B12;
+                color:#fff;
+                box-shadow:24px 0 60px rgba(2,6,23,.38);
+                transform:translateX(-105%);
+                transition:transform .24s ease;
+                overflow-y:auto;
+                overscroll-behavior:contain;
+                -webkit-overflow-scrolling:touch;
+            }
+            .mobile-shell-drawer .drawer-head {
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:12px;
+                margin-bottom:14px;
+            }
+            .mobile-shell-drawer .drawer-brand {
+                display:flex;
+                align-items:center;
+                gap:10px;
+                min-width:0;
+            }
+            .mobile-shell-drawer .drawer-brand strong,
+            .mobile-shell-drawer .drawer-brand span {
+                display:block;
+                max-width:220px;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                white-space:nowrap;
+            }
+            .mobile-shell-drawer .drawer-brand span {
+                color:#94a3b8;
+                font-size:.72rem;
+                font-weight:700;
+            }
+            .mobile-shell-drawer .drawer-close {
+                width:42px;
+                height:42px;
+                border:0;
+                border-radius:12px;
+                background:rgba(255,255,255,.08);
+                color:#fff;
+                display:grid;
+                place-items:center;
+            }
+            .mobile-shell-drawer .drawer-nav {
+                display:grid;
+                gap:4px;
+            }
+            .mobile-shell-drawer a,
+            .mobile-shell-drawer button {
+                min-height:46px;
+                border-radius:12px;
+                color:#e5e7eb;
+                text-decoration:none;
+                display:flex;
+                align-items:center;
+                gap:12px;
+                padding:9px 10px;
+                font-weight:750;
+                border:0;
+                background:transparent;
+                text-align:left;
+            }
+            .mobile-shell-drawer a i,
+            .mobile-shell-drawer button i {
+                width:22px;
+                color:#00A651;
+                text-align:center;
+                flex:0 0 22px;
+            }
+            .mobile-shell-drawer a.active {
+                background:rgba(0,166,81,.18);
+                color:#fff;
+            }
+            .mobile-shell-drawer .drawer-section-title {
+                color:#94a3b8;
+                font-size:.68rem;
+                font-weight:800;
+                letter-spacing:.12em;
+                text-transform:uppercase;
+                margin:16px 2px 7px;
+            }
+            .mobile-shell-drawer .business-switcher {
+                margin-bottom:12px;
+            }
+            body.mobile-nav-open { overflow:hidden; }
+            body.mobile-nav-open .mobile-shell-backdrop {
+                opacity:1;
+                pointer-events:auto;
+            }
+            body.mobile-nav-open .mobile-shell-drawer {
+                transform:translateX(0);
             }
             .mobile-overflow-sheet {
                 position:fixed;
@@ -429,6 +544,7 @@
             }
             main > header .app-header-title { display:none; }
             .mobile-header-identity { display:flex;align-items:center;gap:10px;min-width:0; }
+            .mobile-menu-button { width:42px;height:42px;border:0;background:#fff;color:#111827;display:grid;place-items:center;border-radius:12px;flex:0 0 42px; }
             .mobile-header-avatar { width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#f1f3f7;color:#111827;font-weight:800;flex:0 0 34px; }
             .mobile-header-name { color:#111827;font-size:.86rem;font-weight:800;line-height:1.1;max-width:48vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
             .app-header-actions { margin-left:auto;gap:.25rem; }
@@ -599,6 +715,7 @@
         html[data-theme="dark"] .login-auth-panel{background:#121212}html[data-theme="dark"] .login-auth-intro,html[data-theme="dark"] .login-auth-label{color:#aaa69f}html[data-theme="dark"] .login-card .nav-pills{background:#242424}html[data-theme="dark"] .password-toggle{color:#aaa}html[data-theme="dark"] .password-toggle:hover{background:#303030;color:#fff}html[data-theme="dark"] .guest-theme-toggle{background:rgba(30,30,30,.9);color:#eee;border-color:#555}html[data-theme="dark"] .alert-success{background:#15251a;border-color:#31593a;color:#b9dfc0}html[data-theme="dark"] .alert-warning{background:#2a2118;border-color:#654525;color:#f2c79e}html[data-theme="dark"] .alert-danger{background:#2b1818;border-color:#663737;color:#efb5b5}
     </style>
     <style>:root { {!! $tenantCssVariables ?? '--tenant-primary:#00A651; --tenant-secondary:#000000; --tenant-accent:#00A651;' !!} }</style>
+    @vite('resources/css/app.css')
 </head>
 <body>
 @php
@@ -606,6 +723,7 @@
     $isClientPortal = $currentUser?->role === 'client_portal';
     $mainColumnClass = $currentUser && ! $isClientPortal ? 'col-lg-10' : 'col-12';
     $sidebarBrandName = $activeTenant?->name ?? $activeBusiness?->name ?? 'BAMA';
+    $activeIndustryLabel = \Illuminate\Support\Str::headline($activeBusiness?->industry ?: $activeTenant?->industry ?: 'Workspace');
 @endphp
 <div class="container-fluid">
     <div class="row">
@@ -701,6 +819,9 @@
             @if($currentUser)
                 <header class="app-header border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
                     <div class="mobile-header-identity">
+                        @if(! $isClientPortal)
+                            <button type="button" class="mobile-menu-button" id="mobile-shell-open" aria-controls="mobile-shell-drawer" aria-expanded="false" aria-label="Open navigation"><i class="bi bi-list"></i></button>
+                        @endif
                         <div class="mobile-header-avatar">{{ strtoupper(substr($currentUser->name ?? 'U', 0, 1)) }}</div>
                         <div class="mobile-header-name">{{ $activeBusiness?->name ?? $activeTenant?->name ?? $currentUser->name }}</div>
                     </div>
@@ -790,6 +911,99 @@
 </div>
 @if(! $currentUser)<button type="button" class="btn btn-outline-dark theme-toggle guest-theme-toggle" data-theme-toggle aria-label="Switch colour theme"><i class="bi bi-moon-stars"></i></button>@endif
 @if($currentUser && ! $isClientPortal)
+    <div class="mobile-shell-backdrop" id="mobile-shell-backdrop" aria-hidden="true"></div>
+    <aside class="mobile-shell-drawer" id="mobile-shell-drawer" role="dialog" aria-modal="true" aria-label="Mobile navigation" aria-hidden="true" tabindex="-1">
+        <div class="drawer-head">
+            <div class="drawer-brand">
+                @if(!empty($tenantTheme?->logoUrl()))
+                    <img src="{{ $tenantTheme->logoUrl() }}" alt="{{ $activeTenant?->name ?? 'Tenant' }}" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
+                @elseif(strcasecmp($sidebarBrandName, 'BAMA') === 0)
+                    <img src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions" style="width:118px;height:auto;object-fit:contain;border-radius:6px;background:#fff;padding:4px;">
+                @else
+                    <div class="brand-mark">{{ strtoupper(substr($sidebarBrandName, 0, 1)) }}{{ strtoupper(substr(strstr($sidebarBrandName, ' ') ?: 'A', 1, 1)) }}</div>
+                @endif
+                <div class="min-w-0">
+                    <strong>{{ $sidebarBrandName }}</strong>
+                    <span>{{ $activeIndustryLabel }}</span>
+                </div>
+            </div>
+            <button type="button" class="drawer-close" id="mobile-shell-close" aria-label="Close navigation"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="business-switcher">
+            <form method="post" action="{{ route('businesses.switch') }}">
+                @csrf
+                <label class="form-label mb-1">Business</label>
+                <select class="form-select form-select-sm" name="business_id" onchange="this.form.submit()">
+                    @foreach($businesses as $business)
+                        <option value="{{ $business->id }}" @selected($activeBusiness?->id === $business->id)>{{ $business->name }}</option>
+                    @endforeach
+                </select>
+            </form>
+        </div>
+        <div class="drawer-section-title">Navigation</div>
+        <nav class="drawer-nav">
+            @foreach($platformMenu ?? [] as $item)
+                @php
+                    $routeParams = $item['params'] ?? [];
+                    $children = collect($item['children'] ?? []);
+
+                    if (! empty($item['section'])) {
+                        $routeParams = array_merge($routeParams, ['section' => $item['section']]);
+                    }
+
+                    $activePatterns = collect($item['active_routes'] ?? [])
+                        ->push(str_replace('.index', '.*', $item['route']))
+                        ->push($item['route'])
+                        ->filter()
+                        ->unique()
+                        ->values();
+
+                    $isActive = $activePatterns->contains(fn ($pattern) => request()->routeIs($pattern));
+
+                    if (! empty($item['section'])) {
+                        $isActive = request()->routeIs($item['route'])
+                            && request()->query('section', 'dashboard') === $item['section'];
+                    }
+
+                    $childIsActive = $children->contains(function ($child) {
+                        $patterns = collect($child['active_routes'] ?? [])
+                            ->push(str_replace('.index', '.*', $child['route']))
+                            ->push($child['route'])
+                            ->filter()
+                            ->unique()
+                            ->values();
+
+                        return $patterns->contains(fn ($pattern) => request()->routeIs($pattern));
+                    });
+
+                    $isActive = $isActive || $childIsActive;
+                @endphp
+                <a href="{{ route($item['route'], $routeParams) }}" class="{{ $isActive ? 'active' : '' }}"><i class="bi {{ $item['icon'] }}"></i><span class="text-truncate">{{ $item['label'] }}</span></a>
+                @foreach($children as $child)
+                    @php
+                        $childRouteParams = $child['params'] ?? [];
+                        $childActivePatterns = collect($child['active_routes'] ?? [])
+                            ->push(str_replace('.index', '.*', $child['route']))
+                            ->push($child['route'])
+                            ->filter()
+                            ->unique()
+                            ->values();
+                        $isChildActive = $childActivePatterns->contains(fn ($pattern) => request()->routeIs($pattern));
+                    @endphp
+                    <a href="{{ route($child['route'], $childRouteParams) }}" class="{{ $isChildActive ? 'active' : '' }}"><i class="bi {{ $child['icon'] }}"></i><span class="text-truncate">{{ $child['label'] }}</span></a>
+                @endforeach
+            @endforeach
+        </nav>
+        <div class="drawer-section-title">Workspace</div>
+        <nav class="drawer-nav">
+            @if(Route::has('communication.center'))
+                <a href="{{ route('communication.center') }}" class="{{ request()->routeIs('communication.*') ? 'active' : '' }}"><i class="bi bi-chat-dots"></i><span>Messages</span></a>
+            @endif
+            <a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.*') ? 'active' : '' }}"><i class="bi bi-person"></i><span>Profile</span></a>
+            <button type="button" data-theme-toggle><i class="bi bi-moon-stars"></i><span>Switch theme</span></button>
+            <form method="post" action="{{ route('logout') }}">@csrf<button type="submit"><i class="bi bi-box-arrow-right"></i><span>Logout</span></button></form>
+        </nav>
+    </aside>
     @php
         $genericMobileItems = [
             ['label' => 'Dashboard', 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'bi-grid-fill', 'aria' => 'Dashboard'],
@@ -983,9 +1197,38 @@ document.addEventListener('DOMContentLoaded',()=>{
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const body = document.body;
+    const drawerOpenButton = document.getElementById('mobile-shell-open');
+    const drawerCloseButton = document.getElementById('mobile-shell-close');
+    const drawerBackdrop = document.getElementById('mobile-shell-backdrop');
+    const drawer = document.getElementById('mobile-shell-drawer');
     const openButton = document.getElementById('mobile-overflow-open');
     const backdrop = document.getElementById('mobile-overflow-backdrop');
     const sheet = document.getElementById('mobile-overflow-menu');
+
+    if (drawerOpenButton && drawerBackdrop && drawer) {
+        const openDrawer = () => {
+            body.classList.add('mobile-nav-open');
+            drawerOpenButton.setAttribute('aria-expanded', 'true');
+            drawer.setAttribute('aria-hidden', 'false');
+            requestAnimationFrame(() => drawer.focus({ preventScroll:true }));
+        };
+        const closeDrawer = () => {
+            body.classList.remove('mobile-nav-open');
+            drawerOpenButton.setAttribute('aria-expanded', 'false');
+            drawer.setAttribute('aria-hidden', 'true');
+            drawerOpenButton.focus({ preventScroll:true });
+        };
+
+        drawerOpenButton.addEventListener('click', openDrawer);
+        drawerCloseButton?.addEventListener('click', closeDrawer);
+        drawerBackdrop.addEventListener('click', closeDrawer);
+        drawer.querySelectorAll('a[href]').forEach((link) => link.addEventListener('click', closeDrawer));
+        drawer.querySelectorAll('button[type="submit"]').forEach((button) => button.addEventListener('click', closeDrawer));
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && body.classList.contains('mobile-nav-open')) closeDrawer();
+        });
+    }
+
     if (!openButton || !backdrop || !sheet) return;
 
     const openSheet = () => {

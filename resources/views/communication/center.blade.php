@@ -39,17 +39,16 @@
     @media(max-width:760px){.comm-toolbar,.comm-shell,.comm-grid-two{grid-template-columns:1fr}.comm-metrics,.comm-search-results{grid-template-columns:1fr}.comm-stream{height:44vh}.comm-panel-head{align-items:flex-start;flex-direction:column}.comm-actions .btn{width:100%}}
 </style>
 
-<div class="comm-toolbar">
-    <div>
-        <div class="comm-title">Shared Workspace</div>
-        <h1 class="h3 mb-0">Messages</h1>
-    </div>
-    <form method="get" action="{{ route('communication.center') }}" class="d-flex gap-2">
+<div class="page-shell">
+<x-page-header title="Messages" kicker="Shared Workspace" subtitle="Conversations, alerts, files, announcements, and team communication.">
+    <x-slot:actions>
+    <form method="get" action="{{ route('communication.center') }}" class="d-flex gap-2 flex-wrap">
         @if($activeChannel)<input type="hidden" name="channel" value="{{ $activeChannel->id }}">@endif
         <input class="form-control" name="q" value="{{ request('q') }}" placeholder="Search messages, people, files">
         <button class="btn btn-outline-dark" title="Search"><i class="bi bi-search"></i></button>
     </form>
-</div>
+    </x-slot:actions>
+</x-page-header>
 
 @if(session('status'))
     <div class="alert alert-success">{{ session('status') }}</div>
@@ -342,5 +341,6 @@
             </section>
         @endif
     </aside>
+</div>
 </div>
 @endsection
