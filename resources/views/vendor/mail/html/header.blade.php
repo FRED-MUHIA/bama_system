@@ -9,7 +9,7 @@
 <a href="{{ $url }}" class="mail-brand-mark">
 @if($logoUrl)
 <span class="mail-brand-logo-wrap">
-<img src="{{ $logoUrl }}" class="mail-brand-logo" alt="{{ $brandName }}">
+<img src="{{ $logoUrl }}" class="mail-brand-logo" width="210" alt="{{ $brandName }}">
 </span>
 @else
 {{ $brandName }}

@@ -116,8 +116,9 @@ table {
 
 .mail-brand-header {
     background-color: #00A651;
+    background-image: linear-gradient(135deg, #00BF63 0%, #00A651 52%, #007A3D 100%);
     border-radius: 6px 6px 0 0;
-    padding: 20px 46px;
+    padding: 24px 46px;
 }
 
 .mail-brand-mark {
@@ -137,10 +138,10 @@ table {
     border: 0;
     display: block;
     height: auto;
-    max-height: 42px;
-    max-width: 172px;
+    max-width: 210px;
     outline: none;
     text-decoration: none;
+    width: 210px;
 }
 
 .action {
@@ -267,8 +268,8 @@ table {
     }
 
     .mail-brand-logo {
-        max-height: 38px !important;
-        max-width: 154px !important;
+        max-width: 174px !important;
+        width: 174px !important;
     }
 
     h1 {

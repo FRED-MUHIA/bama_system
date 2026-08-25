@@ -23,11 +23,11 @@
             <td align="center" style="padding:16px 12px 0;">
                 <table role="presentation" width="570" cellspacing="0" cellpadding="0" style="width:570px;max-width:100%;background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
                     <tr>
-                        <td style="background:#00A651;padding:22px 32px;">
+                        <td style="background:#00A651;background-image:linear-gradient(135deg,#00BF63 0%,#00A651 52%,#007A3D 100%);padding:24px 32px;">
                             <a href="{{ config('app.url') }}" style="color:#ffffff;text-decoration:none;font-size:22px;font-weight:800;letter-spacing:0;display:inline-block;">
                                 @if($logoUrl)
                                     <span style="display:inline-block;">
-                                        <img src="{{ $logoUrl }}" alt="{{ $appName }}" width="172" style="display:block;width:172px;max-width:172px;height:auto;max-height:42px;border:0;outline:none;text-decoration:none;">
+                                        <img src="{{ $logoUrl }}" alt="{{ $appName }}" width="210" style="display:block;width:210px;max-width:210px;height:auto;border:0;outline:none;text-decoration:none;">
                                     </span>
                                 @else
                                     {{ $appName }}
