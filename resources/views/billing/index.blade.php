@@ -9,6 +9,17 @@
     $paypalSupportedCurrencies = ['AUD', 'BRL', 'CAD', 'CNY', 'CZK', 'DKK', 'EUR', 'HKD', 'HUF', 'ILS', 'JPY', 'MYR', 'MXN', 'TWD', 'NZD', 'NOK', 'PHP', 'PLN', 'GBP', 'SGD', 'SEK', 'CHF', 'THB', 'USD'];
     $paypalCurrencySupported = $invoice && in_array(strtoupper($invoice->currency), $paypalSupportedCurrencies, true);
     $invoicePayable = $invoice && $invoice->status !== 'paid' && (float) $invoice->total > 0;
+    $mpesaResultMessage = function (?string $result): ?string {
+        if (! $result) return null;
+        $lower = strtolower($result);
+
+        return match (true) {
+            str_contains($lower, 'wrong credentials') => 'The payer entered the wrong M-PESA PIN or could not be authenticated. Send a new prompt and enter the correct PIN.',
+            str_contains($lower, 'timeout') || str_contains($lower, 'cannot be reached') => 'The phone could not be reached or the STK prompt timed out. Confirm the phone has signal, then send a new prompt.',
+            str_contains($lower, 'cancel') => 'The payer cancelled the M-PESA prompt. Send a new prompt to try again.',
+            default => $result,
+        };
+    };
 @endphp
 
 <div class="row g-4">
@@ -42,6 +53,7 @@
                             ?? data_get($latestMpesaPayment->callback_payload, 'Body.stkCallback.ResultDesc')
                             ?? data_get($latestMpesaPayment->callback_payload, 'ResponseDescription'))
                         : null;
+                    $latestMpesaResult = $mpesaResultMessage($latestMpesaResult);
                 @endphp
                 <div class="border rounded-2 p-3 mb-4">
                     <div class="d-flex flex-wrap justify-content-between gap-3">

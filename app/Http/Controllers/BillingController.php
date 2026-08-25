@@ -93,6 +93,7 @@ class BillingController extends Controller
             ?? data_get($payment->callback_payload, 'Body.stkCallback.ResultDesc')
             ?? data_get($payment->callback_payload, 'ResponseDescription')
             ?? 'Safaricom has not returned a final result yet.';
+        $result = $this->mpesaResultMessage($result);
 
         if ($payment->status === 'paid') {
             return back()->with('status', 'M-PESA payment confirmed and subscription renewed.');
@@ -184,5 +185,15 @@ class BillingController extends Controller
     {
         abort_unless(ActiveTenant::id() && (int) $payment->tenant_id === (int) ActiveTenant::id(), 403);
         abort_unless($payment->provider === 'mpesa', 404);
+    }
+
+    private function mpesaResultMessage(string $result): string
+    {
+        return match (true) {
+            str_contains(strtolower($result), 'wrong credentials') => 'The payer entered the wrong M-PESA PIN or could not be authenticated. Send a new prompt and enter the correct PIN.',
+            str_contains(strtolower($result), 'timeout') || str_contains(strtolower($result), 'cannot be reached') => 'The phone could not be reached or the STK prompt timed out. Confirm the phone has signal, then send a new prompt.',
+            str_contains(strtolower($result), 'cancel') => 'The payer cancelled the M-PESA prompt. Send a new prompt to try again.',
+            default => $result,
+        };
     }
 }
