@@ -130,10 +130,7 @@ table {
 }
 
 .mail-brand-logo-wrap {
-    background-color: #ffffff;
-    border-radius: 8px;
     display: inline-block;
-    padding: 8px 12px;
 }
 
 .mail-brand-logo {

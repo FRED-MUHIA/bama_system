@@ -26,7 +26,7 @@
                         <td style="background:#00A651;padding:22px 32px;">
                             <a href="{{ config('app.url') }}" style="color:#ffffff;text-decoration:none;font-size:22px;font-weight:800;letter-spacing:0;display:inline-block;">
                                 @if($logoUrl)
-                                    <span style="display:inline-block;background:#ffffff;border-radius:8px;padding:8px 12px;">
+                                    <span style="display:inline-block;">
                                         <img src="{{ $logoUrl }}" alt="{{ $appName }}" width="172" style="display:block;width:172px;max-width:172px;height:auto;max-height:42px;border:0;outline:none;text-decoration:none;">
                                     </span>
                                 @else
