@@ -556,6 +556,53 @@
             .app-header-actions .theme-toggle { display:none !important; }
             .header-alert-btn { width:40px;height:40px;border:0 !important;background:#fff !important;color:#111827 !important;box-shadow:none !important; }
             .header-alert-btn i { font-size:1.12rem; }
+            .header-notification-menu {
+                position:fixed !important;
+                top:62px !important;
+                right:12px !important;
+                left:12px !important;
+                width:auto !important;
+                max-width:none !important;
+                max-height:calc(100dvh - 146px);
+                transform:none !important;
+                border-radius:14px;
+                overflow:hidden;
+                z-index:1200;
+            }
+            .header-notification-head {
+                align-items:flex-start;
+                padding:.9rem;
+            }
+            .header-notification-head strong,
+            .header-notification-item .notification-title span {
+                white-space:normal;
+                overflow-wrap:anywhere;
+            }
+            .header-notification-list {
+                max-height:calc(100dvh - 260px);
+                overflow-y:auto;
+                -webkit-overflow-scrolling:touch;
+            }
+            .header-notification-item {
+                padding:.85rem .9rem;
+            }
+            .header-notification-item .notification-title {
+                align-items:flex-start;
+            }
+            .header-notification-item .notification-title small {
+                flex:0 0 auto;
+                white-space:nowrap;
+            }
+            .header-notification-foot {
+                padding:.75rem .9rem;
+            }
+            .header-notification-foot .btn {
+                width:100%;
+                min-height:44px;
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+            }
             .mobile-bottom-nav {
                 min-height:64px;
                 gap:2px;
