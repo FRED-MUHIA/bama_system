@@ -24,6 +24,8 @@ class PaymentGatewayServiceTest extends TestCase
                 'access_token' => 'test-token',
             ]),
             'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest' => Http::response([
+                'ResponseCode' => '0',
+                'ResponseDescription' => 'Success. Request accepted for processing',
                 'CheckoutRequestID' => 'ws_CO_test',
                 'MerchantRequestID' => 'mr_test',
             ]),
@@ -54,6 +56,8 @@ class PaymentGatewayServiceTest extends TestCase
                 'access_token' => 'test-token',
             ]),
             'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest' => Http::response([
+                'ResponseCode' => '0',
+                'ResponseDescription' => 'Success. Request accepted for processing',
                 'CheckoutRequestID' => 'ws_CO_prefilled',
                 'MerchantRequestID' => 'mr_prefilled',
             ]),
@@ -74,6 +78,8 @@ class PaymentGatewayServiceTest extends TestCase
                 'access_token' => 'test-token',
             ]),
             'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest' => Http::response([
+                'ResponseCode' => '0',
+                'ResponseDescription' => 'Success. Request accepted for processing',
                 'CheckoutRequestID' => 'ws_CO_local',
                 'MerchantRequestID' => 'mr_local',
             ]),
@@ -85,6 +91,48 @@ class PaymentGatewayServiceTest extends TestCase
 
         $this->assertSame('pending', $payment->status);
         $this->assertSame('254745506619', $payment->phone);
+    }
+
+    public function test_mpesa_stk_push_rejects_overlong_phone_number(): void
+    {
+        $invoice = $this->mpesaFixture();
+
+        try {
+            app(PaymentGatewayService::class)->mpesaStkPush($invoice, '2547588088713');
+            $this->fail('The M-PESA phone number should have failed validation.');
+        } catch (RuntimeException $e) {
+            $this->assertSame(
+                'Enter a valid M-PESA phone number: 10 digits like 0745506619 or 12 digits like 254745506619.',
+                $e->getMessage()
+            );
+        }
+    }
+
+    public function test_mpesa_stk_push_rejects_non_zero_daraja_response(): void
+    {
+        Http::fake([
+            'https://sandbox.safaricom.co.ke/oauth/v1/generate*' => Http::response([
+                'access_token' => 'test-token',
+            ]),
+            'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest' => Http::response([
+                'ResponseCode' => '1',
+                'ResponseDescription' => 'Unable to lock subscriber, a transaction is already in process',
+            ]),
+        ]);
+
+        $invoice = $this->mpesaFixture();
+
+        try {
+            app(PaymentGatewayService::class)->mpesaStkPush($invoice, '0745506619');
+            $this->fail('The M-PESA request should have failed.');
+        } catch (RuntimeException $e) {
+            $this->assertSame(
+                'M-PESA request failed: Unable to lock subscriber, a transaction is already in process',
+                $e->getMessage()
+            );
+        }
+
+        $this->assertDatabaseCount('subscription_payments', 0);
     }
 
     public function test_mpesa_provider_400_is_reported_as_runtime_exception(): void

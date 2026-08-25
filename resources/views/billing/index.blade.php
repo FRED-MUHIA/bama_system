@@ -5,6 +5,7 @@
 @php
     $subscription = $tenant->subscription;
     $enabled = fn (string $provider) => (bool) ($paymentSettings[$provider]->is_enabled ?? false);
+    $mpesaSetting = $paymentSettings['mpesa'] ?? null;
     $invoicePayable = $invoice && $invoice->status !== 'paid' && (float) $invoice->total > 0;
 @endphp
 
@@ -52,7 +53,11 @@
                             <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-phone text-success"></i><strong>M-PESA STK</strong></div>
                             <form method="post" action="{{ route('billing.invoices.mpesa', $invoice) }}" class="d-grid gap-2">
                                 @csrf
-                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="2547XXXXXXXX" @disabled(! $enabled('mpesa') || ! $invoicePayable) required>
+                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="0745506619 or 254745506619" pattern="(?:\+254\d{9}|254\d{9}|0\d{9}|[17]\d{8})" maxlength="13" title="Enter 0745506619 or 254745506619" @disabled(! $enabled('mpesa') || ! $invoicePayable) required>
+                                <div class="form-text">Any payer number: 0745506619 or 254745506619.</div>
+                                @if($enabled('mpesa') && ($mpesaSetting?->mode ?? 'sandbox') === 'sandbox')
+                                    <div class="small text-warning-emphasis">M-PESA is in sandbox mode. Switch to live keys to prompt a real phone.</div>
+                                @endif
                                 <button class="btn btn-warning" @disabled(! $enabled('mpesa') || ! $invoicePayable)><i class="bi bi-send"></i> Prompt Phone</button>
                             </form>
                             @unless($enabled('mpesa'))<div class="small text-muted mt-2">M-PESA is not enabled by owner yet.</div>@endunless

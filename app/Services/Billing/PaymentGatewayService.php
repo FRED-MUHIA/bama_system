@@ -28,6 +28,11 @@ class PaymentGatewayService
             throw new RuntimeException('M-PESA STK is not fully configured in the owner console.');
         }
 
+        $timestamp = now()->format('YmdHis');
+        $normalizedPhone = $this->normalizeMpesaPhone($phone);
+        $amount = max(1, (int) round((float) $invoice->total));
+        $accountReference = Str::limit($invoice->invoice_number, 12, '');
+
         $baseUrl = $this->mpesaBaseUrl($setting->mode);
         try {
             $token = Http::withBasicAuth($consumerKey, $consumerSecret)
@@ -38,11 +43,6 @@ class PaymentGatewayService
         } catch (RequestException $e) {
             throw $this->mpesaRequestException($e, 'authorization');
         }
-
-        $timestamp = now()->format('YmdHis');
-        $normalizedPhone = $this->normalizeMpesaPhone($phone);
-        $amount = max(1, (int) round((float) $invoice->total));
-        $accountReference = Str::limit($invoice->invoice_number, 12, '');
 
         try {
             $response = Http::withToken($token)
@@ -65,6 +65,17 @@ class PaymentGatewayService
                 ->json();
         } catch (RequestException $e) {
             throw $this->mpesaRequestException($e, 'stk_push');
+        }
+
+        $responseCode = (string) ($response['ResponseCode'] ?? '0');
+        if ($responseCode !== '0') {
+            throw new RuntimeException(
+                'M-PESA request failed: '.($response['ResponseDescription'] ?? $response['errorMessage'] ?? 'Safaricom did not accept the STK request.')
+            );
+        }
+
+        if (blank($response['CheckoutRequestID'] ?? null)) {
+            throw new RuntimeException('M-PESA request failed: Safaricom did not return a checkout request ID.');
         }
 
         return $invoice->payments()->create([
@@ -270,7 +281,7 @@ class PaymentGatewayService
         }
 
         if (! preg_match('/^254\d{9}$/', $digits)) {
-            throw new RuntimeException('Enter a valid M-PESA phone number, for example 2547XXXXXXXX.');
+            throw new RuntimeException('Enter a valid M-PESA phone number: 10 digits like 0745506619 or 12 digits like 254745506619.');
         }
 
         return $digits;
