@@ -50,6 +50,58 @@ class PaymentGatewayServiceTest extends TestCase
         });
     }
 
+    public function test_mpesa_stk_push_trims_pasted_settings_before_sending_to_daraja(): void
+    {
+        Http::fake([
+            'https://sandbox.safaricom.co.ke/oauth/v1/generate*' => Http::response([
+                'access_token' => 'test-token',
+            ]),
+            'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest' => Http::response([
+                'ResponseCode' => '0',
+                'ResponseDescription' => 'Success. Request accepted for processing',
+                'CheckoutRequestID' => 'ws_CO_trimmed',
+                'MerchantRequestID' => 'mr_trimmed',
+            ]),
+        ]);
+
+        $invoice = $this->mpesaFixture(
+            mpesaConfig: [
+                'shortcode' => ' 174379 ',
+                'passkey' => " test-passkey\r\n",
+                'callback_url' => ' https://bama.test/billing/mpesa/callback ',
+                'transaction_type' => ' CustomerBuyGoodsOnline ',
+            ],
+            mpesaSetting: [
+                'public_key' => ' consumer-key ',
+                'secret_key' => " consumer-secret\n",
+            ],
+        );
+
+        app(PaymentGatewayService::class)->mpesaStkPush($invoice, '0745506619');
+
+        Http::assertSent(function ($request) {
+            if (! str_contains($request->url(), '/oauth/v1/generate')) {
+                return false;
+            }
+
+            return $request->hasHeader('Authorization', 'Basic '.base64_encode('consumer-key:consumer-secret'));
+        });
+
+        Http::assertSent(function ($request) {
+            if (! str_contains($request->url(), '/mpesa/stkpush/')) {
+                return false;
+            }
+
+            $data = $request->data();
+
+            return $data['BusinessShortCode'] === '174379'
+                && $data['PartyB'] === '174379'
+                && $data['TransactionType'] === 'CustomerBuyGoodsOnline'
+                && $data['CallBackURL'] === 'https://bama.test/billing/mpesa/callback'
+                && $data['Password'] === base64_encode('174379test-passkey'.$data['Timestamp']);
+        });
+    }
+
     public function test_mpesa_stk_push_accepts_prefilled_kenyan_phone_number(): void
     {
         Http::fake([
@@ -228,7 +280,41 @@ class PaymentGatewayServiceTest extends TestCase
         $this->assertDatabaseCount('subscription_payments', 0);
     }
 
-    public function test_paypal_checkout_rejects_unsupported_invoice_currency_before_http_call(): void
+    public function test_paypal_checkout_converts_kes_invoice_to_usd_order(): void
+    {
+        Http::fake([
+            'https://api-m.sandbox.paypal.com/v1/oauth2/token' => Http::response([
+                'access_token' => 'paypal-token',
+            ]),
+            'https://api-m.sandbox.paypal.com/v2/checkout/orders' => Http::response([
+                'id' => 'PAYPAL-ORDER-1',
+                'links' => [[
+                    'rel' => 'approve',
+                    'href' => 'https://paypal.test/checkout/PAYPAL-ORDER-1',
+                ]],
+            ]),
+        ]);
+
+        $invoice = $this->mpesaFixture();
+        $this->paypalSettingFixture(['kes_usd_rate' => '130']);
+
+        $payment = app(PaymentGatewayService::class)->createPayPalOrder($invoice);
+
+        $this->assertSame('requires_action', $payment->status);
+        $this->assertSame('KES', $payment->currency);
+        $this->assertSame('USD', data_get($payment->callback_payload, 'paypal_amount.currency'));
+        $this->assertSame('0.08', data_get($payment->callback_payload, 'paypal_amount.value'));
+
+        Http::assertSent(function ($request) {
+            $data = $request->data();
+
+            return str_contains($request->url(), '/v2/checkout/orders')
+                && data_get($data, 'purchase_units.0.amount.currency_code') === 'USD'
+                && data_get($data, 'purchase_units.0.amount.value') === '0.08';
+        });
+    }
+
+    public function test_paypal_checkout_rejects_kes_invoice_without_exchange_rate(): void
     {
         Http::fake();
 
@@ -240,7 +326,7 @@ class PaymentGatewayServiceTest extends TestCase
             $this->fail('The PayPal checkout should have failed.');
         } catch (RuntimeException $e) {
             $this->assertSame(
-                'PayPal checkout is not available for KES invoices. Use M-PESA or configure a card checkout for local currency payments.',
+                'PayPal KES to USD exchange rate is not configured in the owner console.',
                 $e->getMessage()
             );
         }
@@ -277,22 +363,22 @@ class PaymentGatewayServiceTest extends TestCase
         }
     }
 
-    private function mpesaFixture(string $currency = 'KES'): SubscriptionInvoice
+    private function mpesaFixture(string $currency = 'KES', array $mpesaConfig = [], array $mpesaSetting = []): SubscriptionInvoice
     {
         PlatformPaymentSetting::updateOrCreate(
             ['provider' => 'mpesa'],
-            [
+            array_merge([
                 'is_enabled' => true,
                 'mode' => 'sandbox',
                 'public_key' => 'consumer-key',
                 'secret_key' => 'consumer-secret',
-                'config' => [
+                'config' => array_merge([
                     'shortcode' => '174379',
                     'passkey' => 'test-passkey',
                     'callback_url' => 'https://bama.test/billing/mpesa/callback',
                     'transaction_type' => 'CustomerPayBillOnline',
-                ],
-            ]
+                ], $mpesaConfig),
+            ], $mpesaSetting)
         );
 
         $tenant = Tenant::create([
@@ -335,7 +421,7 @@ class PaymentGatewayServiceTest extends TestCase
         ]);
     }
 
-    private function paypalSettingFixture(): void
+    private function paypalSettingFixture(array $config = []): void
     {
         PlatformPaymentSetting::updateOrCreate(
             ['provider' => 'paypal'],
@@ -344,7 +430,7 @@ class PaymentGatewayServiceTest extends TestCase
                 'mode' => 'sandbox',
                 'public_key' => 'paypal-client',
                 'secret_key' => 'paypal-secret',
-                'config' => [],
+                'config' => $config,
             ]
         );
     }

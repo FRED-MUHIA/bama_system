@@ -18,14 +18,19 @@ class PaymentGatewayService
     {
         $setting = $this->setting('mpesa');
         $config = $setting->config ?? [];
-        $consumerKey = $setting->public_key ?: config('services.mpesa.consumer_key');
-        $consumerSecret = $setting->secret_key ?: config('services.mpesa.consumer_secret');
-        $shortcode = $config['shortcode'] ?? config('services.mpesa.shortcode');
-        $passkey = $config['passkey'] ?? config('services.mpesa.passkey');
-        $callbackUrl = $config['callback_url'] ?? route('billing.mpesa.callback');
+        $consumerKey = trim((string) ($setting->public_key ?: config('services.mpesa.consumer_key')));
+        $consumerSecret = trim((string) ($setting->secret_key ?: config('services.mpesa.consumer_secret')));
+        $shortcode = trim((string) ($config['shortcode'] ?? config('services.mpesa.shortcode')));
+        $passkey = trim((string) ($config['passkey'] ?? config('services.mpesa.passkey')));
+        $callbackUrl = trim((string) ($config['callback_url'] ?? route('billing.mpesa.callback')));
+        $transactionType = trim((string) ($config['transaction_type'] ?? 'CustomerPayBillOnline'));
 
         if (! $consumerKey || ! $consumerSecret || ! $shortcode || ! $passkey) {
             throw new RuntimeException('M-PESA STK is not fully configured in the owner console.');
+        }
+
+        if (! in_array($transactionType, ['CustomerPayBillOnline', 'CustomerBuyGoodsOnline'], true)) {
+            throw new RuntimeException('Choose a valid M-PESA transaction type: PayBill or Buy Goods.');
         }
 
         $timestamp = now()->format('YmdHis');
@@ -52,7 +57,7 @@ class PaymentGatewayService
                     'BusinessShortCode' => $shortcode,
                     'Password' => base64_encode($shortcode.$passkey.$timestamp),
                     'Timestamp' => $timestamp,
-                    'TransactionType' => $config['transaction_type'] ?? 'CustomerPayBillOnline',
+                    'TransactionType' => $transactionType,
                     'Amount' => $amount,
                     'PartyA' => $normalizedPhone,
                     'PartyB' => $shortcode,
@@ -136,10 +141,10 @@ class PaymentGatewayService
 
         $setting = $this->setting('mpesa');
         $config = $setting->config ?? [];
-        $consumerKey = $setting->public_key ?: config('services.mpesa.consumer_key');
-        $consumerSecret = $setting->secret_key ?: config('services.mpesa.consumer_secret');
-        $shortcode = $config['shortcode'] ?? config('services.mpesa.shortcode');
-        $passkey = $config['passkey'] ?? config('services.mpesa.passkey');
+        $consumerKey = trim((string) ($setting->public_key ?: config('services.mpesa.consumer_key')));
+        $consumerSecret = trim((string) ($setting->secret_key ?: config('services.mpesa.consumer_secret')));
+        $shortcode = trim((string) ($config['shortcode'] ?? config('services.mpesa.shortcode')));
+        $passkey = trim((string) ($config['passkey'] ?? config('services.mpesa.passkey')));
 
         if (! $consumerKey || ! $consumerSecret || ! $shortcode || ! $passkey) {
             throw new RuntimeException('M-PESA STK is not fully configured in the owner console.');
@@ -202,16 +207,14 @@ class PaymentGatewayService
     public function createPayPalOrder(SubscriptionInvoice $invoice): SubscriptionPayment
     {
         $setting = $this->setting('paypal');
+        $config = $setting->config ?? [];
         $clientId = $setting->public_key ?: config('services.paypal.client_id');
         $secret = $setting->secret_key ?: config('services.paypal.secret');
         $currency = strtoupper($invoice->currency);
+        $paypalAmount = $this->paypalCheckoutAmount($invoice, $config);
 
         if (! $clientId || ! $secret) {
             throw new RuntimeException('PayPal is not fully configured in the owner console.');
-        }
-
-        if (! $this->paypalSupportsCurrency($currency)) {
-            throw new RuntimeException("PayPal checkout is not available for {$currency} invoices. Use M-PESA or configure a card checkout for local currency payments.");
         }
 
         $baseUrl = $this->paypalBaseUrl($setting->mode);
@@ -236,8 +239,8 @@ class PaymentGatewayService
                         'reference_id' => $invoice->invoice_number,
                         'description' => 'BAMA '.$invoice->plan?->name.' subscription',
                         'amount' => [
-                            'currency_code' => $currency,
-                            'value' => number_format((float) $invoice->total, 2, '.', ''),
+                            'currency_code' => $paypalAmount['currency'],
+                            'value' => $paypalAmount['value'],
                         ],
                     ]],
                     'application_context' => [
@@ -263,7 +266,14 @@ class PaymentGatewayService
             'currency' => $invoice->currency,
             'provider_order_id' => $order['id'] ?? null,
             'payment_url' => $approvalUrl,
-            'callback_payload' => $order,
+            'callback_payload' => [
+                'order' => $order,
+                'paypal_amount' => $paypalAmount,
+                'invoice_amount' => [
+                    'currency' => $currency,
+                    'value' => number_format((float) $invoice->total, 2, '.', ''),
+                ],
+            ],
         ]);
     }
 
@@ -373,6 +383,37 @@ class PaymentGatewayService
             'JPY', 'MYR', 'MXN', 'TWD', 'NZD', 'NOK', 'PHP', 'PLN', 'GBP', 'SGD',
             'SEK', 'CHF', 'THB', 'USD',
         ], true);
+    }
+
+    public function paypalCheckoutAmount(SubscriptionInvoice $invoice, array $config = []): array
+    {
+        $currency = strtoupper($invoice->currency);
+        $invoiceAmount = (float) $invoice->total;
+
+        if ($currency === 'KES') {
+            $rate = (float) ($config['kes_usd_rate'] ?? 0);
+
+            if ($rate <= 0) {
+                throw new RuntimeException('PayPal KES to USD exchange rate is not configured in the owner console.');
+            }
+
+            return [
+                'currency' => 'USD',
+                'value' => number_format(max(0.01, $invoiceAmount / $rate), 2, '.', ''),
+                'exchange_rate' => $rate,
+                'source_currency' => 'KES',
+                'source_value' => number_format($invoiceAmount, 2, '.', ''),
+            ];
+        }
+
+        if (! $this->paypalSupportsCurrency($currency)) {
+            throw new RuntimeException("PayPal checkout is not available for {$currency} invoices. Use M-PESA or configure a card checkout for local currency payments.");
+        }
+
+        return [
+            'currency' => $currency,
+            'value' => number_format($invoiceAmount, 2, '.', ''),
+        ];
     }
 
     private function normalizeMpesaPhone(string $phone): string

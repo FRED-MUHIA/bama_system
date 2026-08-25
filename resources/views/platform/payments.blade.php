@@ -15,7 +15,14 @@
                 'shortcode' => ['label' => 'PayBill / Till shortcode', 'hint' => 'The receiving BAMA shortcode.'],
                 'passkey' => ['label' => 'STK passkey', 'hint' => 'Daraja Lipa Na M-PESA online passkey.'],
                 'callback_url' => ['label' => 'Callback URL', 'hint' => 'Paste this in Daraja if a callback URL is required.'],
-                'transaction_type' => ['label' => 'Transaction type', 'hint' => 'Usually CustomerPayBillOnline.'],
+                'transaction_type' => [
+                    'label' => 'Transaction type',
+                    'hint' => 'Choose PayBill for paybill shortcodes or Buy Goods for till numbers.',
+                    'options' => [
+                        'CustomerPayBillOnline' => 'PayBill',
+                        'CustomerBuyGoodsOnline' => 'Buy Goods / Till',
+                    ],
+                ],
             ],
             'defaults' => [
                 'callback_url' => route('billing.mpesa.callback'),
@@ -28,9 +35,13 @@
             'summary' => 'Send clients to PayPal and capture the order after approval.',
             'public' => 'PayPal client ID',
             'secret' => 'PayPal client secret',
-            'help' => 'Use REST app credentials from the PayPal developer dashboard.',
-            'fields' => [],
-            'defaults' => [],
+            'help' => 'Use REST app credentials from the PayPal developer dashboard. KES invoices can be charged in USD when a KES per USD exchange rate is set.',
+            'fields' => [
+                'kes_usd_rate' => ['label' => 'KES per USD exchange rate', 'hint' => 'Example: 130 means KES 130.00 is charged as USD 1.00 in PayPal.'],
+            ],
+            'defaults' => [
+                'kes_usd_rate' => '',
+            ],
         ],
         'card' => [
             'title' => 'Card Checkout',
@@ -127,7 +138,15 @@
                             @endphp
                             <div class="col-12">
                                 <label class="form-label small">{{ $fieldMeta['label'] }}</label>
-                                <input class="form-control" type="{{ $isSensitiveConfig ? 'password' : 'text' }}" name="providers[{{ $provider }}][config][{{ $field }}]" value="{{ $value }}" placeholder="{{ $placeholder }}" autocomplete="new-password" @disabled(! $billingTablesReady)>
+                                @if(! empty($fieldMeta['options']))
+                                    <select class="form-select" name="providers[{{ $provider }}][config][{{ $field }}]" @disabled(! $billingTablesReady)>
+                                        @foreach($fieldMeta['options'] as $optionValue => $optionLabel)
+                                            <option value="{{ $optionValue }}" @selected($value === $optionValue)>{{ $optionLabel }}</option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <input class="form-control" type="{{ $isSensitiveConfig ? 'password' : 'text' }}" name="providers[{{ $provider }}][config][{{ $field }}]" value="{{ $value }}" placeholder="{{ $placeholder }}" autocomplete="new-password" @disabled(! $billingTablesReady)>
+                                @endif
                                 <div class="form-text">{{ $fieldMeta['hint'] }}</div>
                                 @if($configValueSaved)
                                     <div class="form-text text-success"><i class="bi bi-check-circle"></i> Value saved. Leave blank to keep it.</div>

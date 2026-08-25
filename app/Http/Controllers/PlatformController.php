@@ -226,7 +226,8 @@ class PlatformController extends Controller
             'providers.*.config.shortcode' => ['nullable', 'string', 'max:80'],
             'providers.*.config.passkey' => ['nullable', 'string', 'max:2000'],
             'providers.*.config.callback_url' => ['nullable', 'url', 'max:1000'],
-            'providers.*.config.transaction_type' => ['nullable', 'string', 'max:80'],
+            'providers.*.config.transaction_type' => ['nullable', 'string', Rule::in(['CustomerPayBillOnline', 'CustomerBuyGoodsOnline'])],
+            'providers.*.config.kes_usd_rate' => ['nullable', 'numeric', 'min:0.01'],
             'providers.*.config.checkout_url_template' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -239,6 +240,7 @@ class PlatformController extends Controller
             $setting = PlatformPaymentSetting::firstOrNew(['provider' => $provider]);
             $existingConfig = $setting->config ?? [];
             $config = collect($payload['config'] ?? [])
+                ->map(fn ($value) => is_string($value) ? trim($value) : $value)
                 ->map(fn ($value, $key) => blank($value) && array_key_exists($key, $existingConfig) ? $existingConfig[$key] : $value)
                 ->reject(fn ($value) => blank($value))
                 ->all();
@@ -246,13 +248,13 @@ class PlatformController extends Controller
             $setting->fill([
                 'is_enabled' => (bool) ($payload['is_enabled'] ?? false),
                 'mode' => $payload['mode'],
-                'public_key' => $payload['public_key'] ?? null,
-                'instructions' => $payload['instructions'] ?? null,
+                'public_key' => filled($payload['public_key'] ?? null) ? trim($payload['public_key']) : null,
+                'instructions' => filled($payload['instructions'] ?? null) ? trim($payload['instructions']) : null,
                 'config' => $config,
             ]);
 
             if (filled($payload['secret_key'] ?? null)) {
-                $setting->secret_key = $payload['secret_key'];
+                $setting->secret_key = trim($payload['secret_key']);
             }
 
             $setting->save();

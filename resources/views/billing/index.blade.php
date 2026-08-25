@@ -6,8 +6,12 @@
     $subscription = $tenant->subscription;
     $enabled = fn (string $provider) => (bool) ($paymentSettings[$provider]->is_enabled ?? false);
     $mpesaSetting = $paymentSettings['mpesa'] ?? null;
+    $paypalSetting = $paymentSettings['paypal'] ?? null;
+    $paypalKesUsdRate = (float) data_get($paypalSetting?->config ?? [], 'kes_usd_rate', 0);
     $paypalSupportedCurrencies = ['AUD', 'BRL', 'CAD', 'CNY', 'CZK', 'DKK', 'EUR', 'HKD', 'HUF', 'ILS', 'JPY', 'MYR', 'MXN', 'TWD', 'NZD', 'NOK', 'PHP', 'PLN', 'GBP', 'SGD', 'SEK', 'CHF', 'THB', 'USD'];
-    $paypalCurrencySupported = $invoice && in_array(strtoupper($invoice->currency), $paypalSupportedCurrencies, true);
+    $invoiceCurrency = $invoice ? strtoupper($invoice->currency) : null;
+    $paypalCurrencySupported = $invoice && (in_array($invoiceCurrency, $paypalSupportedCurrencies, true) || ($invoiceCurrency === 'KES' && $paypalKesUsdRate > 0));
+    $paypalConvertedUsd = $invoiceCurrency === 'KES' && $paypalKesUsdRate > 0 ? number_format(max(0.01, (float) $invoice->total / $paypalKesUsdRate), 2) : null;
     $invoicePayable = $invoice && $invoice->status !== 'paid' && (float) $invoice->total > 0;
     $mpesaResultMessage = function (?string $result): ?string {
         if (! $result) return null;
@@ -73,14 +77,14 @@
                     <div class="col-md-4">
                         <div class="border rounded-2 p-3 h-100">
                             <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-phone text-success"></i><strong>M-PESA STK</strong></div>
-                            <form method="post" action="{{ route('billing.invoices.mpesa', $invoice) }}" class="d-grid gap-2">
+                            <form method="post" action="{{ route('billing.invoices.mpesa', $invoice) }}" class="d-grid gap-2" data-mpesa-form>
                                 @csrf
-                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="0700000000 or 254700000000" pattern="(?:\+254\d{9}|254\d{9}|0\d{9}|[17]\d{8})" maxlength="13" title="Enter 0700000000 or 254700000000" @disabled(! $enabled('mpesa') || ! $invoicePayable) required>
+                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="0700000000 or 254700000000" pattern="(?:254\d{9}|0\d{9}|[17]\d{8})" maxlength="12" title="Enter 0700000000 or 254700000000" data-mpesa-phone @disabled(! $enabled('mpesa') || ! $invoicePayable) required>
                                 <div class="form-text">Any payer number: 0700000000 or 254700000000.</div>
                                 @if($enabled('mpesa') && ($mpesaSetting?->mode ?? 'sandbox') === 'sandbox')
                                     <div class="small text-warning-emphasis">M-PESA is in sandbox mode. Switch to live keys to prompt a real phone.</div>
                                 @endif
-                                <button class="btn btn-warning" @disabled(! $enabled('mpesa') || ! $invoicePayable)><i class="bi bi-send"></i> Prompt Phone</button>
+                                <button class="btn btn-warning" data-mpesa-submit @disabled(! $enabled('mpesa') || ! $invoicePayable)><i class="bi bi-send"></i> Prompt Phone</button>
                             </form>
                             @if($latestMpesaPayment)
                                 <div class="border-top mt-3 pt-3 small">
@@ -111,8 +115,10 @@
                                 <button class="btn btn-outline-dark w-100" @disabled(! $enabled('paypal') || ! $invoicePayable || ! $paypalCurrencySupported)><i class="bi bi-box-arrow-up-right"></i> Pay with PayPal</button>
                             </form>
                             @unless($enabled('paypal'))<div class="small text-muted mt-2">PayPal is not enabled by owner yet.</div>@endunless
-                            @if($enabled('paypal') && ! $paypalCurrencySupported)
-                                <div class="small text-muted mt-2">PayPal does not support {{ strtoupper($invoice->currency) }} invoices. Use M-PESA for phone prompts.</div>
+                            @if($enabled('paypal') && $invoiceCurrency === 'KES' && $paypalConvertedUsd)
+                                <div class="small text-muted mt-2">Charges about USD {{ $paypalConvertedUsd }} at KES {{ number_format($paypalKesUsdRate, 2) }} per USD.</div>
+                            @elseif($enabled('paypal') && ! $paypalCurrencySupported)
+                                <div class="small text-muted mt-2">PayPal conversion is not configured for {{ $invoiceCurrency }} invoices.</div>
                             @endif
                         </div>
                     </div>
@@ -168,4 +174,25 @@
         </div>
     </div>
 </div>
+
+<script>
+document.querySelectorAll('[data-mpesa-form]').forEach((form) => {
+    const input = form.querySelector('[data-mpesa-phone]');
+    const button = form.querySelector('[data-mpesa-submit]');
+    const normalize = () => {
+        let value = input.value.replace(/\D+/g, '');
+        if (value.startsWith('2540')) value = '254' + value.slice(4);
+        input.value = value;
+    };
+
+    input?.addEventListener('input', normalize);
+    form.addEventListener('submit', () => {
+        normalize();
+        if (button) {
+            button.disabled = true;
+            button.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+        }
+    });
+});
+</script>
 @endsection
