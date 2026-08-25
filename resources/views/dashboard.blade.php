@@ -447,7 +447,6 @@
 </div>
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const hero = document.querySelector('.dashboard-visibility-anchor') || document.querySelector('.hero-panel');
@@ -463,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filter = document.getElementById('performance-filter');
     const period = document.getElementById('performance-period');
     const customFields = document.querySelectorAll('.custom-range-field');
-    period.addEventListener('change', () => {
+    period?.addEventListener('change', () => {
         customFields.forEach((field) => field.classList.toggle('d-none', period.value !== 'custom'));
         if (period.value !== 'custom') filter.submit();
     });
@@ -471,17 +470,63 @@ document.addEventListener('DOMContentLoaded', () => {
     const values = @json($performance['chart']['values']);
     const labels = @json($performance['chart']['labels']);
     const formatter = new Intl.NumberFormat(@json(str_replace('_', '-', $performance['locale'])), { style: 'currency', currency: @json($performance['currencyCode']), maximumFractionDigits: 2 });
+    const chartCanvas = document.getElementById('performanceChart');
+    const chartIsVisible = () => chartCanvas && chartCanvas.offsetParent !== null && matchMedia('(min-width: 769px)').matches;
+    let chartLoaded = false;
+    let chartLoading;
 
-    new Chart(document.getElementById('performanceChart'), {
-        type: 'bar',
-        data: { labels, datasets: [{ data: values, backgroundColor: 'rgba(0,166,81,.22)', borderColor: '#00A651', borderWidth: 1.4, borderRadius: 8, maxBarThickness: 36 }] },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => formatter.format(context.parsed.y || 0) } } },
-            scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: (value) => formatter.format(value) } } }
-        }
-    });
+    const loadChartJs = () => {
+        if (window.Chart) return Promise.resolve();
+        if (chartLoading) return chartLoading;
+
+        chartLoading = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js';
+            script.defer = true;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+
+        return chartLoading;
+    };
+
+    const renderChart = () => {
+        if (chartLoaded || !chartIsVisible()) return;
+        chartLoaded = true;
+
+        loadChartJs().then(() => {
+            new Chart(chartCanvas, {
+                type: 'bar',
+                data: { labels, datasets: [{ data: values, backgroundColor: 'rgba(0,166,81,.22)', borderColor: '#00A651', borderWidth: 1.4, borderRadius: 8, maxBarThickness: 36 }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => formatter.format(context.parsed.y || 0) } } },
+                    scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: (value) => formatter.format(value) } } }
+                }
+            });
+        }).catch(() => {
+            chartLoaded = false;
+        });
+    };
+
+    if (chartCanvas && 'IntersectionObserver' in window) {
+        new IntersectionObserver(([entry], observer) => {
+            if (!entry.isIntersecting) return;
+            observer.disconnect();
+            renderChart();
+        }, { rootMargin: '160px 0px' }).observe(chartCanvas);
+    } else {
+        renderChart();
+    }
+
+    const desktopChartMedia = matchMedia('(min-width: 769px)');
+    if (desktopChartMedia.addEventListener) {
+        desktopChartMedia.addEventListener('change', renderChart);
+    } else if (desktopChartMedia.addListener) {
+        desktopChartMedia.addListener(renderChart);
+    }
 });
 </script>
 @endpush

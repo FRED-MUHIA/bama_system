@@ -8,6 +8,7 @@
     <title>@yield('title', 'BAMA Admin')</title>
     <script>document.documentElement.dataset.theme=localStorage.getItem('bama-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');</script>
     @if(!empty($tenantTheme?->faviconUrl()))<link rel="icon" href="{{ $tenantTheme->faviconUrl() }}">@endif
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">

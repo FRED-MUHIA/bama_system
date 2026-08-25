@@ -491,6 +491,38 @@
         backdrop-filter: blur(10px);
     }
 
+    .app-header,
+    .mobile-bottom-nav,
+    .mobile-overflow-sheet,
+    .mobile-shell-drawer,
+    .sticky-mobile-actions {
+        backdrop-filter: none !important;
+    }
+
+    @supports (content-visibility: auto) {
+        main > section > .card,
+        main > section > .panel-card,
+        main > section > .finance-card,
+        main > section > .comm-panel,
+        main > section > .mobile-record-card,
+        .modern-dashboard > .panel-card,
+        .modern-dashboard > .row,
+        .modern-dashboard > .stat-grid {
+            content-visibility: auto;
+            contain-intrinsic-size: 1px 280px;
+        }
+
+        .mobile-app-home,
+        .app-header,
+        .mobile-bottom-nav,
+        .mobile-shell-drawer,
+        .modal,
+        .dropdown-menu {
+            content-visibility: visible;
+            contain-intrinsic-size: auto;
+        }
+    }
+
     .sticky-mobile-actions .btn,
     .form-actions .btn {
         flex: 1 1 140px;
