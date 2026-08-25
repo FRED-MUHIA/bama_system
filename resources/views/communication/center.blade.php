@@ -35,8 +35,11 @@
     .presence.Online{background:#12b76a}.presence.Away{background:#f79009}.presence.Busy{background:#f04438}
     .comm-grid-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .comm-search-results{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px}
+    .comm-side[data-defer-template]:empty{min-height:180px}
+    .comm-side[data-defer-template]:empty::before{content:"";display:block;height:180px;border:1px solid #edf0f5;border-radius:8px;background:linear-gradient(90deg,#f7f8fb 25%,#eef1f5 37%,#f7f8fb 63%);background-size:400% 100%;animation:comm-skeleton 1.2s ease infinite}
+    @keyframes comm-skeleton{0%{background-position:100% 0}100%{background-position:0 0}}
     @media(max-width:1300px){.comm-shell{grid-template-columns:280px minmax(0,1fr)}.comm-side{grid-column:1/-1}.comm-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.comm-search-results{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:760px){.comm-toolbar,.comm-shell,.comm-grid-two{grid-template-columns:1fr}.comm-metrics,.comm-search-results{grid-template-columns:1fr}.comm-stream{height:44vh}.comm-panel-head{align-items:flex-start;flex-direction:column}.comm-actions .btn{width:100%}}
+    @media(max-width:760px){.comm-toolbar,.comm-shell,.comm-grid-two{grid-template-columns:1fr}.comm-metrics,.comm-search-results{grid-template-columns:1fr}.comm-stream{height:44vh}.comm-panel-head{align-items:flex-start;flex-direction:column}.comm-actions .btn{width:100%}.comm-message{content-visibility:auto;contain-intrinsic-size:1px 92px}.comm-metric:nth-child(n+4){display:none}.comm-side[data-defer-template]:empty::before{display:none}}
 </style>
 
 <div class="page-shell">
@@ -213,7 +216,9 @@
         </div>
     </section>
 
-    <aside class="comm-side comm-list">
+    <aside class="comm-side comm-list" data-defer-template="comm-side-template" aria-live="polite"></aside>
+    <template id="comm-side-template">
+        <div class="comm-list">
         <section class="comm-panel">
             <div class="comm-panel-head"><div><div class="comm-title">Directory</div><strong>{{ $users->count() }} people</strong></div></div>
             <div class="comm-panel-body">
@@ -340,7 +345,8 @@
                 </div>
             </section>
         @endif
-    </aside>
+        </div>
+    </template>
 </div>
 </div>
 @endsection
