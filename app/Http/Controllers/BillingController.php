@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Plan;
 use App\Models\PlatformPaymentSetting;
 use App\Models\SubscriptionInvoice;
+use App\Models\SubscriptionPayment;
 use App\Services\Billing\PaymentGatewayService;
 use App\Services\Billing\SubscriptionBillingService;
 use App\Services\SubscriptionManager;
@@ -75,7 +76,33 @@ class BillingController extends Controller
             return back()->withErrors(['mpesa' => $e->getMessage()])->withInput();
         }
 
-        return back()->with('status', 'M-PESA STK prompt sent. Complete payment on your phone. Reference: '.$payment->checkout_request_id);
+        return back()->with('status', 'Safaricom accepted the M-PESA STK request. Complete payment on your phone, or check STK status if no prompt appears. Reference: '.$payment->checkout_request_id);
+    }
+
+    public function mpesaStatus(SubscriptionPayment $payment, PaymentGatewayService $gateway)
+    {
+        $this->authorizePayment($payment);
+
+        try {
+            $payment = $gateway->queryMpesaStatus($payment);
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['mpesa' => $e->getMessage()]);
+        }
+
+        $result = data_get($payment->callback_payload, 'stk_query.ResultDesc')
+            ?? data_get($payment->callback_payload, 'Body.stkCallback.ResultDesc')
+            ?? data_get($payment->callback_payload, 'ResponseDescription')
+            ?? 'Safaricom has not returned a final result yet.';
+
+        if ($payment->status === 'paid') {
+            return back()->with('status', 'M-PESA payment confirmed and subscription renewed.');
+        }
+
+        if ($payment->status === 'failed') {
+            return back()->withErrors(['mpesa' => 'M-PESA STK failed: '.$result]);
+        }
+
+        return back()->with('status', 'M-PESA STK status: '.$result);
     }
 
     public function mpesaRedirect()
@@ -151,5 +178,11 @@ class BillingController extends Controller
         abort_unless(ActiveTenant::id() && (int) $invoice->tenant_id === (int) ActiveTenant::id(), 403);
         abort_if($invoice->status === 'paid', 422, 'This BAMA invoice is already paid.');
         abort_if((float) $invoice->total <= 0, 422, 'This package needs sales approval before checkout.');
+    }
+
+    private function authorizePayment(SubscriptionPayment $payment): void
+    {
+        abort_unless(ActiveTenant::id() && (int) $payment->tenant_id === (int) ActiveTenant::id(), 403);
+        abort_unless($payment->provider === 'mpesa', 404);
     }
 }

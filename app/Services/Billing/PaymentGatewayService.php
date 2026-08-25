@@ -124,6 +124,81 @@ class PaymentGatewayService
         return $payment->refresh();
     }
 
+    public function queryMpesaStatus(SubscriptionPayment $payment): SubscriptionPayment
+    {
+        if ($payment->provider !== 'mpesa') {
+            throw new RuntimeException('Only M-PESA payments can be checked through Daraja.');
+        }
+
+        if (! $payment->checkout_request_id) {
+            throw new RuntimeException('This M-PESA payment does not have a checkout request ID.');
+        }
+
+        $setting = $this->setting('mpesa');
+        $config = $setting->config ?? [];
+        $consumerKey = $setting->public_key ?: config('services.mpesa.consumer_key');
+        $consumerSecret = $setting->secret_key ?: config('services.mpesa.consumer_secret');
+        $shortcode = $config['shortcode'] ?? config('services.mpesa.shortcode');
+        $passkey = $config['passkey'] ?? config('services.mpesa.passkey');
+
+        if (! $consumerKey || ! $consumerSecret || ! $shortcode || ! $passkey) {
+            throw new RuntimeException('M-PESA STK is not fully configured in the owner console.');
+        }
+
+        $baseUrl = $this->mpesaBaseUrl($setting->mode);
+        $timestamp = now()->format('YmdHis');
+
+        try {
+            $token = Http::withBasicAuth($consumerKey, $consumerSecret)
+                ->timeout(30)
+                ->get($baseUrl.'/oauth/v1/generate', ['grant_type' => 'client_credentials'])
+                ->throw()
+                ->json('access_token');
+        } catch (RequestException $e) {
+            throw $this->mpesaRequestException($e, 'status_authorization');
+        }
+
+        try {
+            $response = Http::withToken($token)
+                ->acceptJson()
+                ->timeout(30)
+                ->post($baseUrl.'/mpesa/stkpushquery/v1/query', [
+                    'BusinessShortCode' => $shortcode,
+                    'Password' => base64_encode($shortcode.$passkey.$timestamp),
+                    'Timestamp' => $timestamp,
+                    'CheckoutRequestID' => $payment->checkout_request_id,
+                ])
+                ->throw()
+                ->json();
+        } catch (RequestException $e) {
+            throw $this->mpesaRequestException($e, 'stk_query');
+        }
+
+        if ((string) ($response['ResponseCode'] ?? '0') !== '0') {
+            throw new RuntimeException(
+                'M-PESA status check failed: '.($response['ResponseDescription'] ?? $response['errorMessage'] ?? 'Safaricom did not accept the status check.')
+            );
+        }
+
+        $payload = $payment->callback_payload ?? [];
+        $payload['stk_query'] = $response;
+        $resultCode = array_key_exists('ResultCode', $response) ? (int) $response['ResultCode'] : null;
+
+        $updates = ['callback_payload' => $payload];
+        if ($resultCode !== null) {
+            $updates['status'] = $resultCode === 0 ? 'paid' : 'failed';
+            $updates['paid_at'] = $resultCode === 0 ? now() : null;
+        }
+
+        $payment->forceFill($updates)->save();
+
+        if ($resultCode === 0) {
+            app(SubscriptionBillingService::class)->markPaid($payment);
+        }
+
+        return $payment->refresh();
+    }
+
     public function createPayPalOrder(SubscriptionInvoice $invoice): SubscriptionPayment
     {
         $setting = $this->setting('paypal');

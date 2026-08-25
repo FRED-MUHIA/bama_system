@@ -6,6 +6,7 @@ use App\Models\Plan;
 use App\Models\PlatformPaymentSetting;
 use App\Models\Subscription;
 use App\Models\SubscriptionInvoice;
+use App\Models\SubscriptionPayment;
 use App\Models\Tenant;
 use App\Services\Billing\PaymentGatewayService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -133,6 +134,73 @@ class PaymentGatewayServiceTest extends TestCase
         }
 
         $this->assertDatabaseCount('subscription_payments', 0);
+    }
+
+    public function test_mpesa_status_query_records_timeout_failure(): void
+    {
+        Http::fake([
+            'https://sandbox.safaricom.co.ke/oauth/v1/generate*' => Http::response([
+                'access_token' => 'test-token',
+            ]),
+            'https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query' => Http::response([
+                'ResponseCode' => '0',
+                'ResponseDescription' => 'The service request has been accepted successfully',
+                'MerchantRequestID' => 'mr_timeout',
+                'CheckoutRequestID' => 'ws_CO_timeout',
+                'ResultCode' => '1037',
+                'ResultDesc' => 'DS timeout user cannot be reached',
+            ]),
+        ]);
+
+        $invoice = $this->mpesaFixture();
+        $payment = SubscriptionPayment::create([
+            'subscription_invoice_id' => $invoice->id,
+            'tenant_id' => $invoice->tenant_id,
+            'provider' => 'mpesa',
+            'status' => 'pending',
+            'amount' => $invoice->total,
+            'currency' => $invoice->currency,
+            'checkout_request_id' => 'ws_CO_timeout',
+            'merchant_request_id' => 'mr_timeout',
+            'phone' => '254745506619',
+            'callback_payload' => ['ResponseDescription' => 'Success. Request accepted for processing'],
+        ]);
+
+        $checked = app(PaymentGatewayService::class)->queryMpesaStatus($payment);
+
+        $this->assertSame('failed', $checked->status);
+        $this->assertSame('DS timeout user cannot be reached', data_get($checked->callback_payload, 'stk_query.ResultDesc'));
+    }
+
+    public function test_mpesa_status_query_rejects_non_zero_daraja_response(): void
+    {
+        Http::fake([
+            'https://sandbox.safaricom.co.ke/oauth/v1/generate*' => Http::response([
+                'access_token' => 'test-token',
+            ]),
+            'https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query' => Http::response([
+                'ResponseCode' => '1',
+                'ResponseDescription' => 'The transaction is being processed',
+            ]),
+        ]);
+
+        $invoice = $this->mpesaFixture();
+        $payment = SubscriptionPayment::create([
+            'subscription_invoice_id' => $invoice->id,
+            'tenant_id' => $invoice->tenant_id,
+            'provider' => 'mpesa',
+            'status' => 'pending',
+            'amount' => $invoice->total,
+            'currency' => $invoice->currency,
+            'checkout_request_id' => 'ws_CO_pending',
+        ]);
+
+        try {
+            app(PaymentGatewayService::class)->queryMpesaStatus($payment);
+            $this->fail('The M-PESA status check should have failed.');
+        } catch (RuntimeException $e) {
+            $this->assertSame('M-PESA status check failed: The transaction is being processed', $e->getMessage());
+        }
     }
 
     public function test_mpesa_provider_400_is_reported_as_runtime_exception(): void

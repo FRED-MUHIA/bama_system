@@ -175,6 +175,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/invoices', [BillingController::class, 'invoice'])->name('invoices.store');
         Route::get('/invoices/{invoice}/mpesa', [BillingController::class, 'mpesaRedirect'])->name('invoices.mpesa.show');
         Route::post('/invoices/{invoice}/mpesa', [BillingController::class, 'mpesa'])->name('invoices.mpesa');
+        Route::post('/payments/{payment}/mpesa-status', [BillingController::class, 'mpesaStatus'])->name('payments.mpesa-status');
         Route::post('/invoices/{invoice}/paypal', [BillingController::class, 'paypal'])->name('invoices.paypal');
         Route::post('/invoices/{invoice}/card', [BillingController::class, 'card'])->name('invoices.card');
         Route::get('/paypal/return', [BillingController::class, 'paypalReturn'])->name('paypal.return');

@@ -33,6 +33,14 @@
             @endif
 
             @if($invoice)
+                @php
+                    $latestMpesaPayment = $invoice->payments->firstWhere('provider', 'mpesa');
+                    $latestMpesaResult = $latestMpesaPayment
+                        ? (data_get($latestMpesaPayment->callback_payload, 'stk_query.ResultDesc')
+                            ?? data_get($latestMpesaPayment->callback_payload, 'Body.stkCallback.ResultDesc')
+                            ?? data_get($latestMpesaPayment->callback_payload, 'ResponseDescription'))
+                        : null;
+                @endphp
                 <div class="border rounded-2 p-3 mb-4">
                     <div class="d-flex flex-wrap justify-content-between gap-3">
                         <div>
@@ -60,6 +68,24 @@
                                 @endif
                                 <button class="btn btn-warning" @disabled(! $enabled('mpesa') || ! $invoicePayable)><i class="bi bi-send"></i> Prompt Phone</button>
                             </form>
+                            @if($latestMpesaPayment)
+                                <div class="border-top mt-3 pt-3 small">
+                                    <div class="d-flex justify-content-between gap-2 mb-1">
+                                        <span class="text-muted">Latest STK</span>
+                                        <span class="badge {{ $latestMpesaPayment->status === 'paid' ? 'text-bg-success' : ($latestMpesaPayment->status === 'failed' ? 'text-bg-danger' : 'text-bg-light') }}">{{ str($latestMpesaPayment->status)->headline() }}</span>
+                                    </div>
+                                    <div class="text-muted">Phone: {{ $latestMpesaPayment->phone }}</div>
+                                    @if($latestMpesaResult)
+                                        <div class="text-muted mt-1">{{ $latestMpesaResult }}</div>
+                                    @endif
+                                    @if($latestMpesaPayment->status === 'pending' && $latestMpesaPayment->checkout_request_id)
+                                        <form method="post" action="{{ route('billing.payments.mpesa-status', $latestMpesaPayment) }}" class="mt-2">
+                                            @csrf
+                                            <button class="btn btn-sm btn-outline-warning w-100"><i class="bi bi-arrow-repeat"></i> Check STK Status</button>
+                                        </form>
+                                    @endif
+                                </div>
+                            @endif
                             @unless($enabled('mpesa'))<div class="small text-muted mt-2">M-PESA is not enabled by owner yet.</div>@endunless
                         </div>
                     </div>
