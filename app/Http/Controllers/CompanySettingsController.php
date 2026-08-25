@@ -72,14 +72,18 @@ class CompanySettingsController extends Controller
     {
         abort_unless(Schema::hasTable('payment_methods'), 404);
 
-        PaymentMethod::create($request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string', 'max:50'],
-            'details' => ['nullable', 'string'],
-            'is_active' => ['nullable', 'boolean'],
-        ]) + ['is_active' => $request->boolean('is_active')]);
+        PaymentMethod::create($this->paymentMethodData($request));
 
         return back()->with('status', 'Payment method saved.');
+    }
+
+    public function updatePaymentMethod(Request $request, PaymentMethod $paymentMethod)
+    {
+        abort_unless(Schema::hasTable('payment_methods'), 404);
+
+        $paymentMethod->update($this->paymentMethodData($request));
+
+        return back()->with('status', 'Payment method updated.');
     }
 
     public function deletePaymentMethod(PaymentMethod $paymentMethod)
@@ -103,9 +107,28 @@ class CompanySettingsController extends Controller
         if ($request->boolean('is_default')) {
             TermsCondition::query()->update(['is_default' => false]);
         }
-        TermsCondition::create($data + ['is_default' => $request->boolean('is_default')]);
+        TermsCondition::create(array_replace($data, ['is_default' => $request->boolean('is_default')]));
 
         return back()->with('status', 'Terms saved.');
+    }
+
+    public function updateTerms(Request $request, TermsCondition $termsCondition)
+    {
+        abort_unless(Schema::hasTable('terms_conditions'), 404);
+
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'content' => ['required', 'string'],
+            'is_default' => ['nullable', 'boolean'],
+        ]);
+
+        if ($request->boolean('is_default')) {
+            TermsCondition::whereKeyNot($termsCondition->id)->update(['is_default' => false]);
+        }
+
+        $termsCondition->update(array_replace($data, ['is_default' => $request->boolean('is_default')]));
+
+        return back()->with('status', 'Terms updated.');
     }
 
     public function deleteTerms(TermsCondition $termsCondition)
@@ -151,6 +174,43 @@ class CompanySettingsController extends Controller
         return back()->with('status', 'Signatory saved.');
     }
 
+    public function updateSignatory(Request $request, Signatory $signatory)
+    {
+        abort_unless(Schema::hasTable('signatories'), 404);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'title' => ['nullable', 'string', 'max:255'],
+            'signature' => ['nullable', 'image', 'max:2048'],
+            'stamp' => ['nullable', 'image', 'max:2048'],
+            'is_default' => ['nullable', 'boolean'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        if ($request->boolean('is_default')) {
+            Signatory::whereKeyNot($signatory->id)->update(['is_default' => false]);
+        }
+
+        $updates = [
+            'name' => $data['name'],
+            'title' => $data['title'] ?? null,
+            'is_default' => $request->boolean('is_default'),
+            'is_active' => $request->boolean('is_active'),
+        ];
+
+        if ($request->hasFile('signature')) {
+            $updates['signature_path'] = $request->file('signature')->store('signatures', 'public');
+        }
+
+        if ($request->hasFile('stamp') && Schema::hasColumn('signatories', 'stamp_path')) {
+            $updates['stamp_path'] = $request->file('stamp')->store('stamps', 'public');
+        }
+
+        $signatory->update($updates);
+
+        return back()->with('status', 'Signatory updated.');
+    }
+
     public function deleteSignatory(Signatory $signatory)
     {
         abort_unless(Schema::hasTable('signatories'), 404);
@@ -158,6 +218,18 @@ class CompanySettingsController extends Controller
         $signatory->delete();
 
         return back()->with('status', 'Signatory removed.');
+    }
+
+    private function paymentMethodData(Request $request): array
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', 'string', 'max:50'],
+            'details' => ['nullable', 'string'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        return array_replace($data, ['is_active' => $request->boolean('is_active')]);
     }
 
     private function activeCompanySettings(): CompanySetting

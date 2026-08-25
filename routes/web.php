@@ -266,10 +266,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings', [CompanySettingsController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [CompanySettingsController::class, 'update'])->name('settings.update');
         Route::post('/settings/payment-methods', [CompanySettingsController::class, 'storePaymentMethod'])->name('payment-methods.store');
+        Route::put('/settings/payment-methods/{paymentMethod}', [CompanySettingsController::class, 'updatePaymentMethod'])->name('payment-methods.update');
         Route::delete('/settings/payment-methods/{paymentMethod}', [CompanySettingsController::class, 'deletePaymentMethod'])->name('payment-methods.destroy');
         Route::post('/settings/terms', [CompanySettingsController::class, 'storeTerms'])->name('terms.store');
+        Route::put('/settings/terms/{termsCondition}', [CompanySettingsController::class, 'updateTerms'])->name('terms.update');
         Route::delete('/settings/terms/{termsCondition}', [CompanySettingsController::class, 'deleteTerms'])->name('terms.destroy');
         Route::post('/settings/signatories', [CompanySettingsController::class, 'storeSignatory'])->name('signatories.store');
+        Route::put('/settings/signatories/{signatory}', [CompanySettingsController::class, 'updateSignatory'])->name('signatories.update');
         Route::delete('/settings/signatories/{signatory}', [CompanySettingsController::class, 'deleteSignatory'])->name('signatories.destroy');
 
         Route::resource('clients', ClientController::class);

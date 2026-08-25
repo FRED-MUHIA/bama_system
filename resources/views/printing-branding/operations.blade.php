@@ -613,6 +613,17 @@
                             <div><strong>{{ $method->name }}</strong><div class="text-muted small">{{ $method->type }} · {{ $method->details }}</div></div>
                             <form method="post" action="{{ route('payment-methods.destroy',$method) }}">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
                         </div>
+                        <details class="mt-2">
+                            <summary class="btn btn-sm btn-outline-dark">Edit</summary>
+                            <form method="post" action="{{ route('payment-methods.update',$method) }}" class="row g-2 mt-2">
+                                @csrf @method('PUT')
+                                <div class="col-md-7"><input class="form-control" name="name" value="{{ old('name',$method->name) }}" required></div>
+                                <div class="col-md-5"><select class="form-select" name="type">@foreach(['bank'=>'Bank','mpesa'=>'M-Pesa','cash'=>'Cash','custom'=>'Other'] as $value=>$label)<option value="{{ $value }}" @selected(old('type',$method->type)===$value)>{{ $label }}</option>@endforeach</select></div>
+                                <div class="col-12"><textarea class="form-control" name="details" rows="3">{{ old('details',$method->details) }}</textarea></div>
+                                <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_active" value="1" @checked(old('is_active',$method->is_active))> <span class="form-check-label">Show on invoices</span></label></div>
+                                <div class="col-12"><button class="btn btn-dark btn-sm">Update Payment Method</button></div>
+                            </form>
+                        </details>
                     @empty
                         <div class="text-muted">No payment methods yet.</div>
                     @endforelse
@@ -639,6 +650,19 @@
                             </div>
                             <form method="post" action="{{ route('signatories.destroy',$sig) }}">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
                         </div>
+                        <details class="mt-2">
+                            <summary class="btn btn-sm btn-outline-dark">Edit</summary>
+                            <form method="post" action="{{ route('signatories.update',$sig) }}" enctype="multipart/form-data" class="row g-2 mt-2">
+                                @csrf @method('PUT')
+                                <div class="col-md-6"><input class="form-control" name="name" value="{{ old('name',$sig->name) }}" required></div>
+                                <div class="col-md-6"><input class="form-control" name="title" value="{{ old('title',$sig->title) }}" placeholder="Title"></div>
+                                <div class="col-md-6"><label class="form-label">Replace signature</label><input class="form-control" type="file" name="signature" accept="image/*"></div>
+                                <div class="col-md-6"><label class="form-label">Replace stamp</label><input class="form-control" type="file" name="stamp" accept="image/*"></div>
+                                <div class="col-md-6"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_default" value="1" @checked(old('is_default',$sig->is_default))> <span class="form-check-label">Default on documents</span></label></div>
+                                <div class="col-md-6"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_active" value="1" @checked(old('is_active',$sig->is_active))> <span class="form-check-label">Active</span></label></div>
+                                <div class="col-12"><button class="btn btn-dark btn-sm">Update Signatory</button></div>
+                            </form>
+                        </details>
                     @empty
                         <div class="text-muted">No signatories or stamps yet.</div>
                     @endforelse
@@ -659,6 +683,16 @@
                             <div><strong>{{ $term->title }}</strong>@if($term->is_default)<span class="pb-pill ms-1">Default</span>@endif<div class="text-muted small">{{ $term->content }}</div></div>
                             <form method="post" action="{{ route('terms.destroy',$term) }}">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
                         </div>
+                        <details class="mt-2">
+                            <summary class="btn btn-sm btn-outline-dark">Edit</summary>
+                            <form method="post" action="{{ route('terms.update',$term) }}" class="row g-2 mt-2">
+                                @csrf @method('PUT')
+                                <div class="col-12"><input class="form-control" name="title" value="{{ old('title',$term->title) }}" required></div>
+                                <div class="col-12"><textarea class="form-control" name="content" rows="4" required>{{ old('content',$term->content) }}</textarea></div>
+                                <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_default" value="1" @checked(old('is_default',$term->is_default))> <span class="form-check-label">Use as default</span></label></div>
+                                <div class="col-12"><button class="btn btn-dark btn-sm">Update Terms</button></div>
+                            </form>
+                        </details>
                     @empty
                         <div class="text-muted">No reusable terms yet.</div>
                     @endforelse
