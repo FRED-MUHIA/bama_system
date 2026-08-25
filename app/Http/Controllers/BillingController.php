@@ -72,7 +72,7 @@ class BillingController extends Controller
         try {
             $payment = $gateway->mpesaStkPush($invoice, $data['phone']);
         } catch (RuntimeException $e) {
-            return back()->withErrors(['mpesa' => $e->getMessage()]);
+            return back()->withErrors(['mpesa' => $e->getMessage()])->withInput();
         }
 
         return back()->with('status', 'M-PESA STK prompt sent. Complete payment on your phone. Reference: '.$payment->checkout_request_id);

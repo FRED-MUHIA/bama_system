@@ -52,7 +52,7 @@
                             <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-phone text-success"></i><strong>M-PESA STK</strong></div>
                             <form method="post" action="{{ route('billing.invoices.mpesa', $invoice) }}" class="d-grid gap-2">
                                 @csrf
-                                <input class="form-control" name="phone" value="{{ auth()->user()->phone }}" placeholder="2547XXXXXXXX" @disabled(! $enabled('mpesa') || ! $invoicePayable) required>
+                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="2547XXXXXXXX" @disabled(! $enabled('mpesa') || ! $invoicePayable) required>
                                 <button class="btn btn-warning" @disabled(! $enabled('mpesa') || ! $invoicePayable)><i class="bi bi-send"></i> Prompt Phone</button>
                             </form>
                             @unless($enabled('mpesa'))<div class="small text-muted mt-2">M-PESA is not enabled by owner yet.</div>@endunless
