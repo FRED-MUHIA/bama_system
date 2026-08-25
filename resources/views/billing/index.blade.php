@@ -53,8 +53,8 @@
                             <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-phone text-success"></i><strong>M-PESA STK</strong></div>
                             <form method="post" action="{{ route('billing.invoices.mpesa', $invoice) }}" class="d-grid gap-2">
                                 @csrf
-                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="0745506619 or 254745506619" pattern="(?:\+254\d{9}|254\d{9}|0\d{9}|[17]\d{8})" maxlength="13" title="Enter 0745506619 or 254745506619" @disabled(! $enabled('mpesa') || ! $invoicePayable) required>
-                                <div class="form-text">Any payer number: 0745506619 or 254745506619.</div>
+                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="0700000000 or 254700000000" pattern="(?:\+254\d{9}|254\d{9}|0\d{9}|[17]\d{8})" maxlength="13" title="Enter 0700000000 or 254700000000" @disabled(! $enabled('mpesa') || ! $invoicePayable) required>
+                                <div class="form-text">Any payer number: 0700000000 or 254700000000.</div>
                                 @if($enabled('mpesa') && ($mpesaSetting?->mode ?? 'sandbox') === 'sandbox')
                                     <div class="small text-warning-emphasis">M-PESA is in sandbox mode. Switch to live keys to prompt a real phone.</div>
                                 @endif

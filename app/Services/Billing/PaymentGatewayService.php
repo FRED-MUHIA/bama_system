@@ -281,7 +281,7 @@ class PaymentGatewayService
         }
 
         if (! preg_match('/^254\d{9}$/', $digits)) {
-            throw new RuntimeException('Enter a valid M-PESA phone number: 10 digits like 0745506619 or 12 digits like 254745506619.');
+            throw new RuntimeException('Enter a valid M-PESA phone number: 10 digits like 0700000000 or 12 digits like 254700000000.');
         }
 
         return $digits;

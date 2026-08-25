@@ -102,7 +102,7 @@ class PaymentGatewayServiceTest extends TestCase
             $this->fail('The M-PESA phone number should have failed validation.');
         } catch (RuntimeException $e) {
             $this->assertSame(
-                'Enter a valid M-PESA phone number: 10 digits like 0745506619 or 12 digits like 254745506619.',
+                'Enter a valid M-PESA phone number: 10 digits like 0700000000 or 12 digits like 254700000000.',
                 $e->getMessage()
             );
         }
