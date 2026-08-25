@@ -204,41 +204,54 @@ class PaymentGatewayService
         $setting = $this->setting('paypal');
         $clientId = $setting->public_key ?: config('services.paypal.client_id');
         $secret = $setting->secret_key ?: config('services.paypal.secret');
+        $currency = strtoupper($invoice->currency);
 
         if (! $clientId || ! $secret) {
             throw new RuntimeException('PayPal is not fully configured in the owner console.');
         }
 
-        $baseUrl = $this->paypalBaseUrl($setting->mode);
-        $token = Http::asForm()
-            ->withBasicAuth($clientId, $secret)
-            ->timeout(30)
-            ->post($baseUrl.'/v1/oauth2/token', ['grant_type' => 'client_credentials'])
-            ->throw()
-            ->json('access_token');
+        if (! $this->paypalSupportsCurrency($currency)) {
+            throw new RuntimeException("PayPal checkout is not available for {$currency} invoices. Use M-PESA or configure a card checkout for local currency payments.");
+        }
 
-        $order = Http::withToken($token)
-            ->acceptJson()
-            ->timeout(30)
-            ->post($baseUrl.'/v2/checkout/orders', [
-                'intent' => 'CAPTURE',
-                'purchase_units' => [[
-                    'reference_id' => $invoice->invoice_number,
-                    'description' => 'BAMA '.$invoice->plan?->name.' subscription',
-                    'amount' => [
-                        'currency_code' => strtoupper($invoice->currency),
-                        'value' => number_format((float) $invoice->total, 2, '.', ''),
+        $baseUrl = $this->paypalBaseUrl($setting->mode);
+        try {
+            $token = Http::asForm()
+                ->withBasicAuth($clientId, $secret)
+                ->timeout(30)
+                ->post($baseUrl.'/v1/oauth2/token', ['grant_type' => 'client_credentials'])
+                ->throw()
+                ->json('access_token');
+        } catch (RequestException $e) {
+            throw $this->paypalRequestException($e, 'authorization');
+        }
+
+        try {
+            $order = Http::withToken($token)
+                ->acceptJson()
+                ->timeout(30)
+                ->post($baseUrl.'/v2/checkout/orders', [
+                    'intent' => 'CAPTURE',
+                    'purchase_units' => [[
+                        'reference_id' => $invoice->invoice_number,
+                        'description' => 'BAMA '.$invoice->plan?->name.' subscription',
+                        'amount' => [
+                            'currency_code' => $currency,
+                            'value' => number_format((float) $invoice->total, 2, '.', ''),
+                        ],
+                    ]],
+                    'application_context' => [
+                        'brand_name' => 'BAMA Solutions',
+                        'user_action' => 'PAY_NOW',
+                        'return_url' => route('billing.paypal.return'),
+                        'cancel_url' => route('billing.paypal.cancel'),
                     ],
-                ]],
-                'application_context' => [
-                    'brand_name' => 'BAMA Solutions',
-                    'user_action' => 'PAY_NOW',
-                    'return_url' => route('billing.paypal.return'),
-                    'cancel_url' => route('billing.paypal.cancel'),
-                ],
-            ])
-            ->throw()
-            ->json();
+                ])
+                ->throw()
+                ->json();
+        } catch (RequestException $e) {
+            throw $this->paypalRequestException($e, 'create_order');
+        }
 
         $approvalUrl = collect($order['links'] ?? [])->firstWhere('rel', 'approve')['href'] ?? null;
 
@@ -262,19 +275,27 @@ class PaymentGatewayService
         $secret = $setting->secret_key ?: config('services.paypal.secret');
         $baseUrl = $this->paypalBaseUrl($setting->mode);
 
-        $token = Http::asForm()
-            ->withBasicAuth($clientId, $secret)
-            ->timeout(30)
-            ->post($baseUrl.'/v1/oauth2/token', ['grant_type' => 'client_credentials'])
-            ->throw()
-            ->json('access_token');
+        try {
+            $token = Http::asForm()
+                ->withBasicAuth($clientId, $secret)
+                ->timeout(30)
+                ->post($baseUrl.'/v1/oauth2/token', ['grant_type' => 'client_credentials'])
+                ->throw()
+                ->json('access_token');
+        } catch (RequestException $e) {
+            throw $this->paypalRequestException($e, 'capture_authorization');
+        }
 
-        $capture = Http::withToken($token)
-            ->acceptJson()
-            ->timeout(30)
-            ->post($baseUrl.'/v2/checkout/orders/'.$orderId.'/capture')
-            ->throw()
-            ->json();
+        try {
+            $capture = Http::withToken($token)
+                ->acceptJson()
+                ->timeout(30)
+                ->post($baseUrl.'/v2/checkout/orders/'.$orderId.'/capture')
+                ->throw()
+                ->json();
+        } catch (RequestException $e) {
+            throw $this->paypalRequestException($e, 'capture_order');
+        }
 
         $status = ($capture['status'] ?? null) === 'COMPLETED' ? 'paid' : 'pending';
         $captureId = data_get($capture, 'purchase_units.0.payments.captures.0.id');
@@ -345,6 +366,15 @@ class PaymentGatewayService
         return $mode === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
     }
 
+    public function paypalSupportsCurrency(string $currency): bool
+    {
+        return in_array(strtoupper($currency), [
+            'AUD', 'BRL', 'CAD', 'CNY', 'CZK', 'DKK', 'EUR', 'HKD', 'HUF', 'ILS',
+            'JPY', 'MYR', 'MXN', 'TWD', 'NZD', 'NOK', 'PHP', 'PLN', 'GBP', 'SGD',
+            'SEK', 'CHF', 'THB', 'USD',
+        ], true);
+    }
+
     private function normalizeMpesaPhone(string $phone): string
     {
         $digits = preg_replace('/\D+/', '', $phone);
@@ -381,5 +411,27 @@ class PaymentGatewayService
             ?? 'Safaricom rejected the M-PESA request. Check the shortcode, passkey, app environment, callback URL, and phone number.';
 
         return new RuntimeException('M-PESA request failed: '.$message, previous: $exception);
+    }
+
+    private function paypalRequestException(RequestException $exception, string $stage): RuntimeException
+    {
+        $response = $exception->response;
+        $payload = $response->json() ?? [];
+        $detail = collect($payload['details'] ?? [])->first();
+
+        Log::warning('PayPal request failed.', [
+            'stage' => $stage,
+            'status' => $response->status(),
+            'name' => $payload['name'] ?? null,
+            'issue' => $detail['issue'] ?? null,
+            'response' => $payload ?: $response->body(),
+        ]);
+
+        $message = $detail['description']
+            ?? $payload['message']
+            ?? $payload['name']
+            ?? 'PayPal rejected the checkout request.';
+
+        return new RuntimeException('PayPal request failed: '.$message, previous: $exception);
     }
 }

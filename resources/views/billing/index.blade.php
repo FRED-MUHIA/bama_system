@@ -6,6 +6,8 @@
     $subscription = $tenant->subscription;
     $enabled = fn (string $provider) => (bool) ($paymentSettings[$provider]->is_enabled ?? false);
     $mpesaSetting = $paymentSettings['mpesa'] ?? null;
+    $paypalSupportedCurrencies = ['AUD', 'BRL', 'CAD', 'CNY', 'CZK', 'DKK', 'EUR', 'HKD', 'HUF', 'ILS', 'JPY', 'MYR', 'MXN', 'TWD', 'NZD', 'NOK', 'PHP', 'PLN', 'GBP', 'SGD', 'SEK', 'CHF', 'THB', 'USD'];
+    $paypalCurrencySupported = $invoice && in_array(strtoupper($invoice->currency), $paypalSupportedCurrencies, true);
     $invoicePayable = $invoice && $invoice->status !== 'paid' && (float) $invoice->total > 0;
 @endphp
 
@@ -94,9 +96,12 @@
                             <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-paypal text-primary"></i><strong>PayPal</strong></div>
                             <form method="post" action="{{ route('billing.invoices.paypal', $invoice) }}">
                                 @csrf
-                                <button class="btn btn-outline-dark w-100" @disabled(! $enabled('paypal') || ! $invoicePayable)><i class="bi bi-box-arrow-up-right"></i> Pay with PayPal</button>
+                                <button class="btn btn-outline-dark w-100" @disabled(! $enabled('paypal') || ! $invoicePayable || ! $paypalCurrencySupported)><i class="bi bi-box-arrow-up-right"></i> Pay with PayPal</button>
                             </form>
                             @unless($enabled('paypal'))<div class="small text-muted mt-2">PayPal is not enabled by owner yet.</div>@endunless
+                            @if($enabled('paypal') && ! $paypalCurrencySupported)
+                                <div class="small text-muted mt-2">PayPal does not support {{ strtoupper($invoice->currency) }} invoices. Use M-PESA for phone prompts.</div>
+                            @endif
                         </div>
                     </div>
                     <div class="col-md-4">

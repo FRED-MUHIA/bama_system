@@ -115,12 +115,23 @@
 
                         @foreach($definition['fields'] as $field => $fieldMeta)
                             @php
-                                $value = old("providers.$provider.config.$field", $config[$field] ?? $definition['defaults'][$field] ?? '');
+                                $configPath = "providers.$provider.config.$field";
+                                $isSensitiveConfig = in_array($field, ['passkey'], true);
+                                $configValueSaved = $isSensitiveConfig && filled($config[$field] ?? null);
+                                $value = $isSensitiveConfig
+                                    ? old($configPath, '')
+                                    : old($configPath, $config[$field] ?? $definition['defaults'][$field] ?? '');
+                                $placeholder = $configValueSaved
+                                    ? 'Saved - leave blank to keep current value'
+                                    : ($definition['defaults'][$field] ?? '');
                             @endphp
                             <div class="col-12">
                                 <label class="form-label small">{{ $fieldMeta['label'] }}</label>
-                                <input class="form-control" name="providers[{{ $provider }}][config][{{ $field }}]" value="{{ $value }}" placeholder="{{ $definition['defaults'][$field] ?? '' }}" @disabled(! $billingTablesReady)>
+                                <input class="form-control" type="{{ $isSensitiveConfig ? 'password' : 'text' }}" name="providers[{{ $provider }}][config][{{ $field }}]" value="{{ $value }}" placeholder="{{ $placeholder }}" autocomplete="new-password" @disabled(! $billingTablesReady)>
                                 <div class="form-text">{{ $fieldMeta['hint'] }}</div>
+                                @if($configValueSaved)
+                                    <div class="form-text text-success"><i class="bi bi-check-circle"></i> Value saved. Leave blank to keep it.</div>
+                                @endif
                             </div>
                         @endforeach
 

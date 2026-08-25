@@ -228,7 +228,56 @@ class PaymentGatewayServiceTest extends TestCase
         $this->assertDatabaseCount('subscription_payments', 0);
     }
 
-    private function mpesaFixture(): SubscriptionInvoice
+    public function test_paypal_checkout_rejects_unsupported_invoice_currency_before_http_call(): void
+    {
+        Http::fake();
+
+        $invoice = $this->mpesaFixture();
+        $this->paypalSettingFixture();
+
+        try {
+            app(PaymentGatewayService::class)->createPayPalOrder($invoice);
+            $this->fail('The PayPal checkout should have failed.');
+        } catch (RuntimeException $e) {
+            $this->assertSame(
+                'PayPal checkout is not available for KES invoices. Use M-PESA or configure a card checkout for local currency payments.',
+                $e->getMessage()
+            );
+        }
+
+        Http::assertNothingSent();
+    }
+
+    public function test_paypal_provider_422_is_reported_as_runtime_exception(): void
+    {
+        Http::fake([
+            'https://api-m.sandbox.paypal.com/v1/oauth2/token' => Http::response([
+                'access_token' => 'paypal-token',
+            ]),
+            'https://api-m.sandbox.paypal.com/v2/checkout/orders' => Http::response([
+                'name' => 'UNPROCESSABLE_ENTITY',
+                'details' => [[
+                    'issue' => 'CURRENCY_NOT_SUPPORTED',
+                    'description' => 'Currency code is not currently supported.',
+                ]],
+            ], 422),
+        ]);
+
+        $invoice = $this->mpesaFixture(currency: 'USD');
+        $this->paypalSettingFixture();
+
+        try {
+            app(PaymentGatewayService::class)->createPayPalOrder($invoice);
+            $this->fail('The PayPal checkout should have failed.');
+        } catch (RuntimeException $e) {
+            $this->assertSame(
+                'PayPal request failed: Currency code is not currently supported.',
+                $e->getMessage()
+            );
+        }
+    }
+
+    private function mpesaFixture(string $currency = 'KES'): SubscriptionInvoice
     {
         PlatformPaymentSetting::updateOrCreate(
             ['provider' => 'mpesa'],
@@ -278,11 +327,25 @@ class PaymentGatewayServiceTest extends TestCase
             'billing_email' => 'billing@bama.test',
             'customer_name' => 'BAMA Prints Test',
             'status' => 'sent',
-            'currency' => 'KES',
+            'currency' => $currency,
             'subtotal' => 10,
             'total' => 10,
             'due_at' => now()->addDays(7),
             'metadata' => [],
         ]);
+    }
+
+    private function paypalSettingFixture(): void
+    {
+        PlatformPaymentSetting::updateOrCreate(
+            ['provider' => 'paypal'],
+            [
+                'is_enabled' => true,
+                'mode' => 'sandbox',
+                'public_key' => 'paypal-client',
+                'secret_key' => 'paypal-secret',
+                'config' => [],
+            ]
+        );
     }
 }
