@@ -5,7 +5,9 @@ namespace App\Services\Billing;
 use App\Models\PlatformPaymentSetting;
 use App\Models\SubscriptionInvoice;
 use App\Models\SubscriptionPayment;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -27,34 +29,43 @@ class PaymentGatewayService
         }
 
         $baseUrl = $this->mpesaBaseUrl($setting->mode);
-        $token = Http::withBasicAuth($consumerKey, $consumerSecret)
-            ->timeout(30)
-            ->get($baseUrl.'/oauth/v1/generate', ['grant_type' => 'client_credentials'])
-            ->throw()
-            ->json('access_token');
+        try {
+            $token = Http::withBasicAuth($consumerKey, $consumerSecret)
+                ->timeout(30)
+                ->get($baseUrl.'/oauth/v1/generate', ['grant_type' => 'client_credentials'])
+                ->throw()
+                ->json('access_token');
+        } catch (RequestException $e) {
+            throw $this->mpesaRequestException($e, 'authorization');
+        }
 
         $timestamp = now()->format('YmdHis');
         $normalizedPhone = $this->normalizeMpesaPhone($phone);
         $amount = max(1, (int) round((float) $invoice->total));
+        $accountReference = Str::limit($invoice->invoice_number, 12, '');
 
-        $response = Http::withToken($token)
-            ->acceptJson()
-            ->timeout(30)
-            ->post($baseUrl.'/mpesa/stkpush/v1/processrequest', [
-                'BusinessShortCode' => $shortcode,
-                'Password' => base64_encode($shortcode.$passkey.$timestamp),
-                'Timestamp' => $timestamp,
-                'TransactionType' => $config['transaction_type'] ?? 'CustomerPayBillOnline',
-                'Amount' => $amount,
-                'PartyA' => $normalizedPhone,
-                'PartyB' => $shortcode,
-                'PhoneNumber' => $normalizedPhone,
-                'CallBackURL' => $callbackUrl,
-                'AccountReference' => Str::limit($invoice->invoice_number, 12, ''),
-                'TransactionDesc' => 'BAMA '.$invoice->invoice_number,
-            ])
-            ->throw()
-            ->json();
+        try {
+            $response = Http::withToken($token)
+                ->acceptJson()
+                ->timeout(30)
+                ->post($baseUrl.'/mpesa/stkpush/v1/processrequest', [
+                    'BusinessShortCode' => $shortcode,
+                    'Password' => base64_encode($shortcode.$passkey.$timestamp),
+                    'Timestamp' => $timestamp,
+                    'TransactionType' => $config['transaction_type'] ?? 'CustomerPayBillOnline',
+                    'Amount' => $amount,
+                    'PartyA' => $normalizedPhone,
+                    'PartyB' => $shortcode,
+                    'PhoneNumber' => $normalizedPhone,
+                    'CallBackURL' => $callbackUrl,
+                    'AccountReference' => $accountReference,
+                    'TransactionDesc' => 'BAMA Invoice',
+                ])
+                ->throw()
+                ->json();
+        } catch (RequestException $e) {
+            throw $this->mpesaRequestException($e, 'stk_push');
+        }
 
         return $invoice->payments()->create([
             'tenant_id' => $invoice->tenant_id,
@@ -253,13 +264,36 @@ class PaymentGatewayService
         $digits = preg_replace('/\D+/', '', $phone);
 
         if (str_starts_with($digits, '0')) {
-            return '254'.substr($digits, 1);
+            $digits = '254'.substr($digits, 1);
+        } elseif (str_starts_with($digits, '7') || str_starts_with($digits, '1')) {
+            $digits = '254'.$digits;
         }
 
-        if (str_starts_with($digits, '7') || str_starts_with($digits, '1')) {
-            return '254'.$digits;
+        if (! preg_match('/^254[17]\d{8}$/', $digits)) {
+            throw new RuntimeException('Enter a valid Safaricom phone number, for example 2547XXXXXXXX.');
         }
 
         return $digits;
+    }
+
+    private function mpesaRequestException(RequestException $exception, string $stage): RuntimeException
+    {
+        $response = $exception->response;
+        $payload = $response->json() ?? [];
+
+        Log::warning('M-PESA request failed.', [
+            'stage' => $stage,
+            'status' => $response->status(),
+            'error_code' => $payload['errorCode'] ?? $payload['ResponseCode'] ?? null,
+            'request_id' => $payload['requestId'] ?? null,
+            'response' => $payload ?: $response->body(),
+        ]);
+
+        $message = $payload['errorMessage']
+            ?? $payload['ResponseDescription']
+            ?? $payload['ResultDesc']
+            ?? 'Safaricom rejected the M-PESA request. Check the shortcode, passkey, app environment, callback URL, and phone number.';
+
+        return new RuntimeException('M-PESA request failed: '.$message, previous: $exception);
     }
 }
