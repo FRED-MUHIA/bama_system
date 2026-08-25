@@ -125,6 +125,7 @@ return [
 
     'brand' => [
         'name' => env('MAIL_BRAND_NAME', 'BAMA'),
+        'logo_path' => env('MAIL_BRAND_LOGO_PATH', 'images/bama-logo.png'),
     ],
 
     'required_sender_domain' => env(

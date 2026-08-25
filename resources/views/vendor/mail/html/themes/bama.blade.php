@@ -117,14 +117,32 @@ table {
 .mail-brand-header {
     background-color: #00A651;
     border-radius: 6px 6px 0 0;
-    padding: 22px 46px;
+    padding: 20px 46px;
 }
 
 .mail-brand-mark {
     color: #ffffff;
+    display: inline-block;
     font-size: 22px;
     font-weight: 800;
     letter-spacing: 0;
+    text-decoration: none;
+}
+
+.mail-brand-logo-wrap {
+    background-color: #ffffff;
+    border-radius: 8px;
+    display: inline-block;
+    padding: 8px 12px;
+}
+
+.mail-brand-logo {
+    border: 0;
+    display: block;
+    height: auto;
+    max-height: 42px;
+    max-width: 172px;
+    outline: none;
     text-decoration: none;
 }
 
@@ -249,6 +267,11 @@ table {
 
     .mail-brand-header {
         padding: 20px 28px !important;
+    }
+
+    .mail-brand-logo {
+        max-height: 38px !important;
+        max-width: 154px !important;
     }
 
     h1 {

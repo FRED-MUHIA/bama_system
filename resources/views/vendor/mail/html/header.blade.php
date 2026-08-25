@@ -1,8 +1,19 @@
 @props(['url'])
+@php
+    $brandName = config('mail.brand.name', 'BAMA');
+    $logoPath = config('mail.brand.logo_path', 'images/bama-logo.png');
+    $logoUrl = $logoPath ? asset($logoPath) : null;
+@endphp
 <tr>
 <td class="mail-brand-header">
 <a href="{{ $url }}" class="mail-brand-mark">
-{{ config('mail.brand.name', 'BAMA') }}
+@if($logoUrl)
+<span class="mail-brand-logo-wrap">
+<img src="{{ $logoUrl }}" class="mail-brand-logo" alt="{{ $brandName }}">
+</span>
+@else
+{{ $brandName }}
+@endif
 </a>
 </td>
 </tr>

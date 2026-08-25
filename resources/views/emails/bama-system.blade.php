@@ -1,5 +1,7 @@
 @php
     $appName = $appName ?? config('mail.brand.name', 'BAMA');
+    $logoPath = $logoPath ?? config('mail.brand.logo_path', 'images/bama-logo.png');
+    $logoUrl = $logoUrl ?? ($logoPath ? asset($logoPath) : null);
     $headline = $headline ?? $subject;
     $paragraphs = collect(preg_split('/\R{2,}/', trim($body ?? '')))
         ->map(fn ($paragraph) => trim($paragraph))
@@ -22,7 +24,15 @@
                 <table role="presentation" width="570" cellspacing="0" cellpadding="0" style="width:570px;max-width:100%;background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
                     <tr>
                         <td style="background:#00A651;padding:22px 32px;">
-                            <a href="{{ config('app.url') }}" style="color:#ffffff;text-decoration:none;font-size:22px;font-weight:800;letter-spacing:0;">{{ $appName }}</a>
+                            <a href="{{ config('app.url') }}" style="color:#ffffff;text-decoration:none;font-size:22px;font-weight:800;letter-spacing:0;display:inline-block;">
+                                @if($logoUrl)
+                                    <span style="display:inline-block;background:#ffffff;border-radius:8px;padding:8px 12px;">
+                                        <img src="{{ $logoUrl }}" alt="{{ $appName }}" width="172" style="display:block;width:172px;max-width:172px;height:auto;max-height:42px;border:0;outline:none;text-decoration:none;">
+                                    </span>
+                                @else
+                                    {{ $appName }}
+                                @endif
+                            </a>
                         </td>
                     </tr>
                     <tr>
