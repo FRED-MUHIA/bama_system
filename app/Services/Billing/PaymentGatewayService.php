@@ -16,53 +16,26 @@ class PaymentGatewayService
 {
     public function mpesaStkPush(SubscriptionInvoice $invoice, string $phone): SubscriptionPayment
     {
-        $setting = $this->setting('mpesa');
-        $config = $setting->config ?? [];
-        $consumerKey = trim((string) ($setting->public_key ?: config('services.mpesa.consumer_key')));
-        $consumerSecret = trim((string) ($setting->secret_key ?: config('services.mpesa.consumer_secret')));
-        $shortcode = trim((string) ($config['shortcode'] ?? config('services.mpesa.shortcode')));
-        $passkey = trim((string) ($config['passkey'] ?? config('services.mpesa.passkey')));
-        $callbackUrl = trim((string) ($config['callback_url'] ?? route('billing.mpesa.callback')));
-        $transactionType = trim((string) ($config['transaction_type'] ?? 'CustomerPayBillOnline'));
-
-        if (! $consumerKey || ! $consumerSecret || ! $shortcode || ! $passkey) {
-            throw new RuntimeException('M-PESA STK is not fully configured in the owner console.');
-        }
-
-        if (! in_array($transactionType, ['CustomerPayBillOnline', 'CustomerBuyGoodsOnline'], true)) {
-            throw new RuntimeException('Choose a valid M-PESA transaction type: PayBill or Buy Goods.');
-        }
-
+        $mpesa = $this->mpesaConfig();
         $timestamp = now()->format('YmdHis');
         $normalizedPhone = $this->normalizeMpesaPhone($phone);
         $amount = max(1, (int) round((float) $invoice->total));
         $accountReference = Str::limit($invoice->invoice_number, 12, '');
 
-        $baseUrl = $this->mpesaBaseUrl($setting->mode);
         try {
-            $token = Http::withBasicAuth($consumerKey, $consumerSecret)
-                ->timeout(30)
-                ->get($baseUrl.'/oauth/v1/generate', ['grant_type' => 'client_credentials'])
-                ->throw()
-                ->json('access_token');
-        } catch (RequestException $e) {
-            throw $this->mpesaRequestException($e, 'authorization');
-        }
-
-        try {
-            $response = Http::withToken($token)
+            $response = Http::withToken($this->mpesaAccessToken($mpesa, 'authorization'))
                 ->acceptJson()
                 ->timeout(30)
-                ->post($baseUrl.'/mpesa/stkpush/v1/processrequest', [
-                    'BusinessShortCode' => $shortcode,
-                    'Password' => base64_encode($shortcode.$passkey.$timestamp),
+                ->post($mpesa['base_url'].'/mpesa/stkpush/v1/processrequest', [
+                    'BusinessShortCode' => $mpesa['shortcode'],
+                    'Password' => $this->mpesaPassword($mpesa, $timestamp),
                     'Timestamp' => $timestamp,
-                    'TransactionType' => $transactionType,
+                    'TransactionType' => $mpesa['transaction_type'],
                     'Amount' => $amount,
                     'PartyA' => $normalizedPhone,
-                    'PartyB' => $shortcode,
+                    'PartyB' => $mpesa['shortcode'],
                     'PhoneNumber' => $normalizedPhone,
-                    'CallBackURL' => $callbackUrl,
+                    'CallBackURL' => $mpesa['callback_url'],
                     'AccountReference' => $accountReference,
                     'TransactionDesc' => 'BAMA Invoice',
                 ])
@@ -72,16 +45,7 @@ class PaymentGatewayService
             throw $this->mpesaRequestException($e, 'stk_push');
         }
 
-        $responseCode = (string) ($response['ResponseCode'] ?? '0');
-        if ($responseCode !== '0') {
-            throw new RuntimeException(
-                'M-PESA request failed: '.($response['ResponseDescription'] ?? $response['errorMessage'] ?? 'Safaricom did not accept the STK request.')
-            );
-        }
-
-        if (blank($response['CheckoutRequestID'] ?? null)) {
-            throw new RuntimeException('M-PESA request failed: Safaricom did not return a checkout request ID.');
-        }
+        $this->assertMpesaStkAccepted($response);
 
         return $invoice->payments()->create([
             'tenant_id' => $invoice->tenant_id,
@@ -92,7 +56,17 @@ class PaymentGatewayService
             'checkout_request_id' => $response['CheckoutRequestID'] ?? null,
             'merchant_request_id' => $response['MerchantRequestID'] ?? null,
             'phone' => $normalizedPhone,
-            'callback_payload' => $response,
+            'callback_payload' => $response + [
+                'normalized_request' => [
+                    'mode' => $mpesa['mode'],
+                    'shortcode' => $mpesa['shortcode'],
+                    'transaction_type' => $mpesa['transaction_type'],
+                    'amount' => $amount,
+                    'phone' => $normalizedPhone,
+                    'callback_url' => $mpesa['callback_url'],
+                    'account_reference' => $accountReference,
+                ],
+            ],
         ]);
     }
 
@@ -139,37 +113,16 @@ class PaymentGatewayService
             throw new RuntimeException('This M-PESA payment does not have a checkout request ID.');
         }
 
-        $setting = $this->setting('mpesa');
-        $config = $setting->config ?? [];
-        $consumerKey = trim((string) ($setting->public_key ?: config('services.mpesa.consumer_key')));
-        $consumerSecret = trim((string) ($setting->secret_key ?: config('services.mpesa.consumer_secret')));
-        $shortcode = trim((string) ($config['shortcode'] ?? config('services.mpesa.shortcode')));
-        $passkey = trim((string) ($config['passkey'] ?? config('services.mpesa.passkey')));
-
-        if (! $consumerKey || ! $consumerSecret || ! $shortcode || ! $passkey) {
-            throw new RuntimeException('M-PESA STK is not fully configured in the owner console.');
-        }
-
-        $baseUrl = $this->mpesaBaseUrl($setting->mode);
+        $mpesa = $this->mpesaConfig();
         $timestamp = now()->format('YmdHis');
 
         try {
-            $token = Http::withBasicAuth($consumerKey, $consumerSecret)
-                ->timeout(30)
-                ->get($baseUrl.'/oauth/v1/generate', ['grant_type' => 'client_credentials'])
-                ->throw()
-                ->json('access_token');
-        } catch (RequestException $e) {
-            throw $this->mpesaRequestException($e, 'status_authorization');
-        }
-
-        try {
-            $response = Http::withToken($token)
+            $response = Http::withToken($this->mpesaAccessToken($mpesa, 'status_authorization'))
                 ->acceptJson()
                 ->timeout(30)
-                ->post($baseUrl.'/mpesa/stkpushquery/v1/query', [
-                    'BusinessShortCode' => $shortcode,
-                    'Password' => base64_encode($shortcode.$passkey.$timestamp),
+                ->post($mpesa['base_url'].'/mpesa/stkpushquery/v1/query', [
+                    'BusinessShortCode' => $mpesa['shortcode'],
+                    'Password' => $this->mpesaPassword($mpesa, $timestamp),
                     'Timestamp' => $timestamp,
                     'CheckoutRequestID' => $payment->checkout_request_id,
                 ])
@@ -179,11 +132,7 @@ class PaymentGatewayService
             throw $this->mpesaRequestException($e, 'stk_query');
         }
 
-        if ((string) ($response['ResponseCode'] ?? '0') !== '0') {
-            throw new RuntimeException(
-                'M-PESA status check failed: '.($response['ResponseDescription'] ?? $response['errorMessage'] ?? 'Safaricom did not accept the status check.')
-            );
-        }
+        $this->assertMpesaStatusAccepted($response);
 
         $payload = $payment->callback_payload ?? [];
         $payload['stk_query'] = $response;
@@ -369,6 +318,93 @@ class PaymentGatewayService
     private function mpesaBaseUrl(string $mode): string
     {
         return $mode === 'live' ? 'https://api.safaricom.co.ke' : 'https://sandbox.safaricom.co.ke';
+    }
+
+    private function mpesaConfig(): array
+    {
+        $setting = $this->setting('mpesa');
+        $config = $setting->config ?? [];
+        $transactionType = trim((string) ($config['transaction_type'] ?? 'CustomerPayBillOnline'));
+        $callbackUrl = trim((string) ($config['callback_url'] ?? route('billing.mpesa.callback')));
+
+        $mpesa = [
+            'mode' => $setting->mode === 'live' ? 'live' : 'sandbox',
+            'base_url' => $this->mpesaBaseUrl($setting->mode),
+            'consumer_key' => trim((string) ($setting->public_key ?: config('services.mpesa.consumer_key'))),
+            'consumer_secret' => trim((string) ($setting->secret_key ?: config('services.mpesa.consumer_secret'))),
+            'shortcode' => trim((string) ($config['shortcode'] ?? config('services.mpesa.shortcode'))),
+            'passkey' => trim((string) ($config['passkey'] ?? config('services.mpesa.passkey'))),
+            'callback_url' => $callbackUrl,
+            'transaction_type' => $transactionType,
+        ];
+
+        if (! $mpesa['consumer_key'] || ! $mpesa['consumer_secret'] || ! $mpesa['shortcode'] || ! $mpesa['passkey']) {
+            throw new RuntimeException('M-PESA STK is not fully configured in the owner console.');
+        }
+
+        if (! preg_match('/^\d+$/', $mpesa['shortcode'])) {
+            throw new RuntimeException('Enter a numeric M-PESA PayBill or Till shortcode.');
+        }
+
+        if (! in_array($mpesa['transaction_type'], ['CustomerPayBillOnline', 'CustomerBuyGoodsOnline'], true)) {
+            throw new RuntimeException('Choose a valid M-PESA transaction type: PayBill or Buy Goods.');
+        }
+
+        if (! filter_var($mpesa['callback_url'], FILTER_VALIDATE_URL)) {
+            throw new RuntimeException('Enter a valid HTTPS M-PESA callback URL.');
+        }
+
+        if (! str_starts_with($mpesa['callback_url'], 'https://')) {
+            throw new RuntimeException('M-PESA callback URL must use HTTPS.');
+        }
+
+        return $mpesa;
+    }
+
+    private function mpesaAccessToken(array $mpesa, string $stage): string
+    {
+        try {
+            $token = Http::withBasicAuth($mpesa['consumer_key'], $mpesa['consumer_secret'])
+                ->timeout(30)
+                ->get($mpesa['base_url'].'/oauth/v1/generate', ['grant_type' => 'client_credentials'])
+                ->throw()
+                ->json('access_token');
+        } catch (RequestException $e) {
+            throw $this->mpesaRequestException($e, $stage);
+        }
+
+        if (blank($token)) {
+            throw new RuntimeException('M-PESA request failed: Safaricom did not return an access token.');
+        }
+
+        return $token;
+    }
+
+    private function mpesaPassword(array $mpesa, string $timestamp): string
+    {
+        return base64_encode($mpesa['shortcode'].$mpesa['passkey'].$timestamp);
+    }
+
+    private function assertMpesaStkAccepted(array $response): void
+    {
+        if ((string) ($response['ResponseCode'] ?? '') !== '0') {
+            throw new RuntimeException(
+                'M-PESA request failed: '.($response['ResponseDescription'] ?? $response['errorMessage'] ?? 'Safaricom did not accept the STK request.')
+            );
+        }
+
+        if (blank($response['CheckoutRequestID'] ?? null)) {
+            throw new RuntimeException('M-PESA request failed: Safaricom did not return a checkout request ID.');
+        }
+    }
+
+    private function assertMpesaStatusAccepted(array $response): void
+    {
+        if ((string) ($response['ResponseCode'] ?? '') !== '0') {
+            throw new RuntimeException(
+                'M-PESA status check failed: '.($response['ResponseDescription'] ?? $response['errorMessage'] ?? 'Safaricom did not accept the status check.')
+            );
+        }
     }
 
     private function paypalBaseUrl(string $mode): string
