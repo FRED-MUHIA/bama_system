@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\SchemaCache;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema;
 
 class MarketingPage extends Model
 {
@@ -32,7 +32,7 @@ class MarketingPage extends Model
 
     public static function resolve(string $slug): self
     {
-        if (! Schema::hasTable('marketing_pages')) {
+        if (! SchemaCache::hasTable('marketing_pages')) {
             return new static([
                 'slug' => $slug,
                 'title' => $slug === 'home' ? 'BAMA Business Cloud' : (string) str($slug)->headline(),
@@ -86,8 +86,8 @@ class MarketingPage extends Model
                 ],
                 'login_label' => 'Login',
                 'login_url' => '/login',
-                'demo_label' => 'Book Demo',
-                'demo_url' => 'mailto:sales@bama.co.ke?subject=Demo%20Request',
+                'demo_label' => null,
+                'demo_url' => null,
                 'cta_label' => 'Start Free Trial',
                 'cta_url' => '/register/account',
             ],
@@ -97,8 +97,8 @@ class MarketingPage extends Model
                 'body' => 'Manage customers, projects, finances, inventory, operations, and industry-specific workflows from a single cloud platform.',
                 'primary_label' => 'Start Free Trial',
                 'primary_url' => '/register/account',
-                'secondary_label' => 'Book a Demo',
-                'secondary_url' => 'mailto:sales@bama.co.ke?subject=Demo%20Request',
+                'secondary_label' => null,
+                'secondary_url' => null,
             ],
             'stats' => [
                 ['value' => '99.9%', 'label' => 'Uptime'],

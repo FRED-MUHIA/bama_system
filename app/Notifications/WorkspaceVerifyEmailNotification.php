@@ -3,15 +3,16 @@
 namespace App\Notifications;
 
 use App\Models\Business;
+use App\Models\Tenant;
 use App\Support\ActiveBusiness;
 use App\Support\ActiveTenant;
+use App\Support\SchemaCache;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 
 class WorkspaceVerifyEmailNotification extends VerifyEmail
@@ -54,15 +55,25 @@ class WorkspaceVerifyEmailNotification extends VerifyEmail
             return $business->name;
         }
 
-        if ($tenant = $user->currentTenant ?: ActiveTenant::current()) {
-            if ($businessName = Business::withoutGlobalScopes()->where('tenant_id', $tenant->id)->orderBy('id')->value('name')) {
-                return $businessName;
+        $tenant = $user->relationLoaded('currentTenant')
+            ? $user->currentTenant
+            : ($user->current_tenant_id && SchemaCache::hasTable('tenants')
+                ? Tenant::withoutGlobalScopes()->find($user->current_tenant_id)
+                : ActiveTenant::current());
+
+        if ($tenant) {
+            if (SchemaCache::hasTable('businesses')) {
+                $businessName = Business::withoutGlobalScopes()->where('tenant_id', $tenant->id)->orderBy('id')->value('name');
+
+                if ($businessName) {
+                    return $businessName;
+                }
             }
 
             return $tenant->name;
         }
 
-        if (Schema::hasTable('business_user') && Schema::hasTable('businesses')) {
+        if (SchemaCache::hasTable('business_user') && SchemaCache::hasTable('businesses')) {
             $businessName = DB::table('business_user')
                 ->join('businesses', 'businesses.id', '=', 'business_user.business_id')
                 ->where('business_user.user_id', $user->id)

@@ -60,7 +60,6 @@
                 <p class="mt-5 max-w-2xl text-lg leading-8 text-white/82">{{ $industry['description'] }}</p>
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row">
                     <a href="{{ route('register.account') }}" class="rounded-full bg-white px-8 py-4 text-center text-sm font-black uppercase text-black no-underline">Start Free Trial</a>
-                    <a href="mailto:sales@bama.co.ke?subject={{ rawurlencode($industry['industry'].' Demo Request') }}" class="rounded-full border border-white px-8 py-4 text-center text-sm font-black uppercase text-white no-underline">Book Demo</a>
                 </div>
             </div>
             <div class="rounded-lg border border-white/10 bg-white/[.08] p-5 shadow-2xl backdrop-blur">

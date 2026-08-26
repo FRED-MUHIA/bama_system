@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 
@@ -207,13 +206,13 @@ class ActiveTenant
 
     private static function hasTable(string $table): bool
     {
-        return self::$tableExists[$table] ??= Schema::hasTable($table);
+        return self::$tableExists[$table] ??= SchemaCache::hasTable($table);
     }
 
     private static function hasColumn(string $table, string $column): bool
     {
         $key = $table.'.'.$column;
 
-        return self::$columnExists[$key] ??= Schema::hasColumn($table, $column);
+        return self::$columnExists[$key] ??= SchemaCache::hasColumn($table, $column);
     }
 }

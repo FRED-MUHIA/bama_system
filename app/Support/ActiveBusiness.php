@@ -4,7 +4,6 @@ namespace App\Support;
 
 use App\Models\Business;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 
@@ -18,6 +17,12 @@ class ActiveBusiness
 
     public static function current(): ?Business
     {
+        if (! SchemaCache::hasTable('businesses')) {
+            self::clear();
+
+            return null;
+        }
+
         $user = auth()->user();
         if ($user && in_array($user->role, ['super_admin', 'client_portal'], true)) {
             self::clear();
@@ -34,9 +39,13 @@ class ActiveBusiness
         $accessibleIds = self::accessibleBusinessIds();
 
         if ($accessibleIds !== null && $accessibleIds === []) {
-            Session::forget(self::SESSION_KEY);
+            if ($sessionId && Business::withoutGlobalScopes()->whereKey($sessionId)->exists()) {
+                $accessibleIds = [(int) $sessionId];
+            } else {
+                Session::forget(self::SESSION_KEY);
 
-            return self::$current = null;
+                return self::$current = null;
+            }
         }
 
         $business = $accessibleIds === null ? self::ensureDefaults() : null;
@@ -83,6 +92,10 @@ class ActiveBusiness
 
     public static function ensureDefaults(): ?Business
     {
+        if (! SchemaCache::hasTable('businesses')) {
+            return null;
+        }
+
         if (self::$default) {
             return self::$default;
         }
@@ -107,7 +120,7 @@ class ActiveBusiness
         $slug = $base;
         $counter = 2;
 
-        while (Business::withoutGlobalScopes()->where('slug', $slug)->exists()) {
+        while (SchemaCache::hasTable('businesses') && Business::withoutGlobalScopes()->where('slug', $slug)->exists()) {
             $slug = "{$base}-{$counter}";
             $counter++;
         }
@@ -119,7 +132,7 @@ class ActiveBusiness
     {
         $user = auth()->user();
 
-        if (! $user || $user->role === 'super_admin' || ! Schema::hasTable('business_user')) {
+        if (! $user || $user->role === 'super_admin' || ! SchemaCache::hasTable('business_user')) {
             return null;
         }
 

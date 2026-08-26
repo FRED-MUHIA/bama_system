@@ -6,14 +6,14 @@ use App\Models\DashboardWidget;
 use App\Models\Tenant;
 use App\Models\TenantDashboardWidget;
 use App\Support\ActiveTenant;
+use App\Support\SchemaCache;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Schema;
 
 class DashboardWidgetRegistry
 {
     public function available(?Tenant $tenant = null): Collection
     {
-        if (! Schema::hasTable('dashboard_widgets')) {
+        if (! SchemaCache::hasTable('dashboard_widgets')) {
             return collect();
         }
 
@@ -29,7 +29,7 @@ class DashboardWidgetRegistry
     {
         $tenant ??= ActiveTenant::current();
 
-        if (! $tenant || ! Schema::hasTable('tenant_dashboard_widgets')) {
+        if (! $tenant || ! SchemaCache::hasTable('tenant_dashboard_widgets')) {
             return $this->available($tenant);
         }
 

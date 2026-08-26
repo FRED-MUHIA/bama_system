@@ -2,7 +2,9 @@
 
 namespace App\Support;
 
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 class SchemaCache
 {
@@ -11,19 +13,30 @@ class SchemaCache
 
     public static function hasTable(string $table): bool
     {
-        return self::$tables[$table] ??= Schema::hasTable($table);
+        return self::$tables[$table] ??= self::probe(fn () => Schema::hasTable($table));
     }
 
     public static function hasColumn(string $table, string $column): bool
     {
         $key = $table.'.'.$column;
 
-        return self::$columns[$key] ??= self::hasTable($table) && Schema::hasColumn($table, $column);
+        return self::$columns[$key] ??= self::hasTable($table) && self::probe(fn () => Schema::hasColumn($table, $column));
     }
 
     public static function flush(): void
     {
         self::$tables = [];
         self::$columns = [];
+    }
+
+    private static function probe(callable $callback): bool
+    {
+        try {
+            return (bool) $callback();
+        } catch (QueryException) {
+            return false;
+        } catch (Throwable) {
+            return false;
+        }
     }
 }

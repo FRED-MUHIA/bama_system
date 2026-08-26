@@ -369,9 +369,6 @@
                 @if(data_get($headerContent, 'login_label'))
                     <a href="{{ data_get($headerContent, 'login_url', route('login')) }}" class="hidden px-3 py-2 text-sm font-bold text-zinc-700 hover:text-[#00A651] sm:inline-flex">{{ data_get($headerContent, 'login_label', 'Login') }}</a>
                 @endif
-                @if(data_get($headerContent, 'demo_label'))
-                    <a href="{{ data_get($headerContent, 'demo_url', 'mailto:sales@bama.co.ke?subject=Demo%20Request') }}" class="hidden rounded-lg border border-zinc-300 px-4 py-2 text-sm font-black hover:border-[#00A651] md:inline-flex">{{ data_get($headerContent, 'demo_label', 'Book Demo') }}</a>
-                @endif
                 @if(data_get($headerContent, 'cta_label'))
                     <a href="{{ data_get($headerContent, 'cta_url', route('register.account')) }}" class="rounded-lg bg-[#00A651] px-4 py-2 text-sm font-black text-white sm:px-5">{{ data_get($headerContent, 'cta_label', 'Start Free Trial') }}</a>
                 @endif
@@ -398,7 +395,6 @@
                 </p>
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row">
                     <a href="{{ data_get($hero, 'primary_url', route('register.account')) }}" class="rounded-full bg-white px-8 py-4 text-center text-sm font-black uppercase text-black transition hover:bg-[#EAF8F0]">{{ data_get($hero, 'primary_label', 'Start Free Trial') }}</a>
-                    <a href="{{ data_get($hero, 'secondary_url', 'mailto:sales@bama.co.ke?subject=Demo%20Request') }}" class="rounded-full border border-white px-8 py-4 text-center text-sm font-black uppercase text-white transition hover:border-[#79D9A3] hover:text-[#79D9A3]">{{ data_get($hero, 'secondary_label', 'Book a Demo') }}</a>
                 </div>
                 <div class="mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
                     @foreach ($stats ?: [['value' => '99.9%', 'label' => 'Uptime'], ['value' => '1000s', 'label' => 'Businesses'], ['value' => 'Millions', 'label' => 'Transactions'], ['value' => 'Secure', 'label' => 'Security']] as $stat)

@@ -5,8 +5,8 @@ namespace App\Services;
 use App\Models\DashboardWidget;
 use App\Models\IndustryModule;
 use App\Models\Tenant;
+use App\Support\SchemaCache;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Schema;
 
 class IndustrySetupService
 {
@@ -157,7 +157,7 @@ class IndustrySetupService
 
     private function initializeDashboard(Tenant $tenant): void
     {
-        if (! Schema::hasTable('dashboard_widgets') || ! Schema::hasTable('tenant_dashboard_widgets')) {
+        if (! SchemaCache::hasTable('dashboard_widgets') || ! SchemaCache::hasTable('tenant_dashboard_widgets')) {
             return;
         }
 
@@ -178,7 +178,7 @@ class IndustrySetupService
 
     private function dashboardWidgets(string $industry): array
     {
-        if (! Schema::hasTable('dashboard_widgets')) {
+        if (! SchemaCache::hasTable('dashboard_widgets')) {
             return [];
         }
 
@@ -196,7 +196,7 @@ class IndustrySetupService
 
     private function registeredModules(string $industry): array
     {
-        if (! Schema::hasTable('industry_modules')) {
+        if (! SchemaCache::hasTable('industry_modules')) {
             return [];
         }
 

@@ -8,6 +8,7 @@ use App\Models\AccountingBudget;
 use App\Models\BudgetAlert;
 use App\Models\CostCenter;
 use App\Models\Department;
+use App\Models\Invoice;
 use App\Models\Project;
 use App\Support\ActiveBusiness;
 use Illuminate\Database\Eloquent\Model;
@@ -60,12 +61,21 @@ class CostAccountingService
     {
         $projects = Project::with([
             'costCenter.department',
-            'invoices' => fn ($query) => $query->whereYear('invoice_date', $year),
             'receiptAllocations',
             'costs',
             'expenses' => fn ($query) => $query->whereYear('expense_date', $year),
             'supplierInvoices' => fn ($query) => $query->whereYear('invoice_date', $year),
         ])->get();
+        $businessId = ActiveBusiness::id();
+        $projectInvoices = Invoice::withoutGlobalScopes()
+            ->whereIn('project_id', $projects->pluck('id'))
+            ->when($businessId, fn ($query) => $query->where('business_id', $businessId))
+            ->whereYear('invoice_date', $year)
+            ->get()
+            ->groupBy('project_id');
+
+        $projects->each(fn (Project $project) => $project->setRelation('invoices', $projectInvoices->get($project->id, collect())));
+
         $allocations = AccountingAllocation::with('department', 'costCenter', 'project')->whereYear('transaction_date', $year)->get();
         $projectRows = $projects->map(function (Project $project) {
             $revenue = $project->revenue();

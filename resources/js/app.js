@@ -3,16 +3,24 @@ import './bootstrap';
 document.addEventListener('DOMContentLoaded', () => {
     const mobileMedia = window.matchMedia('(max-width: 991px)');
     const desktopMedia = window.matchMedia('(min-width: 992px)');
-    const isMobile = mobileMedia.matches;
+    const eagerImageCount = mobileMedia.matches ? 1 : 2;
 
     document.querySelectorAll('img').forEach((image, index) => {
         image.decoding = image.decoding || 'async';
 
-        if (!image.hasAttribute('loading') && (!isMobile || index > 1)) {
+        if (index < eagerImageCount) {
+            if (!image.hasAttribute('fetchpriority')) {
+                image.fetchPriority = 'high';
+            }
+
+            return;
+        }
+
+        if (!image.hasAttribute('loading')) {
             image.loading = 'lazy';
         }
 
-        if (isMobile && index > 1 && !image.hasAttribute('fetchpriority')) {
+        if (!image.hasAttribute('fetchpriority')) {
             image.fetchPriority = 'low';
         }
     });
