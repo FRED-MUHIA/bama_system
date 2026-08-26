@@ -49,12 +49,12 @@ class IndustryPackageApiTest extends TestCase
 
     public function test_industry_dashboard_features_can_be_retrieved(): void
     {
-        $response = $this->getJson('/api/v1/industry-packages/retail/dashboard?sub_industry=enterprise');
+        $response = $this->getJson('/api/v1/industry-packages/retail/dashboard?sub_industry=book-store');
 
         $response
             ->assertOk()
             ->assertJsonPath('industry', 'Retail')
-            ->assertJsonPath('sub_industry', 'Enterprise Retail')
+            ->assertJsonPath('sub_industry', 'Book Store')
             ->assertJsonFragment(['Point of Sale'])
             ->assertJsonStructure(['industry', 'sub_industry', 'summary', 'modules', 'features', 'dashboard_features']);
     }
@@ -77,6 +77,12 @@ class IndustryPackageApiTest extends TestCase
             ->assertSeeText('Printing & Branding')
             ->assertSeeText('Automotive')
             ->assertSeeText('Retail')
+            ->assertSeeText('Book Store')
+            ->assertSeeText('Clothing Store')
+            ->assertSeeText('Furniture Store')
+            ->assertSeeText('Grocery Store')
+            ->assertSeeText('Hardware Store')
+            ->assertSeeText('Toy Store')
             ->assertSeeText('Construction')
             ->assertDontSeeText('Healthcare');
     }

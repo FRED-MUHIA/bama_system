@@ -132,7 +132,7 @@ class IndustrySetupService
 
         $settings = $tenant->settings ?? [];
         $industry = $this->normalizeIndustrySlug($tenant->industry ?: ($settings['industry'] ?? 'professional-services'));
-        $subIndustry = $settings['sub_industry'] ?? null;
+        $subIndustry = $tenant->sub_industry ?? $settings['sub_industry'] ?? null;
 
         return $this->dashboardFeatures($industry, $subIndustry);
     }

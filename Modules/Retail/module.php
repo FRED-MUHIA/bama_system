@@ -6,9 +6,20 @@ return [
     'type' => 'industry',
     'description' => 'Enterprise retail management for POS, catalog, inventory, warehousing, customers, loyalty, promotions, returns, orders, delivery, branches, ecommerce, analytics, and reports.',
     'sub_industries' => [
-        ['slug' => 'standard', 'name' => 'Retail Standard', 'description' => 'Single-store retail operations with shared ERP services.'],
-        ['slug' => 'multi-branch', 'name' => 'Multi-Branch Retail', 'description' => 'Branch-aware inventory, POS, staff, and performance operations.'],
-        ['slug' => 'enterprise', 'name' => 'Enterprise Retail', 'description' => 'Enterprise retail controls, APIs, workflow hooks, analytics, and auditability.'],
+        ['slug' => 'book-store', 'name' => 'Book Store', 'description' => 'Manage books, stationery, publishers, ISBN/barcode sales, stock replenishment, customer orders, and retail checkout.', 'dashboard_features' => ['Book sales performance', 'Low stock titles', 'Publisher purchasing', 'Customer order queue']],
+        ['slug' => 'clothing-store', 'name' => 'Clothing Store', 'description' => 'Run apparel POS with sizes, colors, variants, seasonal stock, returns, promotions, and branch inventory.', 'dashboard_features' => ['Variant sales', 'Seasonal stock', 'Returns tracking', 'Promotion performance']],
+        ['slug' => 'furniture-store', 'name' => 'Furniture Store', 'description' => 'Track furniture catalog items, showroom sales, supplier orders, delivery status, deposits, and customer balances.', 'dashboard_features' => ['Showroom sales', 'Delivery pipeline', 'Supplier orders', 'Customer balances']],
+        ['slug' => 'grocery-store', 'name' => 'Grocery Store', 'description' => 'Operate grocery checkout, fast-moving inventory, expiry control, supplier purchasing, promotions, and daily stock movement.', 'dashboard_features' => ['Daily grocery sales', 'Expiry alerts', 'Fast-moving items', 'Supplier restock queue']],
+        ['slug' => 'hardware-store', 'name' => 'Hardware Store', 'description' => 'Manage hardware products, units of measure, bulk sales, contractor customers, supplier purchasing, and stock counts.', 'dashboard_features' => ['Bulk sales', 'Contractor accounts', 'Stock count variance', 'Supplier purchasing']],
+        ['slug' => 'toy-store', 'name' => 'Toy Store', 'description' => 'Run toy retail with age categories, seasonal demand, gift sales, promotions, stock alerts, and customer loyalty.', 'dashboard_features' => ['Toy sales trends', 'Seasonal demand', 'Gift purchases', 'Loyalty activity']],
+    ],
+    'registration_sub_industries' => [
+        'book-store',
+        'clothing-store',
+        'furniture-store',
+        'grocery-store',
+        'hardware-store',
+        'toy-store',
     ],
     'features' => [
         'Point of Sale', 'Product Catalog', 'Retail Inventory', 'Warehousing', 'Customer Management',

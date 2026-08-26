@@ -33,6 +33,7 @@ $constructionPackage = file_exists(base_path('Modules/Construction/module.php'))
 $agriculturePackage = file_exists(base_path('Modules/Agriculture/module.php')) ? require base_path('Modules/Agriculture/module.php') : null;
 $printingBrandingPackage = file_exists(base_path('Modules/PrintingBranding/module.php')) ? require base_path('Modules/PrintingBranding/module.php') : null;
 $automotivePackage = file_exists(base_path('Modules/Automotive/module.php')) ? require base_path('Modules/Automotive/module.php') : null;
+$retailPackage = file_exists(base_path('Modules/Retail/module.php')) ? require base_path('Modules/Retail/module.php') : null;
 
 $industries = [
     'construction' => [
@@ -52,7 +53,19 @@ $industries = [
     'healthcare' => ['Healthcare', 'Run patient operations, doctors, appointments, clinical records, pharmacy, laboratory, billing, insurance, wards, and reports.', ['Patient Registration', 'Patient Records', 'Doctors Management', 'Appointments', 'Consultation Notes', 'Prescriptions', 'Pharmacy', 'Laboratory', 'Radiology', 'Medical Billing', 'Insurance Claims', 'Inpatient Management', 'Ward Management', 'Emergency Services', 'Medical Reports']],
     'education' => ['Education', 'Manage students, admissions, classes, timetables, exams, attendance, fees, parents, teachers, resources, transport, and library workflows.', ['Student Management', 'Admissions', 'Classes', 'Timetables', 'Exams', 'Grading', 'Attendance', 'Fee Management', 'Parent Portal', 'Teacher Management', 'Learning Resources', 'Academic Reports', 'School Transport', 'Library']],
     'university' => ['University', 'Coordinate faculties, departments, courses, semesters, registration, exams, graduation, research, hostels, student finance, and alumni.', ['Student Information System', 'Faculties', 'Departments', 'Courses', 'Semesters', 'Registration', 'Exams', 'Graduation Tracking', 'Research Management', 'Hostel Management', 'Student Finance', 'Alumni Management']],
-    'retail' => ['Retail', 'Unify POS, inventory, warehousing, catalog, loyalty, promotions, gift cards, customer accounts, returns, branches, and ecommerce.', ['Point of Sale', 'Inventory', 'Warehousing', 'Product Catalog', 'Loyalty Programs', 'Promotions', 'Gift Cards', 'Customer Accounts', 'Returns Management', 'Branch Management', 'Ecommerce Integration']],
+    'retail' => [
+        $retailPackage['name'] ?? 'Retail',
+        $retailPackage['description'] ?? 'Unify POS, inventory, warehousing, catalog, loyalty, promotions, gift cards, customer accounts, returns, branches, and ecommerce.',
+        $retailPackage['features'] ?? ['Point of Sale', 'Inventory', 'Warehousing', 'Product Catalog', 'Loyalty Programs', 'Promotions', 'Gift Cards', 'Customer Accounts', 'Returns Management', 'Branch Management', 'Ecommerce Integration'],
+        [
+            'sub_industries' => $retailPackage['sub_industries'] ?? [],
+            'registration_sub_industries' => $retailPackage['registration_sub_industries'] ?? [],
+            'dashboard_widgets' => ['Sales Today', 'Average Basket', 'Low Stock', 'Fast Moving Products', 'Customer Loyalty', 'Inventory Value'],
+            'reports' => $retailPackage['reports'] ?? [],
+            'roles' => $retailPackage['roles'] ?? [],
+            'menu_structure' => $retailPackage['menu_structure'] ?? [],
+        ],
+    ],
     'wholesale' => ['Wholesale & Distribution', 'Operate inventory, warehouses, distribution routes, sales orders, purchase orders, fleet, pricing, transfers, and forecasting.', ['Inventory', 'Warehousing', 'Distribution Routes', 'Sales Orders', 'Purchase Orders', 'Fleet Tracking', 'Customer Pricing', 'Stock Transfers', 'Demand Forecasting']],
     'manufacturing' => ['Manufacturing', 'Track BOMs, planning, work orders, shop floor activity, quality, costing, inventory, maintenance, batches, and production reporting.', ['Bill of Materials', 'Production Planning', 'Work Orders', 'Shop Floor Management', 'Quality Assurance', 'Production Costing', 'Inventory Control', 'Machine Maintenance', 'Batch Tracking', 'Manufacturing Reports']],
     'hospitality' => [

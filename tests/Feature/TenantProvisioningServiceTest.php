@@ -110,6 +110,29 @@ class TenantProvisioningServiceTest extends TestCase
         $this->assertContains('Administration', $labels);
     }
 
+    public function test_retail_tenant_provisioning_keeps_selected_store_category(): void
+    {
+        $owner = User::factory()->create([
+            'role' => 'admin',
+            'is_active' => true,
+            'status' => 'Active',
+        ]);
+
+        $tenant = app(TenantProvisioningService::class)->provision([
+            'tenant_name' => 'Mtaa Grocers',
+            'business_name' => 'Mtaa Grocers',
+            'industry' => 'retail',
+            'sub_industry' => 'grocery-store',
+            'plan' => 'starter',
+        ], $owner);
+
+        $dashboard = app(\App\Services\IndustrySetupService::class)->dashboardFeaturesForTenant($tenant->refresh());
+
+        $this->assertSame('grocery-store', $tenant->sub_industry);
+        $this->assertSame('grocery-store', $tenant->settings['sub_industry']);
+        $this->assertSame('Grocery Store', $dashboard['sub_industry']);
+    }
+
     public function test_hospitality_sidebar_includes_shared_messaging_and_tax_etims(): void
     {
         $tenant = Tenant::create([

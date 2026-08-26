@@ -168,7 +168,9 @@ class TenantProvisioningService
         }
 
         if (($data['industry'] ?? null) !== 'agriculture') {
-            return [];
+            return array_filter([
+                'sub_industry' => $data['sub_industry'] ?? null,
+            ]);
         }
 
         return [
