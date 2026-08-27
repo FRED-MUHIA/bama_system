@@ -324,7 +324,6 @@
         border-radius: 12px;
         background: #ffffff;
         padding: 14px 20px;
-        box-shadow: 0 8px 22px rgba(15, 23, 42, .06);
     }
 
     .home-page .trust-logo-card img {
@@ -339,6 +338,34 @@
         font-size: .96rem;
         font-weight: 900;
         text-align: center;
+    }
+
+    .home-page .industry-preview.is-collapsed .industry-preview-extra {
+        display: none;
+    }
+
+    .home-page .industry-preview.is-collapsed #industrySummary {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .home-page .industry-preview.is-collapsed .industry-preview-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .home-page .industry-preview.is-collapsed #industryModules > :nth-child(n+7),
+    .home-page .industry-preview.is-collapsed #industryDashboards > :nth-child(n+3) {
+        display: none;
+    }
+
+    .home-page .industry-preview-toggle i {
+        transition: transform .2s ease;
+    }
+
+    .home-page .industry-preview:not(.is-collapsed) .industry-preview-toggle i {
+        transform: rotate(180deg);
     }
 
     @keyframes bama-rise {
@@ -616,17 +643,24 @@
                     @endforeach
                 </div>
 
-                <div class="sticky top-20 h-max rounded-[22px] bg-black p-5 text-white">
-                    <p class="text-xs font-black uppercase text-[#8BE7B6]">Industry workspace preview</p>
-                    <h3 id="industryTitle" class="mt-2 text-2xl font-black">Construction</h3>
+                <div class="industry-preview is-collapsed sticky top-20 h-max rounded-[22px] bg-black p-5 text-white" data-industry-preview>
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-xs font-black uppercase text-[#8BE7B6]">Industry workspace preview</p>
+                            <h3 id="industryTitle" class="mt-2 text-2xl font-black">Construction</h3>
+                        </div>
+                        <button type="button" class="industry-preview-toggle inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/[.08] text-white" data-industry-preview-toggle aria-expanded="false" aria-label="Expand industry preview">
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                    </div>
                     <p id="industrySummary" class="mt-3 leading-7 text-zinc-300"></p>
 
-                    <div class="mt-4 grid gap-3 md:grid-cols-2">
+                    <div class="industry-preview-summary-grid mt-4 grid gap-3 md:grid-cols-2">
                         <div class="rounded-lg border border-white/10 bg-white/[.06] p-3">
                             <p class="text-xs font-black uppercase text-zinc-400">Available modules</p>
                             <div id="industryModules" class="mt-3 flex flex-wrap gap-2"></div>
                         </div>
-                        <div class="rounded-lg border border-white/10 bg-white/[.06] p-3">
+                        <div class="industry-preview-extra rounded-lg border border-white/10 bg-white/[.06] p-3">
                             <p class="text-xs font-black uppercase text-zinc-400">Sub-industries</p>
                             <div id="industrySubs" class="mt-3 grid gap-2"></div>
                         </div>
@@ -640,7 +674,7 @@
                         <div id="industryDashboards" class="mt-3 grid gap-2 sm:grid-cols-2"></div>
                     </div>
 
-                    <div class="mt-3 rounded-lg border border-white/10 bg-white/[.06] p-3">
+                    <div class="industry-preview-extra mt-3 rounded-lg border border-white/10 bg-white/[.06] p-3">
                         <div class="flex flex-wrap items-center justify-between gap-3">
                             <p class="text-xs font-black uppercase text-zinc-400">Provisioned during onboarding</p>
                             <span id="industryPermissionCount" class="rounded-lg bg-[#EAF8F0] px-3 py-1 text-xs font-black text-[#007A3B]"></span>
@@ -648,7 +682,7 @@
                         <div id="industryMenus" class="mt-3 flex flex-wrap gap-2"></div>
                     </div>
 
-                    <div class="mt-3 grid gap-3 md:grid-cols-2">
+                    <div class="industry-preview-extra mt-3 grid gap-3 md:grid-cols-2">
                         <div class="rounded-lg border border-white/10 bg-white/[.06] p-3">
                             <p class="text-xs font-black uppercase text-zinc-400">Workflows</p>
                             <div id="industryWorkflows" class="mt-3 grid gap-2"></div>
@@ -903,6 +937,8 @@
     const industryTemplates = document.getElementById('industryTemplates');
     const industryRoles = document.getElementById('industryRoles');
     const industryPermissionCount = document.getElementById('industryPermissionCount');
+    const industryPreview = document.querySelector('[data-industry-preview]');
+    const industryPreviewToggle = document.querySelector('[data-industry-preview-toggle]');
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const animatedSelector = [
         '.home-page section > .mx-auto',
@@ -972,6 +1008,16 @@
         return `<div class="bama-tile flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm font-black"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#00A651] text-white"><i class="bi ${iconForDashboard(label)}"></i></span><span>${label}</span></div>`;
     }
 
+    function setIndustryPreviewExpanded(expanded) {
+        if (! industryPreview || ! industryPreviewToggle) {
+            return;
+        }
+
+        industryPreview.classList.toggle('is-collapsed', ! expanded);
+        industryPreviewToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        industryPreviewToggle.setAttribute('aria-label', expanded ? 'Minimize industry preview' : 'Expand industry preview');
+    }
+
     function selectProductTab(name) {
         productTitle.textContent = name;
         productPanel.innerHTML = productTabs[name].map((item) => `<div class="bama-tile rounded-lg border border-white/10 bg-white/[.07] p-3"><p class="font-black text-white">${item}</p><p class="mt-2 text-xs font-bold uppercase text-zinc-500">Dashboard widget</p></div>`).join('');
@@ -1015,7 +1061,11 @@
         button.addEventListener('mouseenter', () => selectIndustry(button.dataset.industryTab));
         button.addEventListener('focus', () => selectIndustry(button.dataset.industryTab));
     });
+    industryPreviewToggle?.addEventListener('click', () => {
+        setIndustryPreviewExpanded(industryPreview?.classList.contains('is-collapsed'));
+    });
     registerAnimations();
+    setIndustryPreviewExpanded(false);
     selectProductTab(Object.keys(productTabs)[0]);
     selectIndustry(Object.keys(industryTabs)[0]);
 </script>

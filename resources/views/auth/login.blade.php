@@ -110,29 +110,6 @@
         object-fit: contain;
     }
 
-    .login-brand .brand-wordmark,
-    .login-mobile-brand .brand-wordmark {
-        display: inline-flex;
-        flex-direction: column;
-        color: #000;
-        font-family: var(--bama-font-heading, inherit);
-        font-size: 2.55rem;
-        font-weight: 600;
-        line-height: .82;
-        letter-spacing: 0;
-    }
-
-    .login-brand .brand-wordmark small,
-    .login-mobile-brand .brand-wordmark small {
-        align-self: flex-end;
-        margin-top: 5px;
-        font-family: var(--bama-font-body, inherit);
-        font-size: .64rem;
-        font-weight: 800;
-        line-height: 1;
-        text-transform: uppercase;
-    }
-
     .login-strips {
         display: none;
         grid-template-columns: 1.1fr .9fr .75fr .6fr .5fr;
@@ -487,7 +464,7 @@
     <section class="login-brand-panel" aria-label="BAMA connected systems">
         <div>
             <a href="{{ route('landing') }}" class="login-brand" aria-label="Back to BAMA home">
-                <span class="brand-wordmark" aria-label="Bama Solutions">Bama<small>Solutions</small></span>
+                <img src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions" class="brand-mark">
             </a>
             <a href="{{ route('landing') }}" class="login-home-link"><i class="bi bi-arrow-left"></i> Back home</a>
         </div>
@@ -531,7 +508,7 @@
     <section class="login-auth-panel">
         <div class="login-auth-wrap">
             <a href="{{ route('landing') }}" class="login-mobile-brand" aria-label="Back to BAMA home">
-                <span class="brand-wordmark" aria-label="Bama Solutions">Bama<small>Solutions</small></span>
+                <img src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions" class="brand-mark">
             </a>
 
             <div class="login-auth-label">{{ $loginCopy['label'] }}</div>
