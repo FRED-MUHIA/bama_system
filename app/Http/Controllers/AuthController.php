@@ -431,11 +431,11 @@ class AuthController extends Controller
     {
         $request ??= request();
 
-        if ($request->routeIs('platform.*')) {
+        if ($request->routeIs('platform.*') || $request->routeIs('public.platform.*')) {
             return 'owner';
         }
 
-        if ($request->routeIs('portal.login*')) {
+        if ($request->routeIs('portal.login*') || $request->routeIs('public.portal.login*')) {
             return 'portal';
         }
 
