@@ -72,7 +72,7 @@ class MarketingPage extends Model
 
         return [
             'brand' => [
-                'logo_path' => 'images/bama-solutions-02.png',
+                'logo_path' => 'logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png',
                 'favicon_path' => null,
                 'logo_alt' => 'Bama Solutions',
             ],

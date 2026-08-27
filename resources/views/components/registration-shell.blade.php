@@ -1,9 +1,7 @@
 @props(['step' => 1])
 
 @php
-    $registrationLogoPath = 'images/bama-solutions-02.png';
-    $registrationLogoVersion = file_exists(public_path($registrationLogoPath)) ? filemtime(public_path($registrationLogoPath)) : time();
-    $registrationLogoUrl = asset($registrationLogoPath).'?v='.$registrationLogoVersion;
+    $registrationLogoUrl = \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png');
 @endphp
 
 <main class="min-h-screen bg-[#F7F8F5] text-black">
@@ -67,9 +65,9 @@
 
         .registration-logo {
             display: block;
-            width: 170px;
-            max-width: 42vw;
-            height: auto;
+            width: 76px;
+            max-width: 24vw;
+            height: 76px;
             object-fit: contain;
         }
     </style>

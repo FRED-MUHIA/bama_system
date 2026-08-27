@@ -13,8 +13,8 @@
     $insightBullets = data_get($sections, 'insight.bullets', $homeDefaults['insight']['bullets']);
     $trustLogos = data_get($sections, 'trust.logos', $homeDefaults['trust']['logos']);
     $trustBadges = data_get($sections, 'trust.badges', $homeDefaults['trust']['badges']);
-    $brandLogoUrl = \App\Support\PublicUpload::url(data_get($sections, 'brand.logo_path')) ?: asset('images/bama-solutions-02.png');
-    $faviconUrl = \App\Support\PublicUpload::url(data_get($sections, 'brand.favicon_path')) ?: asset('images/bama-solutions-02.png');
+    $brandLogoUrl = \App\Support\PublicUpload::url(data_get($sections, 'brand.logo_path')) ?: \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png');
+    $faviconUrl = \App\Support\PublicUpload::url(data_get($sections, 'brand.favicon_path')) ?: $brandLogoUrl;
 @endphp
 
 <form method="post" action="{{ $isCreating ? route('platform.pages.store') : route('platform.pages.update', $page) }}" enctype="multipart/form-data" data-page-builder-form>

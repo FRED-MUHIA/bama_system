@@ -15,7 +15,7 @@
     $finalCta = data_get($content, 'final_cta', []);
     $footerContent = array_replace_recursive($defaults['footer'], (array) data_get($content, 'footer', []));
     $extraBlocks = data_get($content, 'blocks', []);
-    $brandLogoUrl = \App\Support\PublicUpload::url(data_get($brand, 'logo_path')) ?: asset('images/bama-solutions-02.png');
+    $brandLogoUrl = \App\Support\PublicUpload::url(data_get($brand, 'logo_path')) ?: \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png');
     $brandAlt = data_get($brand, 'logo_alt', 'Bama Solutions');
     $headerLinks = data_get($headerContent, 'nav_links', $defaults['header']['nav_links']);
     $footerColumns = data_get($footerContent, 'columns', $defaults['footer']['columns']);
@@ -426,7 +426,7 @@
     <header class="sticky top-0 z-50 border-b border-zinc-200 bg-[#FBFCFA]/95 backdrop-blur-xl">
         <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-2">
             <a href="#top" class="flex items-center gap-3">
-                <img src="{{ $brandLogoUrl }}" alt="{{ $brandAlt }}" class="block h-auto w-[124px] max-w-[32vw]" style="width:124px;height:auto;max-width:32vw;">
+                <img src="{{ $brandLogoUrl }}" alt="{{ $brandAlt }}" class="block h-[56px] w-[56px] max-w-[18vw] object-contain" style="width:56px;height:56px;max-width:18vw;object-fit:contain;">
             </a>
 
             <div class="hidden items-center gap-6 text-sm font-bold text-zinc-700 lg:flex">
@@ -883,7 +883,7 @@
         <div class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.2fr_2fr]">
             <div>
                 <div class="flex items-center gap-3">
-                    <img src="{{ $brandLogoUrl }}" alt="{{ $brandAlt }}" class="block h-auto w-[104px] max-w-[32vw]" style="width:104px;height:auto;max-width:32vw;">
+                    <img src="{{ $brandLogoUrl }}" alt="{{ $brandAlt }}" class="block h-[48px] w-[48px] max-w-[18vw] object-contain" style="width:48px;height:48px;max-width:18vw;object-fit:contain;">
                 </div>
                 <p class="mt-4 max-w-sm leading-7">{{ data_get($footerContent, 'body', 'Enterprise SaaS for ERP, CRM, finance, projects, documents, and industry operations.') }}</p>
                 <p class="mt-3 text-sm">{{ data_get($footerContent, 'email', 'sales@bama.co.ke') }}<br>{{ data_get($footerContent, 'phone', '+254 700 000 000') }}</p>

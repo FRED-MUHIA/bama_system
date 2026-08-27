@@ -11,7 +11,7 @@
     @php
         $marketingSiteContent = $marketingSiteContent ?? \App\Models\MarketingPage::resolve('home')->sections ?? \App\Models\MarketingPage::defaultSections('home');
         $marketingBrand = array_replace_recursive(\App\Models\MarketingPage::defaultSections('home')['brand'], (array) data_get($marketingSiteContent, 'brand', []));
-        $marketingFaviconUrl = \App\Support\PublicUpload::url(data_get($marketingBrand, 'favicon_path')) ?: asset('images/bama-solutions-02.png');
+        $marketingFaviconUrl = \App\Support\PublicUpload::url(data_get($marketingBrand, 'favicon_path')) ?: \App\Support\PublicUpload::url(data_get($marketingBrand, 'logo_path')) ?: asset('images/bama-solutions-02.png');
     @endphp
     <link rel="icon" href="{{ $marketingFaviconUrl }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -89,9 +89,10 @@
 
         .bama-logo {
             display: block;
-            width: 92px;
-            max-width: 24vw;
-            height: auto;
+            width: 54px;
+            max-width: 18vw;
+            height: 54px;
+            object-fit: contain;
         }
 
         .bama-eyebrow {

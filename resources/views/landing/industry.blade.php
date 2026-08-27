@@ -9,6 +9,7 @@
     $reports = collect($industry['reports'] ?? []);
     $roles = collect($industry['roles'] ?? []);
     $menus = collect($industry['dashboard']['menu_structure'] ?? $industry['menus'] ?? [])->map(fn ($menu) => is_array($menu) ? ($menu['label'] ?? $menu['module'] ?? 'Module') : $menu);
+    $brandLogoUrl = \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png');
     $accent = ['#00A651', '#071B12'];
     $featureIcon = function ($feature) {
         $label = str($feature)->lower();
@@ -34,7 +35,7 @@
     <header class="bama-header sticky top-0 z-50">
         <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-3">
             <a href="{{ route('landing') }}" class="flex items-center gap-3 text-black no-underline">
-                <img src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions" class="bama-logo">
+                <img src="{{ $brandLogoUrl }}" alt="Bama Solutions" class="bama-logo">
             </a>
             <div class="hidden items-center gap-6 text-sm font-bold text-zinc-700 md:flex">
                 <a href="{{ route('landing') }}#industries" class="hover:text-[var(--accent)]">Industries</a>

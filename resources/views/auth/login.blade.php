@@ -16,6 +16,7 @@
     'portal' => ['label' => 'Client portal access', 'title' => 'Client portal.', 'intro' => 'Sign in to view your invited projects, invoices, and documents.'],
     'business' => ['label' => 'Identity & Access', 'title' => 'Welcome back.', 'intro' => 'Choose a secure sign-in method to continue to your workspace.'],
 ][$loginContext] ?? ['label' => 'Identity & Access', 'title' => 'Welcome back.', 'intro' => 'Choose a secure sign-in method to continue to your workspace.'])
+@php($brandLogoUrl = \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png'))
 
 <style>
     body:has(.login-stage) { padding-bottom: 0 !important; }
@@ -105,8 +106,8 @@
     .login-brand .brand-mark,
     .login-mobile-brand .brand-mark {
         display: block;
-        width: 148px;
-        height: auto;
+        width: 76px;
+        height: 76px;
         object-fit: contain;
     }
 
@@ -464,7 +465,7 @@
     <section class="login-brand-panel" aria-label="BAMA connected systems">
         <div>
             <a href="{{ route('landing') }}" class="login-brand" aria-label="Back to BAMA home">
-                <img src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions" class="brand-mark">
+                <img src="{{ $brandLogoUrl }}" alt="Bama Solutions" class="brand-mark">
             </a>
             <a href="{{ route('landing') }}" class="login-home-link"><i class="bi bi-arrow-left"></i> Back home</a>
         </div>
@@ -508,7 +509,7 @@
     <section class="login-auth-panel">
         <div class="login-auth-wrap">
             <a href="{{ route('landing') }}" class="login-mobile-brand" aria-label="Back to BAMA home">
-                <img src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions" class="brand-mark">
+                <img src="{{ $brandLogoUrl }}" alt="Bama Solutions" class="brand-mark">
             </a>
 
             <div class="login-auth-label">{{ $loginCopy['label'] }}</div>

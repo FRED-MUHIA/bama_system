@@ -774,6 +774,7 @@
     $mainColumnClass = $currentUser && ! $isClientPortal ? 'col-lg-10' : 'col-12';
     $sidebarBrandName = $activeTenant?->name ?? $activeBusiness?->name ?? 'BAMA';
     $activeIndustryLabel = \Illuminate\Support\Str::headline($activeBusiness?->industry ?: $activeTenant?->industry ?: 'Workspace');
+    $bamaBrandLogoUrl = \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png');
 @endphp
 <div class="container-fluid">
     <div class="row">
@@ -783,13 +784,11 @@
                     @if(!empty($tenantTheme?->logoUrl()))
                         <img src="{{ $tenantTheme->logoUrl() }}" alt="{{ $activeTenant?->name ?? 'Tenant' }}" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
                     @elseif(strcasecmp($sidebarBrandName, 'BAMA') === 0)
-                        <img src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions" style="width:124px;height:auto;object-fit:contain;border-radius:6px;background:#fff;padding:4px;">
+                        <img src="{{ $bamaBrandLogoUrl }}" alt="Bama Solutions" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
                     @else
                         <div class="brand-mark">{{ strtoupper(substr($sidebarBrandName, 0, 1)) }}{{ strtoupper(substr(strstr($sidebarBrandName, ' ') ?: 'A', 1, 1)) }}</div>
                     @endif
-                    @unless(strcasecmp($sidebarBrandName, 'BAMA') === 0 && empty($tenantTheme?->logoUrl()))
-                        <strong>{{ $sidebarBrandName }}</strong>
-                    @endunless
+                    <strong>{{ $sidebarBrandName }}</strong>
                 </div>
                 <div class="business-switcher">
                     <form method="post" action="{{ route('businesses.switch') }}" class="mb-2">
@@ -968,7 +967,7 @@
                 @if(!empty($tenantTheme?->logoUrl()))
                     <img src="{{ $tenantTheme->logoUrl() }}" alt="{{ $activeTenant?->name ?? 'Tenant' }}" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
                 @elseif(strcasecmp($sidebarBrandName, 'BAMA') === 0)
-                    <img src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions" style="width:118px;height:auto;object-fit:contain;border-radius:6px;background:#fff;padding:4px;">
+                    <img src="{{ $bamaBrandLogoUrl }}" alt="Bama Solutions" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
                 @else
                     <div class="brand-mark">{{ strtoupper(substr($sidebarBrandName, 0, 1)) }}{{ strtoupper(substr(strstr($sidebarBrandName, ' ') ?: 'A', 1, 1)) }}</div>
                 @endif
