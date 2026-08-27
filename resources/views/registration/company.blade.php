@@ -33,20 +33,8 @@
             </div>
             <section id="industry-preview-panel" class="industry-preview-panel is-collapsed rounded-[18px] border border-[#00A651]/20 bg-[#EAF8F0] p-4" aria-live="polite">
                 <style>
-                    .registration-page .industry-preview-panel.is-collapsed #industry-preview-copy {
-                        display: -webkit-box;
-                        -webkit-line-clamp: 2;
-                        -webkit-box-orient: vertical;
-                        overflow: hidden;
-                    }
-
-                    .registration-page .industry-preview-panel.is-collapsed #industry-preview-modules > :nth-child(n+7),
-                    .registration-page .industry-preview-panel.is-collapsed #industry-dashboard-features > :nth-child(n+3) {
+                    .registration-page .industry-preview-panel.is-collapsed .industry-preview-body {
                         display: none;
-                    }
-
-                    .registration-page .industry-preview-panel.is-collapsed #industry-dashboard-features {
-                        grid-template-columns: 1fr;
                     }
 
                     .registration-page .industry-preview-toggle i {
@@ -57,20 +45,22 @@
                         transform: rotate(180deg);
                     }
                 </style>
-                <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div class="flex items-start justify-between gap-3">
                     <div>
                         <p class="text-xs font-bold uppercase text-[#007A3B]">Industry dashboard</p>
                         <h2 id="industry-preview-title" class="mt-1 text-xl font-black text-black">Dashboard profile</h2>
-                        <p id="industry-preview-copy" class="mt-1 max-w-2xl text-sm leading-6 text-black"></p>
                     </div>
-                    <div class="flex items-start gap-3">
-                        <div id="industry-preview-modules" class="flex max-w-xl flex-wrap gap-2"></div>
-                        <button type="button" class="industry-preview-toggle inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#00A651]/20 bg-white text-[#007A3B] shadow-sm" aria-controls="industry-dashboard-features" aria-expanded="false" aria-label="Expand industry dashboard preview">
-                            <i class="bi bi-chevron-down"></i>
-                        </button>
-                    </div>
+                    <button type="button" class="industry-preview-toggle inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#00A651]/20 bg-white text-[#007A3B] shadow-sm" aria-controls="industry-preview-body" aria-expanded="false" aria-label="Expand industry dashboard preview">
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
                 </div>
-                <div id="industry-dashboard-features" class="mt-3 grid gap-2 sm:grid-cols-2"></div>
+                <div id="industry-preview-body" class="industry-preview-body mt-3">
+                    <p id="industry-preview-copy" class="max-w-2xl text-sm leading-6 text-black"></p>
+                    <div class="mt-3 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div id="industry-preview-modules" class="flex max-w-xl flex-wrap gap-2"></div>
+                    </div>
+                    <div id="industry-dashboard-features" class="mt-3 grid gap-2 sm:grid-cols-2"></div>
+                </div>
             </section>
             <div class="grid gap-4 sm:grid-cols-3">
                 <label class="grid gap-2">
