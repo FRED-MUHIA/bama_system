@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 88" role="img" aria-labelledby="title desc">
+  <title id="title">Northline Logistics</title>
+  <desc id="desc">A logistics company logo with a route and arrow mark.</desc>
+  <rect width="260" height="88" rx="12" fill="#ffffff"/>
+  <path d="M35 56c14-22 33-28 58-25" fill="none" stroke="#00A651" stroke-width="8" stroke-linecap="round"/>
+  <path d="M77 20 98 32 76 44l6-12-5-12Z" fill="#8CC63F"/>
+  <circle cx="43" cy="58" r="7" fill="#111827"/>
+  <circle cx="65" cy="43" r="6" fill="#111827"/>
+  <text x="112" y="42" fill="#111827" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="800">Northline</text>
+  <text x="112" y="63" fill="#5B6472" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" letter-spacing="1.1">LOGISTICS</text>
+</svg>

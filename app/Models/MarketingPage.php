@@ -120,7 +120,13 @@ class MarketingPage extends Model
             ],
             'trust' => [
                 'heading' => 'Trusted by organizations across multiple industries',
-                'logos' => ['Apex Build Co.', 'MediCare Group', 'Urban Retail', 'Northline Logistics', 'Prime Properties'],
+                'logos' => [
+                    ['label' => 'Apex Build Co.', 'src' => 'images/trust/apex-build.svg'],
+                    ['label' => 'MediCare Group', 'src' => 'images/trust/medicare-group.svg'],
+                    ['label' => 'Urban Retail', 'src' => 'images/trust/urban-retail.svg'],
+                    ['label' => 'Northline Logistics', 'src' => 'images/trust/northline-logistics.svg'],
+                    ['label' => 'Prime Properties', 'src' => 'images/trust/prime-properties.svg'],
+                ],
                 'badges' => ['Enterprise Security', 'Tenant Isolation', 'Role-Based Access', 'Audit Ready'],
             ],
             'final_cta' => [

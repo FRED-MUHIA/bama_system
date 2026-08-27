@@ -19,6 +19,8 @@
     $brandAlt = data_get($brand, 'logo_alt', 'Bama Solutions');
     $headerLinks = data_get($headerContent, 'nav_links', $defaults['header']['nav_links']);
     $footerColumns = data_get($footerContent, 'columns', $defaults['footer']['columns']);
+    $trustLogos = data_get($trust, 'logos', $defaults['trust']['logos']) ?: $defaults['trust']['logos'];
+    $trustBadges = data_get($trust, 'badges', $defaults['trust']['badges']) ?: $defaults['trust']['badges'];
 
     $coreModules = [
         ['CRM', 'Manage customers, deals, activities, and sales pipeline.', 'C'],
@@ -295,6 +297,50 @@
         animation-delay: var(--bama-delay, 0ms);
     }
 
+    .home-page .trust-logo-viewport {
+        overflow: hidden;
+        -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+        mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    }
+
+    .home-page .trust-logo-track {
+        display: flex;
+        width: max-content;
+        gap: .95rem;
+        animation: bama-logo-slide 32s linear infinite;
+    }
+
+    .home-page .trust-logo-track:hover {
+        animation-play-state: paused;
+    }
+
+    .home-page .trust-logo-card {
+        display: grid;
+        place-items: center;
+        width: clamp(172px, 18vw, 244px);
+        height: 82px;
+        flex: 0 0 auto;
+        border: 1px solid rgba(0, 0, 0, .09);
+        border-radius: 12px;
+        background: #ffffff;
+        padding: 14px 20px;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, .06);
+    }
+
+    .home-page .trust-logo-card img {
+        display: block;
+        max-width: 100%;
+        max-height: 56px;
+        object-fit: contain;
+    }
+
+    .home-page .trust-logo-fallback {
+        color: #111827;
+        font-size: .96rem;
+        font-weight: 900;
+        text-align: center;
+    }
+
     @keyframes bama-rise {
         from { opacity: 0; transform: translate3d(0, 16px, 0); }
         to { opacity: 1; transform: translate3d(0, 0, 0); }
@@ -315,6 +361,11 @@
         to { transform: scaleX(1); opacity: 1; }
     }
 
+    @keyframes bama-logo-slide {
+        from { transform: translate3d(0, 0, 0); }
+        to { transform: translate3d(calc(-50% - .475rem), 0, 0); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
         .home-page *,
         .home-page *::before,
@@ -328,6 +379,16 @@
         .home-page .bama-animate {
             opacity: 1;
             transform: none;
+        }
+
+        .home-page .trust-logo-viewport {
+            overflow-x: auto;
+            -webkit-mask-image: none;
+            mask-image: none;
+        }
+
+        .home-page .trust-logo-track {
+            animation: none;
         }
     }
 
@@ -450,13 +511,39 @@
     <section class="bg-[#F7F8F5] px-5 py-8">
         <div class="mx-auto max-w-7xl">
             <p class="text-center text-sm font-bold text-zinc-600">{{ data_get($trust, 'heading', 'Trusted by organizations across multiple industries') }}</p>
-            <div class="mt-5 grid gap-3 text-center sm:grid-cols-2 lg:grid-cols-5">
-                @foreach (data_get($trust, 'logos', []) ?: ['Apex Build Co.', 'MediCare Group', 'Urban Retail', 'Northline Logistics', 'Prime Properties'] as $logo)
-                    <div class="rounded-2xl border border-zinc-200 bg-white px-4 py-4 font-black text-zinc-700 shadow-sm">{{ $logo }}</div>
-                @endforeach
+            <div class="trust-logo-viewport mt-5" aria-label="Trusted organization logos">
+                <div class="trust-logo-track">
+                    @for ($pass = 0; $pass < 2; $pass++)
+                        @foreach ($trustLogos as $logo)
+                            @php
+                                $label = is_array($logo) ? ($logo['label'] ?? $logo['alt'] ?? 'Trusted organization') : (string) $logo;
+                                $src = is_array($logo) ? ($logo['src'] ?? $logo['image'] ?? null) : null;
+
+                                if (! $src && is_string($logo) && preg_match('/\.(svg|png|jpe?g|webp|gif)(\?.*)?$/i', $logo)) {
+                                    $src = $logo;
+                                }
+
+                                $logoUrl = null;
+
+                                if ($src) {
+                                    $logoUrl = preg_match('/^(https?:)?\/\//i', $src) || str_starts_with($src, 'data:')
+                                        ? $src
+                                        : (\App\Support\PublicUpload::url($src) ?: asset(ltrim($src, '/')));
+                                }
+                            @endphp
+                            <div class="trust-logo-card" @if($pass === 1) aria-hidden="true" @endif>
+                                @if($logoUrl)
+                                    <img src="{{ $logoUrl }}" alt="{{ $pass === 0 ? $label : '' }}" loading="lazy">
+                                @else
+                                    <span class="trust-logo-fallback">{{ $label }}</span>
+                                @endif
+                            </div>
+                        @endforeach
+                    @endfor
+                </div>
             </div>
             <div class="mt-4 flex flex-wrap justify-center gap-2">
-                @foreach (data_get($trust, 'badges', []) ?: ['Enterprise Security', 'Tenant Isolation', 'Role-Based Access', 'Audit Ready'] as $badge)
+                @foreach ($trustBadges as $badge)
                     <span class="rounded-full bg-[#EAF8F0] px-4 py-2 text-xs font-black uppercase text-[#007A3B]">{{ $badge }}</span>
                 @endforeach
             </div>

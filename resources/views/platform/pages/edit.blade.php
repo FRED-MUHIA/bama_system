@@ -220,7 +220,7 @@
                                 @endforeach
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12">
                             <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
                                 <label class="form-label mb-0">Trust Logos</label>
                                 <button class="btn btn-sm btn-outline-dark" type="button" data-add-trust-logo><i class="bi bi-plus-lg"></i> Add Logo</button>
@@ -228,9 +228,10 @@
                             <input type="hidden" name="logos_json" data-trust-logos-json value="{{ $json($trustLogos) }}">
                             <div class="d-grid gap-2" data-trust-logos>
                                 @foreach($trustLogos as $logo)
-                                    <div class="input-group" data-trust-logo>
-                                        <input class="form-control" data-trust-logo-value value="{{ is_array($logo) ? ($logo['label'] ?? '') : $logo }}">
-                                        <button class="btn btn-outline-danger" type="button" data-remove-row aria-label="Remove logo"><i class="bi bi-trash"></i></button>
+                                    <div class="row g-2 align-items-end" data-trust-logo>
+                                        <div class="col-md-4"><label class="form-label small">Label</label><input class="form-control" data-trust-logo-label value="{{ is_array($logo) ? ($logo['label'] ?? $logo['alt'] ?? '') : $logo }}"></div>
+                                        <div class="col-md-7"><label class="form-label small">Image Path or URL</label><input class="form-control" data-trust-logo-src value="{{ is_array($logo) ? ($logo['src'] ?? $logo['image'] ?? '') : '' }}" placeholder="images/trust/logo.svg"></div>
+                                        <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-row aria-label="Remove logo"><i class="bi bi-trash"></i></button></div>
                                     </div>
                                 @endforeach
                             </div>
@@ -394,6 +395,13 @@
                 <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-row aria-label="Remove bullet"><i class="bi bi-trash"></i></button></div>
             </div>`;
 
+        const trustLogoRow = () => `
+            <div class="row g-2 align-items-end" data-trust-logo>
+                <div class="col-md-4"><label class="form-label small">Label</label><input class="form-control" data-trust-logo-label></div>
+                <div class="col-md-7"><label class="form-label small">Image Path or URL</label><input class="form-control" data-trust-logo-src placeholder="images/trust/logo.svg"></div>
+                <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-row aria-label="Remove logo"><i class="bi bi-trash"></i></button></div>
+            </div>`;
+
         const smallListRow = (kind) => `
             <div class="input-group" data-trust-${kind}>
                 <input class="form-control" data-trust-${kind}-value>
@@ -447,9 +455,12 @@
             }
 
             if (trustLogos && trustLogosHidden) {
-                trustLogosHidden.value = JSON.stringify([...trustLogos.querySelectorAll('[data-trust-logo-value]')]
-                    .map((input) => input.value.trim())
-                    .filter(Boolean));
+                trustLogosHidden.value = JSON.stringify([...trustLogos.querySelectorAll('[data-trust-logo]')]
+                    .map((row) => ({
+                        label: row.querySelector('[data-trust-logo-label]').value.trim(),
+                        src: row.querySelector('[data-trust-logo-src]').value.trim(),
+                    }))
+                    .filter((logo) => logo.label || logo.src));
             }
 
             if (trustBadges && trustBadgesHidden) {
@@ -490,7 +501,7 @@
                 insightBullets?.insertAdjacentHTML('beforeend', insightBulletRow());
                 syncAll();
             } else if (button.matches('[data-add-trust-logo]')) {
-                trustLogos?.insertAdjacentHTML('beforeend', smallListRow('logo'));
+                trustLogos?.insertAdjacentHTML('beforeend', trustLogoRow());
                 syncAll();
             } else if (button.matches('[data-add-trust-badge]')) {
                 trustBadges?.insertAdjacentHTML('beforeend', smallListRow('badge'));
