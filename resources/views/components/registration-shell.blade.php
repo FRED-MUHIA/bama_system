@@ -1,5 +1,11 @@
 @props(['step' => 1])
 
+@php
+    $registrationLogoPath = 'images/bama-solutions-02.png';
+    $registrationLogoVersion = file_exists(public_path($registrationLogoPath)) ? filemtime(public_path($registrationLogoPath)) : time();
+    $registrationLogoUrl = asset($registrationLogoPath).'?v='.$registrationLogoVersion;
+@endphp
+
 <main class="min-h-screen bg-[#F7F8F5] text-black">
     <style>
         @font-face {
@@ -58,11 +64,19 @@
             border-color: #00A651;
             box-shadow: 0 0 0 4px rgba(0, 166, 81, .12);
         }
+
+        .registration-logo {
+            display: block;
+            width: 170px;
+            max-width: 42vw;
+            height: auto;
+            object-fit: contain;
+        }
     </style>
     <div class="registration-page mx-auto grid min-h-screen max-w-7xl lg:grid-cols-[.72fr_1.28fr]">
         <aside class="relative hidden overflow-hidden border-r border-zinc-200 bg-white px-8 py-7 lg:block">
             <a href="{{ route('landing') }}" class="inline-flex items-center gap-3">
-                <img src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions" class="h-12 w-auto">
+                <img src="{{ $registrationLogoUrl }}" alt="Bama Solutions" class="registration-logo">
             </a>
             <div class="mt-14">
                 <p class="text-xs font-semibold uppercase text-[#00A651]">Workspace setup</p>
@@ -83,7 +97,7 @@
             <div class="w-full max-w-4xl">
                 <div class="mb-5 flex items-center justify-between lg:hidden">
                     <a href="{{ route('landing') }}" class="inline-flex items-center gap-3">
-                        <img src="{{ asset('images/bama-solutions-02.png') }}" alt="Bama Solutions" class="h-12 w-auto">
+                        <img src="{{ $registrationLogoUrl }}" alt="Bama Solutions" class="registration-logo">
                     </a>
                     <span class="rounded-lg border border-zinc-200 bg-white px-3 py-1 text-sm text-black">Step {{ $step }} of 5</span>
                 </div>
