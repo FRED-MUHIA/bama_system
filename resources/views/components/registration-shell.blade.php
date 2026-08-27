@@ -1,7 +1,14 @@
 @props(['step' => 1])
 
 @php
-    $registrationLogoUrl = \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png');
+    $legacyLogoPath = 'logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png';
+    $brand = (array) data_get(\App\Models\MarketingPage::resolve('home')->sections ?? [], 'brand', []);
+    $configuredLogoPath = data_get($brand, 'logo_path');
+    $registrationLogoUrl = $configuredLogoPath && $configuredLogoPath !== $legacyLogoPath
+        ? \App\Support\PublicUpload::url($configuredLogoPath)
+        : null;
+    $registrationBrandName = str_replace(' Admin', '', config('app.name', 'BAMA'));
+    $registrationLogoAlt = data_get($brand, 'logo_alt', $registrationBrandName);
 @endphp
 
 <main class="min-h-screen bg-[#F7F8F5] text-black">
@@ -70,11 +77,42 @@
             height: auto;
             object-fit: contain;
         }
+
+        .registration-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: .65rem;
+            color: #000000;
+            text-decoration: none;
+        }
+
+        .registration-brand-mark {
+            display: grid;
+            width: 42px;
+            height: 42px;
+            place-items: center;
+            border-radius: 10px;
+            background: #00A651;
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .registration-brand-name {
+            font-size: 1.55rem;
+            font-weight: 900;
+            line-height: 1;
+        }
     </style>
     <div class="registration-page mx-auto grid min-h-screen max-w-7xl lg:grid-cols-[.72fr_1.28fr]">
         <aside class="relative hidden overflow-hidden border-r border-zinc-200 bg-white px-8 py-7 lg:block">
-            <a href="{{ route('landing') }}" class="inline-flex items-center gap-3">
-                <img src="{{ $registrationLogoUrl }}" alt="Bama Solutions" class="registration-logo">
+            <a href="{{ route('landing') }}" class="registration-brand" aria-label="Back to {{ $registrationBrandName }} home">
+                @if($registrationLogoUrl)
+                    <img src="{{ $registrationLogoUrl }}" alt="{{ $registrationLogoAlt }}" class="registration-logo">
+                @else
+                    <span class="registration-brand-mark">{{ strtoupper(substr($registrationBrandName, 0, 1)) }}</span>
+                    <span class="registration-brand-name">{{ $registrationBrandName }}</span>
+                @endif
             </a>
             <div class="mt-14">
                 <p class="text-xs font-semibold uppercase text-[#00A651]">Workspace setup</p>
@@ -94,8 +132,13 @@
         <section class="flex min-h-screen items-center justify-center px-4 py-5 sm:px-6">
             <div class="w-full max-w-4xl">
                 <div class="mb-5 flex items-center justify-between lg:hidden">
-                    <a href="{{ route('landing') }}" class="inline-flex items-center gap-3">
-                        <img src="{{ $registrationLogoUrl }}" alt="Bama Solutions" class="registration-logo">
+                    <a href="{{ route('landing') }}" class="registration-brand" aria-label="Back to {{ $registrationBrandName }} home">
+                        @if($registrationLogoUrl)
+                            <img src="{{ $registrationLogoUrl }}" alt="{{ $registrationLogoAlt }}" class="registration-logo">
+                        @else
+                            <span class="registration-brand-mark">{{ strtoupper(substr($registrationBrandName, 0, 1)) }}</span>
+                            <span class="registration-brand-name">{{ $registrationBrandName }}</span>
+                        @endif
                     </a>
                     <span class="rounded-lg border border-zinc-200 bg-white px-3 py-1 text-sm text-black">Step {{ $step }} of 5</span>
                 </div>
