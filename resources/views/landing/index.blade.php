@@ -474,7 +474,7 @@
 
         <div class="mx-auto flex max-w-7xl items-center lg:min-h-[590px]">
             <div class="max-w-2xl py-7">
-                <p class="text-sm font-black uppercase text-[#79D9A3]">{{ data_get($hero, 'eyebrow', 'One Platform to Manage Every Business Operation') }}</p>
+                <p class="text-sm font-black text-[#79D9A3]">{{ data_get($hero, 'eyebrow', 'One Platform to Manage Every Business Operation') }}</p>
                 <h1 class="hero-title mt-5 max-w-4xl font-black text-white">
                     {{ data_get($hero, 'title', 'Run Your Entire Business From One Unified Platform') }}
                 </h1>

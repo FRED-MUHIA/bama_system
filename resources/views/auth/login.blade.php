@@ -16,7 +16,10 @@
     'portal' => ['label' => 'Client portal access', 'title' => 'Client portal.', 'intro' => 'Sign in to view your invited projects, invoices, and documents.'],
     'business' => ['label' => 'Identity & Access', 'title' => 'Welcome back.', 'intro' => 'Choose a secure sign-in method to continue to your workspace.'],
 ][$loginContext] ?? ['label' => 'Identity & Access', 'title' => 'Welcome back.', 'intro' => 'Choose a secure sign-in method to continue to your workspace.'])
-@php($brandLogoUrl = asset('images/bama-solutions-02.png'))
+@php
+    $brandLogoPath = 'images/bama-solutions-02.png';
+    $brandLogoUrl = asset($brandLogoPath).'?v='.(file_exists(public_path($brandLogoPath)) ? filemtime(public_path($brandLogoPath)) : time());
+@endphp
 
 <style>
     body:has(.login-stage) { padding-bottom: 0 !important; }
