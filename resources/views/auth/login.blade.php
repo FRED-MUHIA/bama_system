@@ -16,7 +16,7 @@
     'portal' => ['label' => 'Client portal access', 'title' => 'Client portal.', 'intro' => 'Sign in to view your invited projects, invoices, and documents.'],
     'business' => ['label' => 'Identity & Access', 'title' => 'Welcome back.', 'intro' => 'Choose a secure sign-in method to continue to your workspace.'],
 ][$loginContext] ?? ['label' => 'Identity & Access', 'title' => 'Welcome back.', 'intro' => 'Choose a secure sign-in method to continue to your workspace.'])
-@php($brandLogoUrl = \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png'))
+@php($brandLogoUrl = asset('images/bama-solutions-02.png'))
 
 <style>
     body:has(.login-stage) { padding-bottom: 0 !important; }
@@ -108,6 +108,9 @@
         display: block;
         width: 148px;
         height: auto;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
         object-fit: contain;
     }
 
