@@ -65,9 +65,9 @@
 
         .registration-logo {
             display: block;
-            width: 76px;
-            max-width: 24vw;
-            height: 76px;
+            width: 170px;
+            max-width: 42vw;
+            height: auto;
             object-fit: contain;
         }
     </style>

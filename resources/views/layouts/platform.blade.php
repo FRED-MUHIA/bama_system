@@ -15,7 +15,7 @@
         .owner-shell { min-height:100vh; display:grid; grid-template-columns:260px minmax(0, 1fr); }
         .owner-sidebar { background:#07100c; color:#fff; padding:22px 16px; }
         .owner-brand { display:flex; align-items:center; gap:12px; margin-bottom:28px; font-weight:800; }
-        .owner-logo { width:42px; height:42px; display:block; object-fit:contain; border-radius:8px; background:#fff; }
+        .owner-logo { width:auto; height:42px; max-width:136px; display:block; object-fit:contain; border-radius:6px; background:#fff; }
         .owner-nav { display:grid; gap:6px; }
         .owner-nav a { color:#b8c5bf; text-decoration:none; display:flex; align-items:center; gap:10px; min-height:42px; padding:0 12px; border-radius:8px; font-weight:700; }
         .owner-nav a.active,.owner-nav a:hover { color:#fff; background:rgba(0,166,81,.18); }

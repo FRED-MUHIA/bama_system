@@ -106,8 +106,8 @@
     .login-brand .brand-mark,
     .login-mobile-brand .brand-mark {
         display: block;
-        width: 76px;
-        height: 76px;
+        width: 148px;
+        height: auto;
         object-fit: contain;
     }
 

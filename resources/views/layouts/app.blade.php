@@ -784,7 +784,7 @@
                     @if(!empty($tenantTheme?->logoUrl()))
                         <img src="{{ $tenantTheme->logoUrl() }}" alt="{{ $activeTenant?->name ?? 'Tenant' }}" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
                     @elseif(strcasecmp($sidebarBrandName, 'BAMA') === 0)
-                        <img src="{{ $bamaBrandLogoUrl }}" alt="Bama Solutions" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
+                        <img src="{{ $bamaBrandLogoUrl }}" alt="Bama Solutions" style="width:auto;height:42px;max-width:124px;object-fit:contain;border-radius:6px;background:#fff;">
                     @else
                         <div class="brand-mark">{{ strtoupper(substr($sidebarBrandName, 0, 1)) }}{{ strtoupper(substr(strstr($sidebarBrandName, ' ') ?: 'A', 1, 1)) }}</div>
                     @endif
@@ -967,7 +967,7 @@
                 @if(!empty($tenantTheme?->logoUrl()))
                     <img src="{{ $tenantTheme->logoUrl() }}" alt="{{ $activeTenant?->name ?? 'Tenant' }}" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
                 @elseif(strcasecmp($sidebarBrandName, 'BAMA') === 0)
-                    <img src="{{ $bamaBrandLogoUrl }}" alt="Bama Solutions" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
+                    <img src="{{ $bamaBrandLogoUrl }}" alt="Bama Solutions" style="width:auto;height:42px;max-width:118px;object-fit:contain;border-radius:6px;background:#fff;">
                 @else
                     <div class="brand-mark">{{ strtoupper(substr($sidebarBrandName, 0, 1)) }}{{ strtoupper(substr(strstr($sidebarBrandName, ' ') ?: 'A', 1, 1)) }}</div>
                 @endif

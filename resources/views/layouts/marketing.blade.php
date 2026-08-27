@@ -89,9 +89,9 @@
 
         .bama-logo {
             display: block;
-            width: 54px;
-            max-width: 18vw;
-            height: 54px;
+            width: 92px;
+            max-width: 24vw;
+            height: auto;
             object-fit: contain;
         }
 

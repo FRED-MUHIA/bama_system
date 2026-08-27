@@ -24,7 +24,7 @@ class PublicUpload
 
         if (Storage::disk('public')->exists($diskPath)) {
             return Route::has('uploads.public')
-                ? route('uploads.public', ['path' => $diskPath])
+                ? route('uploads.public', ['path' => $diskPath], false)
                 : Storage::url($diskPath);
         }
 
