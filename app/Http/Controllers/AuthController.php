@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -47,6 +48,7 @@ class AuthController extends Controller
             'username' => ['required', 'string'],
             'password' => ['required'],
         ]);
+        $throttleKey = $this->ensureNotRateLimited($request, 'password-login', $context.'|'.$data['username'], 5, 60, 'username');
 
         $loginField = filter_var($data['username'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
         $user = User::where($loginField, $data['username'])->first();
@@ -87,16 +89,21 @@ class AuthController extends Controller
             if (Schema::hasTable('login_activities')) {
                 app(IamService::class)->recordLogin($request, $authenticated, true);
             }
+            RateLimiter::clear($throttleKey);
 
             return redirect()->intended($this->landingRouteFor($authenticated));
         }
 
+        RateLimiter::hit($throttleKey, 60);
+
         if ($user && Schema::hasColumn('users', 'failed_login_attempts')) {
             $attempts = ($user->failed_login_attempts ?? 0) + 1;
-            $max = Schema::hasTable('security_settings') ? (SecuritySetting::first()?->max_failed_attempts ?? 5) : 5;
+            $securitySettings = Schema::hasTable('security_settings') ? SecuritySetting::first() : null;
+            $max = $securitySettings?->max_failed_attempts ?? 5;
+            $lockoutMinutes = $securitySettings?->lockout_minutes ?? 30;
             $failedUpdates = ['failed_login_attempts' => $attempts];
             if (Schema::hasColumn('users', 'locked_at')) {
-                $failedUpdates['locked_at'] = $attempts >= $max ? now()->addMinutes(30) : null;
+                $failedUpdates['locked_at'] = $attempts >= $max ? now()->addMinutes($lockoutMinutes) : null;
             }
             $user->update($failedUpdates);
         }
@@ -113,17 +120,11 @@ class AuthController extends Controller
 
         $context = $this->loginContext($request);
         $data = $request->validate(['email' => ['required', 'email']]);
+        $throttleKey = $this->ensureNotRateLimited($request, 'otp-request', $context.'|'.$data['email'], 1, 60, 'email');
+        RateLimiter::hit($throttleKey, 60);
         $user = User::where('email', $data['email'])->where('is_active', true)->first();
         if (! $user || ! $this->accountMatchesContext($user, $context) || (Schema::hasColumn('users', 'enable_otp_login') && ! $user->enable_otp_login)) {
             return back()->withErrors(['email' => 'OTP login is not available for this account.']);
-        }
-
-        $resendKey = 'login-otp:'.sha1(strtolower($data['email']).'|'.$request->ip());
-        if (RateLimiter::tooManyAttempts($resendKey, 1)) {
-            $seconds = RateLimiter::availableIn($resendKey);
-
-            return back()->with(['otp_sent' => true, 'otp_email' => $data['email'], 'otp_context' => $context, 'otp_resend_at' => now()->addSeconds($seconds)->timestamp])
-                ->withErrors(['email' => "Please wait {$seconds} seconds before requesting another OTP."]);
         }
 
         $otp = OtpCode::create([
@@ -147,8 +148,6 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'The OTP email could not be delivered. Please contact an administrator.']);
         }
 
-        RateLimiter::hit($resendKey, 60);
-
         return back()->with(['status' => 'OTP sent to '.$user->email.'. Check your inbox and spam folder.', 'otp_sent' => true, 'otp_email' => $user->email, 'otp_context' => $context, 'otp_resend_at' => now()->addSeconds(60)->timestamp]);
     }
 
@@ -158,8 +157,11 @@ class AuthController extends Controller
 
         $context = $this->loginContext($request);
         $data = $request->validate(['email' => ['required', 'email'], 'code' => ['required', 'digits:6']]);
+        $throttleKey = $this->ensureNotRateLimited($request, 'otp-verify', $context.'|'.$data['email'], 5, 300, 'code');
         $otp = OtpCode::where('email', $data['email'])->where('code', $data['code'])->whereNull('used_at')->where('expires_at', '>', now())->latest()->first();
         if (! $otp || ! $otp->user || ! $this->accountMatchesContext($otp->user, $context)) {
+            RateLimiter::hit($throttleKey, 300);
+
             return back()->withErrors(['code' => 'Invalid or expired OTP.']);
         }
 
@@ -173,6 +175,7 @@ class AuthController extends Controller
 
             return redirect()->route($this->loginRouteFor($context))->withErrors(['username' => $this->invalidContextMessage($context)]);
         }
+        RateLimiter::clear($throttleKey);
 
         return redirect()->intended($this->landingRouteFor($otp->user));
     }
@@ -183,8 +186,11 @@ class AuthController extends Controller
 
         $context = $this->loginContext($request);
         $data = $request->validate(['email' => ['required', 'email']]);
+        $throttleKey = $this->ensureNotRateLimited($request, 'magic-link', $context.'|'.$data['email'], 3, 300, 'email');
         $user = User::where('email', $data['email'])->where('is_active', true)->first();
         if (! $user || ! $this->accountMatchesContext($user, $context) || (Schema::hasColumn('users', 'enable_magic_link_login') && ! $user->enable_magic_link_login)) {
+            RateLimiter::hit($throttleKey, 300);
+
             return back()->withErrors(['email' => 'Magic link login is not available for this account.']);
         }
 
@@ -208,6 +214,8 @@ class AuthController extends Controller
 
             return back()->withErrors(['email' => 'The magic-link email could not be delivered. Please contact an administrator.']);
         }
+
+        RateLimiter::hit($throttleKey, 300);
 
         return back()->with('status', 'Magic link sent to '.$user->email.'.');
     }
@@ -253,6 +261,9 @@ class AuthController extends Controller
     public function forgot(Request $request)
     {
         $request->validate(['email' => ['required', 'email']]);
+        $throttleKey = $this->ensureNotRateLimited($request, 'password-reset', $request->input('email'), 5, 300, 'email');
+        RateLimiter::hit($throttleKey, 300);
+
         try {
             $this->applyMailSettings();
             $status = Password::sendResetLink($request->only('email'));
@@ -292,6 +303,26 @@ class AuthController extends Controller
     private function applyMailSettings(): void
     {
         app(OutgoingMailService::class)->apply();
+    }
+
+    private function ensureNotRateLimited(Request $request, string $scope, string $identity, int $maxAttempts, int $decaySeconds, string $field): string
+    {
+        $key = $this->rateLimitKey($request, $scope, $identity);
+
+        if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+            $seconds = RateLimiter::availableIn($key);
+
+            throw ValidationException::withMessages([
+                $field => "Too many attempts. Please try again in {$seconds} seconds.",
+            ]);
+        }
+
+        return $key;
+    }
+
+    private function rateLimitKey(Request $request, string $scope, string $identity): string
+    {
+        return $scope.':'.sha1(Str::lower($identity).'|'.$request->ip());
     }
 
     private function accountMatchesContext(?User $user, string $context): bool

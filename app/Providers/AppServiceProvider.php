@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Console\Commands\CreateSuperAdminCommand;
+use App\Console\Commands\EncryptSensitiveDataCommand;
 use App\Console\Commands\MailTestCommand;
 use App\Console\Commands\PostgresWipeCommand;
 use App\Console\Commands\PurgeNonSuperAdminUsersCommand;
@@ -14,8 +15,11 @@ use App\Services\ThemeManager;
 use App\Support\ActiveBusiness;
 use App\Support\ActiveTenant;
 use App\Support\SchemaCache;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -46,6 +50,7 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 CreateSuperAdminCommand::class,
+                EncryptSensitiveDataCommand::class,
                 MailTestCommand::class,
                 PostgresWipeCommand::class,
                 PurgeNonSuperAdminUsersCommand::class,
@@ -56,6 +61,12 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.force_https')) {
             URL::forceScheme('https');
         }
+
+        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)->by(
+            optional($request->user())->id ?: $request->ip()
+        ));
+        RateLimiter::for('public-api', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
+        RateLimiter::for('auth-pages', fn (Request $request) => Limit::perMinute(30)->by($request->ip()));
 
         Paginator::useBootstrapFive();
 

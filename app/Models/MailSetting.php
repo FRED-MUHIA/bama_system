@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\TolerantEncryptedString;
 use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,7 +14,11 @@ class MailSetting extends Model
 
     protected function casts(): array
     {
-        return ['enabled' => 'boolean', 'username' => 'encrypted', 'password' => 'encrypted'];
+        return [
+            'enabled' => 'boolean',
+            'username' => TolerantEncryptedString::class,
+            'password' => TolerantEncryptedString::class,
+        ];
     }
 
     public function apply(): void

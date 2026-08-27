@@ -117,7 +117,7 @@ Route::prefix('public/public')->group(function () {
     Route::post('/activate/{token}', [AdministrationController::class, 'activate']);
 });
 
-Route::middleware('guest')->group(function () {
+Route::middleware(['guest', 'throttle:auth-pages'])->group(function () {
     Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
     Route::get('/owner/login', [AuthController::class, 'loginForm'])->name('platform.login');
     Route::get('/portal/login', [AuthController::class, 'loginForm'])->name('portal.login');

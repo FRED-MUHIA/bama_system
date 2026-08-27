@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\TolerantEncryptedString;
 use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Model;
 
@@ -10,6 +11,14 @@ class Supplier extends Model
     use BelongsToBusiness;
 
     protected $fillable = ['business_id', 'name', 'email', 'phone', 'kra_pin', 'address'];
+
+    protected function casts(): array
+    {
+        return [
+            'kra_pin' => TolerantEncryptedString::class,
+            'address' => TolerantEncryptedString::class,
+        ];
+    }
 
     public function quotes() { return $this->hasMany(SupplierQuote::class); }
     public function purchaseOrders() { return $this->hasMany(PurchaseOrder::class); }

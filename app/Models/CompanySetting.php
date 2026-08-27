@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\TolerantEncryptedString;
 use App\Models\Concerns\BelongsToBusiness;
 use App\Support\PublicUpload;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,14 @@ class CompanySetting extends Model
         'business_id', 'company_name', 'logo_path', 'primary_color', 'secondary_color', 'accent_color', 'phone', 'email', 'address', 'website',
         'location', 'tax_name', 'tax_rate', 'currency_code', 'locale', 'default_terms',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'address' => TolerantEncryptedString::class,
+            'default_terms' => TolerantEncryptedString::class,
+        ];
+    }
 
     public function logoUrl(): ?string
     {

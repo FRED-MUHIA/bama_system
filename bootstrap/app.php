@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAdminAccess;
+use App\Http\Middleware\EnforceHttps;
 use App\Http\Middleware\EnsureModuleEnabled;
 use App\Http\Middleware\EnsureSubscriptionActive;
 use App\Http\Middleware\EnsureSuperAdmin;
@@ -24,7 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: ['logout', 'billing/mpesa/callback']);
-        $middleware->web(append: [IdentifyTenant::class, RecordMajorActivity::class, SecurityHeaders::class]);
+        $middleware->append([EnforceHttps::class, SecurityHeaders::class]);
+        $middleware->web(append: [IdentifyTenant::class, RecordMajorActivity::class]);
         $middleware->alias([
             'admin' => EnsureAdminAccess::class,
             'permission' => RequirePermission::class,

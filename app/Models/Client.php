@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\TolerantEncryptedString;
 use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
@@ -13,6 +14,16 @@ class Client extends Model
     protected $fillable = [
         'business_id', 'type', 'name', 'phone', 'email', 'company_name', 'address', 'billing_address', 'kra_pin', 'notes',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'address' => TolerantEncryptedString::class,
+            'billing_address' => TolerantEncryptedString::class,
+            'kra_pin' => TolerantEncryptedString::class,
+            'notes' => TolerantEncryptedString::class,
+        ];
+    }
 
     public function quotations() { return $this->hasMany(Quotation::class); }
     public function invoices() { return $this->hasMany(Invoice::class); }

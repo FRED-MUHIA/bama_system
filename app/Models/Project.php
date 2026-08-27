@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\TolerantEncryptedString;
 use App\Models\Concerns\BelongsToBusiness;
 use App\Models\Concerns\AuditsAccountingChanges;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,14 @@ class Project extends Model
     public const STATUSES = ['Lead', 'Quoted', 'Approved', 'Procurement', 'Installation', 'Testing', 'Handover', 'Closed'];
 
     protected $fillable = ['business_id', 'client_id', 'site_id', 'cost_center_id', 'contact_id', 'project_name', 'status', 'scope', 'notes'];
+
+    protected function casts(): array
+    {
+        return [
+            'scope' => TolerantEncryptedString::class,
+            'notes' => TolerantEncryptedString::class,
+        ];
+    }
 
     protected static function booted(): void
     {

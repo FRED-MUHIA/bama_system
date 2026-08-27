@@ -4,7 +4,7 @@ use App\Http\Controllers\Api\V1\IndustryPackageController;
 use App\Http\Controllers\Api\V1\PlatformController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware('throttle:public-api')->group(function () {
     Route::get('/industry-packages', [IndustryPackageController::class, 'index'])->name('api.v1.industry-packages.index');
     Route::get('/industry-packages/{industry}', [IndustryPackageController::class, 'show'])->name('api.v1.industry-packages.show');
     Route::get('/industry-packages/{industry}/dashboard', [IndustryPackageController::class, 'dashboard'])->name('api.v1.industry-packages.dashboard');
@@ -15,7 +15,7 @@ Route::prefix('v1')->group(function () {
     });
 });
 
-Route::prefix('v1')->middleware(['auth', 'tenant.context'])->group(function () {
+Route::prefix('v1')->middleware(['auth', 'tenant.context', 'throttle:api'])->group(function () {
     Route::get('/context', [PlatformController::class, 'context'])->name('api.v1.context');
     Route::get('/tenant/industry-package', [IndustryPackageController::class, 'tenant'])->name('api.v1.tenant.industry-package');
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\TolerantEncryptedString;
 use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,7 +19,13 @@ class Letter extends Model
         'status', 'created_by', 'approved_by', 'approved_at', 'recipient', 'sent_at', 'portal_published_at', 'delivery_status',
     ];
 
-    protected $casts = ['approved_at' => 'datetime', 'sent_at' => 'datetime', 'portal_published_at' => 'datetime'];
+    protected $casts = [
+        'approved_at' => 'datetime',
+        'sent_at' => 'datetime',
+        'portal_published_at' => 'datetime',
+        'content' => TolerantEncryptedString::class,
+        'recipient' => TolerantEncryptedString::class,
+    ];
 
     public function template() { return $this->belongsTo(LetterTemplate::class, 'letter_template_id'); }
     public function client() { return $this->belongsTo(Client::class); }

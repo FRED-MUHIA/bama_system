@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\TolerantEncryptedString;
 use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,6 +18,7 @@ class BusinessTemplate extends Model
     protected $casts = [
         'is_system' => 'boolean',
         'is_active' => 'boolean',
+        'content' => TolerantEncryptedString::class,
     ];
 
     public function category()

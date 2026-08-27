@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\TolerantEncryptedString;
 use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Model;
 
@@ -19,6 +20,7 @@ class LetterTemplate extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'is_system' => 'boolean',
+        'content' => TolerantEncryptedString::class,
     ];
 
     public function letters() { return $this->hasMany(Letter::class); }

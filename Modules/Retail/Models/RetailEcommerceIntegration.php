@@ -2,6 +2,8 @@
 
 namespace Modules\Retail\Models;
 
+use App\Casts\TolerantEncryptedArray;
+
 class RetailEcommerceIntegration extends RetailModel
 {
     protected $casts = [
@@ -9,6 +11,6 @@ class RetailEcommerceIntegration extends RetailModel
         'last_inventory_sync_at' => 'datetime',
         'last_order_sync_at' => 'datetime',
         'last_customer_sync_at' => 'datetime',
-        'settings' => 'array',
+        'settings' => TolerantEncryptedArray::class,
     ];
 }
