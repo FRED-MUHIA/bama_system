@@ -1,22 +1,22 @@
 @extends('layouts.app')
 @section('title','Secure Access')
 @section('content')
-@php($otpAvailable = \Illuminate\Support\Facades\Schema::hasTable('otp_codes'))
-@php($otpSent = (bool) session('otp_sent'))
-@php($loginContext = $loginContext ?? session('otp_context', 'business'))
-@php($publicLoginPrefix = request()->routeIs('public.*') ? 'public.' : '')
-@php($loginActions = [
-    'password' => $loginContext === 'owner' ? route($publicLoginPrefix.'platform.login.store') : ($loginContext === 'portal' ? route($publicLoginPrefix.'portal.login.store') : route($publicLoginPrefix.'login.store')),
-    'otpRequest' => $loginContext === 'owner' ? route($publicLoginPrefix.'platform.login.otp.request') : ($loginContext === 'portal' ? route($publicLoginPrefix.'portal.login.otp.request') : route($publicLoginPrefix.'login.otp.request')),
-    'otpVerify' => $loginContext === 'owner' ? route($publicLoginPrefix.'platform.login.otp.verify') : ($loginContext === 'portal' ? route($publicLoginPrefix.'portal.login.otp.verify') : route($publicLoginPrefix.'login.otp.verify')),
-    'magic' => $loginContext === 'owner' ? route($publicLoginPrefix.'platform.login.magic.request') : ($loginContext === 'portal' ? route($publicLoginPrefix.'portal.login.magic.request') : route($publicLoginPrefix.'login.magic.request')),
-])
-@php($loginCopy = [
-    'owner' => ['label' => 'Platform owner access', 'title' => 'Owner console.', 'intro' => 'Sign in to manage tenants, clients, pricing, and platform controls.'],
-    'portal' => ['label' => 'Client portal access', 'title' => 'Client portal.', 'intro' => 'Sign in to view your invited projects, invoices, and documents.'],
-    'business' => ['label' => 'Identity & Access', 'title' => 'Welcome back.', 'intro' => 'Choose a secure sign-in method to continue to your workspace.'],
-][$loginContext] ?? ['label' => 'Identity & Access', 'title' => 'Welcome back.', 'intro' => 'Choose a secure sign-in method to continue to your workspace.'])
 @php
+    $otpAvailable = \Illuminate\Support\Facades\Schema::hasTable('otp_codes');
+    $otpSent = (bool) session('otp_sent');
+    $loginContext = $loginContext ?? session('otp_context', 'business');
+    $publicLoginPrefix = request()->routeIs('public.*') ? 'public.' : '';
+    $loginActions = [
+        'password' => $loginContext === 'owner' ? route($publicLoginPrefix.'platform.login.store') : ($loginContext === 'portal' ? route($publicLoginPrefix.'portal.login.store') : route($publicLoginPrefix.'login.store')),
+        'otpRequest' => $loginContext === 'owner' ? route($publicLoginPrefix.'platform.login.otp.request') : ($loginContext === 'portal' ? route($publicLoginPrefix.'portal.login.otp.request') : route($publicLoginPrefix.'login.otp.request')),
+        'otpVerify' => $loginContext === 'owner' ? route($publicLoginPrefix.'platform.login.otp.verify') : ($loginContext === 'portal' ? route($publicLoginPrefix.'portal.login.otp.verify') : route($publicLoginPrefix.'login.otp.verify')),
+        'magic' => $loginContext === 'owner' ? route($publicLoginPrefix.'platform.login.magic.request') : ($loginContext === 'portal' ? route($publicLoginPrefix.'portal.login.magic.request') : route($publicLoginPrefix.'login.magic.request')),
+    ];
+    $loginCopy = [
+        'owner' => ['label' => 'Platform owner access', 'title' => 'Owner console.', 'intro' => 'Sign in to manage tenants, clients, pricing, and platform controls.'],
+        'portal' => ['label' => 'Client portal access', 'title' => 'Client portal.', 'intro' => 'Sign in to view your invited projects, invoices, and documents.'],
+        'business' => ['label' => 'Identity & Access', 'title' => 'Welcome back.', 'intro' => 'Choose a secure sign-in method to continue to your workspace.'],
+    ][$loginContext] ?? ['label' => 'Identity & Access', 'title' => 'Welcome back.', 'intro' => 'Choose a secure sign-in method to continue to your workspace.'];
     $brandLogoPath = 'images/bama-solutions-02.png';
     $brandLogoUrl = asset($brandLogoPath).'?v='.(file_exists(public_path($brandLogoPath)) ? filemtime(public_path($brandLogoPath)) : time());
 @endphp
