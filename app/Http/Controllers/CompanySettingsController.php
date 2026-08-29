@@ -144,11 +144,17 @@ class CompanySettingsController extends Controller
     {
         abort_unless(Schema::hasTable('signatories'), 404);
 
+        if (! $request->filled('name') && ! $request->hasFile('signature') && ! $request->hasFile('stamp')) {
+            return back()
+                ->withErrors(['name' => 'Enter a name or upload a signature/stamp image.'])
+                ->withInput();
+        }
+
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['nullable', 'string', 'max:255'],
             'title' => ['nullable', 'string', 'max:255'],
-            'signature' => ['nullable', 'image', 'max:2048'],
-            'stamp' => ['nullable', 'image', 'max:2048'],
+            'signature' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif,svg', 'max:10240'],
+            'stamp' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif,svg', 'max:10240'],
             'is_default' => ['nullable', 'boolean'],
         ]);
 
@@ -158,20 +164,22 @@ class CompanySettingsController extends Controller
             Signatory::where('is_default', true)->update(['is_default' => false]);
         }
 
-        $signatory = Signatory::create([
-            'name' => $data['name'],
+        $signatoryData = [
+            'name' => $data['name'] ?: ($this->activeCompanySettings()->company_name ?: 'Authorized Representative'),
             'title' => $data['title'] ?? null,
             'is_default' => $isDefault,
             'is_active' => true,
-        ]);
+        ];
 
-        if ($request->hasFile('signature')) {
-            $signatory->update(['signature_path' => $request->file('signature')->store('signatures', 'public')]);
+        if ($request->hasFile('signature') && Schema::hasColumn('signatories', 'signature_path')) {
+            $signatoryData['signature_path'] = $request->file('signature')->store('signatures', 'public');
         }
 
         if ($request->hasFile('stamp') && Schema::hasColumn('signatories', 'stamp_path')) {
-            $signatory->update(['stamp_path' => $request->file('stamp')->store('stamps', 'public')]);
+            $signatoryData['stamp_path'] = $request->file('stamp')->store('stamps', 'public');
         }
+
+        Signatory::create($signatoryData);
 
         return back()->with('status', 'Signatory saved.');
     }
@@ -183,8 +191,8 @@ class CompanySettingsController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'title' => ['nullable', 'string', 'max:255'],
-            'signature' => ['nullable', 'image', 'max:2048'],
-            'stamp' => ['nullable', 'image', 'max:2048'],
+            'signature' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif,svg', 'max:10240'],
+            'stamp' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif,svg', 'max:10240'],
             'is_default' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
         ]);

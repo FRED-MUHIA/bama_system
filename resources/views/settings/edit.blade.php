@@ -79,9 +79,9 @@
     </div></div>
     <div class="card mb-4"><div class="card-body"><h2 class="h5">Signatures & Stamps</h2>
         <form method="post" action="{{ route('signatories.store') }}" class="border-bottom pb-3 mb-3" enctype="multipart/form-data">@csrf
-            <div class="row g-2"><div class="col-md-6"><input class="form-control" name="name" placeholder="Full name" required></div><div class="col-md-6"><input class="form-control" name="title" placeholder="Title (e.g. Managing Director)"></div></div>
-            <label class="form-label mt-2">Signature</label><input class="form-control" type="file" name="signature" accept="image/*">
-            <label class="form-label mt-2">Stamp</label><input class="form-control" type="file" name="stamp" accept="image/*">
+            <div class="row g-2"><div class="col-md-6"><input class="form-control" name="name" value="{{ old('name') }}" placeholder="Full name"></div><div class="col-md-6"><input class="form-control" name="title" value="{{ old('title') }}" placeholder="Title (e.g. Managing Director)"></div></div>
+            <label class="form-label mt-2">Signature</label><input class="form-control" type="file" name="signature" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,image/*">
+            <label class="form-label mt-2">Stamp</label><input class="form-control" type="file" name="stamp" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,image/*">
             <label class="form-check mt-2"><input class="form-check-input" type="checkbox" name="is_default" value="1"> <span class="form-check-label">Make default signatory</span></label>
             <button class="btn btn-outline-warning btn-sm mt-2">Add Signatory</button>
         </form>
@@ -100,8 +100,8 @@
                 <form method="post" action="{{ route('signatories.update',$sig) }}" class="row g-2 mt-2" enctype="multipart/form-data">@csrf @method('PUT')
                     <div class="col-md-6"><input class="form-control" name="name" value="{{ old('name',$sig->name) }}" required></div>
                     <div class="col-md-6"><input class="form-control" name="title" value="{{ old('title',$sig->title) }}" placeholder="Title"></div>
-                    <div class="col-md-6"><label class="form-label">Replace signature</label><input class="form-control" type="file" name="signature" accept="image/*"></div>
-                    <div class="col-md-6"><label class="form-label">Replace stamp</label><input class="form-control" type="file" name="stamp" accept="image/*"></div>
+                    <div class="col-md-6"><label class="form-label">Replace signature</label><input class="form-control" type="file" name="signature" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,image/*"></div>
+                    <div class="col-md-6"><label class="form-label">Replace stamp</label><input class="form-control" type="file" name="stamp" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,image/*"></div>
                     <div class="col-md-6"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_default" value="1" @checked(old('is_default',$sig->is_default))> <span class="form-check-label">Default on documents</span></label></div>
                     <div class="col-md-6"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_active" value="1" @checked(old('is_active',$sig->is_active))> <span class="form-check-label">Active</span></label></div>
                     <div class="col-12"><button class="btn btn-warning btn-sm">Update Signatory</button></div>
