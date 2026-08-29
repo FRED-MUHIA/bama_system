@@ -64,9 +64,9 @@
     .doc-sheet__inner{padding:26px}
     .doc-sheet__head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px;align-items:start;margin-bottom:26px}
     .doc-company{display:flex;gap:14px;align-items:flex-start}
-    .doc-logo{width:54px;height:54px;border-radius:999px;border:0;display:grid;place-items:center;background:#fff;color:#fff;font-weight:900;overflow:hidden;flex:0 0 54px}
-    .doc-logo span{display:grid;place-items:center;width:100%;height:100%;background:var(--doc-primary);font-size:1rem}
-    .doc-logo img{width:100%;height:100%;object-fit:contain;background:#fff}
+    .doc-logo{width:64px;height:58px;border-radius:0;border:0;display:grid;place-items:center;background:#fff;color:#fff;font-weight:900;overflow:visible;flex:0 0 64px}
+    .doc-logo span{display:grid;place-items:center;width:54px;height:54px;border-radius:999px;background:var(--doc-primary);font-size:1rem}
+    .doc-logo img{max-width:100%;max-height:100%;object-fit:contain;background:#fff}
     .doc-company h2{font-size:1.18rem;margin:0 0 4px;color:#020617;font-weight:800;line-height:1.12}
     .doc-company__subtitle{display:none}
     .doc-company p,.doc-meta p,.doc-box p{margin:0;color:#020617;font-size:.68rem;line-height:1.45}

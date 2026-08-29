@@ -74,9 +74,9 @@
         .brand-cell { width:68%; vertical-align:top; }
         .meta-cell { width:32%; vertical-align:top; text-align:right; }
         .brand-table td { vertical-align:top; }
-        .logo-cell { width:54px; }
-        .logo-frame { width:42px; height:42px; background:#fff; text-align:center; vertical-align:middle; }
-        .logo { max-width:42px; max-height:42px; object-fit:contain; }
+        .logo-cell { width:66px; }
+        .logo-frame { width:58px; height:50px; background:#fff; text-align:center; vertical-align:middle; }
+        .logo { max-width:58px; max-height:50px; object-fit:contain; }
         .logo-fallback { width:42px; height:42px; border-radius:21px; background:{{ $primaryColor }}; color:#fff; text-align:center; line-height:42px; font-size:11px; font-weight:bold; }
         .company h2 { margin:0 0 4px; font-size:15px; color:#020617; line-height:1.1; }
         .company-subtitle { display:none; }
