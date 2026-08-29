@@ -3,19 +3,27 @@
 
 @section('content')
 <style>
-    .print-shell{display:grid;gap:18px}
+    .print-shell{--print-surface:#fff;--print-surface-soft:#f8faf9;--print-border:#e2e8f0;--print-border-soft:#ecedf0;--print-ink:#101828;--print-muted:#667085;--print-kicker:#007a3b;--print-pill-bg:#e9fff2;--print-pill-ink:#007a3b;--print-button-bg:#101828;--print-button-hover:#1f2937;display:grid;gap:18px;color:var(--print-ink)}
     .print-hero{background:#050806;color:#fff;border-radius:16px;padding:26px;border:1px solid rgba(0,166,81,.28);box-shadow:0 22px 60px rgba(0,0,0,.12)}
-    .print-kicker{color:#71f0ad;font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
-    .print-title{font-size:clamp(2rem,4vw,3.8rem);line-height:1;margin:.35rem 0 .8rem}
+    .print-kicker{color:var(--print-kicker);font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+    .print-title{font-size:clamp(2rem,4vw,3.8rem);line-height:1;margin:.35rem 0 .8rem;color:#fff}
     .print-title span{color:#00A651}
     .print-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-    .print-card{background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:16px;box-shadow:0 12px 28px rgba(15,23,42,.05)}
-    .print-label{color:#667085;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
-    .print-value{font-size:1.45rem;font-weight:900;color:#050806}
+    .print-card{background:var(--print-surface);border:1px solid var(--print-border);border-radius:12px;padding:16px;color:var(--print-ink);box-shadow:0 12px 28px rgba(15,23,42,.05);transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease}
+    .print-card h2,.print-card h3,.print-card h4,.print-card h5,.print-card h6{color:var(--print-ink)}
+    .print-label{color:var(--print-muted);font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+    .print-value{font-size:1.45rem;font-weight:900;color:var(--print-ink)}
     .print-board{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
-    .print-pill{display:inline-flex;align-items:center;border-radius:999px;padding:.28rem .65rem;background:#e9fff2;color:#007a3b;font-size:.78rem;font-weight:800}
+    .print-pill{display:inline-flex;align-items:center;border-radius:999px;padding:.28rem .65rem;background:var(--print-pill-bg);color:var(--print-pill-ink);font-size:.78rem;font-weight:800;transition:background-color .18s ease,color .18s ease}
     .print-list{display:grid;gap:10px}
-    .print-item{display:flex;justify-content:space-between;gap:12px;border:1px solid #ecedf0;border-radius:10px;padding:12px;background:#fff}
+    .print-item{display:flex;justify-content:space-between;gap:12px;border:1px solid var(--print-border-soft);border-radius:10px;padding:12px;background:var(--print-surface);color:var(--print-ink);transition:background-color .18s ease,border-color .18s ease,color .18s ease}
+    .print-item strong,.print-item span{color:var(--print-ink)}
+    .print-shell .text-muted{color:var(--print-muted)!important}
+    .print-shell .btn-dark{background:var(--print-button-bg);border-color:var(--print-button-bg);color:#fff;transition:background-color .18s ease,border-color .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease}
+    .print-shell .btn-dark:hover,.print-shell .btn-dark:focus{background:var(--print-button-hover);border-color:var(--print-button-hover);color:#fff;box-shadow:0 10px 22px rgba(16,24,40,.16)}
+    html[data-theme="dark"] .print-shell{--print-surface:#1b1f1d;--print-surface-soft:#151816;--print-border:#313a35;--print-border-soft:#2a332e;--print-ink:#f4f7f2;--print-muted:#b7c0b9;--print-kicker:#71f0ad;--print-pill-bg:rgba(113,240,173,.14);--print-pill-ink:#93f6bf;--print-button-bg:#00A651;--print-button-hover:#17bf68}
+    html[data-theme="dark"] .print-card{box-shadow:none}
+    html[data-theme="dark"] .print-item{background:var(--print-surface-soft)}
     @media(max-width:1100px){.print-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.print-board{grid-template-columns:1fr}}
     @media(max-width:640px){.print-grid{grid-template-columns:1fr}.print-hero{padding:20px}}
 </style>
