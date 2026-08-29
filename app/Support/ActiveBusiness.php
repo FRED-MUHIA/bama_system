@@ -64,6 +64,10 @@ class ActiveBusiness
             return self::$current = null;
         }
 
+        if ($activeId && ! $sessionId) {
+            Session::put(self::SESSION_KEY, $activeId);
+        }
+
         $query = Business::where('is_active', true);
         if ($accessibleIds !== null) {
             $query->whereIn('id', $accessibleIds);

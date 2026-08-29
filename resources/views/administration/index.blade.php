@@ -10,6 +10,8 @@
     $profileEmail = $companySetting?->email ?: auth()->user()->email;
     $mailFromAddress = old('from_address', $mailSetting?->from_address ?? $profileEmail);
     $mailFromName = old('from_name', $mailSetting?->from_name ?? $companySetting?->company_name ?? $profileName);
+    $userSeatsRemaining = $userSeatLimit === null ? null : max(0, $userSeatLimit - $userSeatUsage);
+    $userSeatsFull = $userSeatLimit !== null && $userSeatUsage >= $userSeatLimit;
     $usesOwnSmtp = old('use_own_smtp') !== null
         ? old('use_own_smtp') === '1'
         : filled($mailSetting?->username) && filled($mailSetting?->password);
@@ -39,7 +41,7 @@
 @endif
 
 <div class="row g-3 mb-4">
-    @foreach([['Users',$users->count()],['Active',$users->where('status','Active')->count()],['Pending',$users->where('status','Pending Invitation')->count()],['Roles',$roles->count()],['Departments',$departments->count()],['Branches',$branches->count()]] as [$label,$count])
+    @foreach([['Users',$users->count()],['Active',$users->where('status','Active')->count()],['Pending',$users->where('status','Pending Invitation')->count()],['Seats',$userSeatLimit === null ? $userSeatUsage.' / Unlimited' : $userSeatUsage.' / '.$userSeatLimit],['Roles',$roles->count()],['Departments',$departments->count()]] as [$label,$count])
         <div class="col-md-2">
             <div class="card p-3">
                 <small>{{ $label }}</small>
@@ -54,7 +56,14 @@
         <div class="col-lg-7">
             <small class="text-uppercase text-muted fw-semibold">Current Profile</small>
             <h2 class="h4 mb-1">{{ $profileName }}</h2>
-            <p class="text-muted mb-0">Administration changes made here apply only to this profile/business.</p>
+            <p class="text-muted mb-0">
+                Administration changes made here apply only to this profile/business.
+                Package: {{ $subscriptionPlanName }}.
+                Seats: {{ $userSeatUsage }}{{ $userSeatLimit === null ? ' used' : ' of '.$userSeatLimit.' used' }}.
+            </p>
+            @if($userSeatsFull)
+                <div class="alert alert-warning mb-0 mt-3">This profile has reached its package user limit. Upgrade the package to invite more people.</div>
+            @endif
         </div>
         <div class="col-lg-5">
             <div class="row g-2" title="Adding more profiles is coming soon. Each profile manages one business for now.">
@@ -116,7 +125,10 @@
                         </div>
                         <div class="col-12"><input class="form-control" name="approval_level" placeholder="Approval level, optional"></div>
                         <div class="col-12">
-                            <button class="btn btn-warning w-100">Save Access & Invite</button>
+                            <button class="btn btn-warning w-100" @disabled($userSeatsFull)>Save Access & Invite</button>
+                            @if($userSeatsFull)
+                                <small class="text-muted d-block mt-2">No user seats remaining on this package.</small>
+                            @endif
                         </div>
                     </form>
                 </div>
@@ -176,7 +188,10 @@
                             @endforelse
                             <div class="permissions-empty text-muted small d-none">No matching permissions.</div>
                         </div>
-                        <button class="btn btn-warning mt-3 w-100">Save Custom Feature Access</button>
+                        <button class="btn btn-warning mt-3 w-100" @disabled($userSeatsFull)>Save Custom Feature Access</button>
+                        @if($userSeatsFull)
+                            <small class="text-muted d-block mt-2">Upgrade the package to add another employee profile.</small>
+                        @endif
                     </form>
                 </div>
             </div>
@@ -217,7 +232,12 @@
                                 <option value="{{ $manager->id }}">{{ $manager->name }}</option>
                             @endforeach
                         </select>
-                        <button class="btn btn-warning">Send Invitation</button>
+                        <button class="btn btn-warning" @disabled($userSeatsFull)>Send Invitation</button>
+                        @if($userSeatsFull)
+                            <small class="text-muted">This {{ $subscriptionPlanName }} package has no user seats remaining.</small>
+                        @elseif($userSeatsRemaining !== null)
+                            <small class="text-muted">{{ $userSeatsRemaining }} user seat{{ $userSeatsRemaining === 1 ? '' : 's' }} remaining.</small>
+                        @endif
                     </form>
                 </div>
             </div>
@@ -227,11 +247,12 @@
                         <table class="table align-middle">
                             <thead><tr><th>User</th><th>Profile Access</th><th>Status</th><th>Devices</th><th>Controls</th></tr></thead>
                             <tbody>
-                            @foreach($users as $user)
-                                @php($membership = $memberships->get($user->id))
-                                @php($profileStatus = $membership?->status ?? $user->status)
-                                @php($canDeleteUser = auth()->id() !== $user->id && in_array($profileStatus, ['Pending Invitation', 'Suspended'], true))
-                                <tr>
+                             @foreach($users as $user)
+                                 @php($membership = $memberships->get($user->id))
+                                 @php($profileStatus = $membership?->status ?? $user->status)
+                                 @php($canDeleteUser = auth()->id() !== $user->id && in_array($profileStatus, ['Pending Invitation', 'Suspended'], true))
+                                 @php($editId = 'edit-user-'.$user->id)
+                                 <tr>
                                     <td>
                                         {{ $user->name }}
                                         <small class="d-block">{{ $user->email }} · {{ $user->job_title ?: 'Team member' }}</small>
@@ -246,11 +267,12 @@
                                     </td>
                                     <td>{{ $profileStatus }}</td>
                                     <td>{{ $user->devices->whereNull('revoked_at')->count() }}</td>
-                                    <td>
-                                        <div class="d-flex flex-wrap gap-1">
-                                            <form method="post" action="{{ route('administration.users.unlock',$user) }}">@csrf<button class="btn btn-sm btn-outline-success">Unlock</button></form>
-                                            <form method="post" action="{{ route('administration.users.force-reset',$user) }}">@csrf<button class="btn btn-sm btn-outline-warning">Reset</button></form>
-                                            <form method="post" action="{{ route('administration.users.status',$user) }}">@csrf<input type="hidden" name="status" value="Suspended"><button class="btn btn-sm btn-outline-danger">Suspend</button></form>
+                                     <td>
+                                         <div class="d-flex flex-wrap gap-1">
+                                             <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $editId }}" aria-expanded="false" aria-controls="{{ $editId }}">Edit</button>
+                                             <form method="post" action="{{ route('administration.users.unlock',$user) }}">@csrf<button class="btn btn-sm btn-outline-success">Unlock</button></form>
+                                             <form method="post" action="{{ route('administration.users.force-reset',$user) }}">@csrf<button class="btn btn-sm btn-outline-warning">Reset Email</button></form>
+                                             <form method="post" action="{{ route('administration.users.status',$user) }}">@csrf<input type="hidden" name="status" value="Suspended"><button class="btn btn-sm btn-outline-danger">Suspend</button></form>
                                             @if($canDeleteUser)
                                                 <form method="post" action="{{ route('administration.users.destroy',$user) }}" onsubmit="return confirm({{ \Illuminate\Support\Js::from('Delete this user access from '.$profileName.'? This cannot be undone.') }})">
                                                     @csrf
@@ -260,9 +282,59 @@
                                                 </form>
                                             @endif
                                         </div>
-                                    </td>
-                                </tr>
-                            @endforeach
+                                     </td>
+                                 </tr>
+                                 <tr class="collapse" id="{{ $editId }}">
+                                     <td colspan="5">
+                                         <form method="post" action="{{ route('administration.users.update',$user) }}" class="border rounded-2 p-3">
+                                             @csrf
+                                             @method('PUT')
+                                             <div class="row g-2">
+                                                 <div class="col-md-4"><label class="form-label small">Name</label><input class="form-control" name="name" value="{{ $user->name }}" required></div>
+                                                 <div class="col-md-4"><label class="form-label small">Employee number</label><input class="form-control" name="employee_number" value="{{ $user->employee_number }}"></div>
+                                                 <div class="col-md-4"><label class="form-label small">Job title</label><input class="form-control" name="job_title" value="{{ $user->job_title }}"></div>
+                                                 <div class="col-md-4"><label class="form-label small">Phone</label><input class="form-control" name="phone" value="{{ $user->phone }}"></div>
+                                                 <div class="col-md-4">
+                                                     <label class="form-label small">Role</label>
+                                                     <select class="form-select" name="iam_role_id" required>
+                                                         @foreach($roles as $role)
+                                                             <option value="{{ $role->id }}" @selected((int) $membership?->iam_role_id === (int) $role->id)>{{ $role->name }}</option>
+                                                         @endforeach
+                                                     </select>
+                                                 </div>
+                                                 <div class="col-md-4">
+                                                     <label class="form-label small">Manager</label>
+                                                     <select class="form-select" name="manager_id">
+                                                         <option value="">No manager</option>
+                                                         @foreach($users->where('id','!=',$user->id) as $manager)
+                                                             <option value="{{ $manager->id }}" @selected((int) $user->manager_id === (int) $manager->id)>{{ $manager->name }}</option>
+                                                         @endforeach
+                                                     </select>
+                                                 </div>
+                                                 <div class="col-md-4">
+                                                     <label class="form-label small">Department</label>
+                                                     <select class="form-select" name="department_id">
+                                                         <option value="">No department</option>
+                                                         @foreach($departments as $department)
+                                                             <option value="{{ $department->id }}" @selected((int) $membership?->department_id === (int) $department->id)>{{ $department->name }}</option>
+                                                         @endforeach
+                                                     </select>
+                                                 </div>
+                                                 <div class="col-md-4">
+                                                     <label class="form-label small">Branch</label>
+                                                     <select class="form-select" name="branch_id">
+                                                         <option value="">No branch</option>
+                                                         @foreach($branches as $branch)
+                                                             <option value="{{ $branch->id }}" @selected((int) $membership?->branch_id === (int) $branch->id)>{{ $branch->name }}</option>
+                                                         @endforeach
+                                                     </select>
+                                                 </div>
+                                                 <div class="col-md-4 d-flex align-items-end"><button class="btn btn-warning w-100">Save User</button></div>
+                                             </div>
+                                         </form>
+                                     </td>
+                                 </tr>
+                             @endforeach
                             </tbody>
                         </table>
                     </div>

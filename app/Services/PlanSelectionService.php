@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\Plan;
+use App\Support\SchemaCache;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Schema;
 
 class PlanSelectionService
 {
@@ -12,7 +12,7 @@ class PlanSelectionService
     {
         $defaults = collect($this->defaults());
 
-        if (! Schema::hasTable('plans')) {
+        if (! SchemaCache::hasTable('plans')) {
             return $defaults;
         }
 

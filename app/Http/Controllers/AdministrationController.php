@@ -17,6 +17,7 @@ use App\Models\UserInvitation;
 use App\Services\IamService;
 use App\Services\ModuleRegistry;
 use App\Services\OutgoingMailService;
+use App\Services\SubscriptionManager;
 use App\Support\ActiveBusiness;
 use App\Support\ActiveTenant;
 use Illuminate\Http\Request;
@@ -75,6 +76,9 @@ class AdministrationController extends Controller
 
         return view('administration.index', [
             'users' => $users,
+            'userSeatLimit' => $this->userSeatLimit(),
+            'userSeatUsage' => $this->billableProfileUserCount(),
+            'subscriptionPlanName' => $this->subscriptionPlanName(),
             'presence' => $presence,
             'memberships' => DB::table('business_user')->where('business_id', $this->businessId())->get()->keyBy('user_id'),
             'roles' => IamRole::where('business_id', $this->businessId())->with('permissions')->orderBy('name')->get(),
@@ -127,6 +131,9 @@ class AdministrationController extends Controller
 
         return view('administration.user-wizard', [
             'users' => $this->profileUsers()->with('teams', 'directPermissions')->orderBy('name')->get(),
+            'userSeatLimit' => $this->userSeatLimit(),
+            'userSeatUsage' => $this->billableProfileUserCount(),
+            'subscriptionPlanName' => $this->subscriptionPlanName(),
             'roles' => IamRole::where('business_id', $this->businessId())->orderBy('name')->get(),
             'permissions' => $this->profilePermissions(),
             'permissionScope' => $this->permissionScopeLabel(),
@@ -334,9 +341,26 @@ class AdministrationController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-        $this->iam->audit('recovery.link.created', $user);
+        $link = route('administration.recovery', $token);
 
-        return back()->with('status', 'One-time recovery link generated. It expires in 30 minutes.')->with('recovery_link', route('administration.recovery', $token));
+        try {
+            $this->outgoingMail->sendRaw(
+                $user->email,
+                'Recover access to '.$this->profileName(),
+                $this->recoveryEmailBody($user, $link),
+                businessId: $this->businessId(),
+            );
+            $sent = true;
+        } catch (\Throwable $e) {
+            report($e);
+            $sent = false;
+        }
+
+        $this->iam->audit($sent ? 'recovery.link.sent' : 'recovery.link.delivery_failed', $user);
+
+        return back()
+            ->with($sent ? 'status' : 'warning', $sent ? 'Recovery link sent to '.$user->email.'. It expires in 30 minutes.' : 'A recovery link was generated, but email delivery failed. Check SMTP settings before trying again.')
+            ->with('recovery_link', $link);
     }
 
     public function recoveryForm(string $token)
@@ -578,9 +602,24 @@ class AdministrationController extends Controller
     {
         $invitation = UserInvitation::where('token', $token)->where('status', 'Pending')->whereNull('accepted_at')->whereNull('cancelled_at')->where('expires_at', '>', now())->firstOrFail();
         $data = $request->validate(['password' => ['required', 'confirmed', Password::min(10)->mixedCase()->numbers()->symbols()], 'terms' => ['accepted']]);
-        $invitation->user->update(['password' => $data['password'], 'status' => 'Active', 'is_active' => true, 'email_verified_at' => now(), 'password_changed_at' => now()]);
-        $invitation->update(['accepted_at' => now(), 'status' => 'Accepted']);
-        DB::table('business_user')->where(['business_id' => $invitation->business_id, 'user_id' => $invitation->user_id])->update(['status' => 'Active', 'updated_at' => now()]);
+        $business = \App\Models\Business::withoutGlobalScopes()->findOrFail($invitation->business_id);
+
+        DB::transaction(function () use ($business, $data, $invitation) {
+            $invitation->user->update([
+                'current_tenant_id' => $business->tenant_id,
+                'password' => $data['password'],
+                'status' => 'Active',
+                'is_active' => true,
+                'email_verified_at' => now(),
+                'password_changed_at' => now(),
+                'date_joined' => $invitation->user->date_joined ?: now()->toDateString(),
+            ]);
+            $invitation->update(['accepted_at' => now(), 'status' => 'Accepted']);
+            DB::table('tenant_user')
+                ->where(['tenant_id' => $business->tenant_id, 'user_id' => $invitation->user_id])
+                ->update(['status' => 'active', 'joined_at' => now(), 'updated_at' => now()]);
+            DB::table('business_user')->where(['business_id' => $invitation->business_id, 'user_id' => $invitation->user_id])->update(['status' => 'Active', 'updated_at' => now()]);
+        });
 
         return redirect()->route('login')->with('status', 'Account activated. You can now sign in.');
     }
@@ -630,6 +669,17 @@ class AdministrationController extends Controller
                 $data['name'] = Str::of($data['email'])->before('@')->replace(['.', '_', '-'], ' ')->title()->value();
             }
 
+            $user = User::where('email', $data['email'])->first();
+            $isNew = ! $user;
+            $alreadyInProfile = $user && DB::table('business_user')
+                ->where('business_id', $this->businessId())
+                ->where('user_id', $user->id)
+                ->exists();
+
+            if (! $alreadyInProfile) {
+                $this->assertUserSeatAvailable();
+            }
+
             if ($mode === 'clone') {
                 $source = User::with('teams')->findOrFail($data['clone_user_id']);
                 $sourceMember = DB::table('business_user')->where(['business_id' => $this->businessId(), 'user_id' => $source->id])->first();
@@ -649,8 +699,6 @@ class AdministrationController extends Controller
 
             $membership = collect($data)->only(['iam_role_id', 'department_id', 'branch_id', 'approval_level'])->all();
             $membership['iam_role_id'] = $membership['iam_role_id'] ?? $this->defaultRoleId();
-            $user = User::where('email', $data['email'])->first();
-            $isNew = ! $user;
 
             if ($user) {
                 $this->assertAttachableUser($user);
@@ -661,7 +709,7 @@ class AdministrationController extends Controller
                     ->filter(fn ($value) => $value !== null && $value !== '')
                     ->all();
                 $userData['username'] = $userData['username'] ?? $this->uniqueUsername($data['name']);
-                $userData['current_tenant_id'] = ActiveTenant::id();
+                $userData['current_tenant_id'] = $this->profileTenantId();
                 $userData['password'] = Hash::make(Str::random(64));
                 $userData['role'] = 'staff';
                 $userData['status'] = 'Pending Invitation';
@@ -694,7 +742,7 @@ class AdministrationController extends Controller
     private function syncProfileAccess(User $user, array $membership, string $status): void
     {
         DB::table('tenant_user')->updateOrInsert(
-            ['tenant_id' => ActiveTenant::id(), 'user_id' => $user->id],
+            ['tenant_id' => $this->profileTenantId(), 'user_id' => $user->id],
             ['role' => $user->role === 'admin' ? 'owner' : 'staff', 'status' => strtolower($status) === 'active' ? 'active' : 'pending', 'joined_at' => now(), 'created_at' => now(), 'updated_at' => now()]
         );
 
@@ -789,6 +837,25 @@ class AdministrationController extends Controller
         ], fn ($line) => $line !== null));
     }
 
+    private function recoveryEmailBody(User $user, string $link): string
+    {
+        return implode("\n", [
+            'Hello '.$user->name.',',
+            '',
+            'An administrator generated a one-time recovery link for your BAMA account.',
+            'Workspace/profile: '.$this->profileName(),
+            'Account email: '.$user->email,
+            '',
+            'Use this secure link to set a new password:',
+            $link,
+            '',
+            'This link expires in 30 minutes and can be used once.',
+            'If you did not request recovery help, contact your administrator before using it.',
+            '',
+            'BAMA secure workspace access',
+        ]);
+    }
+
     private function profileUsers()
     {
         return User::where('role', '!=', 'client_portal')
@@ -825,6 +892,76 @@ class AdministrationController extends Controller
             ->exists();
 
         abort_if($belongsToOtherTenant, 422, 'That email already belongs to another organisation profile.');
+    }
+
+    private function assertUserSeatAvailable(): void
+    {
+        $limit = $this->userSeatLimit();
+
+        if ($limit === null) {
+            return;
+        }
+
+        if ($this->billableProfileUserCount() < $limit) {
+            return;
+        }
+
+        $plan = $this->subscriptionPlanName();
+
+        throw ValidationException::withMessages([
+            'email' => "This profile has reached the {$limit}-user limit on the {$plan} package. Upgrade the package to invite more users.",
+        ]);
+    }
+
+    private function userSeatLimit(): ?int
+    {
+        $limit = app(SubscriptionManager::class)->limit('users', $this->profileTenant());
+
+        if ($limit === null || $limit === '' || $limit === 'Custom') {
+            return null;
+        }
+
+        if (! is_numeric($limit)) {
+            return null;
+        }
+
+        return max(0, (int) $limit);
+    }
+
+    private function billableProfileUserCount(): int
+    {
+        return DB::table('business_user')
+            ->where('business_id', $this->businessId())
+            ->whereNotIn('status', ['Archived'])
+            ->count();
+    }
+
+    private function subscriptionPlanName(): string
+    {
+        return $this->profileTenant()?->subscription?->loadMissing('plan')->plan?->name ?? 'current';
+    }
+
+    private function profileTenantId(): int
+    {
+        $tenantId = ActiveTenant::id() ?: ActiveBusiness::current()?->tenant_id;
+
+        if (! $tenantId) {
+            throw ValidationException::withMessages([
+                'email' => 'Choose an active profile before inviting users.',
+            ]);
+        }
+
+        return (int) $tenantId;
+    }
+
+    private function profileTenant(): ?\App\Models\Tenant
+    {
+        $tenant = ActiveTenant::current();
+        if ($tenant) {
+            return $tenant;
+        }
+
+        return ActiveBusiness::current()?->tenant;
     }
 
     private function detachFromCurrentProfile(User $user): void
