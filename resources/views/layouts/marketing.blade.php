@@ -12,8 +12,11 @@
         $marketingSiteContent = $marketingSiteContent ?? \App\Models\MarketingPage::resolve('home')->sections ?? \App\Models\MarketingPage::defaultSections('home');
         $marketingBrand = array_replace_recursive(\App\Models\MarketingPage::defaultSections('home')['brand'], (array) data_get($marketingSiteContent, 'brand', []));
         $marketingFaviconUrl = \App\Support\PublicUpload::url(data_get($marketingBrand, 'favicon_path')) ?: \App\Support\PublicUpload::url(data_get($marketingBrand, 'logo_path')) ?: asset('images/bama-solutions-02.png');
+        $marketingFaviconHref = $marketingFaviconUrl.(str_contains($marketingFaviconUrl, '?') ? '&' : '?').'v='.rawurlencode((string) md5((string) $marketingFaviconUrl));
     @endphp
-    <link rel="icon" href="{{ $marketingFaviconUrl }}">
+    <link rel="icon" href="{{ $marketingFaviconHref }}">
+    <link rel="shortcut icon" href="{{ $marketingFaviconHref }}">
+    <link rel="apple-touch-icon" href="{{ $marketingFaviconHref }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:opsz,wght@14..32,100..900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">

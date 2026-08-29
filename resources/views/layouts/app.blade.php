@@ -7,7 +7,23 @@
     <meta name="theme-color" content="#00A651">
     <title>@yield('title', 'BAMA Admin')</title>
     <script>document.documentElement.dataset.theme=localStorage.getItem('bama-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');</script>
-    @if(!empty($tenantTheme?->faviconUrl()))<link rel="icon" href="{{ $tenantTheme->faviconUrl() }}">@endif
+    @php
+        $companyFaviconSettings = (($activeBusiness ?? null) && \App\Support\SchemaCache::hasTable('company_settings'))
+            ? \App\Models\CompanySetting::withoutGlobalScope('business')->where('business_id', $activeBusiness->id)->first()
+            : null;
+        $appFaviconUrl = $tenantTheme?->faviconUrl()
+            ?: $tenantTheme?->logoUrl()
+            ?: $companyFaviconSettings?->logoUrl()
+            ?: \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png')
+            ?: asset('images/bama-solutions-02.png');
+        $appFaviconVersion = $tenantTheme?->updated_at?->timestamp
+            ?? $companyFaviconSettings?->updated_at?->timestamp
+            ?? 'bama';
+        $appFaviconHref = $appFaviconUrl.(str_contains($appFaviconUrl, '?') ? '&' : '?').'v='.rawurlencode((string) $appFaviconVersion);
+    @endphp
+    <link rel="icon" href="{{ $appFaviconHref }}">
+    <link rel="shortcut icon" href="{{ $appFaviconHref }}">
+    <link rel="apple-touch-icon" href="{{ $appFaviconHref }}">
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" media="print" onload="this.media='all'">

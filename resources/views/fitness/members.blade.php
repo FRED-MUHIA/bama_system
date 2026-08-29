@@ -16,9 +16,32 @@
     .fitness-history-item:last-child{border-bottom:0}
     .fitness-history-line{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
     .fitness-history-note{font-size:.86rem;color:#666}
+    .fitness-memberships-table td:last-child{min-width:720px}
+    .fitness-membership-actions{display:grid;gap:8px}
+    .fitness-membership-actions form{min-width:0}
+    .fitness-action-row{display:grid;gap:8px;align-items:center}
+    .fitness-action-row .btn{white-space:nowrap;min-height:38px}
+    .fitness-renew-row{grid-template-columns:minmax(160px,1fr) auto}
+    .fitness-freeze-row{grid-template-columns:minmax(140px,160px) minmax(140px,160px) minmax(180px,1fr) auto}
+    .fitness-payment-row{grid-template-columns:minmax(140px,160px) minmax(120px,150px) minmax(140px,160px) minmax(150px,1fr) auto}
+    .fitness-membership-cards{display:none}
+    .fitness-membership-card{border:1px solid #e2ded8;border-radius:8px;padding:14px;background:#fff}
+    .fitness-membership-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+    .fitness-membership-card-title{min-width:0}
+    .fitness-membership-card-title strong{display:block;overflow-wrap:anywhere}
+    .fitness-membership-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+    .fitness-membership-meta span{display:block;color:#667085;font-size:.72rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+    .fitness-membership-meta strong{display:block;overflow-wrap:anywhere}
     @media(max-width:1000px){.fitness-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:1100px){.fitness-history-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:640px){.fitness-form-grid,.fitness-history-grid{grid-template-columns:1fr}.fitness-history summary{align-items:flex-start;flex-direction:column}}
+    @media(max-width:991px){
+        .fitness-memberships-table{display:none}
+        .fitness-membership-cards{display:grid;gap:12px}
+        .fitness-membership-actions{gap:10px}
+        .fitness-action-row{grid-template-columns:1fr}
+        .fitness-action-row .btn{width:100%;white-space:normal}
+    }
+    @media(max-width:640px){.fitness-form-grid,.fitness-history-grid,.fitness-membership-meta{grid-template-columns:1fr}.fitness-history summary{align-items:flex-start;flex-direction:column}.fitness-membership-card-head{flex-direction:column}}
 </style>
 
 <div class="card p-3 mb-3">
@@ -196,7 +219,61 @@
 
 <div class="card p-3">
     <h2 class="h5 mb-3">Recent Memberships</h2>
-    <div class="table-responsive">
+    <div class="fitness-membership-cards">
+        @forelse($memberships as $membership)
+            <div class="fitness-membership-card">
+                <div class="fitness-membership-card-head">
+                    <div class="fitness-membership-card-title">
+                        <strong>{{ $membership->membership_number }}</strong>
+                        <div class="small text-muted">{{ $membership->member?->client?->name }} · {{ $membership->plan?->name }}</div>
+                    </div>
+                    <span class="status-pill">{{ $membership->status }}</span>
+                </div>
+                <div class="fitness-membership-meta">
+                    <div>
+                        <span>Period</span>
+                        <strong>{{ $membership->starts_at?->format('d M Y') }} - {{ $membership->ends_at?->format('d M Y') }}</strong>
+                    </div>
+                    <div>
+                        <span>Balance</span>
+                        <strong>{{ number_format($membership->balance, 2) }}</strong>
+                    </div>
+                </div>
+                @if($membership->member)
+                    <a class="btn btn-sm btn-outline-dark w-100 mb-2" href="{{ route('fitness.members.card', $membership->member) }}"><i class="bi bi-person-vcard me-1"></i>Membership Card</a>
+                @endif
+                <div class="fitness-membership-actions">
+                    <form method="post" action="{{ route('fitness.member-memberships.renew', $membership) }}" class="fitness-action-row">
+                        @csrf
+                        <select class="form-select form-select-sm" name="fitness_membership_plan_id">@foreach($plans as $plan)<option value="{{ $plan->id }}" @selected($membership->fitness_membership_plan_id === $plan->id)>{{ $plan->name }}</option>@endforeach</select>
+                        <button class="btn btn-sm btn-outline-success">Renew</button>
+                    </form>
+                    <form method="post" action="{{ route('fitness.member-memberships.freeze', $membership) }}" class="fitness-action-row">
+                        @csrf
+                        <input class="form-control form-control-sm" name="starts_at" type="date" required>
+                        <input class="form-control form-control-sm" name="ends_at" type="date" required>
+                        <input class="form-control form-control-sm" name="reason" placeholder="Reason" required>
+                        <button class="btn btn-sm btn-outline-dark">Freeze</button>
+                    </form>
+                    <form method="post" action="{{ route('fitness.member-memberships.invoice', $membership) }}">
+                        @csrf
+                        <button class="btn btn-sm btn-outline-dark w-100">Invoice</button>
+                    </form>
+                    <form method="post" action="{{ route('fitness.member-memberships.record-payment', $membership) }}" class="fitness-action-row">
+                        @csrf
+                        <select class="form-select form-select-sm" name="payment_method_id"><option value="">Method</option>@foreach($paymentMethods as $method)<option value="{{ $method->id }}">{{ $method->name }}</option>@endforeach</select>
+                        <input class="form-control form-control-sm" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Amount" required>
+                        <input class="form-control form-control-sm" name="payment_date" type="date" value="{{ now()->toDateString() }}" required>
+                        <input class="form-control form-control-sm" name="reference" placeholder="Reference">
+                        <button class="btn btn-sm btn-warning">Record + Email Invoice</button>
+                    </form>
+                </div>
+            </div>
+        @empty
+            <div class="text-muted">No memberships yet.</div>
+        @endforelse
+    </div>
+    <div class="table-responsive fitness-memberships-table">
         <table class="table align-middle">
             <thead><tr><th>Membership</th><th>Period</th><th>Balance</th><th>Renew / Freeze / Pay</th></tr></thead>
             <tbody>
@@ -212,10 +289,12 @@
                     <td>{{ $membership->starts_at?->format('d M Y') }} - {{ $membership->ends_at?->format('d M Y') }}<div><span class="status-pill">{{ $membership->status }}</span></div></td>
                     <td>{{ number_format($membership->balance, 2) }}</td>
                     <td>
-                        <form method="post" action="{{ route('fitness.member-memberships.renew', $membership) }}" class="d-inline-flex gap-1 mb-1">@csrf<select class="form-select form-select-sm" name="fitness_membership_plan_id">@foreach($plans as $plan)<option value="{{ $plan->id }}" @selected($membership->fitness_membership_plan_id === $plan->id)>{{ $plan->name }}</option>@endforeach</select><button class="btn btn-sm btn-outline-success">Renew</button></form>
-                        <form method="post" action="{{ route('fitness.member-memberships.freeze', $membership) }}" class="d-inline-flex gap-1 mb-1">@csrf<input class="form-control form-control-sm" name="starts_at" type="date" required><input class="form-control form-control-sm" name="ends_at" type="date" required><input class="form-control form-control-sm" name="reason" placeholder="Reason" required><button class="btn btn-sm btn-outline-dark">Freeze</button></form>
-                        <form method="post" action="{{ route('fitness.member-memberships.invoice', $membership) }}" class="d-inline">@csrf<button class="btn btn-sm btn-outline-dark">Invoice</button></form>
-                        <form method="post" action="{{ route('fitness.member-memberships.record-payment', $membership) }}" class="d-inline-flex gap-1 mt-1">@csrf<select class="form-select form-select-sm" name="payment_method_id"><option value="">Method</option>@foreach($paymentMethods as $method)<option value="{{ $method->id }}">{{ $method->name }}</option>@endforeach</select><input class="form-control form-control-sm" name="amount" type="number" min="0.01" step="0.01" placeholder="Amount" required><input class="form-control form-control-sm" name="payment_date" type="date" value="{{ now()->toDateString() }}" required><input class="form-control form-control-sm" name="reference" placeholder="Reference"><button class="btn btn-sm btn-warning">Record + Email Invoice</button></form>
+                        <div class="fitness-membership-actions">
+                            <form method="post" action="{{ route('fitness.member-memberships.renew', $membership) }}" class="fitness-action-row fitness-renew-row">@csrf<select class="form-select form-select-sm" name="fitness_membership_plan_id">@foreach($plans as $plan)<option value="{{ $plan->id }}" @selected($membership->fitness_membership_plan_id === $plan->id)>{{ $plan->name }}</option>@endforeach</select><button class="btn btn-sm btn-outline-success">Renew</button></form>
+                            <form method="post" action="{{ route('fitness.member-memberships.freeze', $membership) }}" class="fitness-action-row fitness-freeze-row">@csrf<input class="form-control form-control-sm" name="starts_at" type="date" required><input class="form-control form-control-sm" name="ends_at" type="date" required><input class="form-control form-control-sm" name="reason" placeholder="Reason" required><button class="btn btn-sm btn-outline-dark">Freeze</button></form>
+                            <form method="post" action="{{ route('fitness.member-memberships.invoice', $membership) }}">@csrf<button class="btn btn-sm btn-outline-dark">Invoice</button></form>
+                            <form method="post" action="{{ route('fitness.member-memberships.record-payment', $membership) }}" class="fitness-action-row fitness-payment-row">@csrf<select class="form-select form-select-sm" name="payment_method_id"><option value="">Method</option>@foreach($paymentMethods as $method)<option value="{{ $method->id }}">{{ $method->name }}</option>@endforeach</select><input class="form-control form-control-sm" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Amount" required><input class="form-control form-control-sm" name="payment_date" type="date" value="{{ now()->toDateString() }}" required><input class="form-control form-control-sm" name="reference" placeholder="Reference"><button class="btn btn-sm btn-warning">Record + Email Invoice</button></form>
+                        </div>
                     </td>
                 </tr>
             @empty
