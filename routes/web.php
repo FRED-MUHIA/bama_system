@@ -682,6 +682,15 @@ Route::middleware('auth')->group(function () {
             Route::get('/reports', [PrintingOperationsController::class, 'reports'])->middleware('permission:printing_reports.view')->name('reports');
             Route::get('/reports/{type}.csv', [PrintingOperationsController::class, 'reportExport'])->whereIn('type', ['jobs', 'estimates', 'waste', 'daily-production'])->middleware('permission:printing_reports.view')->name('reports.csv');
             Route::get('/settings', [PrintingOperationsController::class, 'settings'])->middleware('permission:printing_settings.manage')->name('settings');
+            Route::post('/settings/payment-methods', [CompanySettingsController::class, 'storePaymentMethod'])->middleware('permission:printing_settings.manage')->name('settings.payment-methods.store');
+            Route::put('/settings/payment-methods/{paymentMethod}', [CompanySettingsController::class, 'updatePaymentMethod'])->middleware('permission:printing_settings.manage')->name('settings.payment-methods.update');
+            Route::delete('/settings/payment-methods/{paymentMethod}', [CompanySettingsController::class, 'deletePaymentMethod'])->middleware('permission:printing_settings.manage')->name('settings.payment-methods.destroy');
+            Route::post('/settings/signatories', [CompanySettingsController::class, 'storeSignatory'])->middleware('permission:printing_settings.manage')->name('settings.signatories.store');
+            Route::put('/settings/signatories/{signatory}', [CompanySettingsController::class, 'updateSignatory'])->middleware('permission:printing_settings.manage')->name('settings.signatories.update');
+            Route::delete('/settings/signatories/{signatory}', [CompanySettingsController::class, 'deleteSignatory'])->middleware('permission:printing_settings.manage')->name('settings.signatories.destroy');
+            Route::post('/settings/terms', [CompanySettingsController::class, 'storeTerms'])->middleware('permission:printing_settings.manage')->name('settings.terms.store');
+            Route::put('/settings/terms/{termsCondition}', [CompanySettingsController::class, 'updateTerms'])->middleware('permission:printing_settings.manage')->name('settings.terms.update');
+            Route::delete('/settings/terms/{termsCondition}', [CompanySettingsController::class, 'deleteTerms'])->middleware('permission:printing_settings.manage')->name('settings.terms.destroy');
             Route::post('/settings/templates', [PrintingOperationsController::class, 'storeTemplate'])->middleware('permission:printing_settings.manage')->name('settings.templates.store');
             Route::post('/settings/print-methods', [PrintingOperationsController::class, 'storePrintMethod'])->middleware('permission:printing_settings.manage')->name('settings.print-methods.store');
             Route::post('/settings/finishing', [PrintingOperationsController::class, 'storeFinishingOption'])->middleware('permission:printing_settings.manage')->name('settings.finishing.store');
