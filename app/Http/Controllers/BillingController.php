@@ -76,7 +76,20 @@ class BillingController extends Controller
             return back()->withErrors(['mpesa' => $e->getMessage()])->withInput();
         }
 
-        return back()->with('status', 'Safaricom accepted the M-PESA STK request. Complete payment on your phone, or check STK status if no prompt appears. Reference: '.$payment->checkout_request_id);
+        $mode = data_get($payment->callback_payload, 'normalized_request.mode', 'sandbox');
+        $phone = $payment->phone;
+
+        if ($mode === 'sandbox') {
+            return back()->with(
+                'warning',
+                'M-PESA is in sandbox mode. Safaricom accepted a test STK request, but no real phone prompt will appear. Switch M-PESA to Live in the owner payment settings and use live Daraja credentials to prompt '.$phone.'. Reference: '.$payment->checkout_request_id
+            );
+        }
+
+        return back()->with(
+            'status',
+            'M-PESA STK prompt sent to '.$phone.'. Complete payment on that phone, or use Check STK Status if the prompt does not appear. Reference: '.$payment->checkout_request_id
+        );
     }
 
     public function mpesaStatus(SubscriptionPayment $payment, PaymentGatewayService $gateway)

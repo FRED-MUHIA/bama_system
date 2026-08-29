@@ -10,7 +10,7 @@
             'summary' => 'Prompt clients on their phone when they renew a BAMA package.',
             'public' => 'Daraja consumer key',
             'secret' => 'Daraja consumer secret',
-            'help' => 'Use Safaricom Daraja app credentials. Sandbox mode tests the API only; live mode is required to prompt a real phone. The callback URL must be reachable on HTTPS.',
+            'help' => 'Use Safaricom Daraja app credentials. Sandbox mode only confirms API connectivity and will not prompt a real phone. Live mode with live Daraja credentials is required for handset STK prompts. The callback URL must be reachable on HTTPS.',
             'fields' => [
                 'shortcode' => ['label' => 'PayBill / Till shortcode', 'hint' => 'The receiving BAMA shortcode.'],
                 'passkey' => ['label' => 'STK passkey', 'hint' => 'Daraja Lipa Na M-PESA online passkey.'],

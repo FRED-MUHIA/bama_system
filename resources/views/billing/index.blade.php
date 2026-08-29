@@ -6,6 +6,7 @@
     $subscription = $tenant->subscription;
     $enabled = fn (string $provider) => (bool) ($paymentSettings[$provider]->is_enabled ?? false);
     $mpesaSetting = $paymentSettings['mpesa'] ?? null;
+    $mpesaLive = $enabled('mpesa') && ($mpesaSetting?->mode ?? 'sandbox') === 'live';
     $paypalSetting = $paymentSettings['paypal'] ?? null;
     $paypalKesUsdRate = (float) data_get($paypalSetting?->config ?? [], 'kes_usd_rate', 0);
     $paypalSupportedCurrencies = ['AUD', 'BRL', 'CAD', 'CNY', 'CZK', 'DKK', 'EUR', 'HKD', 'HUF', 'ILS', 'JPY', 'MYR', 'MXN', 'TWD', 'NZD', 'NOK', 'PHP', 'PLN', 'GBP', 'SGD', 'SEK', 'CHF', 'THB', 'USD'];
@@ -79,12 +80,12 @@
                             <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-phone text-success"></i><strong>M-PESA STK</strong></div>
                             <form method="post" action="{{ route('billing.invoices.mpesa', $invoice) }}" class="d-grid gap-2" data-mpesa-form>
                                 @csrf
-                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="0700000000 or 254700000000" pattern="(?:254\d{9}|0\d{9}|[17]\d{8})" maxlength="12" title="Enter 0700000000 or 254700000000" data-mpesa-phone @disabled(! $enabled('mpesa') || ! $invoicePayable) required>
+                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="0700000000 or 254700000000" pattern="(?:254\d{9}|0\d{9}|[17]\d{8})" maxlength="12" title="Enter 0700000000 or 254700000000" data-mpesa-phone @disabled(! $mpesaLive || ! $invoicePayable) required>
                                 <div class="form-text">Any payer number: 0700000000 or 254700000000.</div>
-                                @if($enabled('mpesa') && ($mpesaSetting?->mode ?? 'sandbox') === 'sandbox')
-                                    <div class="small text-warning-emphasis">M-PESA is in sandbox mode. Switch to live keys to prompt a real phone.</div>
+                                @if($enabled('mpesa') && ! $mpesaLive)
+                                    <div class="small text-warning-emphasis">M-PESA is in sandbox mode. Sandbox accepts test requests but does not prompt a real phone. Switch to live keys in the owner console.</div>
                                 @endif
-                                <button class="btn btn-warning" data-mpesa-submit @disabled(! $enabled('mpesa') || ! $invoicePayable)><i class="bi bi-send"></i> Prompt Phone</button>
+                                <button class="btn btn-warning" data-mpesa-submit @disabled(! $mpesaLive || ! $invoicePayable)><i class="bi bi-send"></i> Prompt Phone</button>
                             </form>
                             @if($latestMpesaPayment)
                                 <div class="border-top mt-3 pt-3 small">
