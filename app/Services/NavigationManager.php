@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Support\ActiveTenant;
+use App\Support\BamaBilling;
 use App\Support\SchemaCache;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
@@ -34,7 +35,7 @@ class NavigationManager
             ['module' => 'documents', 'label' => 'Quotations', 'route' => 'quotations.index', 'icon' => 'bi-file-earmark-text'],
             ['module' => 'documents', 'label' => 'Invoices', 'route' => 'invoices.index', 'icon' => 'bi-receipt'],
             ['module' => 'documents', 'label' => 'Receipts', 'route' => 'receipts.index', 'icon' => 'bi-cash-coin'],
-            ['module' => 'core', 'label' => 'BAMA Billing', 'route' => 'billing.index', 'icon' => 'bi-credit-card'],
+            ['module' => 'core', 'label' => 'BAMA Billing', 'route' => 'billing.index', 'icon' => 'bi-credit-card', 'condition' => BamaBilling::visible(app(SubscriptionManager::class)->billingState())],
             ['module' => 'administration', 'label' => 'Settings', 'route' => 'settings.edit', 'icon' => 'bi-gear'],
             ['module' => 'administration', 'label' => 'Administration', 'route' => 'administration.index', 'icon' => 'bi-shield-lock', 'permission' => 'administration.view'],
         ]);
@@ -99,7 +100,9 @@ class NavigationManager
                 fn (Collection $items) => $items->push(['module' => 'administration', 'label' => 'Settings', 'route' => 'settings.edit', 'icon' => 'bi-gear'])
             )
             ->when(
-                Route::has('billing.index') && ! $items->contains(fn ($item) => ($item['route'] ?? null) === 'billing.index'),
+                BamaBilling::visible(app(SubscriptionManager::class)->billingState())
+                    && Route::has('billing.index')
+                    && ! $items->contains(fn ($item) => ($item['route'] ?? null) === 'billing.index'),
                 fn (Collection $items) => $items->push(['module' => 'core', 'label' => 'BAMA Billing', 'route' => 'billing.index', 'icon' => 'bi-credit-card'])
             )
             ->when(
@@ -188,7 +191,7 @@ class NavigationManager
 
     private function itemAvailable(array $item): bool
     {
-        if (! Route::has($item['route']) || ! $this->tablesReady($item['tables'] ?? [])) {
+        if (! Route::has($item['route']) || ! $this->tablesReady($item['tables'] ?? []) || ! ($item['condition'] ?? true)) {
             return false;
         }
 

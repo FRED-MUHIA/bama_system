@@ -2,7 +2,7 @@
 
 namespace Modules\Retail\Models;
 
-use App\Casts\TolerantEncryptedArray;
+use App\Casts\TolerantEncryptedJsonArray;
 
 class RetailEcommerceIntegration extends RetailModel
 {
@@ -11,6 +11,6 @@ class RetailEcommerceIntegration extends RetailModel
         'last_inventory_sync_at' => 'datetime',
         'last_order_sync_at' => 'datetime',
         'last_customer_sync_at' => 'datetime',
-        'settings' => TolerantEncryptedArray::class,
+        'settings' => TolerantEncryptedJsonArray::class,
     ];
 }

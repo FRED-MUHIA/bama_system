@@ -153,6 +153,23 @@ class EncryptSensitiveDataCommand extends Command
             return false;
         }
 
+        $decoded = json_decode((string) $raw, true);
+        if (is_array($decoded) && isset($decoded['_encrypted']) && is_string($decoded['_encrypted'])) {
+            try {
+                Crypt::decryptString($decoded['_encrypted']);
+
+                return false;
+            } catch (DecryptException) {
+                try {
+                    Crypt::decrypt($decoded['_encrypted']);
+
+                    return false;
+                } catch (DecryptException) {
+                    return true;
+                }
+            }
+        }
+
         try {
             Crypt::decryptString((string) $raw);
 

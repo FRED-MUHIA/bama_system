@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Casts\TolerantEncryptedArray;
+use App\Casts\TolerantEncryptedJsonArray;
 use App\Casts\TolerantEncryptedString;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,7 +15,7 @@ class PlatformPaymentSetting extends Model
         return [
             'is_enabled' => 'boolean',
             'secret_key' => TolerantEncryptedString::class,
-            'config' => TolerantEncryptedArray::class,
+            'config' => TolerantEncryptedJsonArray::class,
         ];
     }
 }

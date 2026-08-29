@@ -14,6 +14,7 @@ use App\Services\SubscriptionManager;
 use App\Services\ThemeManager;
 use App\Support\ActiveBusiness;
 use App\Support\ActiveTenant;
+use App\Support\BamaBilling;
 use App\Support\SchemaCache;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -112,6 +113,7 @@ class AppServiceProvider extends ServiceProvider
                 'headerUnreadCount' => $headerUnreadCount,
                 'headerMessageCount' => $headerMessageCount,
                 'subscriptionBillingState' => $subscriptionBillingState,
+                'bamaBillingVisible' => BamaBilling::visible($subscriptionBillingState),
                 'tenantTheme' => $activeTenant ? $themeManager->current($activeTenant) : null,
                 'tenantCssVariables' => $activeTenant ? $themeManager->cssVariables($activeTenant) : '--tenant-primary:#00A651; --tenant-secondary:#000000; --tenant-accent:#00A651;',
             ]);

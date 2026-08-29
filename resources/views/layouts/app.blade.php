@@ -973,7 +973,7 @@
                                 <div class="small">Expires: {{ $subscriptionBillingState['expires_at']->format('d M Y') }} · Grace ends: {{ $subscriptionBillingState['grace_ends_at']?->format('d M Y') }}</div>
                             @endif
                         </div>
-                        @if(Route::has('billing.index'))
+                        @if(($bamaBillingVisible ?? false) && Route::has('billing.index'))
                             <a class="btn btn-sm btn-warning" href="{{ route('billing.index') }}"><i class="bi bi-credit-card"></i> Renew</a>
                         @endif
                     </div>
@@ -1096,6 +1096,7 @@
             ['label' => 'Quotations', 'route' => 'quotations.index', 'match' => 'quotations.*', 'icon' => 'bi-file-earmark-text'],
             ['label' => 'Invoices', 'route' => 'invoices.index', 'match' => 'invoices.*', 'icon' => 'bi-receipt'],
             ['label' => 'Receipts', 'route' => 'receipts.index', 'match' => 'receipts.*', 'icon' => 'bi-cash-coin'],
+            ['label' => 'BAMA Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
         ];
 
         $fitnessMobileItems = [
@@ -1116,6 +1117,7 @@
             ['label' => 'Equipment', 'route' => 'fitness.equipment.index', 'match' => 'fitness.equipment.*', 'icon' => 'bi-tools'],
             ['label' => 'Inventory', 'route' => 'products.index', 'match' => 'products.*', 'icon' => 'bi-box-seam'],
             ['label' => 'Payments', 'route' => 'finance.index', 'match' => 'finance.*', 'icon' => 'bi-cash-coin'],
+            ['label' => 'BAMA Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
             ['label' => 'Reports', 'route' => 'fitness.reports.index', 'match' => 'fitness.reports.*', 'icon' => 'bi-bar-chart'],
         ];
 
@@ -1135,6 +1137,7 @@
             ['label' => 'Suppliers', 'route' => 'hospitality.suppliers.index', 'match' => 'hospitality.suppliers.*', 'icon' => 'bi-truck'],
             ['label' => 'Procurement', 'route' => 'erp.procurement', 'match' => 'erp.procurement', 'icon' => 'bi-cart-check'],
             ['label' => 'Billing', 'route' => 'finance.index', 'match' => 'finance.*', 'icon' => 'bi-bank'],
+            ['label' => 'BAMA Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
             ['label' => 'Reports', 'route' => 'hospitality.reports.index', 'match' => 'hospitality.reports.*', 'icon' => 'bi-bar-chart'],
         ];
 
@@ -1153,12 +1156,14 @@
             ['label' => 'Compliance', 'route' => 'agriculture.dashboard', 'match' => 'agriculture.dashboard', 'section' => 'compliance', 'icon' => 'bi-shield-check'],
             ['label' => 'Documents', 'route' => 'agriculture.dashboard', 'match' => 'agriculture.dashboard', 'section' => 'documents', 'icon' => 'bi-folder2-open'],
             ['label' => 'Finance', 'route' => 'agriculture.dashboard', 'match' => 'agriculture.dashboard', 'section' => 'finance', 'icon' => 'bi-bank'],
+            ['label' => 'BAMA Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
             ['label' => 'Reports', 'route' => 'agriculture.reports.index', 'match' => 'agriculture.reports.*', 'icon' => 'bi-bar-chart'],
         ];
 
         $utilityOverflowItems = [
             ['label' => 'Settings', 'route' => 'settings.edit', 'match' => 'settings.*', 'icon' => 'bi-gear'],
             ['label' => 'My Profile', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'bi-person'],
+            ['label' => 'BAMA Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
             ['label' => 'Administration', 'route' => 'administration.index', 'match' => 'administration.*', 'icon' => 'bi-shield-lock', 'condition' => \App\Support\SchemaCache::hasTable('iam_roles') && $currentUser->hasPermission('administration.view')],
         ];
 
@@ -1212,7 +1217,7 @@
             ->values();
 
         if ($sidebarMobileItems->isNotEmpty()) {
-            $priority = ['Home', 'Dashboard', 'Transactions', 'Orders', 'POS Orders', 'Finance', 'Clients', 'Tenants', 'Guests', 'Members', 'Products', 'Inventory', 'Rooms', 'Properties', 'Projects'];
+            $priority = ['Home', 'Dashboard', 'Transactions', 'Orders', 'POS Orders', 'Finance', 'BAMA Billing', 'Billing', 'Clients', 'Tenants', 'Guests', 'Members', 'Products', 'Inventory', 'Rooms', 'Properties', 'Projects'];
             $mobileContextLabel = \Illuminate\Support\Str::headline($activeIndustrySlug ?: 'Workspace');
             $mobileContextItems = $sidebarMobileItems
                 ->sortBy(fn ($item) => ($index = array_search($item['label'], $priority, true)) === false ? 99 : $index)
