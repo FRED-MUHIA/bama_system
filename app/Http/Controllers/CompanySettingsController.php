@@ -152,14 +152,16 @@ class CompanySettingsController extends Controller
             'is_default' => ['nullable', 'boolean'],
         ]);
 
-        if ($request->boolean('is_default')) {
+        $isDefault = $request->boolean('is_default') || ! Signatory::where('is_active', true)->exists();
+
+        if ($isDefault) {
             Signatory::where('is_default', true)->update(['is_default' => false]);
         }
 
         $signatory = Signatory::create([
             'name' => $data['name'],
             'title' => $data['title'] ?? null,
-            'is_default' => $request->boolean('is_default'),
+            'is_default' => $isDefault,
             'is_active' => true,
         ]);
 

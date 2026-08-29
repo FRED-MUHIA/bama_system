@@ -194,7 +194,7 @@
                     @if($isReceipt)
                         <tr><th>Description</th><th>Method</th><th>Date</th><th>Total</th></tr>
                     @else
-                        <tr><th>Item</th><th>Description</th><th>Qty</th><th>Unit</th><th>Total</th></tr>
+                        <tr><th>Item</th><th>Description</th><th>Qty</th><th>Unit price</th><th>Total</th></tr>
                     @endif
                 </thead>
                 <tbody>

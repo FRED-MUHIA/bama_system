@@ -1,7 +1,7 @@
 <div class="card"><div class="card-body">
     <div class="table-responsive">
         <table class="table align-middle" id="items-table">
-            <thead><tr><th style="width:220px">Service/Products Title</th><th>Description</th><th style="width:110px">Qty</th><th style="width:150px">Unit</th><th style="width:140px">Discount</th><th style="width:120px">Tax %</th><th style="width:60px"></th></tr></thead>
+            <thead><tr><th style="width:220px">Service/Products Title</th><th>Description</th><th style="width:110px">Qty</th><th style="width:150px">Unit price</th><th style="width:140px">Discount</th><th style="width:120px">Tax %</th><th style="width:60px"></th></tr></thead>
             <tbody>
             @foreach($items as $i => $item)
                 <tr>

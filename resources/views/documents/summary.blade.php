@@ -49,7 +49,7 @@
             @endif
         </div>
     @endif
-    <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Service/Products Title</th><th>Description</th><th>Qty</th><th>Unit</th><th>Discount</th><th>Tax</th><th>Total</th></tr></thead><tbody>
+    <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Service/Products Title</th><th>Description</th><th>Qty</th><th>Unit price</th><th>Discount</th><th>Tax</th><th>Total</th></tr></thead><tbody>
         @foreach($document->items as $item)<tr><td>{{ $item->title }}</td><td>{{ $item->description }}</td><td>{{ $item->quantity }}</td><td>{{ number_format($item->unit_price,2) }}</td><td>{{ number_format($item->discount,2) }}</td><td>{{ $item->tax_rate }}%</td><td>{{ number_format($item->line_total,2) }}</td></tr>@endforeach
     </tbody></table></div>
     <div class="row justify-content-end"><div class="col-md-4"><table class="table">@if($isPartPaymentInvoice)<tr><th>Allocated Amount</th><td class="text-end fw-bold">{{ number_format($document->part_payment_amount,2) }}</td></tr>@if($document->parentInvoice)<tr><th>Source Total</th><td class="text-end">{{ number_format($document->parentInvoice->total,2) }}</td></tr>@endif @else<tr><th>Subtotal</th><td class="text-end">{{ number_format($document->subtotal,2) }}</td></tr><tr><th>Discount</th><td class="text-end">{{ number_format($document->discount_total,2) }}</td></tr><tr><th>Tax</th><td class="text-end">{{ number_format($document->tax_total,2) }}</td></tr><tr><th>Total</th><td class="text-end fw-bold">{{ number_format($document->total,2) }}</td></tr>@isset($document->balance)<tr><th>Balance</th><td class="text-end">{{ number_format($document->balance,2) }}</td></tr>@endisset @endif</table></div></div>

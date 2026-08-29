@@ -681,6 +681,7 @@ class InvoiceController extends Controller
             ? Signatory::withoutGlobalScope('business')->where('business_id', $businessId)
             : Signatory::query();
 
-        return $query->where('is_default', true)->where('is_active', true)->first();
+        return (clone $query)->where('is_default', true)->where('is_active', true)->first()
+            ?: (clone $query)->where('is_active', true)->latest()->first();
     }
 }
