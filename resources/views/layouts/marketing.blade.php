@@ -11,8 +11,10 @@
     @php
         $marketingSiteContent = $marketingSiteContent ?? \App\Models\MarketingPage::resolve('home')->sections ?? \App\Models\MarketingPage::defaultSections('home');
         $marketingBrand = array_replace_recursive(\App\Models\MarketingPage::defaultSections('home')['brand'], (array) data_get($marketingSiteContent, 'brand', []));
-        $marketingFaviconUrl = \App\Support\PublicUpload::url(data_get($marketingBrand, 'favicon_path')) ?: \App\Support\PublicUpload::url(data_get($marketingBrand, 'logo_path')) ?: asset('images/bama-solutions-02.png');
-        $marketingFaviconHref = $marketingFaviconUrl.(str_contains($marketingFaviconUrl, '?') ? '&' : '?').'v='.rawurlencode((string) md5((string) $marketingFaviconUrl));
+        $marketingFaviconPath = 'images/bama-favicon.png';
+        $marketingFaviconUrl = asset($marketingFaviconPath);
+        $marketingFaviconVersion = file_exists(public_path($marketingFaviconPath)) ? filemtime(public_path($marketingFaviconPath)) : 'bama';
+        $marketingFaviconHref = $marketingFaviconUrl.(str_contains($marketingFaviconUrl, '?') ? '&' : '?').'v='.rawurlencode((string) $marketingFaviconVersion);
     @endphp
     <link rel="icon" href="{{ $marketingFaviconHref }}">
     <link rel="shortcut icon" href="{{ $marketingFaviconHref }}">

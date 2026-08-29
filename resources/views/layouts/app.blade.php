@@ -8,17 +8,9 @@
     <title>@yield('title', 'BAMA Admin')</title>
     <script>document.documentElement.dataset.theme=localStorage.getItem('bama-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');</script>
     @php
-        $companyFaviconSettings = (($activeBusiness ?? null) && \App\Support\SchemaCache::hasTable('company_settings'))
-            ? \App\Models\CompanySetting::withoutGlobalScope('business')->where('business_id', $activeBusiness->id)->first()
-            : null;
-        $appFaviconUrl = $tenantTheme?->faviconUrl()
-            ?: $tenantTheme?->logoUrl()
-            ?: $companyFaviconSettings?->logoUrl()
-            ?: \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png')
-            ?: asset('images/bama-solutions-02.png');
-        $appFaviconVersion = $tenantTheme?->updated_at?->timestamp
-            ?? $companyFaviconSettings?->updated_at?->timestamp
-            ?? 'bama';
+        $appFaviconPath = 'images/bama-favicon.png';
+        $appFaviconUrl = asset($appFaviconPath);
+        $appFaviconVersion = file_exists(public_path($appFaviconPath)) ? filemtime(public_path($appFaviconPath)) : 'bama';
         $appFaviconHref = $appFaviconUrl.(str_contains($appFaviconUrl, '?') ? '&' : '?').'v='.rawurlencode((string) $appFaviconVersion);
     @endphp
     <link rel="icon" href="{{ $appFaviconHref }}">

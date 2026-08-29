@@ -11,8 +11,10 @@
             : null;
         $platformBrand = array_replace_recursive(\App\Models\MarketingPage::defaultSections('home')['brand'], (array) data_get($platformHomeSections, 'brand', []));
         $bamaBrandLogoUrl = \App\Support\PublicUpload::url(data_get($platformBrand, 'logo_path')) ?: \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png');
-        $platformFaviconUrl = \App\Support\PublicUpload::url(data_get($platformBrand, 'favicon_path')) ?: $bamaBrandLogoUrl;
-        $platformFaviconHref = $platformFaviconUrl.(str_contains($platformFaviconUrl, '?') ? '&' : '?').'v='.rawurlencode((string) md5((string) $platformFaviconUrl));
+        $platformFaviconPath = 'images/bama-favicon.png';
+        $platformFaviconUrl = asset($platformFaviconPath);
+        $platformFaviconVersion = file_exists(public_path($platformFaviconPath)) ? filemtime(public_path($platformFaviconPath)) : 'bama';
+        $platformFaviconHref = $platformFaviconUrl.(str_contains($platformFaviconUrl, '?') ? '&' : '?').'v='.rawurlencode((string) $platformFaviconVersion);
     @endphp
     <link rel="icon" href="{{ $platformFaviconHref }}">
     <link rel="shortcut icon" href="{{ $platformFaviconHref }}">
