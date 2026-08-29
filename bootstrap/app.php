@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Middleware\EnsureAdminAccess;
 use App\Http\Middleware\EnforceHttps;
+use App\Http\Middleware\EnsureAdminAccess;
 use App\Http\Middleware\EnsureModuleEnabled;
 use App\Http\Middleware\EnsureSubscriptionActive;
 use App\Http\Middleware\EnsureSuperAdmin;
@@ -9,11 +9,11 @@ use App\Http\Middleware\IdentifyTenant;
 use App\Http\Middleware\RecordMajorActivity;
 use App\Http\Middleware\RequirePermission;
 use App\Http\Middleware\SecurityHeaders;
-use Illuminate\Http\Request;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -24,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->validateCsrfTokens(except: ['logout', 'billing/mpesa/callback']);
+        $middleware->validateCsrfTokens(except: ['logout', 'billing/mpesa/callback', 'api/payments/*']);
         $middleware->append([EnforceHttps::class, SecurityHeaders::class]);
         $middleware->web(append: [IdentifyTenant::class, RecordMajorActivity::class]);
         $middleware->alias([

@@ -197,6 +197,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/payments/{payment}/mpesa-status', [BillingController::class, 'mpesaStatus'])->name('payments.mpesa-status');
         Route::post('/invoices/{invoice}/paypal', [BillingController::class, 'paypal'])->name('invoices.paypal');
         Route::post('/invoices/{invoice}/card', [BillingController::class, 'card'])->name('invoices.card');
+        Route::get('/payments/{payment}/card', [BillingController::class, 'cardConfirm'])->name('payments.card-confirm');
         Route::get('/paypal/return', [BillingController::class, 'paypalReturn'])->name('paypal.return');
         Route::get('/paypal/cancel', [BillingController::class, 'paypalCancel'])->name('paypal.cancel');
     });

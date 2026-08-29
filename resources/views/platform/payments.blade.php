@@ -25,7 +25,7 @@
                 ],
             ],
             'defaults' => [
-                'callback_url' => route('billing.mpesa.callback'),
+                'callback_url' => route('api.payments.mpesa.callback'),
                 'transaction_type' => 'CustomerPayBillOnline',
             ],
         ],
@@ -38,23 +38,25 @@
             'help' => 'Use REST app credentials from the PayPal developer dashboard. KES invoices can be charged in USD when a KES per USD exchange rate is set.',
             'fields' => [
                 'kes_usd_rate' => ['label' => 'KES per USD exchange rate', 'hint' => 'Example: 130 means KES 130.00 is charged as USD 1.00 in PayPal.'],
+                'webhook_id' => ['label' => 'Webhook ID', 'hint' => 'Required to verify PayPal webhook signatures.'],
             ],
             'defaults' => [
                 'kes_usd_rate' => '',
+                'webhook_id' => '',
             ],
         ],
         'card' => [
-            'title' => 'Card Checkout',
+            'title' => 'Stripe Card Checkout',
             'icon' => 'bi-credit-card',
-            'summary' => 'Connect a hosted card checkout page from your preferred card processor.',
-            'public' => 'Public key',
-            'secret' => 'Secret key',
-            'help' => 'The URL can include {invoice}, {amount}, {currency}, and {tenant}.',
+            'summary' => 'Collect card payments with Stripe PaymentIntents and webhooks.',
+            'public' => 'Stripe publishable key',
+            'secret' => 'Stripe secret key',
+            'help' => 'Use Stripe test or live keys. Laravel never receives card numbers; successful webhooks activate subscriptions.',
             'fields' => [
-                'checkout_url_template' => ['label' => 'Hosted checkout URL template', 'hint' => 'Example: https://checkout.example.com/pay?invoice={invoice}&amount={amount}&currency={currency}&tenant={tenant}'],
+                'webhook_secret' => ['label' => 'Webhook signing secret', 'hint' => 'Use the whsec_ value from the Stripe webhook endpoint.'],
             ],
             'defaults' => [
-                'checkout_url_template' => 'https://checkout.example.com/pay?invoice={invoice}&amount={amount}&currency={currency}&tenant={tenant}',
+                'webhook_secret' => '',
             ],
         ],
     ];
@@ -127,7 +129,7 @@
                         @foreach($definition['fields'] as $field => $fieldMeta)
                             @php
                                 $configPath = "providers.$provider.config.$field";
-                                $isSensitiveConfig = in_array($field, ['passkey'], true);
+                                $isSensitiveConfig = in_array($field, ['passkey', 'webhook_secret'], true);
                                 $configValueSaved = $isSensitiveConfig && filled($config[$field] ?? null);
                                 $value = $isSensitiveConfig
                                     ? old($configPath, '')

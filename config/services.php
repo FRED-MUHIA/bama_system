@@ -36,15 +36,27 @@ return [
     ],
 
     'mpesa' => [
+        'environment' => env('MPESA_ENVIRONMENT', 'sandbox'),
         'consumer_key' => env('MPESA_CONSUMER_KEY'),
         'consumer_secret' => env('MPESA_CONSUMER_SECRET'),
         'shortcode' => env('MPESA_SHORTCODE'),
         'passkey' => env('MPESA_PASSKEY'),
+        'transaction_type' => env('MPESA_TRANSACTION_TYPE', 'CustomerPayBillOnline'),
+        'callback_url' => env('MPESA_CALLBACK_URL'),
+        'account_reference' => env('MPESA_ACCOUNT_REFERENCE', 'BAMA'),
     ],
 
     'paypal' => [
+        'mode' => env('PAYPAL_MODE', 'sandbox'),
         'client_id' => env('PAYPAL_CLIENT_ID'),
-        'secret' => env('PAYPAL_SECRET'),
+        'secret' => env('PAYPAL_CLIENT_SECRET', env('PAYPAL_SECRET')),
+        'webhook_id' => env('PAYPAL_WEBHOOK_ID'),
+    ],
+
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
 ];

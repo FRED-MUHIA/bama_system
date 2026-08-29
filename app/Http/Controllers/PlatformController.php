@@ -228,6 +228,8 @@ class PlatformController extends Controller
             'providers.*.config.callback_url' => ['nullable', 'url', 'max:1000'],
             'providers.*.config.transaction_type' => ['nullable', 'string', Rule::in(['CustomerPayBillOnline', 'CustomerBuyGoodsOnline'])],
             'providers.*.config.kes_usd_rate' => ['nullable', 'numeric', 'min:0.01'],
+            'providers.*.config.webhook_id' => ['nullable', 'string', 'max:255'],
+            'providers.*.config.webhook_secret' => ['nullable', 'string', 'max:255'],
             'providers.*.config.checkout_url_template' => ['nullable', 'string', 'max:2000'],
         ]);
 

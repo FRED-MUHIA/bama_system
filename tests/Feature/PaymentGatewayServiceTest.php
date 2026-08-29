@@ -185,7 +185,11 @@ class PaymentGatewayServiceTest extends TestCase
             );
         }
 
-        $this->assertDatabaseCount('subscription_payments', 0);
+        $this->assertDatabaseHas('subscription_payments', [
+            'provider' => 'mpesa',
+            'status' => 'failed',
+            'failure_code' => '1',
+        ]);
     }
 
     public function test_mpesa_status_query_records_timeout_failure(): void
@@ -277,7 +281,11 @@ class PaymentGatewayServiceTest extends TestCase
             $this->assertSame('M-PESA request failed: Bad Request - Invalid PhoneNumber', $e->getMessage());
         }
 
-        $this->assertDatabaseCount('subscription_payments', 0);
+        $this->assertDatabaseHas('subscription_payments', [
+            'provider' => 'mpesa',
+            'status' => 'failed',
+            'failure_code' => '400.002.02',
+        ]);
     }
 
     public function test_paypal_checkout_converts_kes_invoice_to_usd_order(): void
@@ -311,6 +319,64 @@ class PaymentGatewayServiceTest extends TestCase
             return str_contains($request->url(), '/v2/checkout/orders')
                 && data_get($data, 'purchase_units.0.amount.currency_code') === 'USD'
                 && data_get($data, 'purchase_units.0.amount.value') === '0.08';
+        });
+    }
+
+    public function test_paypal_capture_posts_well_formed_empty_json_and_activates_after_completed_capture(): void
+    {
+        Http::fake([
+            'https://api-m.sandbox.paypal.com/v1/oauth2/token' => Http::response([
+                'access_token' => 'paypal-token',
+            ]),
+            'https://api-m.sandbox.paypal.com/v2/checkout/orders/PAYPAL-ORDER-2/capture' => Http::response([
+                'status' => 'COMPLETED',
+                'purchase_units' => [[
+                    'payments' => [
+                        'captures' => [[
+                            'id' => 'CAPTURE-2',
+                            'status' => 'COMPLETED',
+                            'amount' => [
+                                'currency_code' => 'USD',
+                                'value' => '10.00',
+                            ],
+                        ]],
+                    ],
+                ]],
+            ]),
+        ]);
+
+        $invoice = $this->mpesaFixture(currency: 'USD');
+        $this->paypalSettingFixture();
+
+        $payment = SubscriptionPayment::create([
+            'subscription_invoice_id' => $invoice->id,
+            'tenant_id' => $invoice->tenant_id,
+            'provider' => 'paypal',
+            'status' => 'requires_action',
+            'amount' => $invoice->total,
+            'currency' => $invoice->currency,
+            'provider_order_id' => 'PAYPAL-ORDER-2',
+            'callback_payload' => [
+                'paypal_amount' => [
+                    'currency' => 'USD',
+                    'value' => '10.00',
+                ],
+            ],
+        ]);
+
+        $captured = app(PaymentGatewayService::class)->capturePayPalOrder($payment->provider_order_id);
+
+        $this->assertSame('successful', $captured->status);
+        $this->assertSame('CAPTURE-2', $captured->provider_receipt);
+        $this->assertDatabaseHas('subscription_invoices', [
+            'id' => $invoice->id,
+            'status' => 'paid',
+        ]);
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/capture')
+                && $request->method() === 'POST'
+                && $request->body() === '{}';
         });
     }
 

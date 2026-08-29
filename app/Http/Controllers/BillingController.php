@@ -12,6 +12,7 @@ use App\Services\SubscriptionManager;
 use App\Support\ActiveTenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use RuntimeException;
 
@@ -88,7 +89,7 @@ class BillingController extends Controller
 
         return back()->with(
             'status',
-            'M-PESA STK prompt sent to '.$phone.'. Complete payment on that phone, or use Check STK Status if the prompt does not appear. Reference: '.$payment->checkout_request_id
+            'M-PESA payment request initiated for '.$phone.'. Complete the request on that phone, or use Check Payment Status if no prompt appears. Reference: '.$payment->checkout_request_id
         );
     }
 
@@ -108,7 +109,7 @@ class BillingController extends Controller
             ?? 'Safaricom has not returned a final result yet.';
         $result = $this->mpesaResultMessage($result);
 
-        if ($payment->status === 'paid') {
+        if ($payment->isSuccessful()) {
             return back()->with('status', 'M-PESA payment confirmed and subscription renewed.');
         }
 
@@ -166,7 +167,7 @@ class BillingController extends Controller
             return redirect()->route('billing.index')->withErrors(['paypal' => 'PayPal capture failed: '.$e->getMessage()]);
         }
 
-        return redirect()->route('billing.index')->with('status', 'PayPal payment '.$payment->provider_receipt.' captured and subscription renewed.');
+        return redirect()->route('billing.index')->with('status', 'PayPal payment verified and subscription renewed. Reference: '.$payment->provider_receipt.'.');
     }
 
     public function paypalCancel()
@@ -184,7 +185,46 @@ class BillingController extends Controller
             return back()->withErrors(['card' => $e->getMessage()]);
         }
 
-        return redirect()->away($payment->payment_url);
+        return redirect()->route('billing.payments.card-confirm', $payment);
+    }
+
+    public function cardConfirm(SubscriptionPayment $payment)
+    {
+        abort_unless(ActiveTenant::id() && (int) $payment->tenant_id === (int) ActiveTenant::id(), 403);
+        abort_unless($payment->provider === 'card', 404);
+        $payment->loadMissing('invoice.plan');
+
+        $setting = PlatformPaymentSetting::where('provider', 'card')->first();
+        $publicKey = $setting?->public_key ?: config('services.stripe.key');
+        abort_unless($publicKey, 422, 'Card payments are not fully configured.');
+
+        return view('billing.card', [
+            'payment' => $payment,
+            'invoice' => $payment->invoice,
+            'stripeKey' => $publicKey,
+            'clientSecret' => data_get($payment->response_payload, 'client_secret'),
+            'returnUrl' => URL::signedRoute('billing.index'),
+        ]);
+    }
+
+    public function paypalWebhook(Request $request, PaymentGatewayService $gateway)
+    {
+        $payment = $gateway->handlePayPalWebhook($request);
+
+        return response()->json([
+            'received' => true,
+            'processed' => (bool) $payment,
+        ]);
+    }
+
+    public function stripeWebhook(Request $request, PaymentGatewayService $gateway)
+    {
+        $payment = $gateway->handleStripeWebhook($request);
+
+        return response()->json([
+            'received' => true,
+            'processed' => (bool) $payment,
+        ]);
     }
 
     private function authorizeInvoice(SubscriptionInvoice $invoice): void

@@ -91,16 +91,16 @@
                                 <div class="border-top mt-3 pt-3 small">
                                     <div class="d-flex justify-content-between gap-2 mb-1">
                                         <span class="text-muted">Latest STK</span>
-                                        <span class="badge {{ $latestMpesaPayment->status === 'paid' ? 'text-bg-success' : ($latestMpesaPayment->status === 'failed' ? 'text-bg-danger' : 'text-bg-light') }}">{{ str($latestMpesaPayment->status)->headline() }}</span>
+                                        <span class="badge {{ $latestMpesaPayment->isSuccessful() ? 'text-bg-success' : (in_array($latestMpesaPayment->status, ['failed', 'cancelled', 'expired'], true) ? 'text-bg-danger' : 'text-bg-light') }}">{{ str($latestMpesaPayment->status)->headline() }}</span>
                                     </div>
-                                    <div class="text-muted">Phone: {{ $latestMpesaPayment->phone }}</div>
+                                    <div class="text-muted">Phone: {{ $latestMpesaPayment->maskedPhone() }}</div>
                                     @if($latestMpesaResult)
                                         <div class="text-muted mt-1">{{ $latestMpesaResult }}</div>
                                     @endif
                                     @if($latestMpesaPayment->status === 'pending' && $latestMpesaPayment->checkout_request_id)
                                         <form method="post" action="{{ route('billing.payments.mpesa-status', $latestMpesaPayment) }}" class="mt-2">
                                             @csrf
-                                            <button class="btn btn-sm btn-outline-warning w-100"><i class="bi bi-arrow-repeat"></i> Check STK Status</button>
+                                            <button class="btn btn-sm btn-outline-warning w-100"><i class="bi bi-arrow-repeat"></i> Check Payment Status</button>
                                         </form>
                                     @endif
                                 </div>
@@ -120,6 +120,8 @@
                                 <div class="small text-muted mt-2">Charges about USD {{ $paypalConvertedUsd }} at KES {{ number_format($paypalKesUsdRate, 2) }} per USD.</div>
                             @elseif($enabled('paypal') && ! $paypalCurrencySupported)
                                 <div class="small text-muted mt-2">PayPal conversion is not configured for {{ $invoiceCurrency }} invoices.</div>
+                            @elseif($enabled('paypal'))
+                                <div class="small text-muted mt-2">Continue with PayPal to approve your payment.</div>
                             @endif
                         </div>
                     </div>
@@ -131,6 +133,7 @@
                                 <button class="btn btn-outline-dark w-100" @disabled(! $enabled('card') || ! $invoicePayable)><i class="bi bi-credit-card-2-front"></i> Pay by Card</button>
                             </form>
                             @unless($enabled('card'))<div class="small text-muted mt-2">Card checkout is not enabled by owner yet.</div>@endunless
+                            @if($enabled('card'))<div class="small text-muted mt-2">Additional bank verification is handled securely by Stripe when required.</div>@endif
                         </div>
                     </div>
                 </div>
