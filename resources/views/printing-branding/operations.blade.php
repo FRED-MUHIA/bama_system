@@ -638,7 +638,7 @@
                     <div class="col-md-6"><label class="form-label">Signature</label><input class="form-control" type="file" name="signature" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,image/*"></div>
                     <div class="col-md-6"><label class="form-label">Stamp</label><input class="form-control" type="file" name="stamp" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,image/*"></div>
                     <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_default" value="1"> <span class="form-check-label">Default on documents</span></label></div>
-                    <div class="col-12"><button class="btn btn-outline-dark btn-sm">Add Signatory</button></div>
+                    <div class="col-12"><button type="submit" class="btn btn-dark w-100">Save Signature & Stamp</button></div>
                 </form>
                 <div class="pb-list mt-3">
                     @forelse(($signatories ?? collect()) as $sig)
@@ -660,7 +660,7 @@
                                 <div class="col-md-6"><label class="form-label">Replace stamp</label><input class="form-control" type="file" name="stamp" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,image/*"></div>
                                 <div class="col-md-6"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_default" value="1" @checked(old('is_default',$sig->is_default))> <span class="form-check-label">Default on documents</span></label></div>
                                 <div class="col-md-6"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_active" value="1" @checked(old('is_active',$sig->is_active))> <span class="form-check-label">Active</span></label></div>
-                                <div class="col-12"><button class="btn btn-dark btn-sm">Update Signatory</button></div>
+                                <div class="col-12"><button type="submit" class="btn btn-dark w-100">Save Signature & Stamp Changes</button></div>
                             </form>
                         </details>
                     @empty
