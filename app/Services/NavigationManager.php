@@ -96,6 +96,19 @@ class NavigationManager
                 fn (Collection $items) => $items->push(['module' => 'finance', 'label' => 'Finance', 'route' => 'finance.index', 'icon' => 'bi-bank'])
             )
             ->when(
+                ! $items->contains(fn ($item) => ($item['label'] ?? null) === 'Expenses')
+                    && Route::has('accounting.index')
+                    && $this->tablesReady(['departments', 'cost_centers', 'accounting_allocations'])
+                    && $modules->enabledSlug('accounting'),
+                fn (Collection $items) => $items->push([
+                    'module' => 'accounting',
+                    'label' => 'Expenses',
+                    'route' => 'accounting.index',
+                    'icon' => 'bi-receipt',
+                    'params' => ['tab' => 'allocations', 'direction' => 'Expense'],
+                ])
+            )
+            ->when(
                 ! $items->contains(fn ($item) => ($item['label'] ?? null) === 'Settings'),
                 fn (Collection $items) => $items->push(['module' => 'administration', 'label' => 'Settings', 'route' => 'settings.edit', 'icon' => 'bi-gear'])
             )

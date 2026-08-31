@@ -30,7 +30,8 @@ class IamService
         'finance.coa.manage', 'finance.gl.view', 'finance.gl.post', 'finance.gl.reverse', 'finance.gl.unreverse',
         'finance.ar.view', 'finance.ar.manage', 'finance.ap.view', 'finance.ap.approve', 'finance.ap.manage',
         'finance.banking.manage', 'finance.reconciliation.manage', 'finance.assets.manage',
-        'finance.periods.manage', 'finance.reports.view', 'letters.view', 'letters.create', 'letters.edit', 'letters.delete',
+        'finance.periods.manage', 'finance.reports.view', 'expenses.view', 'expenses.manage',
+        'accounting.expenses.view', 'accounting.expenses.manage', 'letters.view', 'letters.create', 'letters.edit', 'letters.delete',
         'inventory.view', 'inventory.adjust', 'reports.view', 'reports.export',
         'hospitality.view', 'hospitality.manage', 'hospitality.reports',
         'hospitality.reservations.view', 'hospitality.reservations.manage',
@@ -515,7 +516,8 @@ class IamService
             'finance.gl.reverse', 'finance.gl.unreverse', 'finance.ar.view', 'finance.ar.manage',
             'finance.ap.view', 'finance.ap.approve', 'finance.ap.manage', 'finance.banking.manage',
             'finance.reconciliation.manage', 'finance.assets.manage', 'finance.periods.manage',
-            'finance.reports.view', 'reports.view', 'reports.export',
+            'finance.reports.view', 'expenses.view', 'expenses.manage',
+            'accounting.expenses.view', 'accounting.expenses.manage', 'reports.view', 'reports.export',
         ];
 
         $map = [
@@ -523,13 +525,15 @@ class IamService
             'accountant' => [
                 'finance.view', 'finance.gl.view', 'finance.gl.post', 'finance.ar.view',
                 'finance.ar.manage', 'finance.ap.view', 'finance.ap.manage', 'finance.banking.manage',
-                'finance.reconciliation.manage', 'finance.reports.view', 'reports.view', 'reports.export',
+                'finance.reconciliation.manage', 'finance.reports.view', 'expenses.view', 'expenses.manage',
+                'accounting.expenses.view', 'accounting.expenses.manage', 'reports.view', 'reports.export',
             ],
             'finance-officer' => [
                 'finance.view', 'finance.gl.view', 'finance.gl.post', 'finance.ar.view',
-                'finance.ar.manage', 'finance.ap.view', 'finance.banking.manage',
+                'finance.ar.manage', 'finance.ap.view', 'finance.banking.manage', 'expenses.view', 'expenses.manage',
+                'accounting.expenses.view', 'accounting.expenses.manage',
             ],
-            'director' => ['finance.view', 'finance.gl.view', 'finance.ar.view', 'finance.ap.view', 'finance.reports.view', 'reports.view', 'reports.export'],
+            'director' => ['finance.view', 'finance.gl.view', 'finance.ar.view', 'finance.ap.view', 'finance.reports.view', 'expenses.view', 'accounting.expenses.view', 'reports.view', 'reports.export'],
         ];
 
         foreach ($map as $slug => $permissions) {

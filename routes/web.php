@@ -176,6 +176,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/plans', [PlatformController::class, 'plans'])->name('plans');
         Route::put('/plans/{plan}', [PlatformController::class, 'updatePlan'])->name('plans.update');
         Route::get('/payments', [PlatformController::class, 'paymentSettings'])->name('payments');
+        Route::get('/payment-settings/kes-usd-rate', [PlatformController::class, 'liveKesUsdRate'])->name('payment-settings.kes-usd-rate');
         Route::put('/payment-settings', [PlatformController::class, 'updatePaymentSettings'])->name('payment-settings.update');
         Route::resource('pages', MarketingPageController::class)->except(['show']);
     });

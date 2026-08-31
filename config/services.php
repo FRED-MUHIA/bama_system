@@ -53,6 +53,11 @@ return [
         'webhook_id' => env('PAYPAL_WEBHOOK_ID'),
     ],
 
+    'exchange_rates' => [
+        'usd_kes_url' => env('EXCHANGE_RATES_USD_KES_URL', 'https://api.frankfurter.dev/v2/rate/USD/KES'),
+        'cache_minutes' => env('EXCHANGE_RATES_CACHE_MINUTES', 30),
+    ],
+
     'stripe' => [
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),

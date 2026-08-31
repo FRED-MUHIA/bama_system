@@ -351,6 +351,7 @@ return new class extends Migration
             ['projects', 'Projects', 'core', true, 'bi-kanban', 'projects.index'],
             ['finance', 'Finance', 'core', true, 'bi-bank', 'finance.index'],
             ['accounting', 'Accounting', 'core', true, 'bi-diagram-3', 'accounting.index'],
+            ['expenses', 'Expenses', 'core', true, 'bi-receipt', 'accounting.index'],
             ['notifications', 'Notifications', 'core', true, 'bi-bell', null],
             ['reporting', 'Reporting', 'core', true, 'bi-bar-chart', 'erp.reports'],
             ['administration', 'Administration', 'core', true, 'bi-gear', 'administration.index'],

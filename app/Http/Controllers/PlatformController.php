@@ -9,10 +9,12 @@ use App\Models\Subscription;
 use App\Models\SubscriptionFeature;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\ExchangeRateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
+use RuntimeException;
 
 class PlatformController extends Controller
 {
@@ -165,6 +167,17 @@ class PlatformController extends Controller
                 : collect(),
             'billingTablesReady' => Schema::hasTable('platform_payment_settings'),
         ]);
+    }
+
+    public function liveKesUsdRate(Request $request, ExchangeRateService $exchangeRates)
+    {
+        abort_unless(Schema::hasTable('platform_payment_settings'), 503, 'Run the billing migrations before fetching live exchange rates.');
+
+        try {
+            return response()->json($exchangeRates->usdToKes($request->boolean('refresh', true)));
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 502);
+        }
     }
 
     public function updatePlan(Request $request, Plan $plan)

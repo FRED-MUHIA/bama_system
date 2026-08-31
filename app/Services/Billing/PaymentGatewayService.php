@@ -7,6 +7,7 @@ use App\Models\PaymentWebhookEvent;
 use App\Models\PlatformPaymentSetting;
 use App\Models\SubscriptionInvoice;
 use App\Models\SubscriptionPayment;
+use App\Services\ExchangeRateService;
 use App\Services\Payments\PaymentAuditService;
 use App\Services\Payments\SubscriptionPaymentService;
 use Illuminate\Http\Client\RequestException;
@@ -22,6 +23,7 @@ class PaymentGatewayService
     public function __construct(
         private readonly SubscriptionPaymentService $payments,
         private readonly PaymentAuditService $audit,
+        private readonly ExchangeRateService $exchangeRates,
     ) {}
 
     public function mpesaStkPush(SubscriptionInvoice $invoice, string $phone): SubscriptionPayment
@@ -752,18 +754,40 @@ class PaymentGatewayService
 
         if ($currency === 'KES') {
             $rate = (float) ($config['kes_usd_rate'] ?? 0);
+            $exchangeRateSource = $rate > 0 ? 'owner_config' : null;
+            $exchangeRateDate = null;
+
+            try {
+                $quote = $this->exchangeRates->usdToKes();
+                $liveRate = (float) ($quote['rate'] ?? 0);
+
+                if ($liveRate > 0) {
+                    $rate = $liveRate;
+                    $exchangeRateSource = 'live';
+                    $exchangeRateDate = $quote['date'] ?? null;
+                }
+            } catch (RuntimeException) {
+                // Keep the owner-configured rate as a fallback when the live source is unreachable.
+            }
 
             if ($rate <= 0) {
                 throw new RuntimeException('PayPal KES to USD exchange rate is not configured in the owner console.');
             }
 
-            return [
+            $amount = [
                 'currency' => 'USD',
                 'value' => number_format(max(0.01, $invoiceAmount / $rate), 2, '.', ''),
                 'exchange_rate' => $rate,
+                'exchange_rate_source' => $exchangeRateSource,
                 'source_currency' => 'KES',
                 'source_value' => number_format($invoiceAmount, 2, '.', ''),
             ];
+
+            if ($exchangeRateDate) {
+                $amount['exchange_rate_date'] = $exchangeRateDate;
+            }
+
+            return $amount;
         }
 
         if (! $this->paypalSupportsCurrency($currency)) {

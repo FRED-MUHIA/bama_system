@@ -11,7 +11,7 @@
     $paypalKesUsdRate = (float) data_get($paypalSetting?->config ?? [], 'kes_usd_rate', 0);
     $paypalSupportedCurrencies = ['AUD', 'BRL', 'CAD', 'CNY', 'CZK', 'DKK', 'EUR', 'HKD', 'HUF', 'ILS', 'JPY', 'MYR', 'MXN', 'TWD', 'NZD', 'NOK', 'PHP', 'PLN', 'GBP', 'SGD', 'SEK', 'CHF', 'THB', 'USD'];
     $invoiceCurrency = $invoice ? strtoupper($invoice->currency) : null;
-    $paypalCurrencySupported = $invoice && (in_array($invoiceCurrency, $paypalSupportedCurrencies, true) || ($invoiceCurrency === 'KES' && $paypalKesUsdRate > 0));
+    $paypalCurrencySupported = $invoice && (in_array($invoiceCurrency, $paypalSupportedCurrencies, true) || $invoiceCurrency === 'KES');
     $paypalConvertedUsd = $invoiceCurrency === 'KES' && $paypalKesUsdRate > 0 ? number_format(max(0.01, (float) $invoice->total / $paypalKesUsdRate), 2) : null;
     $invoicePayable = $invoice && $invoice->status !== 'paid' && (float) $invoice->total > 0;
     $mpesaResultMessage = function (?string $result): ?string {
@@ -118,6 +118,8 @@
                             @unless($enabled('paypal'))<div class="small text-muted mt-2">PayPal is not enabled by owner yet.</div>@endunless
                             @if($enabled('paypal') && $invoiceCurrency === 'KES' && $paypalConvertedUsd)
                                 <div class="small text-muted mt-2">Charges about USD {{ $paypalConvertedUsd }} at KES {{ number_format($paypalKesUsdRate, 2) }} per USD.</div>
+                            @elseif($enabled('paypal') && $invoiceCurrency === 'KES')
+                                <div class="small text-muted mt-2">KES will be converted to USD using the live exchange rate.</div>
                             @elseif($enabled('paypal') && ! $paypalCurrencySupported)
                                 <div class="small text-muted mt-2">PayPal conversion is not configured for {{ $invoiceCurrency }} invoices.</div>
                             @elseif($enabled('paypal'))

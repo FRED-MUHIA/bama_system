@@ -5,6 +5,7 @@ $coreModules = [
     'projects' => 'Projects',
     'finance' => 'Finance',
     'accounting' => 'Accounting',
+    'expenses' => 'Expenses',
     'documents' => 'Documents',
     'reporting' => 'Reporting',
     'hr' => 'HR',
@@ -26,9 +27,27 @@ $sharedFeatures = [
         'name' => 'Offline Mode',
         'description' => 'Ability to record sales without an active internet connection and sync later.',
     ],
+    [
+        'name' => 'Expense Management',
+        'description' => 'Record operating expenses by department, cost center, project, and industry workflow.',
+    ],
+    [
+        'name' => 'Budgets & Cost Centers',
+        'description' => 'Track budgets, cost centers, allocations, and variance alerts for every industry.',
+    ],
+    [
+        'name' => 'Expense Approvals & Reports',
+        'description' => 'Review spending, monitor approvals, and export expense reports alongside finance dashboards.',
+    ],
 ];
 
 $sharedFeatureNames = array_column($sharedFeatures, 'name');
+$sharedExpenseModules = ['Expense Management', 'Expense Approvals', 'Budget Tracking', 'Cost Centers'];
+$sharedExpenseReports = ['Expense Report', 'Budget vs Actual', 'Cost Center Spend'];
+$sharedExpenseWorkflows = ['Record Expense', 'Review Expense', 'Approve Expense', 'Post Expense', 'Report Expense'];
+$sharedExpenseTemplates = ['Expense claim', 'Supplier bill', 'Budget request', 'Expense approval workflow'];
+$sharedExpensePermissions = ['expenses.view', 'expenses.manage', 'accounting.expenses.view', 'accounting.expenses.manage'];
+$sharedExpenseMenu = ['Expenses', 'Expense Approvals', 'Budgets', 'Cost Centers'];
 $constructionPackage = file_exists(base_path('Modules/Construction/module.php')) ? require base_path('Modules/Construction/module.php') : null;
 $agriculturePackage = file_exists(base_path('Modules/Agriculture/module.php')) ? require base_path('Modules/Agriculture/module.php') : null;
 $printingBrandingPackage = file_exists(base_path('Modules/PrintingBranding/module.php')) ? require base_path('Modules/PrintingBranding/module.php') : null;
@@ -170,8 +189,9 @@ $industries = [
 return [
     'core_modules' => $coreModules,
     'shared_features' => $sharedFeatures,
-    'industries' => collect($industries)->map(function (array $definition, string $slug) use ($coreModules, $sharedFeatureNames) {
+    'industries' => collect($industries)->map(function (array $definition, string $slug) use ($coreModules, $sharedFeatureNames, $sharedExpenseModules, $sharedExpenseReports, $sharedExpenseWorkflows, $sharedExpenseTemplates, $sharedExpensePermissions, $sharedExpenseMenu) {
         [$name, $description, $modules, $overrides] = array_pad($definition, 4, []);
+        $modules = array_values(array_unique(array_merge($modules, $sharedExpenseModules)));
         $dashboardFeatures = array_slice(array_map(fn (string $module) => $module.' dashboard', $modules), 0, 4);
         $subIndustries = $overrides['sub_industries'] ?? [
             ['slug' => 'standard', 'name' => $name.' Standard', 'description' => $description, 'dashboard_features' => $dashboardFeatures],
@@ -188,17 +208,18 @@ return [
             'menus' => array_map(fn (string $module) => ['label' => $module, 'module' => str($slug.'-'.$module)->slug()->value(), 'icon' => 'bi-grid'], $modules),
             'permissions' => array_merge(
                 [$slug.'.view', $slug.'.manage', $slug.'.reports'],
-                array_map(fn (string $module) => str($slug.'.'.$module.'.view')->slug('.')->value(), $modules)
+                array_map(fn (string $module) => str($slug.'.'.$module.'.view')->slug('.')->value(), $modules),
+                $sharedExpensePermissions
             ),
-            'reports' => $overrides['reports'] ?? ['Executive summary', 'Operational performance', 'Compliance report', 'Financial performance'],
-            'workflows' => ['Create', 'Review', 'Approve', 'Post', 'Report'],
-            'templates' => ['Default dashboard', 'Management report', 'Approval workflow', 'Document template'],
+            'reports' => array_values(array_unique(array_merge($overrides['reports'] ?? ['Executive summary', 'Operational performance', 'Compliance report', 'Financial performance'], $sharedExpenseReports))),
+            'workflows' => array_values(array_unique(array_merge(['Create', 'Review', 'Approve', 'Post', 'Report'], $sharedExpenseWorkflows))),
+            'templates' => array_values(array_unique(array_merge(['Default dashboard', 'Management report', 'Approval workflow', 'Document template'], $sharedExpenseTemplates))),
             'features' => array_values(array_unique(array_merge($sharedFeatureNames, array_slice($modules, 0, 6)))),
             'dashboard_features' => $overrides['dashboard_widgets'] ?? $dashboardFeatures,
             'sub_industries' => $subIndustries,
             'registration_sub_industries' => $overrides['registration_sub_industries'] ?? collect($subIndustries)->pluck('slug')->all(),
             'roles' => $overrides['roles'] ?? [],
-            'menu_structure' => $overrides['menu_structure'] ?? array_map(fn (array $menu) => $menu['label'], array_map(fn (string $module) => ['label' => $module], $modules)),
+            'menu_structure' => array_values(array_unique(array_merge($overrides['menu_structure'] ?? array_map(fn (array $menu) => $menu['label'], array_map(fn (string $module) => ['label' => $module], $modules)), $sharedExpenseMenu))),
         ];
     })->values()->all(),
 ];

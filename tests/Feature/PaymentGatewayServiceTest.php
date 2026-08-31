@@ -10,6 +10,7 @@ use App\Models\SubscriptionPayment;
 use App\Models\Tenant;
 use App\Services\Billing\PaymentGatewayService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 use Tests\TestCase;
@@ -17,6 +18,13 @@ use Tests\TestCase;
 class PaymentGatewayServiceTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Cache::forget('exchange-rates.usd-kes');
+    }
 
     public function test_mpesa_stk_push_sends_daraja_safe_payload(): void
     {
@@ -290,7 +298,15 @@ class PaymentGatewayServiceTest extends TestCase
 
     public function test_paypal_checkout_converts_kes_invoice_to_usd_order(): void
     {
+        config(['services.exchange_rates.usd_kes_url' => 'https://rates.test/usd-kes']);
+
         Http::fake([
+            'https://rates.test/usd-kes' => Http::response([
+                'date' => '2026-08-31',
+                'base' => 'USD',
+                'quote' => 'KES',
+                'rate' => 100,
+            ]),
             'https://api-m.sandbox.paypal.com/v1/oauth2/token' => Http::response([
                 'access_token' => 'paypal-token',
             ]),
@@ -311,14 +327,15 @@ class PaymentGatewayServiceTest extends TestCase
         $this->assertSame('requires_action', $payment->status);
         $this->assertSame('KES', $payment->currency);
         $this->assertSame('USD', data_get($payment->callback_payload, 'paypal_amount.currency'));
-        $this->assertSame('0.08', data_get($payment->callback_payload, 'paypal_amount.value'));
+        $this->assertSame('0.10', data_get($payment->callback_payload, 'paypal_amount.value'));
+        $this->assertSame('live', data_get($payment->callback_payload, 'paypal_amount.exchange_rate_source'));
 
         Http::assertSent(function ($request) {
             $data = $request->data();
 
             return str_contains($request->url(), '/v2/checkout/orders')
                 && data_get($data, 'purchase_units.0.amount.currency_code') === 'USD'
-                && data_get($data, 'purchase_units.0.amount.value') === '0.08';
+                && data_get($data, 'purchase_units.0.amount.value') === '0.10';
         });
     }
 
@@ -382,7 +399,11 @@ class PaymentGatewayServiceTest extends TestCase
 
     public function test_paypal_checkout_rejects_kes_invoice_without_exchange_rate(): void
     {
-        Http::fake();
+        config(['services.exchange_rates.usd_kes_url' => 'https://rates.test/usd-kes']);
+
+        Http::fake([
+            'https://rates.test/usd-kes' => Http::response([]),
+        ]);
 
         $invoice = $this->mpesaFixture();
         $this->paypalSettingFixture();
@@ -397,7 +418,8 @@ class PaymentGatewayServiceTest extends TestCase
             );
         }
 
-        Http::assertNothingSent();
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'https://rates.test/usd-kes'));
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), 'api-m.sandbox.paypal.com'));
     }
 
     public function test_paypal_provider_422_is_reported_as_runtime_exception(): void

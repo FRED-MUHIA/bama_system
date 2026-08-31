@@ -11,10 +11,11 @@
     @php
         $marketingSiteContent = $marketingSiteContent ?? \App\Models\MarketingPage::resolve('home')->sections ?? \App\Models\MarketingPage::defaultSections('home');
         $marketingBrand = array_replace_recursive(\App\Models\MarketingPage::defaultSections('home')['brand'], (array) data_get($marketingSiteContent, 'brand', []));
-        $marketingFaviconPath = 'images/bama-favicon.png';
-        $marketingFaviconUrl = asset($marketingFaviconPath);
-        $marketingFaviconVersion = file_exists(public_path($marketingFaviconPath)) ? filemtime(public_path($marketingFaviconPath)) : 'bama';
-        $marketingFaviconHref = $marketingFaviconUrl.(str_contains($marketingFaviconUrl, '?') ? '&' : '?').'v='.rawurlencode((string) $marketingFaviconVersion);
+        $marketingFaviconPath = data_get($marketingBrand, 'favicon_path') ?: 'images/bama-favicon.png';
+        $marketingFaviconHref = \App\Support\PublicUpload::url($marketingFaviconPath) ?: asset('images/bama-favicon.png');
+        $marketingFaviconFile = \App\Support\PublicUpload::filePath($marketingFaviconPath);
+        $marketingFaviconVersion = $marketingFaviconFile && file_exists($marketingFaviconFile) ? filemtime($marketingFaviconFile) : 'bama';
+        $marketingFaviconHref = $marketingFaviconHref.(str_contains($marketingFaviconHref, '?') ? '&' : '?').'v='.rawurlencode((string) $marketingFaviconVersion);
     @endphp
     <link rel="icon" href="{{ $marketingFaviconHref }}">
     <link rel="shortcut icon" href="{{ $marketingFaviconHref }}">

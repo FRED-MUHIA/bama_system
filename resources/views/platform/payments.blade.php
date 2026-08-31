@@ -147,9 +147,23 @@
                                         @endforeach
                                     </select>
                                 @else
-                                    <input class="form-control" type="{{ $isSensitiveConfig ? 'password' : 'text' }}" name="providers[{{ $provider }}][config][{{ $field }}]" value="{{ $value }}" placeholder="{{ $placeholder }}" autocomplete="new-password" @disabled(! $billingTablesReady)>
+                                    @if($provider === 'paypal' && $field === 'kes_usd_rate')
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" name="providers[{{ $provider }}][config][{{ $field }}]" value="{{ $value }}" placeholder="{{ $placeholder }}" autocomplete="new-password" data-kes-usd-rate-input @disabled(! $billingTablesReady)>
+                                            <button class="btn btn-outline-dark" type="button" title="Fetch live USD to KES rate" aria-label="Fetch live USD to KES rate" data-fetch-kes-usd-rate @disabled(! $billingTablesReady)>
+                                                <i class="bi bi-arrow-repeat"></i>
+                                            </button>
+                                        </div>
+                                    @else
+                                        <input class="form-control" type="{{ $isSensitiveConfig ? 'password' : 'text' }}" name="providers[{{ $provider }}][config][{{ $field }}]" value="{{ $value }}" placeholder="{{ $placeholder }}" autocomplete="new-password" @disabled(! $billingTablesReady)>
+                                    @endif
                                 @endif
-                                <div class="form-text">{{ $fieldMeta['hint'] }}</div>
+                                <div class="form-text">
+                                    {{ $fieldMeta['hint'] }}
+                                    @if($provider === 'paypal' && $field === 'kes_usd_rate')
+                                        <span class="d-block" data-kes-usd-rate-status></span>
+                                    @endif
+                                </div>
                                 @if($configValueSaved)
                                     <div class="form-text text-success"><i class="bi bi-check-circle"></i> Value saved. Leave blank to keep it.</div>
                                 @endif
@@ -166,4 +180,47 @@
         @endforeach
     </div>
 </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const button = document.querySelector('[data-fetch-kes-usd-rate]');
+    const input = document.querySelector('[data-kes-usd-rate-input]');
+    const status = document.querySelector('[data-kes-usd-rate-status]');
+
+    if (! button || ! input || ! status) {
+        return;
+    }
+
+    const originalButtonHtml = button.innerHTML;
+    const setStatus = (message, className = 'text-muted') => {
+        status.className = `d-block ${className}`;
+        status.textContent = message;
+    };
+
+    button.addEventListener('click', async () => {
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>';
+        setStatus('Fetching live rate...');
+
+        try {
+            const response = await fetch(@json(route('platform.payment-settings.kes-usd-rate')), {
+                headers: { Accept: 'application/json' },
+            });
+            const payload = await response.json().catch(() => ({}));
+
+            if (! response.ok) {
+                throw new Error(payload.message || 'Live rate is unavailable right now.');
+            }
+
+            input.value = payload.rate;
+            setStatus(`Live rate ${payload.rate}${payload.date ? ` from ${payload.date}` : ''}. Save to apply.`, 'text-success');
+        } catch (error) {
+            setStatus(error.message || 'Live rate is unavailable right now.', 'text-danger');
+        } finally {
+            button.disabled = false;
+            button.innerHTML = originalButtonHtml;
+        }
+    });
+});
+</script>
 @endsection
