@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AccountEmailReuseService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
 {
@@ -40,5 +44,29 @@ class ProfileController extends Controller
         $user->update($data);
 
         return back()->with('status', 'Profile preferences updated. Access assignments were unchanged.');
+    }
+
+    public function destroy(Request $request, AccountEmailReuseService $emailReuse)
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'confirm_delete' => ['accepted'],
+        ]);
+
+        $user = $request->user();
+
+        if ($user->role === 'super_admin') {
+            throw ValidationException::withMessages([
+                'current_password' => 'Owner console accounts cannot be self-deleted from this page.',
+            ]);
+        }
+
+        DB::transaction(fn () => $emailReuse->holdSelfDeletedAccount($user));
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->with('status', 'Your account has been deleted. This email can be used for a new account after four months.');
     }
 }

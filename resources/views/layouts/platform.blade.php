@@ -19,12 +19,18 @@
     <link rel="icon" href="{{ $platformFaviconHref }}">
     <link rel="shortcut icon" href="{{ $platformFaviconHref }}">
     <link rel="apple-touch-icon" href="{{ $platformFaviconHref }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:opsz,wght@14..32,100..900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:opsz,wght@14..32,100..900&display=swap" rel="stylesheet"></noscript>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"></noscript>
     <style>
-        :root { --owner-green:#00A651; --owner-ink:#101312; --owner-line:#dfe6e2; --owner-soft:#f6f8f7; }
-        body { margin:0; background:var(--owner-soft); color:var(--owner-ink); font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        :root { --owner-green:#00A651; --owner-ink:#101312; --owner-line:#dfe6e2; --owner-soft:#f6f8f7; --owner-font-body:'Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; --owner-font-heading:'Inter Tight','Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+        body,button,input,optgroup,select,textarea,table { font-family:var(--owner-font-body) !important;font-feature-settings:'kern' 1,'liga' 1,'calt' 1;letter-spacing:0;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale; }
+        h1,h2,h3,h4,h5,h6,.owner-brand { font-family:var(--owner-font-heading) !important;font-feature-settings:'kern' 1,'liga' 1,'calt' 1;letter-spacing:0;text-rendering:geometricPrecision;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale; }
+        body { margin:0; background:var(--owner-soft); color:var(--owner-ink); font-optical-sizing:auto;font-synthesis-weight:none; }
         .owner-shell { min-height:100vh; display:grid; grid-template-columns:260px minmax(0, 1fr); }
         .owner-sidebar { background:#07100c; color:#fff; padding:22px 16px; }
         .owner-brand { display:flex; align-items:center; gap:12px; margin-bottom:28px; font-weight:800; }

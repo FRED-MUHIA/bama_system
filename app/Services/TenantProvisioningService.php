@@ -74,6 +74,8 @@ class TenantProvisioningService
             $company = $payload['company'];
             $plan = $payload['plan'] ?? 'starter';
 
+            app(AccountEmailReuseService::class)->releaseEmailForRegistration($account['email']);
+
             $userAttributes = [
                 'name' => $account['name'],
                 'email' => strtolower($account['email']),

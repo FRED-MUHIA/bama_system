@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\AccountEmailReuseService;
 use App\Services\IndustrySetupService;
 use App\Services\OutgoingMailService;
 use App\Services\PlanSelectionService;
@@ -24,14 +25,16 @@ class RegistrationController extends Controller
         ]);
     }
 
-    public function storeAccount(Request $request)
+    public function storeAccount(Request $request, AccountEmailReuseService $emailReuse)
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email', 'max:180', Rule::unique('users', 'email')],
+            'email' => ['required', 'email', 'max:180'],
             'phone' => ['nullable', 'string', 'max:40'],
             'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
         ]);
+
+        $emailReuse->assertEmailCanRegister($data['email']);
 
         session(['registration.account' => $data]);
 

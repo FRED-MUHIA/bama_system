@@ -119,9 +119,15 @@
         --line: #e5e7eb;
         --muted: #000000;
         --page: #F7F8F5;
-        --font-brand: 'tt_normsregular', 'TT Norms', 'Inter Tight', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-        --font-heading: 'McQueen', 'tt_normsregular', 'TT Norms', 'Inter Tight', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+        --font-brand: 'Inter', 'Inter Tight', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --font-heading: 'Inter Tight', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-family: var(--font-brand) !important;
+        font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+        font-optical-sizing: auto;
+        font-synthesis-weight: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     .home-page h1,
@@ -132,6 +138,10 @@
     .home-page h6 {
         font-family: var(--font-heading) !important;
         font-weight: 600 !important;
+        font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+        text-rendering: geometricPrecision;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     .home-page p,
@@ -141,6 +151,10 @@
     .home-page summary,
     .home-page input {
         font-family: var(--font-brand) !important;
+        font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     .home-page .text-zinc-400,

@@ -14,6 +14,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Session\TokenMismatchException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -59,5 +61,23 @@ return Application::configure(basePath: dirname(__DIR__))
             return redirect()->back()
                 ->withInput($request->except(['_token', 'password', 'password_confirmation']))
                 ->with('warning', 'Your session expired. Please try again.');
+        });
+
+        $exceptions->render(function (InvalidSignatureException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'The request signature is invalid.'], 401);
+            }
+
+            return redirect()->route('login')
+                ->with('warning', 'The link you followed is invalid or has expired. Please sign in again.');
+        });
+
+        $exceptions->render(function (DecryptException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Your session could not be restored. Please log in again.'], 401);
+            }
+
+            return redirect()->route('login')
+                ->with('warning', 'Your session could not be restored. Please sign in again.');
         });
     })->create();

@@ -22,8 +22,8 @@
     <link rel="apple-touch-icon" href="{{ $marketingFaviconHref }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:opsz,wght@14..32,100..900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter+Tight:opsz,wght@14..32,100..900&display=swap" rel="stylesheet"></noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:opsz,wght@14..32,100..900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:opsz,wght@14..32,100..900&display=swap" rel="stylesheet"></noscript>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"></noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -43,22 +43,34 @@
             --bama-soft: #EAF8F0;
             --bama-page: #F7F8F5;
             --bama-line: #e5e7eb;
-            --bama-font-body: 'tt_normsregular', 'TT Norms', 'Inter Tight', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-            --bama-font-heading: 'McQueen', 'tt_normsregular', 'TT Norms', 'Inter Tight', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+            --bama-font-body: 'Inter', 'Inter Tight', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --bama-font-heading: 'Inter Tight', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         body {
             background: var(--bama-page);
             color: var(--bama-black);
             font-family: var(--bama-font-body) !important;
+            font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+            font-optical-sizing: auto;
+            font-synthesis-weight: none;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         body,
         button,
         input,
         select,
-        textarea {
+        textarea,
+        table {
+            font-family: var(--bama-font-body) !important;
+            font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
             letter-spacing: 0;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         h1,
@@ -69,8 +81,11 @@
         h6 {
             font-family: var(--bama-font-heading) !important;
             font-weight: 600 !important;
+            font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
             letter-spacing: 0;
             text-rendering: geometricPrecision;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         [x-cloak] { display: none !important; }

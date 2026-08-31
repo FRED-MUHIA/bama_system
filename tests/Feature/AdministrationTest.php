@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Business;
 use App\Models\IamRole;
 use App\Models\Plan;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UserInvitation;
 use App\Services\IamService;
@@ -280,6 +281,121 @@ class AdministrationTest extends TestCase
 
         $this->assertSame('0700000000', $this->admin->fresh()->phone);
         $this->assertSame($roleBefore, DB::table('business_user')->where('user_id', $this->admin->id)->value('iam_role_id'));
+    }
+
+    public function test_super_admin_tenant_delete_releases_account_email_immediately(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Reusable Profile',
+            'slug' => 'reusable-profile',
+            'industry' => 'retail',
+            'status' => 'active',
+        ]);
+        $business = Business::withoutGlobalScopes()->create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Reusable Profile',
+            'slug' => 'reusable-profile',
+            'industry' => 'retail',
+        ]);
+        $deletedUser = User::factory()->create([
+            'email' => 'reuse@example.test',
+            'role' => 'admin',
+            'current_tenant_id' => $tenant->id,
+            'is_active' => true,
+            'status' => 'Active',
+        ]);
+
+        DB::table('tenant_user')->insert([
+            'tenant_id' => $tenant->id,
+            'user_id' => $deletedUser->id,
+            'role' => 'owner',
+            'status' => 'active',
+            'joined_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('business_user')->insert([
+            'business_id' => $business->id,
+            'user_id' => $deletedUser->id,
+            'status' => 'Active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $superAdmin = User::factory()->create(['role' => 'super_admin', 'is_active' => true, 'status' => 'Active']);
+
+        $this->actingAs($superAdmin)
+            ->delete(route('platform.tenants.destroy', $tenant), ['confirm_delete' => 1])
+            ->assertRedirect(route('platform.tenants'));
+
+        $this->assertDatabaseMissing('users', ['email' => 'reuse@example.test']);
+        $this->assertStringStartsWith('deleted-user-'.$deletedUser->id.'-', $deletedUser->fresh()->email);
+
+        auth()->logout();
+        $this->post(route('register.account.store'), [
+            'name' => 'Reuse Owner',
+            'email' => 'reuse@example.test',
+            'password' => 'StrongPass1',
+            'password_confirmation' => 'StrongPass1',
+        ])->assertRedirect(route('register.company'))->assertSessionHasNoErrors();
+    }
+
+    public function test_self_deleted_account_email_is_held_for_four_months(): void
+    {
+        $password = 'StrongPass1';
+        $user = User::factory()->create([
+            'email' => 'self-delete@example.test',
+            'password' => Hash::make($password),
+            'role' => 'admin',
+            'current_tenant_id' => $this->business->tenant_id,
+            'is_active' => true,
+            'status' => 'Active',
+        ]);
+
+        DB::table('tenant_user')->insert([
+            'tenant_id' => $this->business->tenant_id,
+            'user_id' => $user->id,
+            'role' => 'owner',
+            'status' => 'active',
+            'joined_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('business_user')->insert([
+            'business_id' => $this->business->id,
+            'user_id' => $user->id,
+            'status' => 'Active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->withSession(['active_business_id' => $this->business->id])
+            ->delete(route('profile.destroy'), [
+                'current_password' => $password,
+                'confirm_delete' => 1,
+            ])
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
+        $this->assertDatabaseMissing('users', ['email' => 'self-delete@example.test']);
+        $this->assertDatabaseHas('account_email_reuse_holds', ['reason' => 'self_deleted']);
+
+        $this->post(route('register.account.store'), [
+            'name' => 'Held Owner',
+            'email' => 'self-delete@example.test',
+            'password' => 'StrongPass1',
+            'password_confirmation' => 'StrongPass1',
+        ])->assertSessionHasErrors('email');
+
+        $this->travelTo(now()->addMonthsNoOverflow(4)->addDay());
+
+        $this->post(route('register.account.store'), [
+            'name' => 'Held Owner',
+            'email' => 'self-delete@example.test',
+            'password' => 'StrongPass1',
+            'password_confirmation' => 'StrongPass1',
+        ])->assertRedirect(route('register.company'))->assertSessionHasNoErrors();
     }
 
     public function test_admin_can_view_user_presence_and_concise_activity(): void

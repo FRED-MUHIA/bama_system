@@ -9,6 +9,7 @@ use App\Models\Subscription;
 use App\Models\SubscriptionFeature;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\AccountEmailReuseService;
 use App\Services\ExchangeRateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -95,7 +96,7 @@ class PlatformController extends Controller
         return back()->with('status', 'Tenant updated.');
     }
 
-    public function destroyTenant(Request $request, Tenant $tenant)
+    public function destroyTenant(Request $request, Tenant $tenant, AccountEmailReuseService $emailReuse)
     {
         $request->validate([
             'confirm_delete' => ['accepted'],
@@ -135,6 +136,8 @@ class PlatformController extends Controller
             }
 
             DB::table('tenant_user')->where('tenant_id', $tenant->id)->delete();
+
+            $emailReuse->releaseTenantUsersImmediately($userIds);
 
             Subscription::withoutGlobalScopes()
                 ->where('tenant_id', $tenant->id)

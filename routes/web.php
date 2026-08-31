@@ -189,6 +189,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/email/verify/{id}/{hash}', [RegistrationController::class, 'verifyEmail'])->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/portal', [PortalController::class, 'dashboard'])->name('portal.dashboard');
     Route::middleware(['admin', 'verified'])->prefix('billing')->name('billing.')->group(function () {
         Route::get('/', [BillingController::class, 'index'])->name('index');

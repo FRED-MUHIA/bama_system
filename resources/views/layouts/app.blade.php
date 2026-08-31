@@ -32,18 +32,20 @@
             font-style:normal;
             font-display:swap;
         }
-        :root { --font-brand:'McQueen','tt_normsregular','TT Norms','Inter Tight','Inter',ui-sans-serif,system-ui,sans-serif; --font-body:'tt_normsregular','TT Norms','Inter Tight','Inter',ui-sans-serif,system-ui,sans-serif; }
+        :root { --font-brand:'Inter Tight','Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; --font-body:'Inter','Inter Tight',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
         h1,h2,h3,h4,h5,h6 {
             font-family:var(--font-brand) !important;
             font-weight:600 !important;
             font-optical-sizing:auto;
             font-variation-settings:'opsz' 28;
+            font-feature-settings:'kern' 1,'liga' 1,'calt' 1;
             letter-spacing:0;
             text-rendering:geometricPrecision;
             -webkit-font-smoothing:antialiased;
             -moz-osx-font-smoothing:grayscale;
         }
-        body { background:#F7F8F5;font-family:var(--font-body);color:#000; }
+        body,button,input,optgroup,select,textarea,table { font-family:var(--font-body) !important;font-feature-settings:'kern' 1,'liga' 1,'calt' 1;letter-spacing:0;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale; }
+        body { background:#F7F8F5;color:#000;font-optical-sizing:auto;font-synthesis-weight:none; }
         .sidebar { background:#071B12; min-height:100vh; }
         .sidebar a { color:#cbd5e1; text-decoration:none; display:flex; gap:.6rem; align-items:center; padding:.7rem 1rem; border-radius:.5rem; }
         .sidebar a:hover,.sidebar a.active { background:rgba(0,166,81,.16); color:#fff; }
@@ -360,14 +362,24 @@
         body {
             background:var(--bama-warm);
             color:var(--bama-ink);
-            font-family:var(--font-body);
+            font-family:var(--font-body) !important;
             font-size:.925rem;
+            font-feature-settings:'kern' 1,'liga' 1,'calt' 1;
+            font-optical-sizing:auto;
+            font-synthesis-weight:none;
             letter-spacing:0;
+            text-rendering:optimizeLegibility;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
             transition:background-color .18s ease,color .18s ease;
         }
         h1,h2,h3,h4,h5,h6,.brand-mark + strong {
-            font-family:var(--font-brand);
+            font-family:var(--font-brand) !important;
+            font-feature-settings:'kern' 1,'liga' 1,'calt' 1;
             letter-spacing:0;
+            text-rendering:geometricPrecision;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
         }
         .container-fluid > .row { min-height:100vh; }
         .sidebar {

@@ -22,8 +22,15 @@
         }
 
         .registration-page {
-            --font-heading: 'McQueen', 'tt_normsregular', 'TT Norms', 'Inter Tight', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-            --font-body: 'tt_normsregular', 'TT Norms', 'Inter Tight', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+            --font-heading: 'Inter Tight', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-body: 'Inter', 'Inter Tight', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: var(--font-body) !important;
+            font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+            font-optical-sizing: auto;
+            font-synthesis-weight: none;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .registration-page * { letter-spacing: 0; }
@@ -37,6 +44,7 @@
             font-family: var(--font-heading) !important;
             font-weight: 600 !important;
             color: #000000;
+            font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
             text-rendering: geometricPrecision;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
@@ -48,8 +56,13 @@
         .registration-page label,
         .registration-page input,
         .registration-page select,
-        .registration-page button {
+        .registration-page button,
+        .registration-page textarea {
             font-family: var(--font-body) !important;
+            font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .registration-page .font-semibold,
