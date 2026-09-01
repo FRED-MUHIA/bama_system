@@ -16,6 +16,7 @@
     <link rel="icon" href="{{ $appFaviconHref }}">
     <link rel="shortcut icon" href="{{ $appFaviconHref }}">
     <link rel="apple-touch-icon" href="{{ $appFaviconHref }}">
+    @include('mobile.pwa-meta')
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" media="print" onload="this.media='all'">
@@ -321,14 +322,17 @@
             }
             .mobile-overflow-sheet i { color:#00A651; font-size:1.15rem; }
             body.mobile-overflow-open { overflow:hidden; }
-            body.mobile-overflow-open .mobile-nav-backdrop {
+            body.mobile-overflow-open #mobile-overflow-backdrop,
+            body.mobile-quick-add-open #mobile-quick-add-backdrop {
                 opacity:1;
                 pointer-events:auto;
             }
-            body.mobile-overflow-open .mobile-overflow-sheet {
+            body.mobile-overflow-open #mobile-overflow-menu,
+            body.mobile-quick-add-open #mobile-quick-add-menu {
                 opacity:1;
                 transform:translateY(0);
             }
+            body.mobile-quick-add-open { overflow:hidden; }
         }
         /* BAMA engineering system */
         :root {
@@ -805,6 +809,7 @@
     @vite('resources/css/app.css')
 </head>
 <body>
+@include('mobile.pwa-shell')
 @php
     $currentUser = auth()->user();
     $isClientPortal = $currentUser?->role === 'client_portal';
@@ -968,6 +973,7 @@
                             </div>
                         @endif
                         <button type="button" class="btn btn-outline-dark btn-sm theme-toggle" data-theme-toggle aria-label="Switch colour theme"><i class="bi bi-moon-stars"></i></button>
+                        <button type="button" class="btn btn-outline-dark btn-sm" data-bama-install hidden><i class="bi bi-download"></i> <span>Install App</span></button>
                         <a class="btn btn-outline-dark btn-sm profile-link" href="{{route('profile.edit')}}"><i class="bi bi-person"></i> <span>My Profile</span></a>
                         <form method="post" action="{{ route('logout') }}">@csrf<button class="btn btn-outline-dark btn-sm"><i class="bi bi-box-arrow-right"></i> <span>Logout</span></button></form>
                     </div>
@@ -1248,7 +1254,18 @@
         $mobileRouteParams = fn ($item) => ! empty($item['section'])
             ? array_merge($item['params'] ?? [], ['section' => $item['section']])
             : ($item['params'] ?? []);
-        $mobilePrimaryItems = collect($mobileContextItems)->filter($mobileItemAvailable)->take(4)->values();
+        $mobileQuickActions = collect([
+            ['label' => 'Add Customer', 'route' => 'clients.create', 'icon' => 'bi-person-plus'],
+            ['label' => 'Create Invoice', 'route' => 'invoices.create', 'icon' => 'bi-receipt'],
+            ['label' => 'Create Quotation', 'route' => 'quotations.create', 'icon' => 'bi-file-earmark-plus'],
+            ['label' => 'New Project', 'route' => 'projects.create', 'icon' => 'bi-kanban'],
+            ['label' => 'Add Product', 'route' => 'products.create', 'icon' => 'bi-box-seam'],
+            ['label' => 'Create Booking', 'route' => 'automotive.bookings', 'icon' => 'bi-calendar-plus', 'condition' => $currentUser->hasPermission('bookings.manage')],
+            ['label' => 'Create Job Card', 'route' => 'automotive.job-cards', 'icon' => 'bi-clipboard-plus', 'condition' => $currentUser->hasPermission('job_cards.create')],
+            ['label' => 'Site Report', 'route' => 'construction.operations', 'icon' => 'bi-building-add', 'condition' => $currentUser->hasPermission('site_reports.create')],
+            ['label' => 'Production Job', 'route' => 'printing.jobs', 'icon' => 'bi-printer', 'condition' => $currentUser->hasPermission('production_jobs.create')],
+        ])->filter($mobileItemAvailable)->values();
+        $mobilePrimaryItems = collect($mobileContextItems)->filter($mobileItemAvailable)->take($mobileQuickActions->isNotEmpty() ? 3 : 4)->values();
         $mobileOverflowItems = collect($mobileOverflowItems)
             ->merge($utilityOverflowItems)
             ->filter($mobileItemAvailable)
@@ -1260,8 +1277,21 @@
         @foreach($mobilePrimaryItems as $item)
             <a href="{{ route($item['route'], $mobileRouteParams($item)) }}" class="{{ $mobileRouteMatches($item) ? 'active' : '' }}" @if(!empty($item['aria'])) aria-label="{{ $item['aria'] }}" @endif><i class="bi {{ $item['icon'] }}"></i><span>{{ $item['label'] }}</span></a>
         @endforeach
+        @if($mobileQuickActions->isNotEmpty())
+            <button type="button" id="mobile-quick-add-open" aria-controls="mobile-quick-add-menu" aria-expanded="false"><i class="bi bi-plus-circle-fill"></i><span>Add</span></button>
+        @endif
         <button type="button" id="mobile-overflow-open" class="{{ $mobileMoreActive ? 'active' : '' }}" aria-controls="mobile-overflow-menu" aria-expanded="false"><i class="bi bi-three-dots"></i><span>More</span></button>
     </nav>
+    @if($mobileQuickActions->isNotEmpty())
+        <div class="mobile-nav-backdrop" id="mobile-quick-add-backdrop" aria-hidden="true"></div>
+        <div class="mobile-overflow-sheet" id="mobile-quick-add-menu" role="dialog" aria-modal="true" aria-label="Quick add" aria-hidden="true">
+            <div class="sheet-handle"></div>
+            <div class="sheet-title">Quick Add</div>
+            @foreach($mobileQuickActions as $item)
+                <a href="{{ route($item['route'], $mobileRouteParams($item)) }}"><i class="bi {{ $item['icon'] }}"></i> {{ $item['label'] }}</a>
+            @endforeach
+        </div>
+    @endif
     <div class="mobile-nav-backdrop" id="mobile-overflow-backdrop" aria-hidden="true"></div>
     <div class="mobile-overflow-sheet" id="mobile-overflow-menu" role="dialog" aria-modal="true" aria-label="More navigation" aria-hidden="true">
         <div class="sheet-handle"></div>
@@ -1292,6 +1322,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const drawerCloseButton = document.getElementById('mobile-shell-close');
     const drawerBackdrop = document.getElementById('mobile-shell-backdrop');
     const drawer = document.getElementById('mobile-shell-drawer');
+    const quickAddOpenButton = document.getElementById('mobile-quick-add-open');
+    const quickAddBackdrop = document.getElementById('mobile-quick-add-backdrop');
+    const quickAddSheet = document.getElementById('mobile-quick-add-menu');
     const openButton = document.getElementById('mobile-overflow-open');
     const backdrop = document.getElementById('mobile-overflow-backdrop');
     const sheet = document.getElementById('mobile-overflow-menu');
@@ -1320,61 +1353,66 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (!openButton || !backdrop || !sheet) return;
+    const bindBottomSheet = (trigger, sheetBackdrop, menu, openClass) => {
+        if (!trigger || !sheetBackdrop || !menu) return;
 
-    const openSheet = () => {
-        body.classList.add('mobile-overflow-open');
-        openButton.setAttribute('aria-expanded', 'true');
-        sheet.setAttribute('aria-hidden', 'false');
-    };
-    const closeSheet = () => {
-        body.classList.remove('mobile-overflow-open');
-        openButton.setAttribute('aria-expanded', 'false');
-        sheet.setAttribute('aria-hidden', 'true');
-    };
-    const toggleSheet = () => {
-        if (body.classList.contains('mobile-overflow-open')) {
-            closeSheet();
-            return;
-        }
-
-        openSheet();
-    };
-
-    openButton.addEventListener('click', toggleSheet);
-    backdrop.addEventListener('click', closeSheet);
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') closeSheet();
-    });
-
-    let startY = 0;
-    let currentY = 0;
-    sheet.addEventListener('touchstart', (event) => {
-        startY = event.touches[0].clientY;
-        currentY = startY;
-    }, { passive:true });
-    sheet.addEventListener('touchmove', (event) => {
-        currentY = event.touches[0].clientY;
-    }, { passive:true });
-    sheet.addEventListener('touchend', () => {
-        if (currentY - startY > 55) closeSheet();
-    });
-    sheet.querySelectorAll('a[href]').forEach((link) => {
-        link.addEventListener('click', (event) => {
-            const href = link.getAttribute('href');
-            if (!href || href === '#' || event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        const openSheet = () => {
+            body.classList.add(openClass);
+            trigger.setAttribute('aria-expanded', 'true');
+            menu.setAttribute('aria-hidden', 'false');
+        };
+        const closeSheet = () => {
+            body.classList.remove(openClass);
+            trigger.setAttribute('aria-expanded', 'false');
+            menu.setAttribute('aria-hidden', 'true');
+        };
+        const toggleSheet = () => {
+            if (body.classList.contains(openClass)) {
                 closeSheet();
                 return;
             }
 
-            event.preventDefault();
-            closeSheet();
-            window.location.assign(href);
+            openSheet();
+        };
+
+        trigger.addEventListener('click', toggleSheet);
+        sheetBackdrop.addEventListener('click', closeSheet);
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closeSheet();
         });
-    });
-    sheet.querySelectorAll('button[type="submit"]').forEach((item) => {
-        item.addEventListener('click', closeSheet);
-    });
+
+        let startY = 0;
+        let currentY = 0;
+        menu.addEventListener('touchstart', (event) => {
+            startY = event.touches[0].clientY;
+            currentY = startY;
+        }, { passive:true });
+        menu.addEventListener('touchmove', (event) => {
+            currentY = event.touches[0].clientY;
+        }, { passive:true });
+        menu.addEventListener('touchend', () => {
+            if (currentY - startY > 55) closeSheet();
+        });
+        menu.querySelectorAll('a[href]').forEach((link) => {
+            link.addEventListener('click', (event) => {
+                const href = link.getAttribute('href');
+                if (!href || href === '#' || event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                    closeSheet();
+                    return;
+                }
+
+                event.preventDefault();
+                closeSheet();
+                window.location.assign(href);
+            });
+        });
+        menu.querySelectorAll('button[type="submit"]').forEach((item) => {
+            item.addEventListener('click', closeSheet);
+        });
+    };
+
+    bindBottomSheet(quickAddOpenButton, quickAddBackdrop, quickAddSheet, 'mobile-quick-add-open');
+    bindBottomSheet(openButton, backdrop, sheet, 'mobile-overflow-open');
 });
 </script>
 @endauth

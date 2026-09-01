@@ -8,6 +8,9 @@
         <div class="card p-4">
             <h1 class="h4">My profile</h1>
             <p class="text-muted">You can update personal preferences. Role, permissions, branch, department and approval level remain administrator-controlled.</p>
+            <div class="mb-3">
+                @include('mobile.install-card')
+            </div>
             <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="row g-3">
                 @csrf
                 @method('PUT')
@@ -54,6 +57,28 @@
                     <button class="btn btn-warning">Save profile</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card p-4">
+            <h2 class="h5">About BAMA</h2>
+            <div class="row g-3 mt-1">
+                <div class="col-md-4">
+                    <div class="text-muted small">App Version</div>
+                    <strong>{{ config('app.version', '1.0.0') }}</strong>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-muted small">Build Version</div>
+                    <strong>{{ file_exists(public_path('build/manifest.json')) ? filemtime(public_path('build/manifest.json')) : 'local' }}</strong>
+                </div>
+                @if($user->role === 'super_admin')
+                    <div class="col-md-4">
+                        <div class="text-muted small">Environment</div>
+                        <strong>{{ app()->environment() }}</strong>
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 

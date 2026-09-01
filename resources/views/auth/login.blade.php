@@ -13,10 +13,10 @@
         'magic' => $loginContext === 'owner' ? route($publicLoginPrefix.'platform.login.magic.request') : ($loginContext === 'portal' ? route($publicLoginPrefix.'portal.login.magic.request') : route($publicLoginPrefix.'login.magic.request')),
     ];
     $loginCopy = [
-        'owner' => ['label' => 'Platform owner access', 'title' => 'Owner console.', 'intro' => 'Sign in to manage tenants, clients, pricing, and platform controls.'],
-        'portal' => ['label' => 'Client portal access', 'title' => 'Client portal.', 'intro' => 'Sign in to view your invited projects, invoices, and documents.'],
-        'business' => ['label' => 'Identity & Access', 'title' => 'Welcome back.', 'intro' => 'Choose a secure sign-in method to continue to your workspace.'],
-    ][$loginContext] ?? ['label' => 'Identity & Access', 'title' => 'Welcome back.', 'intro' => 'Choose a secure sign-in method to continue to your workspace.'];
+        'owner' => ['label' => 'Platform owner access', 'title' => 'Owner Console', 'intro' => 'Sign in to manage tenants, clients, pricing, and platform controls.'],
+        'portal' => ['label' => 'Client portal access', 'title' => 'Client Portal', 'intro' => 'Sign in to view your invited projects, invoices, and documents.'],
+        'business' => ['label' => 'BAMA', 'title' => 'Welcome Back', 'intro' => 'Sign in to your workspace.'],
+    ][$loginContext] ?? ['label' => 'BAMA', 'title' => 'Welcome Back', 'intro' => 'Sign in to your workspace.'];
     $brandLogoPath = 'images/bama-solutions-02.png';
     $brandLogoUrl = asset($brandLogoPath).'?v='.(file_exists(public_path($brandLogoPath)) ? filemtime(public_path($brandLogoPath)) : time());
 @endphp
@@ -67,7 +67,7 @@
         justify-content: space-between;
         padding: clamp(28px, 4vw, 54px);
         color: #000;
-        background: #ffffff;
+        background: var(--green);
         border-right: 1px solid #e5e7eb;
         isolation: isolate;
     }
@@ -83,9 +83,13 @@
         font-weight: 800;
     }
 
-    .login-brand-panel a.login-brand,
+    .login-brand-panel a.login-brand {
+        color: #fff;
+        text-decoration: none;
+    }
+
     .login-mobile-brand {
-        color: #000;
+        color: #fff;
         text-decoration: none;
     }
 
@@ -95,7 +99,7 @@
         gap: 8px;
         width: fit-content;
         margin-top: 18px;
-        color: #000;
+        color: #fff;
         font-size: .78rem;
         font-weight: 800;
         text-decoration: none;
@@ -103,7 +107,7 @@
     }
 
     .login-home-link:hover {
-        color: var(--green);
+        color: #fff;
     }
 
     .login-brand .brand-mark,
@@ -141,7 +145,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        color: var(--green);
+        color: #fff;
         font-size: .72rem;
         font-weight: 500;
         text-transform: uppercase;
@@ -151,22 +155,22 @@
         content: "";
         width: 30px;
         height: 2px;
-        background: var(--green);
+        background: #fff;
     }
 
     .login-copy h1 {
         margin: 18px 0;
-        color: #000;
+        color: #fff;
         font-size: clamp(2.3rem, 4vw, 4.15rem);
         font-weight: 600;
         line-height: 1.04;
     }
 
-    .login-copy h1 span { color: var(--green); }
+    .login-copy h1 span { color: #fff; }
 
     .login-copy p {
         max-width: 460px;
-        color: #000;
+        color: #fff;
         font-size: 1rem;
         line-height: 1.7;
     }
@@ -178,11 +182,11 @@
     }
 
     .login-meta span {
-        border: 1px solid #dfe5e1;
+        border: 1px solid rgba(255, 255, 255, .28);
         border-radius: 8px;
         padding: 7px 10px;
-        color: #000;
-        background: #fff;
+        color: #fff;
+        background: rgba(255, 255, 255, .12);
         font-size: .68rem;
         font-weight: 500;
         text-transform: uppercase;
@@ -209,9 +213,7 @@
         min-height: 100vh;
         place-items: center;
         padding: clamp(24px, 4vw, 54px);
-        background:
-            radial-gradient(circle at 30% 10%, rgba(0, 166, 81, .08), transparent 30%),
-            #F7F8F5;
+        background: #F7F8F5;
     }
 
     .login-auth-wrap {
@@ -384,27 +386,49 @@
         .login-stage {
             display: block;
             min-height: 100vh;
-            background: #F7F8F5;
+            background: #00A651;
         }
 
-        .login-brand-panel { display: none; }
+        .login-brand-panel {
+            display: flex;
+            min-height: 34vh;
+            justify-content: flex-start;
+            padding: calc(22px + env(safe-area-inset-top)) 20px 74px;
+            border: 0;
+        }
+
+        .login-brand-panel .login-home-link,
+        .login-brand-panel .login-meta {
+            display: none;
+        }
+
+        .login-copy {
+            margin-top: 34px;
+        }
+
+        .login-copy h1 {
+            max-width: 320px;
+            font-size: 2.2rem;
+        }
+
+        .login-copy p {
+            max-width: 290px;
+            color: rgba(255, 255, 255, .9);
+        }
 
         .login-auth-panel {
-            min-height: 100vh;
+            min-height: 66vh;
             align-items: start;
-            padding: 28px 16px;
+            margin-top: -52px;
+            padding: 0 16px calc(28px + env(safe-area-inset-bottom));
+            border-radius: 28px 28px 0 0;
         }
 
-        .login-mobile-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 26px;
-            font-weight: 900;
-        }
+        .login-mobile-brand { display: none; }
 
+        .login-auth-wrap { padding-top: 26px; }
         .login-auth-intro { margin-bottom: 18px; }
-        .login-card { padding: 18px 15px; }
+        .login-card { padding: 18px 15px; box-shadow: none; }
         .login-card .d-flex.justify-content-between { gap: 12px; font-size: .86rem; }
     }
 
@@ -425,7 +449,11 @@
         color: #000 !important;
     }
 
-    html[data-theme="dark"] .login-brand-panel,
+    html[data-theme="dark"] .login-brand-panel {
+        background: #00A651 !important;
+        color: #fff !important;
+    }
+
     html[data-theme="dark"] .login-card {
         background-color: #fff !important;
         border-color: #e5e7eb !important;
@@ -433,7 +461,6 @@
         box-shadow: 0 16px 44px rgba(15, 23, 42, .07) !important;
     }
 
-    html[data-theme="dark"] .login-copy h1,
     html[data-theme="dark"] .login-auth-wrap > h2,
     html[data-theme="dark"] .login-copy p,
     html[data-theme="dark"] .login-auth-label,
@@ -445,6 +472,14 @@
     html[data-theme="dark"] .login-mobile-brand,
     html[data-theme="dark"] .login-meta span {
         color: #000 !important;
+    }
+
+    html[data-theme="dark"] .login-copy h1,
+    html[data-theme="dark"] .login-copy p,
+    html[data-theme="dark"] .login-kicker,
+    html[data-theme="dark"] .login-home-link,
+    html[data-theme="dark"] .login-meta span {
+        color: #fff !important;
     }
 
     html[data-theme="dark"] .login-card .nav-pills {
@@ -543,14 +578,14 @@
                     @csrf
                     <input type="hidden" name="login_context" value="{{ $loginContext }}">
                     <div class="mb-3">
-                        <label class="form-label">Username or email</label>
-                        <input name="username" value="{{ old('username') }}" class="form-control" autocomplete="username" required autofocus>
+                        <label class="form-label">Email or Username</label>
+                        <input name="username" value="{{ old('username') }}" class="form-control" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Password</label>
                         <div class="password-wrap">
                             <input id="login-password" name="password" type="password" class="form-control" autocomplete="current-password" required>
-                            <button class="password-toggle" type="button" aria-label="Show password"><i class="bi bi-eye"></i></button>
+                            <button class="password-toggle" type="button" aria-label="Show password" data-password-toggle="login-password"><i class="bi bi-eye"></i></button>
                         </div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -560,7 +595,7 @@
                         </label>
                         <a href="{{ route('password.request') }}">Forgot password?</a>
                     </div>
-                    <button class="btn btn-warning w-100">Sign in securely <i class="bi bi-arrow-right ms-1"></i></button>
+                    <button class="btn btn-warning w-100">Login <i class="bi bi-arrow-right ms-1"></i></button>
                 </form>
 
                 @if ($otpAvailable)
@@ -620,6 +655,13 @@
                     <i class="bi bi-shield-check"></i>
                     <span>Your access is encrypted, role-controlled and recorded for security.</span>
                 </div>
+                @if($loginContext === 'business')
+                    <div class="text-center mt-3">
+                        <span class="text-muted">Don't have an account?</span>
+                        <a href="{{ route('register.account') }}">Create Account</a>
+                    </div>
+                @endif
+                @include('mobile.install-card')
             </div>
         </div>
     </section>
@@ -630,7 +672,7 @@
         const password = document.querySelector('#login-password');
         const toggle = document.querySelector('.password-toggle');
 
-        if (password && toggle) {
+        if (password && toggle && ! toggle.hasAttribute('data-password-toggle')) {
             toggle.addEventListener('click', () => {
                 const show = password.type === 'password';
                 password.type = show ? 'text' : 'password';

@@ -84,6 +84,10 @@
 }
 
 @layer components {
+    [hidden] {
+        display: none !important;
+    }
+
     .page-shell {
         width: 100%;
         max-width: 1600px;
@@ -376,6 +380,226 @@
         border: 1px dashed #cfd5df;
         border-radius: 8px;
         background: #fbfffc;
+    }
+
+    .bama-pwa-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483000;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: .75rem;
+        padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+        background: #00A651;
+        color: #fff;
+        opacity: 1;
+        transition: opacity .22s ease, visibility .22s ease;
+    }
+
+    .bama-pwa-splash.is-hidden {
+        visibility: hidden;
+        opacity: 0;
+    }
+
+    .bama-pwa-splash-mark {
+        display: grid;
+        width: 96px;
+        height: 96px;
+        place-items: center;
+        border-radius: 24px;
+        background: #fff;
+        box-shadow: 0 18px 44px rgba(0, 0, 0, .18);
+    }
+
+    .bama-pwa-splash-mark img {
+        width: 78px;
+        height: 78px;
+        object-fit: contain;
+    }
+
+    .bama-pwa-splash-name {
+        font-family: var(--font-brand) !important;
+        font-size: 1.65rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .bama-pwa-splash-tagline {
+        font-size: .86rem;
+        font-weight: 700;
+        opacity: .86;
+    }
+
+    .bama-offline-banner,
+    .bama-update-toast {
+        position: fixed;
+        left: 50%;
+        z-index: 2147482000;
+        width: min(420px, calc(100vw - 24px));
+        transform: translateX(-50%);
+        border-radius: 8px;
+        box-shadow: 0 18px 44px rgba(15, 23, 42, .2);
+    }
+
+    .bama-offline-banner {
+        top: calc(10px + env(safe-area-inset-top));
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: .15rem .75rem;
+        align-items: center;
+        padding: .75rem .85rem;
+        background: #171717;
+        color: #fff;
+    }
+
+    .bama-offline-banner span {
+        color: #d1d5db;
+        font-size: .78rem;
+    }
+
+    .bama-offline-banner button,
+    .bama-update-toast button,
+    .bama-install-card button {
+        min-height: 38px;
+        border: 0;
+        border-radius: 8px;
+        font-weight: 800;
+    }
+
+    .bama-offline-banner button {
+        grid-row: 1 / span 2;
+        padding-inline: .9rem;
+        background: #00A651;
+        color: #fff;
+    }
+
+    .bama-update-toast {
+        right: auto;
+        bottom: calc(86px + env(safe-area-inset-bottom));
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        padding: .7rem;
+        background: #fff;
+        color: #000;
+        border: 1px solid #dfe5e1;
+    }
+
+    .bama-update-toast button {
+        padding-inline: .85rem;
+        background: #00A651;
+        color: #fff;
+        white-space: nowrap;
+    }
+
+    .bama-install-card {
+        display: grid;
+        gap: .75rem;
+        margin-top: 1rem;
+        padding: .9rem;
+        border: 1px solid #BDE8CF;
+        border-radius: 8px;
+        background: #EAF8F0;
+        color: #000;
+    }
+
+    .bama-install-card strong,
+    .bama-install-card span {
+        display: block;
+    }
+
+    .bama-install-card span,
+    .bama-install-card p {
+        margin: .15rem 0 0;
+        color: #334155;
+        font-size: .86rem;
+        line-height: 1.45;
+    }
+
+    .bama-install-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    .bama-install-actions button:first-child {
+        background: #00A651;
+        color: #fff;
+    }
+
+    .bama-install-actions button:last-child {
+        background: #fff;
+        color: #000;
+        border: 1px solid #dfe5e1;
+    }
+
+    .bama-install-card button {
+        flex: 1 1 120px;
+        padding-inline: .85rem;
+    }
+
+    .auth-mobile-stage {
+        min-height: min(82vh, 760px);
+        display: grid;
+        place-items: center;
+        padding: 1rem;
+    }
+
+    .auth-mobile-card {
+        width: min(100%, 440px);
+        padding: 1.25rem;
+        border: 1px solid #dfe5e1;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 16px 44px rgba(15, 23, 42, .08);
+    }
+
+    .auth-mobile-brand {
+        display: inline-grid;
+        place-items: center;
+        min-height: 42px;
+        min-width: 42px;
+        margin-bottom: 1rem;
+        padding-inline: .85rem;
+        border-radius: 8px;
+        background: #00A651;
+        color: #fff;
+        font-weight: 900;
+    }
+
+    .auth-mobile-card h1 {
+        margin: 0;
+        color: #000;
+        font-size: 1.7rem;
+        line-height: 1.1;
+    }
+
+    .auth-mobile-card p {
+        margin: .55rem 0 1.15rem;
+        color: #667085;
+        line-height: 1.55;
+    }
+
+    .password-wrap {
+        position: relative;
+    }
+
+    .password-wrap .form-control {
+        padding-right: 46px;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 7px;
+        top: 5px;
+        width: 36px;
+        height: 36px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: #67706c;
     }
 
     .table-responsive {

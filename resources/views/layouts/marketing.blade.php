@@ -20,6 +20,8 @@
     <link rel="icon" href="{{ $marketingFaviconHref }}">
     <link rel="shortcut icon" href="{{ $marketingFaviconHref }}">
     <link rel="apple-touch-icon" href="{{ $marketingFaviconHref }}">
+    <meta name="theme-color" content="#00A651">
+    @include('mobile.pwa-meta')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:opsz,wght@14..32,100..900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -139,6 +141,7 @@
     </style>
 </head>
 <body class="min-h-screen bg-[#F7F8F5] font-sans text-black antialiased">
+    @include('mobile.pwa-shell')
     @yield('body')
 </body>
 </html>

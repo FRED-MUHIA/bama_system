@@ -1,13 +1,18 @@
 @extends('layouts.app')
 @section('title','Forgot Password')
 @section('content')
-<div class="row justify-content-center align-items-center" style="min-height:80vh"><div class="col-md-5">
-    <div class="card"><div class="card-body p-4">
-        <h1 class="h4">Reset your password</h1>
-        <form method="post" action="{{ route('password.email') }}">@csrf
-            <label class="form-label">Email address</label><input name="email" type="email" class="form-control mb-3" required>
-            <button class="btn btn-warning">Send reset link</button> <a class="btn btn-link" href="{{ route('login') }}">Back to login</a>
+<div class="auth-mobile-stage">
+    <div class="auth-mobile-card">
+        <div class="auth-mobile-brand">BAMA</div>
+        <h1>Reset your password</h1>
+        <p>Enter your account email and we will send a secure reset link.</p>
+        <form method="post" action="{{ route('password.email') }}">
+            @csrf
+            <label class="form-label">Email address</label>
+            <input name="email" type="email" class="form-control mb-3" autocomplete="email" autocapitalize="none" spellcheck="false" required>
+            <button class="btn btn-warning w-100">Send reset link</button>
+            <a class="btn btn-link w-100 mt-2" href="{{ route('login') }}">Back to login</a>
         </form>
-    </div></div>
-</div></div>
+    </div>
+</div>
 @endsection
