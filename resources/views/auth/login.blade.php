@@ -13,529 +13,289 @@
         'magic' => $loginContext === 'owner' ? route($publicLoginPrefix.'platform.login.magic.request') : ($loginContext === 'portal' ? route($publicLoginPrefix.'portal.login.magic.request') : route($publicLoginPrefix.'login.magic.request')),
     ];
     $loginCopy = [
-        'owner' => [
-            'label' => 'Owner console',
-            'headline' => ['Manage', 'Platform', 'Access'],
-            'intro' => 'Sign in to control tenants, plans, billing, pages, security, and platform settings.',
-            'formTitle' => 'Owner sign in',
-            'button' => 'Open owner dashboard',
-            'create' => null,
-        ],
-        'portal' => [
-            'label' => 'Client portal',
-            'headline' => ['View', 'Your', 'Workspace'],
-            'intro' => 'Sign in to view invited projects, invoices, receipts, and secure documents.',
-            'formTitle' => 'Portal sign in',
-            'button' => 'Open portal dashboard',
-            'create' => null,
-        ],
-        'business' => [
-            'label' => 'BAMA Workspace',
-            'headline' => ['Manage', 'Your', 'Business'],
-            'intro' => 'Sign up or log in to see business activity, finance, clients, stock, projects, and reports in one dashboard.',
-            'formTitle' => 'Continue with email',
-            'button' => 'Sign in',
-            'create' => 'Create business account',
-        ],
-    ][$loginContext] ?? [
-        'label' => 'BAMA Workspace',
-        'headline' => ['Manage', 'Your', 'Business'],
-        'intro' => 'Sign up or log in to see business activity, finance, clients, stock, projects, and reports in one dashboard.',
-        'formTitle' => 'Continue with email',
-        'button' => 'Sign in',
-        'create' => 'Create business account',
-    ];
-    $system = $loginSystem ?? ['workspaces' => 'Ready', 'modules' => 'Live', 'industries' => 'Many', 'security' => 'Encrypted'];
+        'owner' => ['label' => 'Platform owner access', 'title' => 'Owner Console', 'intro' => 'Sign in to manage tenants, pricing, billing, pages, and platform controls.'],
+        'portal' => ['label' => 'Client portal access', 'title' => 'Client Portal', 'intro' => 'Sign in to view your invited projects, invoices, receipts, and documents.'],
+        'business' => ['label' => 'BAMA secure access', 'title' => 'Welcome Back', 'intro' => 'Sign in to your business workspace and continue to the dashboard.'],
+    ][$loginContext] ?? ['label' => 'BAMA secure access', 'title' => 'Welcome Back', 'intro' => 'Sign in to your business workspace and continue to the dashboard.'];
     $brandLogoPath = 'images/bama-solutions-02.png';
     $brandLogoUrl = asset($brandLogoPath).'?v='.(file_exists(public_path($brandLogoPath)) ? filemtime(public_path($brandLogoPath)) : time());
-    $heroImagePath = 'images/analytics-command-center.png';
-    $heroImageUrl = asset($heroImagePath).'?v='.(file_exists(public_path($heroImagePath)) ? filemtime(public_path($heroImagePath)) : time());
 @endphp
 
 <style>
-    body:has(.app-login) { padding-bottom:0 !important; background:#071B12 !important; }
-    main > section:has(.app-login) { max-width:none; padding:0 !important; overflow:hidden; }
-    main > section:has(.app-login) > .alert {
+    body:has(.website-login) { padding-bottom:0 !important; background:#F7F8F5 !important; }
+    main > section:has(.website-login) { max-width:none; padding:0 !important; }
+    main > section:has(.website-login) > .alert {
         position:fixed;
-        top:calc(12px + env(safe-area-inset-top));
+        top:14px;
         left:50%;
-        z-index:50;
-        width:min(640px, calc(100% - 28px));
+        z-index:30;
+        width:min(620px, calc(100% - 32px));
         transform:translateX(-50%);
-        border-radius:8px;
-        box-shadow:0 20px 45px rgba(0,0,0,.22);
+        box-shadow:0 14px 34px rgba(0,0,0,.14);
     }
-    body:has(.app-login) .guest-theme-toggle { display:none !important; }
 
-    .app-login {
-        --teal:#31c6bb;
-        --teal-deep:#0fa899;
-        --night:#061512;
-        --ink:#ffffff;
-        --muted:rgba(255,255,255,.76);
+    .website-login {
         min-height:100vh;
-        min-height:100dvh;
-        color:var(--ink);
-        background:#071B12;
         display:grid;
-        grid-template-columns:minmax(420px,.9fr) minmax(460px,.82fr);
-        isolation:isolate;
+        grid-template-columns:minmax(390px,.82fr) minmax(520px,1.18fr);
+        background:#fff;
+        color:#111827;
     }
-    .app-login * { letter-spacing:0; }
-
-    .app-login-hero {
+    .website-login * { letter-spacing:0; }
+    .website-login-brand {
         position:relative;
-        min-height:100vh;
         display:flex;
+        min-height:100vh;
         flex-direction:column;
         justify-content:space-between;
-        padding:clamp(30px,4vw,56px);
-        overflow:hidden;
+        padding:clamp(28px,4vw,54px);
         background:#071B12;
-    }
-    .app-login-hero::before {
-        content:"";
-        position:absolute;
-        inset:0;
-        z-index:-3;
-        background:
-            linear-gradient(180deg,rgba(4,22,18,.32),rgba(4,14,12,.96)),
-            linear-gradient(90deg,rgba(3,20,16,.92),rgba(3,20,16,.26) 56%,rgba(3,20,16,.84)),
-            url("{{ $heroImageUrl }}") center/cover no-repeat;
-        filter:saturate(.95) contrast(1.04);
-    }
-    .app-login-hero::after {
-        content:"";
-        position:absolute;
-        inset:0;
-        z-index:-2;
-        background:
-            radial-gradient(circle at 72% 12%,rgba(49,198,187,.38),transparent 28%),
-            linear-gradient(180deg,rgba(49,198,187,.14),transparent 34%);
-        pointer-events:none;
-    }
-
-    .app-login-brand {
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        gap:13px;
-        font-size:1.18rem;
-        font-weight:800;
-        text-decoration:none;
         color:#fff;
+        overflow:hidden;
+        isolation:isolate;
     }
-    .app-login-brand img {
-        width:154px;
+    .website-login-brand::before {
+        content:"";
+        position:absolute;
+        inset:0;
+        z-index:-1;
+        background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px),radial-gradient(circle at 78% 8%,rgba(0,166,81,.34),transparent 30%);
+        background-size:34px 34px,34px 34px,100% 100%;
+    }
+    .website-login-logo img {
+        width:150px;
         height:auto;
         object-fit:contain;
-        filter:drop-shadow(0 12px 24px rgba(0,0,0,.18));
     }
-
-    .app-login-headline {
-        max-width:680px;
-        margin-block:auto 48px;
-    }
-    .app-login-kicker {
+    .website-login-home {
         display:inline-flex;
         align-items:center;
         gap:8px;
-        margin-bottom:24px;
-        color:rgba(255,255,255,.9);
-        font-size:.76rem;
+        width:fit-content;
+        margin-top:18px;
+        color:#cbd5e1;
+        font-size:.78rem;
         font-weight:800;
-        text-transform:uppercase;
-    }
-    .app-login-kicker::before {
-        content:"";
-        width:28px;
-        height:2px;
-        border-radius:999px;
-        background:var(--teal);
-    }
-    .app-login-headline h1 {
-        margin:0;
-        max-width:520px;
-        color:#fff;
-        font-size:clamp(4.2rem,8.5vw,8rem);
-        font-weight:800 !important;
-        line-height:.94;
-        text-shadow:0 18px 40px rgba(0,0,0,.34);
-    }
-    .app-login-headline p {
-        max-width:520px;
-        margin:28px 0 0;
-        color:var(--muted);
-        font-size:1.02rem;
-        line-height:1.68;
-    }
-    .app-login-start {
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        gap:10px;
-        min-height:66px;
-        width:min(100%,520px);
-        margin-top:34px;
-        border:0;
-        border-radius:999px;
-        background:linear-gradient(135deg,#3dd1c6,#11aa9c);
-        color:#fff;
-        font-size:1.04rem;
-        font-weight:900;
         text-decoration:none;
-        box-shadow:0 18px 44px rgba(17,170,156,.34);
+        text-transform:uppercase;
     }
-    .app-login-start:hover { color:#fff; filter:brightness(1.04); }
-
-    .app-login-status {
-        display:grid;
-        grid-template-columns:repeat(4,minmax(0,1fr));
-        gap:9px;
-        max-width:680px;
-    }
-    .app-login-status span {
-        min-height:70px;
+    .website-login-home:hover { color:#fff; }
+    .website-login-copy { max-width:510px; margin-block:auto; }
+    .website-login-kicker {
         display:flex;
-        flex-direction:column;
-        justify-content:center;
-        gap:3px;
-        border:1px solid rgba(255,255,255,.12);
-        border-radius:8px;
-        padding:11px 12px;
-        background:rgba(3,16,14,.58);
-        backdrop-filter:blur(14px);
+        align-items:center;
+        gap:10px;
+        color:#79D9A3;
+        font-size:.72rem;
+        font-weight:800;
+        text-transform:uppercase;
     }
-    .app-login-status strong {
+    .website-login-kicker::before {
+        content:"";
+        width:30px;
+        height:2px;
+        border-radius:99px;
+        background:#00A651;
+    }
+    .website-login-copy h1 {
+        margin:18px 0;
         color:#fff;
-        font-size:1.18rem;
-        font-weight:900;
-        line-height:1;
+        font-size:clamp(2.4rem,4.4vw,4.6rem);
+        font-weight:700 !important;
+        line-height:1.02;
     }
-    .app-login-status small {
-        color:rgba(255,255,255,.72);
-        font-size:.65rem;
+    .website-login-copy p {
+        max-width:460px;
+        color:#cbd5e1;
+        font-size:1rem;
+        line-height:1.7;
+    }
+    .website-login-meta {
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+    }
+    .website-login-meta span {
+        border:1px solid rgba(121,217,163,.28);
+        border-radius:8px;
+        padding:7px 10px;
+        color:#dffdea;
+        background:rgba(0,166,81,.12);
+        font-size:.68rem;
         font-weight:800;
         text-transform:uppercase;
     }
 
-    .app-login-panel {
-        position:relative;
-        min-height:100vh;
+    .website-login-panel {
         display:grid;
+        min-height:100vh;
         place-items:center;
-        padding:clamp(28px,4vw,58px);
-        background:
-            radial-gradient(circle at 80% 10%,rgba(49,198,187,.18),transparent 32%),
-            linear-gradient(180deg,#0b211e,#061512);
+        padding:clamp(24px,4vw,54px);
+        background:#fff;
     }
-    .app-login-panel::before {
-        content:"";
-        position:absolute;
-        inset:0;
-        background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
-        background-size:32px 32px;
-        mask-image:linear-gradient(180deg,#000,transparent 82%);
-        pointer-events:none;
-    }
-    .app-login-card-wrap {
-        position:relative;
-        width:min(100%,520px);
-        z-index:1;
-    }
-    .app-login-form-heading {
-        margin-bottom:18px;
-        text-align:center;
-    }
-    .app-login-form-heading .label {
-        color:var(--teal);
+    .website-login-wrap { width:min(100%,540px); }
+    .website-login-label {
+        color:#00A651;
         font-size:.72rem;
-        font-weight:900;
+        font-weight:800;
+        text-transform:uppercase;
+        margin-bottom:8px;
+    }
+    .website-login-wrap > h2 {
+        margin-bottom:8px;
+        color:#111827;
+        font-size:clamp(2rem,3.4vw,3rem);
+        font-weight:700 !important;
+        line-height:1.05;
+    }
+    .website-login-intro {
+        margin-bottom:22px;
+        color:#475467;
+        line-height:1.6;
+    }
+    .website-login-card {
+        padding:22px;
+        border:1px solid #dfe5e1;
+        border-radius:8px;
+        background:#fff;
+        box-shadow:0 16px 44px rgba(15,23,42,.07);
+    }
+    .website-login-tabs {
+        display:grid;
+        grid-template-columns:repeat(3,1fr);
+        gap:4px;
+        padding:4px;
+        margin-bottom:18px !important;
+        border-radius:8px;
+        background:#EAF8F0;
+    }
+    .website-login-tabs .nav-item { display:grid; }
+    .website-login-tabs .nav-link {
+        border-radius:7px;
+        color:#111827;
+        padding:.62rem .45rem;
+        font-size:.82rem;
+        font-weight:800;
+    }
+    .website-login-tabs .nav-link.active {
+        background:#00A651;
+        color:#fff;
+        box-shadow:0 6px 14px rgba(0,166,81,.18);
+    }
+    .website-login-card .form-label {
+        margin-bottom:7px;
+        color:#111827;
+        font-size:.78rem;
+        font-weight:800;
         text-transform:uppercase;
     }
-    .app-login-form-heading h2 {
-        margin:8px 0 0;
-        color:#fff;
-        font-size:clamp(1.7rem,3vw,2.55rem);
-        font-weight:800 !important;
-    }
-
-    .app-login-email-pill {
-        width:100%;
-        min-height:64px;
-        border:0;
-        border-radius:999px;
-        background:linear-gradient(135deg,#3dd1c6,#11aa9c);
-        color:#fff;
-        font-size:1.02rem;
-        font-weight:900;
-        box-shadow:0 18px 44px rgba(17,170,156,.3);
-    }
-
-    .app-login-card {
-        margin-top:24px;
-        padding:26px;
-        border:1px solid rgba(255,255,255,.08);
-        border-radius:26px 26px 8px 8px;
-        background:rgba(2,15,13,.91);
-        box-shadow:0 30px 70px rgba(0,0,0,.28);
-        backdrop-filter:blur(16px);
-    }
-    .app-login-tabs {
-        display:grid;
-        grid-template-columns:repeat(3,minmax(0,1fr));
-        gap:5px;
-        margin:0 0 20px !important;
-        padding:5px;
-        border:1px solid rgba(255,255,255,.08);
-        border-radius:999px;
-        background:rgba(255,255,255,.045);
-    }
-    .app-login-tabs .nav-item { display:grid; }
-    .app-login-tabs .nav-link {
-        min-height:42px;
-        border-radius:999px;
-        color:rgba(255,255,255,.78);
-        font-size:.75rem;
-        font-weight:900;
-        padding:.42rem .35rem;
-        white-space:nowrap;
-    }
-    .app-login-tabs .nav-link.active {
-        background:var(--teal);
-        color:#061512;
-    }
-
-    .app-login-card .form-label {
-        margin-bottom:10px;
-        color:#fff;
-        font-size:.92rem;
-        font-weight:900;
-    }
-    .app-login-card .form-control {
-        min-height:64px;
-        border:1px solid rgba(255,255,255,.16);
-        border-radius:24px;
-        background:rgba(255,255,255,.11);
-        color:#fff;
-        font-size:1rem;
-        padding:1rem 1.18rem;
-        box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
-    }
-    .app-login-card .form-control::placeholder { color:rgba(255,255,255,.36); }
-    .app-login-card .form-control:focus {
-        border-color:var(--teal);
-        background:rgba(255,255,255,.14);
-        color:#fff;
-        box-shadow:0 0 0 .22rem rgba(49,198,187,.18);
-    }
-    .app-login-card .form-check-input {
-        border-color:rgba(255,255,255,.4);
-        background-color:rgba(255,255,255,.08);
-    }
-    .app-login-card .form-check-input:checked {
-        background-color:var(--teal);
-        border-color:var(--teal);
-    }
-    .app-login-card .form-check-label,
-    .app-login-card .text-muted {
-        color:rgba(255,255,255,.72) !important;
-    }
-    .app-login-card a {
-        color:#dffdfa;
-        font-weight:900;
-        text-decoration-thickness:2px;
-        text-underline-offset:4px;
-    }
-    .app-login-submit,
-    .app-login-card .btn-warning {
-        min-height:64px;
-        border:0;
-        border-radius:999px;
-        background:linear-gradient(135deg,#3dd1c6,#11aa9c);
-        color:#fff;
-        font-size:1.02rem;
-        font-weight:900;
-        box-shadow:0 18px 44px rgba(17,170,156,.28);
-    }
-    .app-login-submit:hover,
-    .app-login-submit:focus,
-    .app-login-card .btn-warning:hover,
-    .app-login-card .btn-warning:focus {
-        background:linear-gradient(135deg,#48ddd2,#0fa899);
-        color:#fff;
-    }
-    .app-login-create {
-        min-height:62px;
-        border-radius:999px;
-        border:0;
+    .website-login-card .form-control {
+        min-height:48px;
+        border-color:#d7ddd9;
+        border-radius:8px;
         background:#fff;
-        color:#071B12 !important;
-        font-size:.98rem;
-        font-weight:950;
-        text-decoration:none !important;
+        color:#111827;
     }
-    .app-login-create:hover { color:#071B12 !important; background:#f5faf9; }
-
+    .website-login-card .form-control:focus {
+        border-color:#00A651;
+        box-shadow:0 0 0 .2rem rgba(0,166,81,.16);
+    }
+    .website-login-card a {
+        color:#007A3B;
+        font-weight:800;
+    }
+    .website-login-card .btn-warning {
+        min-height:50px;
+        border:0;
+        border-radius:8px;
+        background:#00A651;
+        color:#fff;
+        font-size:.9rem;
+        font-weight:900;
+        box-shadow:0 12px 26px rgba(0,166,81,.22);
+    }
+    .website-login-card .btn-warning:hover,
+    .website-login-card .btn-warning:focus {
+        background:#008F45;
+        color:#fff;
+    }
     .password-wrap { position:relative; }
-    .password-wrap .form-control { padding-right:58px; }
+    .password-wrap .form-control { padding-right:46px; }
     .password-toggle {
         position:absolute;
-        top:50%;
-        right:12px;
-        width:42px;
-        height:42px;
-        transform:translateY(-50%);
+        right:7px;
+        top:6px;
+        width:36px;
+        height:36px;
         border:0;
-        border-radius:50%;
-        background:rgba(255,255,255,.08);
-        color:#fff;
+        border-radius:8px;
+        background:transparent;
+        color:#67706c;
     }
-    .password-toggle:hover { background:rgba(49,198,187,.18); color:#fff; }
-
-    .app-login-security {
+    .password-toggle:hover {
+        background:#eef3f0;
+        color:#111827;
+    }
+    .website-login-note {
         display:flex;
-        align-items:flex-start;
+        align-items:center;
         gap:9px;
-        margin-top:20px;
-        color:rgba(255,255,255,.66);
+        margin-top:16px;
+        color:#475467;
         font-size:.78rem;
-        line-height:1.45;
     }
-    .app-login-security i { color:var(--teal); font-size:1rem; margin-top:1px; }
-    .app-login-legal {
-        max-width:420px;
-        margin:30px auto 0;
-        color:rgba(255,255,255,.62);
-        font-size:.82rem;
-        line-height:1.55;
-        text-align:center;
-    }
-    .app-login-legal a { color:#9df4ee; font-weight:800; text-decoration:none; }
-    .otp-success {
-        border-color:rgba(49,198,187,.32);
-        background:rgba(49,198,187,.12);
-        color:#dffdfa;
-    }
+    .website-login-note i { color:#00A651; }
 
-    html[data-theme="dark"] .app-login,
-    html[data-theme="dark"] .app-login-panel,
-    html[data-theme="dark"] .app-login-hero {
-        color:#fff !important;
-    }
-
-    @media (max-width: 1040px) {
-        .app-login { grid-template-columns:1fr; }
-        .app-login-hero {
-            min-height:56vh;
-            padding:calc(24px + env(safe-area-inset-top)) 24px 88px;
-        }
-        .app-login-headline {
-            margin-block:72px 30px;
-        }
-        .app-login-headline h1 { font-size:clamp(3.4rem,13vw,6.2rem); }
-        .app-login-panel {
+    @media (max-width:980px) {
+        .website-login { grid-template-columns:1fr; }
+        .website-login-brand {
             min-height:auto;
-            margin-top:-64px;
-            padding:0 18px calc(28px + env(safe-area-inset-bottom));
-            border-radius:34px 34px 0 0;
-            background:#061512;
+            padding:24px 34px;
         }
-        .app-login-panel::before { display:none; }
-        .app-login-card-wrap { padding-top:28px; }
+        .website-login-copy { margin-top:28px; max-width:680px; }
+        .website-login-copy h1 { max-width:650px; font-size:2.6rem; }
+        .website-login-panel { min-height:auto; padding:34px 24px; }
     }
-
-    @media (max-width: 680px) {
-        .app-login { display:block; min-height:100dvh; }
-        .app-login-hero {
-            min-height:55vh;
-            padding-inline:20px;
-            background:#071B12;
-        }
-        .app-login-brand { justify-content:center; }
-        .app-login-brand img { width:148px; }
-        .app-login-kicker { margin-bottom:18px; font-size:.68rem; }
-        .app-login-headline { margin-block:68px 0; }
-        .app-login-headline h1 {
-            max-width:320px;
-            font-size:clamp(4rem,21vw,6.4rem);
-        }
-        .app-login-headline p {
-            max-width:340px;
-            margin-top:20px;
-            font-size:.95rem;
-            line-height:1.52;
-        }
-        .app-login-start {
-            min-height:60px;
-            margin-top:28px;
-            font-size:.98rem;
-        }
-        .app-login-status { display:none; }
-        .app-login-card { padding:22px 18px; border-radius:26px 26px 0 0; }
-        .app-login-form-heading { display:none; }
-        .app-login-card .form-control,
-        .app-login-email-pill,
-        .app-login-submit,
-        .app-login-card .btn-warning {
-            min-height:58px;
-        }
-        .app-login-card .form-control { border-radius:22px; }
-        .app-login-tabs .nav-link { font-size:.68rem; }
-        .app-login-legal { margin-top:24px; font-size:.76rem; }
-    }
-
-    @media (max-width: 380px) {
-        .app-login-hero { padding-inline:16px; }
-        .app-login-card { padding-inline:14px; }
-        .app-login-tabs { border-radius:18px; }
-        .app-login-tabs .nav-link { white-space:normal; line-height:1.05; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .app-login-start,
-        .app-login-submit,
-        .app-login-card .btn-warning { transition:none; }
+    @media (max-width:680px) {
+        .website-login-brand { padding:22px 20px 42px; }
+        .website-login-copy h1 { font-size:2.35rem; }
+        .website-login-panel { padding:24px 16px calc(28px + env(safe-area-inset-bottom)); }
+        .website-login-card { padding:18px 15px; box-shadow:none; }
     }
 </style>
 
-<div class="app-login">
-    <section class="app-login-hero" aria-label="BAMA app access">
-        <div class="app-login-brand" aria-label="BAMA">
-            <img src="{{ $brandLogoUrl }}" alt="Bama Solutions">
-        </div>
-
-        <div class="app-login-headline">
-            <div class="app-login-kicker">{{ $loginCopy['label'] }}</div>
-            <h1>{{ $loginCopy['headline'][0] }}<br>{{ $loginCopy['headline'][1] }}<br>{{ $loginCopy['headline'][2] }}</h1>
-            <p>{{ $loginCopy['intro'] }}</p>
-            <a class="app-login-start d-lg-none" href="#app-login-form">
-                Get Started <i class="bi bi-arrow-down"></i>
+<div class="website-login">
+    <section class="website-login-brand" aria-label="BAMA website access">
+        <div>
+            <a href="{{ route('landing') }}" class="website-login-logo" aria-label="Back to BAMA home">
+                <img src="{{ $brandLogoUrl }}" alt="Bama Solutions">
             </a>
+            <a href="{{ route('landing') }}" class="website-login-home"><i class="bi bi-arrow-left"></i> Back home</a>
         </div>
 
-        <div class="app-login-status" aria-label="Live system snapshot">
-            <span><strong>{{ $system['workspaces'] }}</strong><small>Workspaces</small></span>
-            <span><strong>{{ $system['modules'] }}</strong><small>Modules</small></span>
-            <span><strong>{{ $system['industries'] }}</strong><small>Industries</small></span>
-            <span><strong>{{ $system['security'] }}</strong><small>Access</small></span>
+        <div class="website-login-copy">
+            <div class="website-login-kicker">{{ $loginCopy['label'] }}</div>
+            <h1>Secure access for connected operations.</h1>
+            <p>{{ $loginCopy['intro'] }}</p>
+        </div>
+
+        <div class="website-login-meta">
+            <span>Encrypted access</span>
+            <span>Role controlled</span>
+            <span>Activity audited</span>
+            <span>Dashboard ready</span>
         </div>
     </section>
 
-    <section class="app-login-panel" id="app-login-form">
-        <div class="app-login-card-wrap">
-            <div class="app-login-form-heading">
-                <div class="label">App login</div>
-                <h2>{{ $loginCopy['formTitle'] }}</h2>
-            </div>
+    <section class="website-login-panel">
+        <div class="website-login-wrap">
+            <div class="website-login-label">{{ $loginCopy['label'] }}</div>
+            <h2>{{ $loginCopy['title'] }}</h2>
+            <p class="website-login-intro">{{ $loginCopy['intro'] }}</p>
 
-            <button class="app-login-email-pill" type="button" data-focus-login>
-                Continue With Email
-            </button>
-
-            <div class="app-login-card">
+            <div class="website-login-card">
                 @if ($otpAvailable)
-                    <ul class="nav nav-pills app-login-tabs" role="tablist">
+                    <ul class="nav nav-pills website-login-tabs" role="tablist">
                         <li class="nav-item">
                             <button class="nav-link {{ $otpSent ? '' : 'active' }}" data-bs-toggle="pill" data-bs-target="#password-login" type="button">Password</button>
                         </li>
@@ -554,34 +314,31 @@
                     @csrf
                     <input type="hidden" name="login_context" value="{{ $loginContext }}">
                     <div class="mb-3">
-                        <label class="form-label">Email address</label>
+                        <label class="form-label">Email or Username</label>
                         <input name="username" value="{{ old('username') }}" class="form-control" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
                     </div>
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label class="form-label">Password</label>
                         <div class="password-wrap">
                             <input id="login-password" name="password" type="password" class="form-control" autocomplete="current-password" required>
                             <button class="password-toggle" type="button" aria-label="Show password" data-password-toggle="login-password"><i class="bi bi-eye"></i></button>
                         </div>
                     </div>
-                    <button class="btn app-login-submit w-100" type="submit">{{ $loginCopy['button'] }}</button>
-                    @if($loginCopy['create'])
-                        <a href="{{ route('register.account') }}" class="btn app-login-create w-100 mt-3">{{ $loginCopy['create'] }}</a>
-                    @endif
-                    <div class="text-center mt-4">
+                    <div class="d-flex justify-content-between align-items-center gap-3 mb-4">
+                        <label class="form-check">
+                            <input class="form-check-input" type="checkbox" name="remember">
+                            <span class="form-check-label">Remember me</span>
+                        </label>
                         <a href="{{ route('password.request') }}">Forgot password?</a>
                     </div>
-                    <label class="form-check d-flex justify-content-center gap-2 mt-3">
-                        <input class="form-check-input" type="checkbox" name="remember">
-                        <span class="form-check-label">Keep me signed in</span>
-                    </label>
+                    <button class="btn btn-warning w-100">Login <i class="bi bi-arrow-right ms-1"></i></button>
                 </form>
 
                 @if ($otpAvailable)
                         </div>
                         <div class="tab-pane fade {{ $otpSent ? 'show active' : '' }}" id="otp-login">
                             @if ($otpSent)
-                                <div class="alert otp-success">
+                                <div class="alert alert-success">
                                     <strong>OTP sent</strong><br>
                                     <small>We sent a 6-digit code to {{ session('otp_email') }}.</small>
                                 </div>
@@ -596,7 +353,7 @@
                                     <button class="btn btn-warning w-100">Verify OTP</button>
                                 </form>
                                 <div class="text-center mt-3">
-                                    <small class="text-muted d-block mb-2">Check your inbox and spam folder.</small>
+                                    <small class="text-muted d-block mb-2">Did not receive it? Check your spam folder.</small>
                                     <form method="post" action="{{ $loginActions['otpRequest'] }}">
                                         @csrf
                                         <input type="hidden" name="login_context" value="{{ $loginContext }}">
@@ -630,15 +387,16 @@
                     </div>
                 @endif
 
-                <div class="app-login-security">
+                <div class="website-login-note">
                     <i class="bi bi-shield-check"></i>
-                    <span>Accounts are checked against the system database, tenant context is loaded, and successful sign-ins open the dashboard.</span>
+                    <span>Your access is encrypted, role-controlled, and recorded for security.</span>
                 </div>
-                @include('mobile.install-card')
-            </div>
-
-            <div class="app-login-legal">
-                By signing up or logging in, I accept the BAMA Terms of Service and Privacy Policy.
+                @if($loginContext === 'business')
+                    <div class="text-center mt-3">
+                        <span class="text-muted">Do not have an account?</span>
+                        <a href="{{ route('register.account') }}">Create Account</a>
+                    </div>
+                @endif
             </div>
         </div>
     </section>
@@ -646,25 +404,6 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const focusButton = document.querySelector('[data-focus-login]');
-        const username = document.querySelector('input[name="username"]');
-        focusButton?.addEventListener('click', () => {
-            document.querySelector('#app-login-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            setTimeout(() => username?.focus({ preventScroll: true }), 280);
-        });
-
-        document.querySelectorAll('[data-password-toggle]').forEach((toggle) => {
-            const password = document.getElementById(toggle.dataset.passwordToggle);
-            if (! password) return;
-
-            toggle.addEventListener('click', () => {
-                const show = password.type === 'password';
-                password.type = show ? 'text' : 'password';
-                toggle.innerHTML = `<i class="bi bi-eye${show ? '-slash' : ''}"></i>`;
-                toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-            });
-        });
-
         @if ($otpSent)
             const button = document.querySelector('#resend-otp');
             const countdown = document.querySelector('#otp-countdown');

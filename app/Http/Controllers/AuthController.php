@@ -24,11 +24,21 @@ class AuthController extends Controller
 {
     public function loginForm()
     {
-        return view('auth.login', [
+        return view('auth.login', $this->loginViewData());
+    }
+
+    public function appLoginForm()
+    {
+        return view('auth.app-login', $this->loginViewData());
+    }
+
+    private function loginViewData(): array
+    {
+        return [
             'loginContext' => $this->loginContext(),
             'loginSystem' => $this->loginSystemSnapshot(),
             'otpAvailable' => $this->schemaHasTable('otp_codes'),
-        ]);
+        ];
     }
 
     public function login(Request $request)

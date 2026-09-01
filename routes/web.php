@@ -96,6 +96,7 @@ Route::post('/portal/activate/{token}', [PortalController::class, 'activate'])->
 Route::get('/hospitality/menu', [HospitalityFrontController::class, 'menu'])->name('public.hospitality.menu');
 Route::post('/hospitality/menu/reserve', [HospitalityFrontController::class, 'reserve'])->name('public.hospitality.reserve');
 Route::post('/billing/mpesa/callback', [BillingController::class, 'mpesaCallback'])->name('billing.mpesa.callback');
+Route::get('/app', fn () => auth()->check() ? redirect()->route('dashboard') : redirect()->route('app.login'))->name('app');
 
 Route::prefix('public')->group(function () {
     Route::get('/activate/{token}', [AdministrationController::class, 'activateForm'])->name('public.administration.activate');
@@ -118,6 +119,7 @@ Route::prefix('public/public')->group(function () {
 });
 
 Route::middleware(['guest', 'throttle:auth-pages'])->group(function () {
+    Route::get('/app/login', [AuthController::class, 'appLoginForm'])->name('app.login');
     Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
     Route::get('/owner/login', [AuthController::class, 'loginForm'])->name('platform.login');
     Route::get('/portal/login', [AuthController::class, 'loginForm'])->name('portal.login');

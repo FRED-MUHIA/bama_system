@@ -10,6 +10,8 @@ class LoginErrorHandlingTest extends TestCase
     {
         $routes = app('router')->getRoutes();
 
+        $this->assertNotNull($routes->getByName('app'));
+        $this->assertNotNull($routes->getByName('app.login'));
         $this->assertNotNull($routes->getByName('public.platform.login'));
         $this->assertNotNull($routes->getByName('public.platform.login.store'));
         $this->assertNotNull($routes->getByName('public.portal.login'));
