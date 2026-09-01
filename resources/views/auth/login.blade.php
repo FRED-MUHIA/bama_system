@@ -46,7 +46,7 @@
         min-height: 100vh;
         display: grid;
         grid-template-columns: minmax(390px, .75fr) minmax(520px, 1.25fr);
-        background: #F7F8F5;
+        background: #fff;
         color: #000;
     }
 
@@ -67,7 +67,7 @@
         justify-content: space-between;
         padding: clamp(28px, 4vw, 54px);
         color: #000;
-        background: var(--green);
+        background: #fff;
         border-right: 1px solid #e5e7eb;
         isolation: isolate;
     }
@@ -84,7 +84,7 @@
     }
 
     .login-brand-panel a.login-brand {
-        color: #fff;
+        color: #000;
         text-decoration: none;
     }
 
@@ -99,7 +99,7 @@
         gap: 8px;
         width: fit-content;
         margin-top: 18px;
-        color: #fff;
+        color: #000;
         font-size: .78rem;
         font-weight: 800;
         text-decoration: none;
@@ -107,7 +107,7 @@
     }
 
     .login-home-link:hover {
-        color: #fff;
+        color: var(--green);
     }
 
     .login-brand .brand-mark,
@@ -145,7 +145,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        color: #fff;
+        color: var(--green);
         font-size: .72rem;
         font-weight: 500;
         text-transform: uppercase;
@@ -155,22 +155,22 @@
         content: "";
         width: 30px;
         height: 2px;
-        background: #fff;
+        background: var(--green);
     }
 
     .login-copy h1 {
         margin: 18px 0;
-        color: #fff;
+        color: #000;
         font-size: clamp(2.3rem, 4vw, 4.15rem);
         font-weight: 600;
         line-height: 1.04;
     }
 
-    .login-copy h1 span { color: #fff; }
+    .login-copy h1 span { color: var(--green); }
 
     .login-copy p {
         max-width: 460px;
-        color: #fff;
+        color: #000;
         font-size: 1rem;
         line-height: 1.7;
     }
@@ -182,11 +182,11 @@
     }
 
     .login-meta span {
-        border: 1px solid rgba(255, 255, 255, .28);
+        border: 1px solid #BDE8CF;
         border-radius: 8px;
         padding: 7px 10px;
-        color: #fff;
-        background: rgba(255, 255, 255, .12);
+        color: #007A3B;
+        background: #EAF8F0;
         font-size: .68rem;
         font-weight: 500;
         text-transform: uppercase;
@@ -213,7 +213,7 @@
         min-height: 100vh;
         place-items: center;
         padding: clamp(24px, 4vw, 54px);
-        background: #F7F8F5;
+        background: #fff;
     }
 
     .login-auth-wrap {
@@ -390,11 +390,25 @@
         }
 
         .login-brand-panel {
+            background: var(--green);
             display: flex;
             min-height: 34vh;
             justify-content: flex-start;
             padding: calc(22px + env(safe-area-inset-top)) 20px 74px;
             border: 0;
+        }
+
+        .login-brand-panel a.login-brand,
+        .login-home-link,
+        .login-home-link:hover,
+        .login-kicker,
+        .login-copy h1,
+        .login-copy h1 span {
+            color: #fff;
+        }
+
+        .login-kicker::before {
+            background: #fff;
         }
 
         .login-brand-panel .login-home-link,
@@ -445,13 +459,13 @@
     html[data-theme="dark"] body:has(.login-stage),
     html[data-theme="dark"] .login-stage,
     html[data-theme="dark"] .login-auth-panel {
-        background: #F7F8F5 !important;
+        background: #fff !important;
         color: #000 !important;
     }
 
     html[data-theme="dark"] .login-brand-panel {
-        background: #00A651 !important;
-        color: #fff !important;
+        background: #fff !important;
+        color: #000 !important;
     }
 
     html[data-theme="dark"] .login-card {
@@ -479,7 +493,16 @@
     html[data-theme="dark"] .login-kicker,
     html[data-theme="dark"] .login-home-link,
     html[data-theme="dark"] .login-meta span {
-        color: #fff !important;
+        color: #000 !important;
+    }
+
+    html[data-theme="dark"] .login-copy h1 span,
+    html[data-theme="dark"] .login-kicker {
+        color: #00A651 !important;
+    }
+
+    html[data-theme="dark"] .login-kicker::before {
+        background: #00A651 !important;
     }
 
     html[data-theme="dark"] .login-card .nav-pills {
@@ -499,6 +522,27 @@
         background: #fff !important;
         border-color: #d7ddd9 !important;
         color: #000 !important;
+    }
+
+    @media (max-width: 680px) {
+        html[data-theme="dark"] .login-stage,
+        html[data-theme="dark"] .login-brand-panel {
+            background: #00A651 !important;
+        }
+
+        html[data-theme="dark"] .login-brand-panel,
+        html[data-theme="dark"] .login-brand-panel a.login-brand,
+        html[data-theme="dark"] .login-home-link,
+        html[data-theme="dark"] .login-kicker,
+        html[data-theme="dark"] .login-copy h1,
+        html[data-theme="dark"] .login-copy h1 span,
+        html[data-theme="dark"] .login-copy p {
+            color: #fff !important;
+        }
+
+        html[data-theme="dark"] .login-kicker::before {
+            background: #fff !important;
+        }
     }
 </style>
 

@@ -61,6 +61,13 @@
                 <img src="{{ $brandLogoUrl }}" alt="{{ $brandAlt }}" class="bama-logo">
                 <p class="mt-4 max-w-sm leading-7">{{ data_get($footerContent, 'body', 'Enterprise SaaS for ERP, CRM, finance, projects, documents, and industry operations.') }}</p>
                 <p class="mt-3 text-sm">{{ data_get($footerContent, 'email', 'sales@bama.co.ke') }}<br>{{ data_get($footerContent, 'phone', '+254 700 000 000') }}</p>
+                <div class="mt-5" data-bama-install-card hidden>
+                    <button type="button" class="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#00A651] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#007A3B] focus:outline-none focus:ring-2 focus:ring-[#00A651] focus:ring-offset-2" data-bama-install hidden>
+                        <i class="bi bi-download"></i>
+                        <span>Download App</span>
+                    </button>
+                    <p class="mt-2 text-sm text-zinc-600" data-bama-ios-install hidden>On iPhone or iPad, tap Share, then Add to Home Screen.</p>
+                </div>
             </div>
             <div class="grid gap-8 sm:grid-cols-4">
                 @foreach($footerColumns as $column)
