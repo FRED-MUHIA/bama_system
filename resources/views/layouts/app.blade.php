@@ -470,6 +470,11 @@
         .app-header .text-muted { color:#777 !important;text-transform:uppercase;letter-spacing:.14em;font-size:.64rem !important;font-weight:700; }
         .app-header h1 { font-weight:600;color:var(--bama-ink); }
         main > section { max-width:1600px;margin-inline:auto;width:100%; }
+        .app-install-footer { max-width:1600px;margin:0 auto;width:100%;padding:0 1.5rem 1.5rem; }
+        .app-install-footer[hidden] { display:none !important; }
+        .app-install-footer-inner { display:flex;align-items:center;justify-content:space-between;gap:1rem;border-top:1px solid var(--bama-line);padding-top:1rem;color:#777;font-size:.82rem; }
+        .app-install-footer .btn { white-space:nowrap; }
+        .app-install-footer p { margin:0;color:#777; }
         .card {
             background:var(--bama-paper);
             border:1px solid var(--bama-line);
@@ -666,6 +671,9 @@
             .mobile-overflow-sheet a,.mobile-overflow-sheet button { color:#111827; }
             .mobile-overflow-sheet a.active { color:var(--tenant-primary,#00A651);background:#eefbf3; }
             .mobile-overflow-sheet i { color:var(--tenant-primary,#00A651); }
+            .app-install-footer { padding:.1rem .85rem calc(1rem + env(safe-area-inset-bottom)); }
+            .app-install-footer-inner { flex-wrap:wrap;justify-content:center;text-align:center; }
+            .app-install-footer .btn { width:100%;min-height:44px; }
             html:not([data-theme="dark"]) body,
             html:not([data-theme="dark"]) main,
             html:not([data-theme="dark"]) main > section,
@@ -998,6 +1006,14 @@
                 @endif
                 @yield('content')
             </section>
+            @if($currentUser && ! $isClientPortal)
+                <footer class="app-install-footer" data-bama-install-footer hidden>
+                    <div class="app-install-footer-inner">
+                        <p data-bama-ios-install hidden>On iPhone or iPad, tap Share, then Add to Home Screen.</p>
+                        <button type="button" class="btn btn-success btn-sm" data-bama-install hidden><i class="bi bi-download"></i> <span>Install App</span></button>
+                    </div>
+                </footer>
+            @endif
         </main>
     </div>
 </div>

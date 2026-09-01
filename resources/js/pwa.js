@@ -15,6 +15,7 @@ function hideElement(element) {
 
 function configureInstallCards() {
     const cards = document.querySelectorAll('[data-bama-install-card]');
+    const footers = document.querySelectorAll('[data-bama-install-footer]');
     const iosHelpers = document.querySelectorAll('[data-bama-ios-install]');
     const installButtons = document.querySelectorAll('[data-bama-install]');
     const dismissButtons = document.querySelectorAll('[data-bama-install-dismiss]');
@@ -27,6 +28,9 @@ function configureInstallCards() {
 
         cards.forEach((card) => {
             card.hidden = ! showCard;
+        });
+        footers.forEach((footer) => {
+            footer.hidden = ! showCard;
         });
         iosHelpers.forEach((helper) => {
             helper.hidden = ! showIosHelp;
