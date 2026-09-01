@@ -2,14 +2,19 @@
     "name": "BAMA",
     "short_name": "BAMA",
     "description": "Business Management Anywhere",
-    "id": "/",
+    "id": "/dashboard",
     "start_url": "/dashboard",
     "scope": "/",
+    "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
     "display": "standalone",
     "background_color": "#00A651",
     "theme_color": "#00A651",
     "orientation": "portrait-primary",
     "categories": ["business", "productivity", "finance"],
+    "prefer_related_applications": false,
+    "launch_handler": {
+        "client_mode": "navigate-existing"
+    },
     "icons": [
         {
             "src": "/pwa-icons/icon-192.png",
