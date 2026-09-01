@@ -11,7 +11,7 @@ class BamaResetPasswordNotification extends ResetPassword
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject(Lang::get('Reset your BAMA password'))
+            ->subject(Lang::get('Reset your Bama password'))
             ->theme('bama')
             ->greeting(Lang::get('Forgot your password? It happens to the best of us.'))
             ->line(Lang::get('To reset your password, click the button below. The link will expire in :count minutes.', [
@@ -19,6 +19,6 @@ class BamaResetPasswordNotification extends ResetPassword
             ]))
             ->action(Lang::get('Reset your password'), $this->resetUrl($notifiable))
             ->line(Lang::get('If you do not want to change your password or did not request a reset, you can ignore and delete this email.'))
-            ->salutation(Lang::get('BAMA secure workspace access'));
+            ->salutation(Lang::get('Bama secure workspace access'));
     }
 }

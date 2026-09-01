@@ -8,7 +8,7 @@
     $brandLogoUrl = $configuredLogoPath && $configuredLogoPath !== $legacyLogoPath
         ? \App\Support\PublicUpload::url($configuredLogoPath)
         : null;
-    $brandName = str_replace(' Admin', '', config('app.name', 'BAMA'));
+    $brandName = str_replace(' Admin', '', config('app.name', 'Bama'));
     $brandAlt = data_get($brand, 'logo_alt', $brandName);
 @endphp
 <main class="bama-page min-h-screen px-5 py-12">

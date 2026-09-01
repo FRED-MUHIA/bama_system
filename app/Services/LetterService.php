@@ -70,7 +70,7 @@ class LetterService
         $company = $this->companySettingsForBusiness($businessId);
         $signatory = $this->defaultSignatoryForBusiness($businessId);
 
-        $companyName = $company?->company_name ?: 'BAMA';
+        $companyName = $company?->company_name ?: 'Bama';
         $contactPerson = $client?->primaryContact;
 
         return strtr($content, [
@@ -355,7 +355,7 @@ class LetterService
 
     private function defaultCompanySettings(): array
     {
-        $defaults = ['company_name' => ActiveBusiness::current()?->name ?? 'BAMA'];
+        $defaults = ['company_name' => ActiveBusiness::current()?->name ?? 'Bama'];
 
         foreach ([
             'primary_color' => CompanySetting::DEFAULT_PRIMARY_COLOR,

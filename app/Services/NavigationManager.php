@@ -35,7 +35,7 @@ class NavigationManager
             ['module' => 'documents', 'label' => 'Quotations', 'route' => 'quotations.index', 'icon' => 'bi-file-earmark-text'],
             ['module' => 'documents', 'label' => 'Invoices', 'route' => 'invoices.index', 'icon' => 'bi-receipt'],
             ['module' => 'documents', 'label' => 'Receipts', 'route' => 'receipts.index', 'icon' => 'bi-cash-coin'],
-            ['module' => 'core', 'label' => 'BAMA Billing', 'route' => 'billing.index', 'icon' => 'bi-credit-card', 'condition' => BamaBilling::visible(app(SubscriptionManager::class)->billingState())],
+            ['module' => 'core', 'label' => 'Bama Billing', 'route' => 'billing.index', 'icon' => 'bi-credit-card', 'condition' => BamaBilling::visible(app(SubscriptionManager::class)->billingState())],
             ['module' => 'administration', 'label' => 'Settings', 'route' => 'settings.edit', 'icon' => 'bi-gear'],
             ['module' => 'administration', 'label' => 'Administration', 'route' => 'administration.index', 'icon' => 'bi-shield-lock', 'permission' => 'administration.view'],
         ]);
@@ -116,7 +116,7 @@ class NavigationManager
                 BamaBilling::visible(app(SubscriptionManager::class)->billingState())
                     && Route::has('billing.index')
                     && ! $items->contains(fn ($item) => ($item['route'] ?? null) === 'billing.index'),
-                fn (Collection $items) => $items->push(['module' => 'core', 'label' => 'BAMA Billing', 'route' => 'billing.index', 'icon' => 'bi-credit-card'])
+                fn (Collection $items) => $items->push(['module' => 'core', 'label' => 'Bama Billing', 'route' => 'billing.index', 'icon' => 'bi-credit-card'])
             )
             ->when(
                 Route::has('administration.index') && $this->tablesReady(['iam_roles']) && auth()->check() && auth()->user()->hasPermission('administration.view'),

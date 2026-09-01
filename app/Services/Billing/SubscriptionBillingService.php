@@ -84,13 +84,13 @@ class SubscriptionBillingService
                 Mail::send(
                     ['html' => 'emails.bama-system', 'text' => 'emails.bama-text'],
                     [
-                        'appName' => config('mail.brand.name', 'BAMA'),
+                        'appName' => config('mail.brand.name', 'Bama'),
                         'subject' => $subject,
                         'headline' => $this->emailHeadline($kind),
                         'body' => $body,
                         'preheader' => str($body)->squish()->limit(140)->toString(),
                         'actionUrl' => $kind === 'paid' ? null : route('billing.index'),
-                        'actionText' => 'Pay BAMA invoice',
+                        'actionText' => 'Pay Bama invoice',
                         'footerNote' => $kind === 'paid' ? null : 'If the button does not work, copy and paste the payment link from this email into your browser.',
                     ],
                     fn ($mail) => $mail->to($email)->subject($subject)
@@ -312,20 +312,20 @@ class SubscriptionBillingService
     private function subject(SubscriptionInvoice $invoice, string $kind): string
     {
         return match ($kind) {
-            'renewal' => 'BAMA subscription renewal invoice '.$invoice->invoice_number,
-            'grace' => 'BAMA subscription grace period reminder '.$invoice->invoice_number,
-            'paid' => 'BAMA subscription payment received '.$invoice->invoice_number,
-            default => 'BAMA subscription invoice '.$invoice->invoice_number,
+            'renewal' => 'Bama subscription renewal invoice '.$invoice->invoice_number,
+            'grace' => 'Bama subscription grace period reminder '.$invoice->invoice_number,
+            'paid' => 'Bama subscription payment received '.$invoice->invoice_number,
+            default => 'Bama subscription invoice '.$invoice->invoice_number,
         };
     }
 
     private function emailHeadline(string $kind): string
     {
         return match ($kind) {
-            'renewal' => 'Your BAMA renewal invoice is ready.',
-            'grace' => 'Your BAMA workspace is in grace period.',
-            'paid' => 'Your BAMA payment has been received.',
-            default => 'Your BAMA invoice is ready.',
+            'renewal' => 'Your Bama renewal invoice is ready.',
+            'grace' => 'Your Bama workspace is in grace period.',
+            'paid' => 'Your Bama payment has been received.',
+            default => 'Your Bama invoice is ready.',
         };
     }
 
@@ -338,10 +338,10 @@ class SubscriptionBillingService
         $billingUrl = route('billing.index');
 
         $intro = match ($kind) {
-            'renewal' => 'Your BAMA business package is due for renewal in 5 days.',
-            'grace' => 'Your BAMA business package has expired and is now in the 2-day grace period.',
-            'paid' => 'Your BAMA business package payment has been received.',
-            default => 'Your BAMA business package invoice is ready.',
+            'renewal' => 'Your Bama business package is due for renewal in 5 days.',
+            'grace' => 'Your Bama business package has expired and is now in the 2-day grace period.',
+            'paid' => 'Your Bama business package payment has been received.',
+            default => 'Your Bama business package invoice is ready.',
         };
 
         $body = "{$intro}\n\n"
@@ -355,13 +355,13 @@ class SubscriptionBillingService
             return $body
                 ."Paid at: ".($invoice->paid_at?->format('d M Y H:i') ?? now()->format('d M Y H:i'))."\n\n"
                 ."Your workspace subscription is active.\n\n"
-                ."BAMA Solutions";
+                ."Bama Solutions";
         }
 
         return $body
             ."Grace ends: {$grace}\n\n"
             ."Pay by card, M-PESA STK Push, or PayPal here:\n{$billingUrl}\n\n"
             ."If payment is not received by the end of the grace period, the workspace is locked automatically until renewal is completed.\n\n"
-            ."BAMA Solutions";
+            ."Bama Solutions";
     }
 }

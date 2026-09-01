@@ -13,7 +13,7 @@
         $secondaryColor = $documentColors['secondary'];
         $accentColor = $documentColors['accent'];
     @endphp
-    <title>Document Verification - {{ $company?->company_name ?? 'BAMA' }}</title>
+    <title>Document Verification - {{ $company?->company_name ?? 'Bama' }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background: #F7F8F5; color: #000; display: flex; align-items: center; min-height: 100vh; font-family:'Inter Tight',system-ui,sans-serif; }
@@ -30,14 +30,14 @@
     <div class="container">
         <div class="card verify-card p-4 text-center">
             @if($company?->logoUrl())
-                <img class="brand-logo mx-auto mb-3" src="{{ $company->logoUrl() }}" alt="{{ $company?->company_name ?? 'BAMA' }} logo">
+                <img class="brand-logo mx-auto mb-3" src="{{ $company->logoUrl() }}" alt="{{ $company?->company_name ?? 'Bama' }} logo">
             @else
                 <div class="seal mx-auto mb-3">&#10003;</div>
             @endif
             <div class="verified-badge mx-auto mb-4">
                 <span>&#10003;</span> DOCUMENT VERIFIED
             </div>
-            <p class="text-muted mb-4">This document was issued by {{ $company?->company_name ?? 'BAMA' }} and has been verified as authentic.</p>
+            <p class="text-muted mb-4">This document was issued by {{ $company?->company_name ?? 'Bama' }} and has been verified as authentic.</p>
             <div class="border-top pt-4">
                 <div class="row g-3 text-start">
                     <div class="col-6">
@@ -62,12 +62,12 @@
                     </div>
                     <div class="col-6">
                         <div class="detail-label">Prepared By</div>
-                        <div class="detail-value">{{ $company?->company_name ?? 'BAMA' }}</div>
+                        <div class="detail-value">{{ $company?->company_name ?? 'Bama' }}</div>
                     </div>
                 </div>
             </div>
             <div class="border-top mt-4 pt-3">
-                <p class="mb-0 text-muted small">This verification confirms the digital authenticity of this document as issued by {{ $company?->company_name ?? 'BAMA' }}.</p>
+                <p class="mb-0 text-muted small">This verification confirms the digital authenticity of this document as issued by {{ $company?->company_name ?? 'Bama' }}.</p>
             </div>
         </div>
     </div>

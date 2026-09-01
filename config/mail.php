@@ -124,7 +124,7 @@ return [
     ],
 
     'brand' => [
-        'name' => env('MAIL_BRAND_NAME', 'BAMA'),
+        'name' => env('MAIL_BRAND_NAME', 'Bama'),
         'logo_path' => env('MAIL_BRAND_LOGO_PATH', 'logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png'),
     ],
 

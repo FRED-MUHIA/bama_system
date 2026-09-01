@@ -1,6 +1,6 @@
 @php
     $issuerProfile = $invoice->issuer_profile ?? [];
-    $companyName = $issuerProfile['name'] ?? $settings?->company_name ?? 'BAMA';
+    $companyName = $issuerProfile['name'] ?? $settings?->company_name ?? 'Bama';
 @endphp
 <!doctype html>
 <html lang="en">

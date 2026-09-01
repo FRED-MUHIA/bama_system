@@ -4,7 +4,7 @@
 <x-registration-shell :step="$step">
     <div class="rounded-[18px] border border-zinc-200 bg-white p-5 shadow-2xl shadow-zinc-200/70 sm:p-6">
         <p class="text-xs font-bold uppercase text-[#00A651]">Step 1</p>
-        <h1 class="mt-2 text-3xl font-black">Create Your BAMA Account</h1>
+        <h1 class="mt-2 text-3xl font-black">Create Your Bama Account</h1>
         <p class="mt-2 text-sm text-black">This account becomes the workspace owner for your tenant.</p>
 
         @if ($errors->any())

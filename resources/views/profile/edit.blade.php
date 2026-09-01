@@ -62,7 +62,7 @@
 
     <div class="col-lg-8">
         <div class="card p-4">
-            <h2 class="h5">About BAMA</h2>
+            <h2 class="h5">About Bama</h2>
             <div class="row g-3 mt-1">
                 <div class="col-md-4">
                     <div class="text-muted small">App Version</div>

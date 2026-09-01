@@ -26,8 +26,8 @@ class MailTestCommand extends Command
 
             $this->components->info("Sending test email via {$scheme}://{$host}:{$port} from {$from}");
 
-            Mail::raw('Your BAMA SMTP settings are working.', function ($mail) {
-                $mail->to($this->argument('email'))->subject('BAMA SMTP test');
+            Mail::raw('Your Bama SMTP settings are working.', function ($mail) {
+                $mail->to($this->argument('email'))->subject('Bama SMTP test');
             });
         } catch (\Throwable $e) {
             report($e);

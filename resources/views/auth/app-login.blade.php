@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title','BAMA App')
+@section('title','Bama App')
 @section('content')
 @php
     $otpAvailable = (bool) ($otpAvailable ?? false);
@@ -410,13 +410,13 @@
 
 <div class="app-flow" data-app-flow data-initial-step="{{ $initialStep }}">
     <div class="app-flow-track" data-app-track>
-        <section class="app-screen" aria-label="BAMA app welcome">
+        <section class="app-screen" aria-label="Bama app welcome">
             <div class="app-screen-center">
                 <div class="app-logo">
                     <img src="{{ $brandLogoUrl }}" alt="Bama Solutions">
                 </div>
                 <div>
-                    <div class="app-kicker">BAMA Workspace</div>
+                    <div class="app-kicker">Bama Workspace</div>
                     <h1 class="app-title">Manage<br>Your<br>Business</h1>
                     <p class="app-copy">Sign up or log in to see business activity, finance, clients, stock, projects, and reports in one dashboard.</p>
                 </div>
@@ -433,7 +433,7 @@
                 </div>
                 <div class="app-choice-card">
                     <h2>Continue with email</h2>
-                    <p>Use your BAMA account to open the app dashboard, or create a workspace if your business is new.</p>
+                    <p>Use your Bama account to open the app dashboard, or create a workspace if your business is new.</p>
                     <div class="app-choice-actions">
                         <button class="app-primary mt-0" type="button" data-app-go="2">Continue With Email</button>
                         <a class="app-secondary" href="{{ route('register.account') }}">Create business account</a>
@@ -449,7 +449,7 @@
             </div>
         </section>
 
-        <section class="app-screen" aria-label="BAMA app login">
+        <section class="app-screen" aria-label="Bama app login">
             <div class="app-screen-center">
                 <div class="app-auth-top">
                     <button class="app-icon-button" type="button" data-app-go="1" aria-label="Back">
@@ -563,7 +563,7 @@
                 </div>
 
                 <div class="app-legal">
-                    By signing up or logging in, I accept the BAMA Terms of Service and Privacy Policy.
+                    By signing up or logging in, I accept the Bama Terms of Service and Privacy Policy.
                 </div>
             </div>
         </section>

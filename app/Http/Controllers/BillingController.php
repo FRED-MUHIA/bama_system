@@ -58,7 +58,7 @@ class BillingController extends Controller
 
         return redirect()->route('billing.index')->with(
             'status',
-            'BAMA invoice '.$invoice->invoice_number.' is ready for payment.'
+            'Bama invoice '.$invoice->invoice_number.' is ready for payment.'
                 .($sent > 0 ? ' It was emailed to the billing profile email.' : ' Add a profile email to receive invoices automatically.')
         );
     }
@@ -133,7 +133,7 @@ class BillingController extends Controller
 
         return response()->json([
             'ResultCode' => 0,
-            'ResultDesc' => $payment ? 'Accepted' : 'No matching BAMA payment',
+            'ResultDesc' => $payment ? 'Accepted' : 'No matching Bama payment',
         ]);
     }
 
@@ -230,7 +230,7 @@ class BillingController extends Controller
     private function authorizeInvoice(SubscriptionInvoice $invoice): void
     {
         abort_unless(ActiveTenant::id() && (int) $invoice->tenant_id === (int) ActiveTenant::id(), 403);
-        abort_if($invoice->status === 'paid', 422, 'This BAMA invoice is already paid.');
+        abort_if($invoice->status === 'paid', 422, 'This Bama invoice is already paid.');
         abort_if((float) $invoice->total <= 0, 422, 'This package needs sales approval before checkout.');
     }
 

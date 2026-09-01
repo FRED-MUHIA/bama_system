@@ -8,7 +8,7 @@
     $primaryColor = $documentColors['primary'];
     $secondaryColor = $documentColors['secondary'];
     $accentColor = $documentColors['accent'];
-    $companyName = $settings?->company_name ?? 'BAMA';
+    $companyName = $settings?->company_name ?? 'Bama';
     $initials = \Illuminate\Support\Str::of($companyName)->explode(' ')->filter()->take(2)->map(fn ($word) => \Illuminate\Support\Str::substr($word, 0, 1))->implode('') ?: 'BA';
     $logoPath = $settings?->logoFilePath();
     $ticketNumber = $job->ticket?->ticket_number ?: $job->job_number;

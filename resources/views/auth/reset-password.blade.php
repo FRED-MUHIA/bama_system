@@ -3,7 +3,7 @@
 @section('content')
 <div class="auth-mobile-stage">
     <div class="auth-mobile-card">
-        <div class="auth-mobile-brand">BAMA</div>
+        <div class="auth-mobile-brand">Bama</div>
         <h1>Choose a new password</h1>
         <p>Use a strong password for your workspace account.</p>
         <form method="post" action="{{ route('password.update') }}">

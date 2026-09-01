@@ -2,7 +2,7 @@
     <div class="bama-pwa-splash-mark">
         <img src="{{ asset('pwa-icons/icon-192.png') }}" alt="">
     </div>
-    <div class="bama-pwa-splash-name">BAMA</div>
+    <div class="bama-pwa-splash-name">Bama</div>
     <div class="bama-pwa-splash-tagline">Business Management Anywhere</div>
 </div>
 
@@ -13,6 +13,6 @@
 </div>
 
 <div class="bama-update-toast" data-bama-update hidden>
-    <span>A new BAMA version is available.</span>
+    <span>A new Bama version is available.</span>
     <button type="button" data-bama-update-now>Update Now</button>
 </div>

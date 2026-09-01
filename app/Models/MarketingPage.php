@@ -35,9 +35,9 @@ class MarketingPage extends Model
         if (! SchemaCache::hasTable('marketing_pages')) {
             return new static([
                 'slug' => $slug,
-                'title' => $slug === 'home' ? 'BAMA Business Cloud' : (string) str($slug)->headline(),
-                'meta_title' => $slug === 'home' ? 'BAMA Business Cloud' : (string) str($slug)->headline().' | BAMA',
-                'meta_description' => 'BAMA business cloud platform.',
+                'title' => $slug === 'home' ? 'Bama Business Cloud' : (string) str($slug)->headline(),
+                'meta_title' => $slug === 'home' ? 'Bama Business Cloud' : (string) str($slug)->headline().' | Bama',
+                'meta_description' => 'Bama business cloud platform.',
                 'sections' => static::defaultSections($slug),
                 'is_published' => true,
             ]);
@@ -45,9 +45,9 @@ class MarketingPage extends Model
 
         return static::where('slug', $slug)->first() ?? new static([
             'slug' => $slug,
-            'title' => $slug === 'home' ? 'BAMA Business Cloud' : (string) str($slug)->headline(),
-            'meta_title' => $slug === 'home' ? 'BAMA Business Cloud' : (string) str($slug)->headline().' | BAMA',
-            'meta_description' => 'BAMA business cloud platform.',
+            'title' => $slug === 'home' ? 'Bama Business Cloud' : (string) str($slug)->headline(),
+            'meta_title' => $slug === 'home' ? 'Bama Business Cloud' : (string) str($slug)->headline().' | Bama',
+            'meta_description' => 'Bama business cloud platform.',
             'sections' => static::defaultSections($slug),
             'is_published' => true,
         ]);
@@ -60,7 +60,7 @@ class MarketingPage extends Model
                 'blocks' => [
                     [
                         'type' => 'hero',
-                        'eyebrow' => 'BAMA Page',
+                        'eyebrow' => 'Bama Page',
                         'title' => (string) str($slug)->headline(),
                         'body' => 'Use the page builder to update this page content.',
                         'button_label' => 'Start Free Trial',

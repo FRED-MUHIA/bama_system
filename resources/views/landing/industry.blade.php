@@ -1,4 +1,4 @@
-@extends('layouts.marketing', ['title' => $industry['industry'].' | BAMA Industry Solution'])
+@extends('layouts.marketing', ['title' => $industry['industry'].' | Bama Industry Solution'])
 
 @php
     $slug = str_replace('_', '-', $industry['slug']);
@@ -51,7 +51,7 @@
 
     <section class="relative overflow-hidden px-5 py-12 text-white md:py-16" style="background:var(--dark)">
         <div class="absolute inset-y-0 right-0 hidden w-1/2 opacity-35 lg:block">
-            <img src="{{ asset('images/people-industry-mosaic.png') }}" alt="{{ $industry['industry'] }} teams using BAMA" class="h-full w-full object-cover">
+            <img src="{{ asset('images/people-industry-mosaic.png') }}" alt="{{ $industry['industry'] }} teams using Bama" class="h-full w-full object-cover">
         </div>
         <div class="relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-[.95fr_.7fr]">
             <div class="max-w-3xl">
@@ -82,7 +82,7 @@
             <div>
                 <p class="bama-eyebrow">Operating fit</p>
                 <h2 class="mt-3 text-3xl font-black">What this workspace helps you control</h2>
-                <p class="mt-4 leading-7 text-zinc-600">BAMA provisions practical screens, permissions, dashboards, reports, and workflows around the way {{ strtolower($industry['industry']) }} teams actually work.</p>
+                <p class="mt-4 leading-7 text-zinc-600">Bama provisions practical screens, permissions, dashboards, reports, and workflows around the way {{ strtolower($industry['industry']) }} teams actually work.</p>
             </div>
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach($features->take(6) as $feature)
@@ -146,7 +146,7 @@
             <div class="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
                 <div>
                     <p class="bama-eyebrow">Ready to operate</p>
-                    <h2 class="mt-3 text-3xl font-black">Launch a {{ $industry['industry'] }} workspace with BAMA</h2>
+                    <h2 class="mt-3 text-3xl font-black">Launch a {{ $industry['industry'] }} workspace with Bama</h2>
                     <p class="mt-3 max-w-2xl leading-7 text-white/75">Start with guided onboarding, then add users, permissions, modules, documents, finance, and reports as your operation grows.</p>
                 </div>
                 <a href="{{ route('register.account') }}" class="rounded-full bg-white px-8 py-4 text-center text-sm font-black uppercase text-black no-underline">Start Free Trial</a>

@@ -18,7 +18,7 @@ class CreateSuperAdminCommand extends Command
 {
     protected $signature = 'super-admin:create
         {email=superadmin@bama.co.ke : Super admin email address}
-        {--name=BAMA Super Admin : Display name}
+        {--name=Bama Super Admin : Display name}
         {--username=superadmin : Login username}
         {--password= : Password to set}
         {--generate-password : Generate and print a secure temporary password}

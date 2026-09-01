@@ -7,7 +7,7 @@
     $primaryColor = $documentColors['primary'];
     $secondaryColor = $documentColors['secondary'];
     $accentColor = $documentColors['accent'];
-    $companyName = $settings?->company_name ?? 'BAMA';
+    $companyName = $settings?->company_name ?? 'Bama';
 @endphp
 <!doctype html>
 <html>

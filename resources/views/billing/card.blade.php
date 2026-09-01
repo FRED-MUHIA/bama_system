@@ -8,7 +8,7 @@
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
                 <div>
                     <div class="text-muted small fw-bold text-uppercase">Secure card payment</div>
-                    <h1 class="h4 mb-1">{{ $invoice->plan?->name ?? 'BAMA package' }}</h1>
+                    <h1 class="h4 mb-1">{{ $invoice->plan?->name ?? 'Bama package' }}</h1>
                     <div class="text-muted">{{ $invoice->invoice_number }}</div>
                 </div>
                 <div class="text-end">

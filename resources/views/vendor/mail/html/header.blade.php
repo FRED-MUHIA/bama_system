@@ -1,6 +1,6 @@
 @props(['url'])
 @php
-    $brandName = config('mail.brand.name', 'BAMA');
+    $brandName = config('mail.brand.name', 'Bama');
     $logoPath = config('mail.brand.logo_path', 'images/bama-logo.png');
     $logoUrl = $logoPath ? asset($logoPath) : null;
 @endphp

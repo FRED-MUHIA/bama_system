@@ -819,7 +819,7 @@ class AdministrationController extends Controller
         return implode("\n", array_filter([
             'Hello '.$user->name.',',
             '',
-            'You were invited to access a BAMA workspace.',
+            'You were invited to access a Bama workspace.',
             'Workspace/profile: '.$this->profileName(),
             'Account email: '.$user->email,
             $role ? 'Profile access role: '.$role : null,
@@ -833,7 +833,7 @@ class AdministrationController extends Controller
             $expiresAt ? 'This link expires on '.$expiresAt.'.' : null,
             'If you were not expecting access to '.$this->profileName().', do not click the link.',
             '',
-            'BAMA secure workspace access',
+            'Bama secure workspace access',
         ], fn ($line) => $line !== null));
     }
 
@@ -842,7 +842,7 @@ class AdministrationController extends Controller
         return implode("\n", [
             'Hello '.$user->name.',',
             '',
-            'An administrator generated a one-time recovery link for your BAMA account.',
+            'An administrator generated a one-time recovery link for your Bama account.',
             'Workspace/profile: '.$this->profileName(),
             'Account email: '.$user->email,
             '',
@@ -852,7 +852,7 @@ class AdministrationController extends Controller
             'This link expires in 30 minutes and can be used once.',
             'If you did not request recovery help, contact your administrator before using it.',
             '',
-            'BAMA secure workspace access',
+            'Bama secure workspace access',
         ]);
     }
 

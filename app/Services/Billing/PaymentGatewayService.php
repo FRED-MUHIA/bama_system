@@ -44,7 +44,7 @@ class PaymentGatewayService
             'PhoneNumber' => $normalizedPhone,
             'CallBackURL' => $mpesa['callback_url'],
             'AccountReference' => $accountReference,
-            'TransactionDesc' => 'BAMA Invoice',
+            'TransactionDesc' => 'Bama Invoice',
         ];
 
         $payment = $invoice->payments()->create([
@@ -278,14 +278,14 @@ class PaymentGatewayService
                 'reference_id' => $invoice->invoice_number,
                 'custom_id' => $payment->merchant_reference,
                 'invoice_id' => $invoice->invoice_number,
-                'description' => 'BAMA '.$invoice->plan?->name.' subscription',
+                'description' => 'Bama '.$invoice->plan?->name.' subscription',
                 'amount' => [
                     'currency_code' => $paypalAmount['currency'],
                     'value' => $paypalAmount['value'],
                 ],
             ]],
             'application_context' => [
-                'brand_name' => 'BAMA Solutions',
+                'brand_name' => 'Bama Solutions',
                 'user_action' => 'PAY_NOW',
                 'return_url' => route('billing.paypal.return'),
                 'cancel_url' => route('billing.paypal.cancel'),

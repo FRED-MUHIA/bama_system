@@ -6,7 +6,7 @@
     $client = $type === 'receipt' ? $document->invoice->client : $document->client;
     $profileName = \App\Models\CompanySetting::withoutGlobalScopes()->where('business_id', $document->business_id)->value('company_name')
         ?: \App\Models\Business::withoutGlobalScopes()->where('id', $document->business_id)->value('name')
-        ?: config('app.name', 'BAMA');
+        ?: config('app.name', 'Bama');
     $mailSetting = \App\Models\MailSetting::withoutGlobalScopes()->where('business_id', $document->business_id)->where('enabled', true)->first();
     $usesOwnSmtp = filled($mailSetting?->username) && filled($mailSetting?->password);
     $serverMailDomain = config('mail.required_sender_domain') ?: config('mail.mailers.smtp.local_domain') ?: (

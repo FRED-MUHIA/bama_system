@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Page Not Found | BAMA</title>
+    <title>Page Not Found | Bama</title>
     <style>
         :root {
             color-scheme: light;
@@ -81,7 +81,7 @@
     <main>
         <div class="code">404 error</div>
         <h1>Page not found.</h1>
-        <p>The address may be mistyped, moved, or no longer available. Return home and continue from the main BAMA page.</p>
+        <p>The address may be mistyped, moved, or no longer available. Return home and continue from the main Bama page.</p>
         <a href="{{ url('/') }}">Back home</a>
     </main>
 </body>

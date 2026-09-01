@@ -15,8 +15,8 @@
     $loginCopy = [
         'owner' => ['label' => 'Platform owner access', 'title' => 'Owner Console', 'intro' => 'Sign in to manage tenants, pricing, billing, pages, and platform controls.'],
         'portal' => ['label' => 'Client portal access', 'title' => 'Client Portal', 'intro' => 'Sign in to view your invited projects, invoices, receipts, and documents.'],
-        'business' => ['label' => 'BAMA secure access', 'title' => 'Welcome Back', 'intro' => 'Sign in to your business workspace and continue to the dashboard.'],
-    ][$loginContext] ?? ['label' => 'BAMA secure access', 'title' => 'Welcome Back', 'intro' => 'Sign in to your business workspace and continue to the dashboard.'];
+        'business' => ['label' => 'Bama secure access', 'title' => 'Welcome Back', 'intro' => 'Sign in to your business workspace and continue to the dashboard.'],
+    ][$loginContext] ?? ['label' => 'Bama secure access', 'title' => 'Welcome Back', 'intro' => 'Sign in to your business workspace and continue to the dashboard.'];
     $brandLogoPath = 'images/bama-solutions-02.png';
     $brandLogoUrl = asset($brandLogoPath).'?v='.(file_exists(public_path($brandLogoPath)) ? filemtime(public_path($brandLogoPath)) : time());
 @endphp
@@ -265,9 +265,9 @@
 </style>
 
 <div class="website-login">
-    <section class="website-login-brand" aria-label="BAMA website access">
+    <section class="website-login-brand" aria-label="Bama website access">
         <div>
-            <a href="{{ route('landing') }}" class="website-login-logo" aria-label="Back to BAMA home">
+            <a href="{{ route('landing') }}" class="website-login-logo" aria-label="Back to Bama home">
                 <img src="{{ $brandLogoUrl }}" alt="Bama Solutions">
             </a>
             <a href="{{ route('landing') }}" class="website-login-home"><i class="bi bi-arrow-left"></i> Back home</a>

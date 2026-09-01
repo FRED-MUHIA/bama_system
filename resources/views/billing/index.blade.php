@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'BAMA Billing')
+@section('title', 'Bama Billing')
 
 @section('content')
 @php
@@ -32,7 +32,7 @@
         <div class="card p-4 h-100">
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
                 <div>
-                    <div class="text-muted small fw-bold text-uppercase">BAMA package</div>
+                    <div class="text-muted small fw-bold text-uppercase">Bama package</div>
                     <h2 class="h4 mb-1">{{ $subscription?->plan?->name ?? 'No package' }}</h2>
                     <p class="text-muted mb-0">{{ $tenant->name }} subscription billing and renewal.</p>
                 </div>
@@ -140,7 +140,7 @@
                     </div>
                 </div>
             @else
-                <div class="alert alert-warning">Run database migrations to activate BAMA billing invoices.</div>
+                <div class="alert alert-warning">Run database migrations to activate Bama billing invoices.</div>
             @endif
         </div>
     </div>
@@ -148,7 +148,7 @@
     <div class="col-xl-4">
         <div class="card p-4 mb-4">
             <h2 class="h5">Change package</h2>
-            <p class="text-muted">Generate a new BAMA invoice for another monthly package.</p>
+            <p class="text-muted">Generate a new Bama invoice for another monthly package.</p>
             <form method="post" action="{{ route('billing.invoices.store') }}" class="d-grid gap-2">
                 @csrf
                 <select class="form-select" name="plan_id" required>
@@ -163,7 +163,7 @@
         </div>
 
         <div class="card p-4">
-            <h2 class="h5">Recent BAMA invoices</h2>
+            <h2 class="h5">Recent Bama invoices</h2>
             <div class="d-grid gap-2">
                 @forelse($invoices as $item)
                     <div class="border rounded-2 p-2">

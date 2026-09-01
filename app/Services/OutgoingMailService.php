@@ -78,7 +78,7 @@ class OutgoingMailService
         $actionUrl = $this->firstUrlIn($body);
 
         return [
-            'appName' => $setting?->from_name ?: config('mail.brand.name', 'BAMA'),
+            'appName' => $setting?->from_name ?: config('mail.brand.name', 'Bama'),
             'subject' => $subject,
             'headline' => $subject,
             'body' => $body,

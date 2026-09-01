@@ -3,7 +3,7 @@
 @section('content')
 <div class="auth-mobile-stage">
     <div class="auth-mobile-card">
-        <div class="auth-mobile-brand">BAMA</div>
+        <div class="auth-mobile-brand">Bama</div>
         <h1>Reset your password</h1>
         <p>Enter your account email and we will send a secure reset link.</p>
         <form method="post" action="{{ route('password.email') }}">

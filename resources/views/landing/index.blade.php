@@ -1,5 +1,5 @@
 @extends('layouts.marketing', [
-    'title' => $marketingPage?->meta_title ?: 'BAMA Business Cloud',
+    'title' => $marketingPage?->meta_title ?: 'Bama Business Cloud',
     'metaDescription' => $marketingPage?->meta_description,
 ])
 
@@ -483,7 +483,7 @@
     <section class="hero-field relative isolate overflow-hidden bg-black px-5 py-12 text-white sm:py-14 lg:min-h-[590px] lg:py-0">
         <img
             src="{{ asset('images/hero-green-team.png') }}"
-            alt="Business leaders using BAMA cloud ERP"
+            alt="Business leaders using Bama cloud ERP"
             class="hero-image-clear absolute inset-y-0 right-0 z-[-1] hidden h-full object-contain object-right-center lg:block"
             style="width: auto; max-width: none;"
             fetchpriority="high"
@@ -515,7 +515,7 @@
                 <div class="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-[#062515] lg:hidden" style="aspect-ratio: 1672 / 941;">
                     <img
                         src="{{ asset('images/hero-green-team.png') }}"
-                        alt="Business leaders using BAMA cloud ERP"
+                        alt="Business leaders using Bama cloud ERP"
                         class="hero-image-clear h-full w-full object-cover object-center"
                     >
                 </div>

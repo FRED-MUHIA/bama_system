@@ -45,7 +45,7 @@ class SubscriptionManager
         if ($tenant->status === 'suspended' || $subscription->locked_at || in_array($subscription->status, ['paused', 'cancelled'], true)) {
             return [
                 'state' => 'locked',
-                'message' => 'This workspace is locked because the BAMA subscription is overdue. Renew the package to restore access.',
+                'message' => 'This workspace is locked because the Bama subscription is overdue. Renew the package to restore access.',
                 'expires_at' => $subscription->renews_at,
                 'grace_ends_at' => $subscription->grace_ends_at,
             ];
@@ -63,8 +63,8 @@ class SubscriptionManager
             return [
                 'state' => $graceEndsAt->isFuture() ? 'grace' : 'locked',
                 'message' => $graceEndsAt->isFuture()
-                    ? 'Your BAMA subscription has expired. You are in a 2-day grace period; renew now to keep access active.'
-                    : 'This workspace is locked because the BAMA subscription is overdue. Renew the package to restore access.',
+                    ? 'Your Bama subscription has expired. You are in a 2-day grace period; renew now to keep access active.'
+                    : 'This workspace is locked because the Bama subscription is overdue. Renew the package to restore access.',
                 'expires_at' => $expiresAt,
                 'grace_ends_at' => $graceEndsAt,
             ];
@@ -73,7 +73,7 @@ class SubscriptionManager
         if ($daysUntilExpiry <= 5) {
             return [
                 'state' => 'renewal_due',
-                'message' => "Your BAMA subscription expires in {$daysUntilExpiry} day".($daysUntilExpiry === 1 ? '' : 's').'. Renew before the grace period to avoid a lock.',
+                'message' => "Your Bama subscription expires in {$daysUntilExpiry} day".($daysUntilExpiry === 1 ? '' : 's').'. Renew before the grace period to avoid a lock.',
                 'expires_at' => $expiresAt,
                 'grace_ends_at' => $graceEndsAt,
             ];

@@ -656,7 +656,7 @@ class InvoiceController extends Controller
 
     private function defaultCompanySettings(): array
     {
-        $defaults = ['company_name' => ActiveBusiness::current()?->name ?? 'BAMA'];
+        $defaults = ['company_name' => ActiveBusiness::current()?->name ?? 'Bama'];
 
         foreach ([
             'primary_color' => CompanySetting::DEFAULT_PRIMARY_COLOR,

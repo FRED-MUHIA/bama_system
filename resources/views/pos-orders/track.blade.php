@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Track {{ $order->order_number }} - BAMA</title>
+    <title>Track {{ $order->order_number }} - Bama</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background:#F7F8F5; color:#000; font-family:'Inter Tight',system-ui,sans-serif; }
@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="page px-3">
-    <div class="mb-3"><div class="brand h3 mb-0">BAMA</div><div class="text-muted">Order tracking</div></div>
+    <div class="mb-3"><div class="brand h3 mb-0">Bama</div><div class="text-muted">Order tracking</div></div>
     <div class="card"><div class="card-body p-4">
         <div class="row g-4 mb-3">
             <div class="col-md-6"><h1 class="h4">{{ $order->order_number }}</h1><p class="mb-1">Tracking key: <strong>{{ $order->tracking_key }}</strong></p><p class="mb-1">Date: {{ $order->order_date?->format('d M Y') }}</p><span class="status-pill">{{ $order->status }}</span></div>

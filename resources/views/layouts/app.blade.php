@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#00A651">
-    <title>@yield('title', 'BAMA Admin')</title>
+    <title>@yield('title', 'Bama Admin')</title>
     <script>document.documentElement.dataset.theme=localStorage.getItem('bama-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');</script>
     @php
         $appFaviconPath = 'images/bama-favicon.png';
@@ -822,7 +822,7 @@
     $currentUser = auth()->user();
     $isClientPortal = $currentUser?->role === 'client_portal';
     $mainColumnClass = $currentUser && ! $isClientPortal ? 'col-lg-10' : 'col-12';
-    $sidebarBrandName = $activeTenant?->name ?? $activeBusiness?->name ?? 'BAMA';
+    $sidebarBrandName = $activeTenant?->name ?? $activeBusiness?->name ?? 'Bama';
     $activeIndustryLabel = \Illuminate\Support\Str::headline($activeBusiness?->industry ?: $activeTenant?->industry ?: 'Workspace');
     $bamaBrandLogoUrl = \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png');
 @endphp
@@ -833,7 +833,7 @@
                 <div class="sidebar-brand d-flex align-items-center gap-2 text-white mb-3">
                     @if(!empty($tenantTheme?->logoUrl()))
                         <img src="{{ $tenantTheme->logoUrl() }}" alt="{{ $activeTenant?->name ?? 'Tenant' }}" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
-                    @elseif(strcasecmp($sidebarBrandName, 'BAMA') === 0)
+                    @elseif(strcasecmp($sidebarBrandName, 'Bama') === 0)
                         <img src="{{ $bamaBrandLogoUrl }}" alt="Bama Solutions" style="width:auto;height:42px;max-width:124px;object-fit:contain;border-radius:6px;background:#fff;">
                     @else
                         <div class="brand-mark">{{ strtoupper(substr($sidebarBrandName, 0, 1)) }}{{ strtoupper(substr(strstr($sidebarBrandName, ' ') ?: 'A', 1, 1)) }}</div>
@@ -1025,7 +1025,7 @@
             <div class="drawer-brand">
                 @if(!empty($tenantTheme?->logoUrl()))
                     <img src="{{ $tenantTheme->logoUrl() }}" alt="{{ $activeTenant?->name ?? 'Tenant' }}" style="width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;">
-                @elseif(strcasecmp($sidebarBrandName, 'BAMA') === 0)
+                @elseif(strcasecmp($sidebarBrandName, 'Bama') === 0)
                     <img src="{{ $bamaBrandLogoUrl }}" alt="Bama Solutions" style="width:auto;height:42px;max-width:118px;object-fit:contain;border-radius:6px;background:#fff;">
                 @else
                     <div class="brand-mark">{{ strtoupper(substr($sidebarBrandName, 0, 1)) }}{{ strtoupper(substr(strstr($sidebarBrandName, ' ') ?: 'A', 1, 1)) }}</div>
@@ -1130,7 +1130,7 @@
             ['label' => 'Quotations', 'route' => 'quotations.index', 'match' => 'quotations.*', 'icon' => 'bi-file-earmark-text'],
             ['label' => 'Invoices', 'route' => 'invoices.index', 'match' => 'invoices.*', 'icon' => 'bi-receipt'],
             ['label' => 'Receipts', 'route' => 'receipts.index', 'match' => 'receipts.*', 'icon' => 'bi-cash-coin'],
-            ['label' => 'BAMA Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
+            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
         ];
 
         $fitnessMobileItems = [
@@ -1151,7 +1151,7 @@
             ['label' => 'Equipment', 'route' => 'fitness.equipment.index', 'match' => 'fitness.equipment.*', 'icon' => 'bi-tools'],
             ['label' => 'Inventory', 'route' => 'products.index', 'match' => 'products.*', 'icon' => 'bi-box-seam'],
             ['label' => 'Payments', 'route' => 'finance.index', 'match' => 'finance.*', 'icon' => 'bi-cash-coin'],
-            ['label' => 'BAMA Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
+            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
             ['label' => 'Reports', 'route' => 'fitness.reports.index', 'match' => 'fitness.reports.*', 'icon' => 'bi-bar-chart'],
         ];
 
@@ -1171,7 +1171,7 @@
             ['label' => 'Suppliers', 'route' => 'hospitality.suppliers.index', 'match' => 'hospitality.suppliers.*', 'icon' => 'bi-truck'],
             ['label' => 'Procurement', 'route' => 'erp.procurement', 'match' => 'erp.procurement', 'icon' => 'bi-cart-check'],
             ['label' => 'Billing', 'route' => 'finance.index', 'match' => 'finance.*', 'icon' => 'bi-bank'],
-            ['label' => 'BAMA Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
+            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
             ['label' => 'Reports', 'route' => 'hospitality.reports.index', 'match' => 'hospitality.reports.*', 'icon' => 'bi-bar-chart'],
         ];
 
@@ -1190,14 +1190,14 @@
             ['label' => 'Compliance', 'route' => 'agriculture.dashboard', 'match' => 'agriculture.dashboard', 'section' => 'compliance', 'icon' => 'bi-shield-check'],
             ['label' => 'Documents', 'route' => 'agriculture.dashboard', 'match' => 'agriculture.dashboard', 'section' => 'documents', 'icon' => 'bi-folder2-open'],
             ['label' => 'Finance', 'route' => 'agriculture.dashboard', 'match' => 'agriculture.dashboard', 'section' => 'finance', 'icon' => 'bi-bank'],
-            ['label' => 'BAMA Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
+            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
             ['label' => 'Reports', 'route' => 'agriculture.reports.index', 'match' => 'agriculture.reports.*', 'icon' => 'bi-bar-chart'],
         ];
 
         $utilityOverflowItems = [
             ['label' => 'Settings', 'route' => 'settings.edit', 'match' => 'settings.*', 'icon' => 'bi-gear'],
             ['label' => 'My Profile', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'bi-person'],
-            ['label' => 'BAMA Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
+            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
             ['label' => 'Administration', 'route' => 'administration.index', 'match' => 'administration.*', 'icon' => 'bi-shield-lock', 'condition' => \App\Support\SchemaCache::hasTable('iam_roles') && $currentUser->hasPermission('administration.view')],
         ];
 
@@ -1251,7 +1251,7 @@
             ->values();
 
         if ($sidebarMobileItems->isNotEmpty()) {
-            $priority = ['Home', 'Dashboard', 'Transactions', 'Orders', 'POS Orders', 'Finance', 'BAMA Billing', 'Billing', 'Clients', 'Tenants', 'Guests', 'Members', 'Products', 'Inventory', 'Rooms', 'Properties', 'Projects'];
+            $priority = ['Home', 'Dashboard', 'Transactions', 'Orders', 'POS Orders', 'Finance', 'Bama Billing', 'Billing', 'Clients', 'Tenants', 'Guests', 'Members', 'Products', 'Inventory', 'Rooms', 'Properties', 'Projects'];
             $mobileContextLabel = \Illuminate\Support\Str::headline($activeIndustrySlug ?: 'Workspace');
             $mobileContextItems = $sidebarMobileItems
                 ->sortBy(fn ($item) => ($index = array_search($item['label'], $priority, true)) === false ? 99 : $index)

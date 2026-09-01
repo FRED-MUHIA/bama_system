@@ -7,7 +7,7 @@
     $registrationLogoUrl = $configuredLogoPath && $configuredLogoPath !== $legacyLogoPath
         ? \App\Support\PublicUpload::url($configuredLogoPath)
         : null;
-    $registrationBrandName = str_replace(' Admin', '', config('app.name', 'BAMA'));
+    $registrationBrandName = str_replace(' Admin', '', config('app.name', 'Bama'));
     $registrationLogoAlt = data_get($brand, 'logo_alt', $registrationBrandName);
 @endphp
 

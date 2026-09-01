@@ -40,13 +40,13 @@ class WorkspaceVerifyEmailNotification extends VerifyEmail
             ->subject('Verify '.$notifiable->email.' for '.$profile)
             ->theme('bama')
             ->greeting('Hello '.$notifiable->name.',')
-            ->line('You are receiving this because a BAMA workspace was created or updated for this account.')
+            ->line('You are receiving this because a Bama workspace was created or updated for this account.')
             ->line('Workspace/profile: '.$profile)
             ->line('Account email: '.$notifiable->email)
             ->line('Click the button below to verify this email before opening the dashboard.')
             ->action('Verify email for '.$profile, $url)
             ->line('If you did not request this workspace, do not click the link. You can safely ignore this email.')
-            ->salutation('BAMA secure workspace access');
+            ->salutation('Bama secure workspace access');
     }
 
     private function profileNameFor($user): string
@@ -85,6 +85,6 @@ class WorkspaceVerifyEmailNotification extends VerifyEmail
             }
         }
 
-        return config('app.name', 'BAMA');
+        return config('app.name', 'Bama');
     }
 }

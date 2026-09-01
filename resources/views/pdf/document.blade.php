@@ -19,7 +19,7 @@
     $primaryColor = $documentColors['primary'];
     $secondaryColor = $documentColors['secondary'];
     $accentColor = $documentColors['accent'];
-    $companyName = $issuerProfile['name'] ?? $settings?->company_name ?? 'BAMA';
+    $companyName = $issuerProfile['name'] ?? $settings?->company_name ?? 'Bama';
     $companySubtitle = $issuerProfile['subtitle'] ?? 'Business Services';
     $currency = $settings?->currency_code ?: 'KES';
     $money = fn ($value) => $currency.' '.number_format((float) $value, 2);

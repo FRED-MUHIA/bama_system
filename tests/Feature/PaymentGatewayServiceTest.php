@@ -53,7 +53,7 @@ class PaymentGatewayServiceTest extends TestCase
             return str_contains($request->url(), '/mpesa/stkpush/')
                 && $data['PhoneNumber'] === '254712345678'
                 && $data['AccountReference'] === 'BAMA-2026082'
-                && $data['TransactionDesc'] === 'BAMA Invoice'
+                && $data['TransactionDesc'] === 'Bama Invoice'
                 && strlen($data['TransactionDesc']) <= 13;
         });
     }

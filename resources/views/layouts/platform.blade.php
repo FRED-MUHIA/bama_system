@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'BAMA Owner Console')</title>
+    <title>@yield('title', 'Bama Owner Console')</title>
     @php
         $platformHomeSections = \App\Support\SchemaCache::hasTable('marketing_pages')
             ? optional(\App\Models\MarketingPage::resolve('home'))->sections
@@ -66,7 +66,7 @@
             <div class="owner-brand">
                 <img class="owner-logo" src="{{ $bamaBrandLogoUrl }}" alt="Bama Solutions">
                 <div>
-                    <strong>BAMA</strong>
+                    <strong>Bama</strong>
                     <small class="text-white-50">Owner Console</small>
                 </div>
             </div>

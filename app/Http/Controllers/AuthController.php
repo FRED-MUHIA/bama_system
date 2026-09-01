@@ -151,7 +151,7 @@ class AuthController extends Controller
         try {
             app(OutgoingMailService::class)->sendRaw(
                 $user->email,
-                'BAMA login OTP for '.$this->profileLabelFor($user, $context),
+                'Bama login OTP for '.$this->profileLabelFor($user, $context),
                 $this->otpEmailBody($user, $otp->code, $context),
                 businessId: $this->businessIdFor($user, $context),
             );
@@ -218,7 +218,7 @@ class AuthController extends Controller
         try {
             app(OutgoingMailService::class)->sendRaw(
                 $user->email,
-                'BAMA magic login link for '.$this->profileLabelFor($user, $context),
+                'Bama magic login link for '.$this->profileLabelFor($user, $context),
                 $this->magicLinkEmailBody($user, route('login.magic.consume', ['token' => $token->token, 'context' => $context]), $context),
                 businessId: $this->businessIdFor($user, $context),
             );
@@ -386,7 +386,7 @@ class AuthController extends Controller
         return implode("\n", [
             'Hello '.$user->name.',',
             '',
-            'Use this one-time password to sign in to BAMA.',
+            'Use this one-time password to sign in to Bama.',
             'Workspace/profile: '.$this->profileLabelFor($user, $context),
             'Account email: '.$user->email,
             'Login area: '.$this->contextLabel($context),
@@ -396,7 +396,7 @@ class AuthController extends Controller
             '',
             'If you did not request this login, do not share this code with anyone.',
             '',
-            'BAMA secure workspace access',
+            'Bama secure workspace access',
         ]);
     }
 
@@ -405,7 +405,7 @@ class AuthController extends Controller
         return implode("\n", [
             'Hello '.$user->name.',',
             '',
-            'Use this secure link to sign in to BAMA.',
+            'Use this secure link to sign in to Bama.',
             'Workspace/profile: '.$this->profileLabelFor($user, $context),
             'Account email: '.$user->email,
             'Login area: '.$this->contextLabel($context),
@@ -416,18 +416,18 @@ class AuthController extends Controller
             'This link expires in 15 minutes and can be used once.',
             'If you did not request this login, do not click the link.',
             '',
-            'BAMA secure workspace access',
+            'Bama secure workspace access',
         ]);
     }
 
     private function profileLabelFor(User $user, string $context): string
     {
         if ($context === 'owner') {
-            return 'BAMA owner console';
+            return 'Bama owner console';
         }
 
         if ($context === 'portal') {
-            return 'BAMA client portal';
+            return 'Bama client portal';
         }
 
         if ($businessId = $this->businessIdFor($user, $context)) {
@@ -441,7 +441,7 @@ class AuthController extends Controller
             return $user->currentTenant->name;
         }
 
-        return config('app.name', 'BAMA');
+        return config('app.name', 'Bama');
     }
 
     private function businessIdFor(User $user, string $context): ?int

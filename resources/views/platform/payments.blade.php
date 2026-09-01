@@ -7,12 +7,12 @@
         'mpesa' => [
             'title' => 'M-PESA STK Push',
             'icon' => 'bi-phone',
-            'summary' => 'Prompt clients on their phone when they renew a BAMA package.',
+            'summary' => 'Prompt clients on their phone when they renew a Bama package.',
             'public' => 'Daraja consumer key',
             'secret' => 'Daraja consumer secret',
             'help' => 'Use Safaricom Daraja app credentials. Sandbox mode only confirms API connectivity and will not prompt a real phone. Live mode with live Daraja credentials is required for handset STK prompts. The callback URL must be reachable on HTTPS.',
             'fields' => [
-                'shortcode' => ['label' => 'PayBill / Till shortcode', 'hint' => 'The receiving BAMA shortcode.'],
+                'shortcode' => ['label' => 'PayBill / Till shortcode', 'hint' => 'The receiving Bama shortcode.'],
                 'passkey' => ['label' => 'STK passkey', 'hint' => 'Daraja Lipa Na M-PESA online passkey.'],
                 'callback_url' => ['label' => 'Callback URL', 'hint' => 'Paste this in Daraja if a callback URL is required.'],
                 'transaction_type' => [
@@ -74,7 +74,7 @@
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
             <div>
                 <h2 class="h5 mb-1">Package Payment Keys</h2>
-                <p class="text-muted mb-0">Add the live or sandbox keys clients will use to pay BAMA package invoices.</p>
+                <p class="text-muted mb-0">Add the live or sandbox keys clients will use to pay Bama package invoices.</p>
             </div>
             <button class="btn btn-owner" @disabled(! $billingTablesReady)><i class="bi bi-save"></i> Save Payment Keys</button>
         </div>

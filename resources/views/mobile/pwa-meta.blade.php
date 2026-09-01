@@ -1,8 +1,8 @@
-<meta name="application-name" content="BAMA">
+<meta name="application-name" content="Bama">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-title" content="BAMA">
+<meta name="mobile-web-app-title" content="Bama">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="BAMA">
+<meta name="apple-mobile-web-app-title" content="Bama">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
 <meta name="msapplication-TileColor" content="#00A651">

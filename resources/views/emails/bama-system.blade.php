@@ -1,5 +1,5 @@
 @php
-    $appName = $appName ?? config('mail.brand.name', 'BAMA');
+    $appName = $appName ?? config('mail.brand.name', 'Bama');
     $logoPath = $logoPath ?? config('mail.brand.logo_path', 'images/bama-logo.png');
     $logoUrl = $logoUrl ?? ($logoPath ? asset($logoPath) : null);
     $headline = $headline ?? $subject;
