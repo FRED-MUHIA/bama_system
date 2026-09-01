@@ -24,7 +24,11 @@ class AuthController extends Controller
 {
     public function loginForm()
     {
-        return view('auth.login', ['loginContext' => $this->loginContext()]);
+        return view('auth.login', [
+            'loginContext' => $this->loginContext(),
+            'loginSystem' => $this->loginSystemSnapshot(),
+            'otpAvailable' => $this->schemaHasTable('otp_codes'),
+        ]);
     }
 
     public function login(Request $request)
@@ -492,6 +496,56 @@ class AuthController extends Controller
             'portal' => 'portal.login',
             default => 'login',
         };
+    }
+
+    private function loginSystemSnapshot(): array
+    {
+        $fallbackIndustries = count(config('industry-packages.industries', []));
+
+        $snapshot = [
+            'workspaces' => 'Ready',
+            'modules' => $fallbackIndustries ?: 'Live',
+            'industries' => $fallbackIndustries ?: 'Many',
+            'security' => 'Encrypted',
+        ];
+
+        try {
+            if (Schema::hasTable('tenants')) {
+                $snapshot['workspaces'] = max(1, (int) DB::table('tenants')->count());
+            } elseif (Schema::hasTable('businesses')) {
+                $snapshot['workspaces'] = max(1, (int) DB::table('businesses')->count());
+            }
+
+            if (Schema::hasTable('modules')) {
+                $snapshot['modules'] = max(1, (int) DB::table('modules')->where('is_active', true)->count());
+                $industryCount = DB::table('modules')
+                    ->whereNotNull('industry')
+                    ->where('industry', '!=', '')
+                    ->distinct()
+                    ->pluck('industry')
+                    ->filter()
+                    ->count();
+
+                if ($industryCount > 0) {
+                    $snapshot['industries'] = $industryCount;
+                }
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return $snapshot;
+    }
+
+    private function schemaHasTable(string $table): bool
+    {
+        try {
+            return Schema::hasTable($table);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return false;
+        }
     }
 
     private function invalidContextMessage(string $context): string

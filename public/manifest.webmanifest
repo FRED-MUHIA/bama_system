@@ -3,7 +3,7 @@
     "short_name": "BAMA",
     "description": "Business Management Anywhere",
     "id": "/",
-    "start_url": "/",
+    "start_url": "/dashboard",
     "scope": "/",
     "display": "standalone",
     "background_color": "#00A651",
