@@ -129,7 +129,7 @@ class RegistrationController extends Controller
         return view('registration.welcome', [
             'tenant' => auth()->user()?->currentTenant,
             'checklist' => $industries->onboardingChecklist(),
-            'industryDashboard' => $industries->dashboardFeaturesForTenant(auth()->user()?->currentTenant),
+            'industryDashboard' => $industries->dashboardFeaturesForTenant(auth()->user()?->currentTenant, auth()->user()),
         ]);
     }
 

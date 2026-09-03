@@ -21,7 +21,7 @@ class HospitalityDashboardController extends Controller
 
         return view('hospitality.dashboard', [
             'tenant' => $tenant,
-            'industryDashboard' => app(IndustrySetupService::class)->dashboardFeaturesForTenant($tenant),
+            'industryDashboard' => app(IndustrySetupService::class)->dashboardFeaturesForTenant($tenant, auth()->user()),
             'metrics' => $dashboard->metrics(),
             'kpis' => $dashboard->executiveKpis(),
             'moduleBadges' => [

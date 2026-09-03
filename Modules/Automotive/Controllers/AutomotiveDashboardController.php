@@ -19,7 +19,7 @@ class AutomotiveDashboardController extends Controller
         $tenant = ActiveTenant::current();
 
         return view('automotive.dashboard', [
-            'industryDashboard' => $industries->dashboardFeatures('automotive', $tenant?->sub_industry ?: ($tenant?->settings['sub_industry'] ?? 'standard')),
+            'industryDashboard' => $industries->dashboardFeaturesForTenant($tenant, auth()->user()),
             'metrics' => $dashboard->metrics(),
             'charts' => $dashboard->charts(),
             'alerts' => $dashboard->alerts(),

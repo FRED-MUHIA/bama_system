@@ -20,7 +20,7 @@ class PrintingDashboardController extends Controller
 
         return view('printing-branding.dashboard', [
             'tenant' => $tenant,
-            'industryDashboard' => app(IndustrySetupService::class)->dashboardFeaturesForTenant($tenant),
+            'industryDashboard' => app(IndustrySetupService::class)->dashboardFeaturesForTenant($tenant, auth()->user()),
             'modules' => $industry->definition()['modules'] ?? [],
             'enabledModules' => $industry->enabledModules(),
             'metrics' => $dashboard->metrics(),

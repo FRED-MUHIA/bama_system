@@ -72,7 +72,7 @@ class DashboardController extends Controller
         return view('dashboard', [
             'cards' => $cards,
             'widgets' => app(DashboardWidgetRegistry::class)->forUser($request->user()?->id),
-            'industryDashboard' => app(IndustrySetupService::class)->dashboardFeaturesForTenant($request->user()?->currentTenant),
+            'industryDashboard' => app(IndustrySetupService::class)->dashboardFeaturesForTenant($request->user()?->currentTenant, $request->user()),
             'industryHero' => $this->industryHero(),
             'clients' => Client::latest()->limit(6)->get(),
             'recentInvoices' => Invoice::source()->with('client')->latest()->limit(5)->get(),

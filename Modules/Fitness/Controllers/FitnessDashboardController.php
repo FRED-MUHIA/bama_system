@@ -19,7 +19,7 @@ class FitnessDashboardController extends Controller
 
         return view('fitness.dashboard', [
             'tenant' => $tenant,
-            'industryDashboard' => app(IndustrySetupService::class)->dashboardFeaturesForTenant($tenant),
+            'industryDashboard' => app(IndustrySetupService::class)->dashboardFeaturesForTenant($tenant, auth()->user()),
             'metrics' => $dashboard->metrics(),
             'counts' => $dashboard->counts(),
             'plans' => MembershipPlan::latest()->limit(5)->get(),

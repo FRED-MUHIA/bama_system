@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\DashboardWidget;
 use App\Models\IndustryModule;
 use App\Models\Tenant;
+use App\Models\User;
 use App\Support\SchemaCache;
 use Illuminate\Support\Collection;
 
@@ -128,7 +129,7 @@ class IndustrySetupService
         ];
     }
 
-    public function dashboardFeaturesForTenant(?Tenant $tenant): array
+    public function dashboardFeaturesForTenant(?Tenant $tenant, ?User $user = null): array
     {
         if (! $tenant) {
             return [];
@@ -137,8 +138,9 @@ class IndustrySetupService
         $settings = $tenant->settings ?? [];
         $industry = $this->normalizeIndustrySlug($tenant->industry ?: ($settings['industry'] ?? 'professional-services'));
         $subIndustry = $tenant->sub_industry ?? $settings['sub_industry'] ?? null;
+        $dashboard = $this->dashboardFeatures($industry, $subIndustry);
 
-        return $this->dashboardFeatures($industry, $subIndustry);
+        return $user ? $this->applyUserDashboardPreferences($dashboard, $this->find($industry), $user, $industry) : $dashboard;
     }
 
     public function provision(Tenant $tenant): void
@@ -214,6 +216,56 @@ class IndustrySetupService
             ->values()
             ->map(fn ($module) => $module->toArray())
             ->all();
+    }
+
+    private function applyUserDashboardPreferences(array $dashboard, array $definition, User $user, string $industry): array
+    {
+        $preferences = app(UserIndustryPreferenceService::class);
+        $current = $preferences->preferences($user, $industry);
+        $hiddenKeys = collect($current['hidden_menu_keys'] ?? []);
+        $hiddenLabels = collect($current['hidden_menu_labels'] ?? []);
+
+        if ($hiddenLabels->isEmpty() && $hiddenKeys->isNotEmpty()) {
+            $hiddenLabels = collect($definition['menus'] ?? [])
+                ->filter(fn ($item) => $hiddenKeys->contains($preferences->menuKey($item)))
+                ->pluck('label');
+        }
+
+        $hiddenLabels = $hiddenLabels
+            ->map(fn ($label) => $this->dashboardPreferenceKey((string) $label))
+            ->filter()
+            ->values();
+
+        if ($hiddenLabels->isEmpty()) {
+            return $dashboard;
+        }
+
+        foreach (['modules', 'features', 'dashboard_features'] as $key) {
+            $dashboard[$key] = collect($dashboard[$key] ?? [])
+                ->reject(fn ($value) => $this->dashboardLabelIsHidden((string) $value, $hiddenLabels))
+                ->values()
+                ->all();
+        }
+
+        return $dashboard;
+    }
+
+    private function dashboardLabelIsHidden(string $label, Collection $hiddenLabels): bool
+    {
+        $key = $this->dashboardPreferenceKey($label);
+
+        return $hiddenLabels->contains(fn ($hidden) => $key === $hidden || str_contains($key, $hidden) || str_contains($hidden, $key));
+    }
+
+    private function dashboardPreferenceKey(string $label): string
+    {
+        return str($label)
+            ->lower()
+            ->replace(['&', '/', '-'], ' ')
+            ->replaceMatches('/\b(programs?|management|dashboard|operations?)\b/', '')
+            ->squish()
+            ->slug('-')
+            ->toString();
     }
 
     private function definitions(): array

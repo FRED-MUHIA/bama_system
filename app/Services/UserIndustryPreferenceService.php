@@ -109,7 +109,9 @@ class UserIndustryPreferenceService
         $all = data_get($layout, 'industry_preferences', []);
         $all[$industry] = [
             'hidden_menu_keys' => collect($preferences['hidden_menu_keys'] ?? [])->filter()->values()->all(),
+            'hidden_menu_labels' => collect($preferences['hidden_menu_labels'] ?? [])->filter()->values()->all(),
             'hidden_widget_slugs' => collect($preferences['hidden_widget_slugs'] ?? [])->filter()->values()->all(),
+            'hidden_widget_names' => collect($preferences['hidden_widget_names'] ?? [])->filter()->values()->all(),
             'component_density' => $preferences['component_density'] ?? 'comfortable',
         ];
 

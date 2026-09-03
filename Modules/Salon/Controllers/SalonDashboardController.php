@@ -17,7 +17,7 @@ class SalonDashboardController extends Controller
 
         return view('salon.dashboard', [
             'tenant' => $tenant,
-            'industryDashboard' => app(IndustrySetupService::class)->dashboardFeaturesForTenant($tenant),
+            'industryDashboard' => app(IndustrySetupService::class)->dashboardFeaturesForTenant($tenant, auth()->user()),
             'metrics' => $dashboard->metrics(),
             'kpis' => $dashboard->kpis(),
             'reports' => $dashboard->reports(),

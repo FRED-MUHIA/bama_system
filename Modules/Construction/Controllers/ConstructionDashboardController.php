@@ -18,7 +18,7 @@ class ConstructionDashboardController extends Controller
         $tenant = ActiveTenant::current();
 
         return view('construction.dashboard', [
-            'industryDashboard' => app(IndustrySetupService::class)->dashboardFeaturesForTenant($tenant),
+            'industryDashboard' => app(IndustrySetupService::class)->dashboardFeaturesForTenant($tenant, auth()->user()),
             'enabledModules' => $industry->enabledModules(),
             'metrics' => $dashboard->metrics(),
             'charts' => $dashboard->charts(),

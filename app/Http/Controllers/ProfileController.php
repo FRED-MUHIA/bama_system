@@ -123,18 +123,23 @@ class ProfileController extends Controller
             return;
         }
 
-        $menuKeys = $navigation->currentIndustryMenuOptions()->pluck('preference_key')->values();
-        $widgetSlugs = $widgets->available(ActiveTenant::current(), false)
+        $menuOptions = $navigation->currentIndustryMenuOptions();
+        $widgetOptions = $widgets->available(ActiveTenant::current(), false)
             ->filter(fn ($widget) => ! $widget->permission || $request->user()->hasPermission($widget->permission))
             ->filter(fn ($widget) => ! $widget->industry || $preferences->normalizeIndustry($widget->industry) === $industry)
-            ->pluck('slug')
             ->values();
+        $menuKeys = $menuOptions->pluck('preference_key')->values();
+        $widgetSlugs = $widgetOptions->pluck('slug')->values();
         $enabledMenus = collect($request->input('industry_workspace.enabled_menu_keys', []))->intersect($menuKeys);
         $enabledWidgets = collect($request->input('industry_workspace.enabled_widget_slugs', []))->intersect($widgetSlugs);
+        $hiddenMenuKeys = $menuKeys->diff($enabledMenus)->values();
+        $hiddenWidgetSlugs = $widgetSlugs->diff($enabledWidgets)->values();
 
         $preferences->save($request->user(), $industry, [
-            'hidden_menu_keys' => $menuKeys->diff($enabledMenus)->values()->all(),
-            'hidden_widget_slugs' => $widgetSlugs->diff($enabledWidgets)->values()->all(),
+            'hidden_menu_keys' => $hiddenMenuKeys->all(),
+            'hidden_menu_labels' => $menuOptions->whereIn('preference_key', $hiddenMenuKeys)->pluck('label')->values()->all(),
+            'hidden_widget_slugs' => $hiddenWidgetSlugs->all(),
+            'hidden_widget_names' => $widgetOptions->whereIn('slug', $hiddenWidgetSlugs)->pluck('name')->values()->all(),
             'component_density' => $request->input('industry_workspace.component_density', 'comfortable'),
         ]);
     }
