@@ -12,8 +12,14 @@
     .pos-kpi span{display:block;color:#667085;font-size:.72rem;font-weight:800;text-transform:uppercase}
     .pos-kpi strong{display:block;font-size:1.2rem;color:#0f766e}
     .pos-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-    .pos-line{display:grid;grid-template-columns:minmax(220px,2fr) 82px 110px 100px 90px;gap:8px;align-items:center}
-    .pos-pay{display:grid;grid-template-columns:minmax(150px,1fr) minmax(150px,1fr) 120px minmax(120px,1fr) minmax(120px,1fr);gap:8px;align-items:center}
+    .pos-sell-grid{display:grid;grid-template-columns:minmax(180px,1.2fr) minmax(150px,.8fr) minmax(150px,.8fr) minmax(150px,.8fr);gap:10px}
+    .pos-line-item{border:1px solid #edf0f5;border-radius:8px;padding:10px;background:#fbfcfd}
+    .pos-line{display:grid;grid-template-columns:minmax(220px,2fr) 88px 120px 120px 42px;gap:8px;align-items:center}
+    .pos-line-total{min-height:38px;display:flex;align-items:center;justify-content:flex-end;border:1px solid #e1e5ee;border-radius:6px;padding:0 .75rem;background:#fff;color:#0f766e;font-weight:800}
+    .pos-line-more{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+    .pos-icon-btn{width:42px;height:38px;display:grid;place-items:center;padding:0}
+    .pos-pay{display:grid;grid-template-columns:minmax(150px,1fr) minmax(120px,1fr) minmax(120px,1fr) 42px;gap:8px;align-items:center}
+    .pos-pay-more{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
     .pos-actions{display:flex;flex-wrap:wrap;gap:8px}
     .pos-list-row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #edf0f5;padding:9px 0}
     .pos-search-box{position:relative}
@@ -23,14 +29,14 @@
     .pos-suggestion strong{display:block;color:#111827}
     .pos-suggestion span{display:block;color:#667085;font-size:.78rem}
     .pos-suggestion .price{font-weight:800;color:#0f766e;white-space:nowrap}
-    @media(max-width:1100px){.pos-shell{grid-template-columns:1fr}.pos-kpis,.pos-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pos-line,.pos-pay{grid-template-columns:1fr 1fr}}
-    @media(max-width:640px){.pos-kpis,.pos-grid,.pos-line,.pos-pay{grid-template-columns:1fr}}
+    @media(max-width:1100px){.pos-shell{grid-template-columns:1fr}.pos-kpis,.pos-grid,.pos-sell-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pos-line,.pos-pay,.pos-line-more,.pos-pay-more{grid-template-columns:1fr 1fr}}
+    @media(max-width:640px){.pos-kpis,.pos-grid,.pos-sell-grid,.pos-line,.pos-pay,.pos-line-more,.pos-pay-more{grid-template-columns:1fr}.pos-line-total{justify-content:flex-start}.pos-icon-btn{width:100%}}
 </style>
 
 <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
     <div>
         <h1 class="h3 mb-1">Point of Sale</h1>
-        <div class="text-muted">Retail POS extends shared orders, payments, inventory, CRM, promotions, loyalty, and audit services.</div>
+        <div class="text-muted">Scan items, take payment, and finish the sale quickly.</div>
     </div>
     <div class="pos-actions">
         <a class="btn btn-outline-dark" href="{{ route('retail.products.index') }}"><i class="bi bi-plus-square me-1"></i>Add Product</a>
@@ -90,7 +96,7 @@
         <form method="POST" action="{{ route('retail.pos.sales.store') }}" class="d-grid gap-3">
             @csrf
             <div class="pos-band">
-                <div class="pos-grid">
+                <div class="pos-sell-grid">
                     <select class="form-select" name="client_id">
                         <option value="">Walk-in Customer</option>
                         @foreach($clients as $client)
@@ -99,102 +105,125 @@
                     </select>
                     <input class="form-control" name="customer_name" placeholder="Customer name">
                     <input class="form-control" name="customer_phone" placeholder="Customer phone">
-                    <select class="form-select" name="customer_type">
-                        <option>Retail Customer</option>
-                        <option>VIP Customer</option>
-                        <option>Wholesale Customer</option>
-                        <option>Corporate Customer</option>
-                    </select>
-                    <select class="form-select" name="sale_type" id="retail-pos-sale-type">
-                        @foreach($saleTypes as $saleType)
-                            <option>{{ $saleType }}</option>
-                        @endforeach
-                    </select>
-                    <select class="form-select" name="channel">
-                        @foreach($channels as $channel)
-                            <option>{{ $channel }}</option>
-                        @endforeach
-                    </select>
                     <select class="form-select" name="branch_id">
                         <option value="">Store / Branch</option>
                         @foreach($branches as $branch)
                             <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                         @endforeach
                     </select>
-                    <select class="form-select" name="retail_cash_drawer_id">
-                        <option value="">Cash Drawer</option>
-                        @foreach($drawers as $drawer)
-                            <option value="{{ $drawer->id }}">{{ $drawer->drawer_number }} · {{ $drawer->cashier?->name }}</option>
-                        @endforeach
-                    </select>
-                    <input class="form-control" name="coupon_code" placeholder="Coupon code">
-                    <select class="form-select" name="retail_promotion_id">
-                        <option value="">Promotion</option>
-                        @foreach($promotions as $promotion)
-                            <option value="{{ $promotion->id }}">{{ $promotion->name }}</option>
-                        @endforeach
-                    </select>
-                    <input class="form-control" name="layaway_due_at" type="date" title="Layaway due date">
-                    <input class="form-control" name="notes" placeholder="Sale notes">
                 </div>
+                <div class="collapse mt-3" id="saleOptions">
+                    <div class="pos-grid">
+                        <select class="form-select" name="customer_type">
+                            <option>Retail Customer</option>
+                            <option>VIP Customer</option>
+                            <option>Wholesale Customer</option>
+                            <option>Corporate Customer</option>
+                        </select>
+                        <select class="form-select" name="sale_type" id="retail-pos-sale-type">
+                            @foreach($saleTypes as $saleType)
+                                <option>{{ $saleType }}</option>
+                            @endforeach
+                        </select>
+                        <select class="form-select" name="channel">
+                            @foreach($channels as $channel)
+                                <option>{{ $channel }}</option>
+                            @endforeach
+                        </select>
+                        <select class="form-select" name="retail_cash_drawer_id">
+                            <option value="">Cash Drawer</option>
+                            @foreach($drawers as $drawer)
+                                <option value="{{ $drawer->id }}">{{ $drawer->drawer_number }} · {{ $drawer->cashier?->name }}</option>
+                            @endforeach
+                        </select>
+                        <input class="form-control" name="coupon_code" placeholder="Coupon code">
+                        <select class="form-select" name="retail_promotion_id">
+                            <option value="">Promotion</option>
+                            @foreach($promotions as $promotion)
+                                <option value="{{ $promotion->id }}">{{ $promotion->name }}</option>
+                            @endforeach
+                        </select>
+                        <input class="form-control" name="layaway_due_at" type="date" title="Layaway due date">
+                        <input class="form-control" name="notes" placeholder="Sale notes">
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-outline-dark mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#saleOptions" aria-expanded="false" aria-controls="saleOptions">
+                    <i class="bi bi-sliders me-1"></i>Sale options
+                </button>
             </div>
 
             <div class="pos-band">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h2 class="h5 mb-0">Cart</h2>
-                    <span class="status-pill">Discounts, tax, promotions, coupons, exchanges, refunds, layaway</span>
+                    <span class="status-pill">Fast sale</span>
                 </div>
                 @for($i = 0; $i < 4; $i++)
                     @php
                         $selectedProduct = $i === 0 ? $scanProduct : null;
                         $selectedTaxRate = is_numeric($selectedProduct?->retailProfile?->tax_class) ? $selectedProduct?->retailProfile?->tax_class : '';
                     @endphp
-                    <div class="pos-line mb-2">
-                        <select class="form-select" name="items[{{ $i }}][product_id]" data-cart-product="{{ $i }}">
-                            <option value="">Product / Quick Sale</option>
-                            @foreach($products as $product)
-                                <option value="{{ $product->id }}" @selected($selectedProduct?->id === $product->id)>{{ $product->name }} · {{ $product->sku }}</option>
-                            @endforeach
-                        </select>
-                        <input class="form-control" name="items[{{ $i }}][quantity]" data-cart-quantity="{{ $i }}" type="number" step="0.001" min="0.001" value="{{ $i === 0 ? 1 : '' }}" placeholder="Qty">
-                        <input class="form-control" name="items[{{ $i }}][unit_price]" data-cart-price="{{ $i }}" type="number" step="0.01" min="0" value="{{ $selectedProduct ? (float) $selectedProduct->price : '' }}" placeholder="Price">
-                        <input class="form-control" name="items[{{ $i }}][discount]" type="number" step="0.01" min="0" placeholder="Discount">
-                        <input class="form-control" name="items[{{ $i }}][tax_rate]" data-cart-tax="{{ $i }}" type="number" step="0.01" min="0" max="100" value="{{ $selectedTaxRate }}" placeholder="Tax %">
-                        <input class="form-control" name="items[{{ $i }}][description]" data-cart-description="{{ $i }}" placeholder="Description / SKU note" value="{{ $selectedProduct?->name }}">
+                    <div class="pos-line-item mb-2">
+                        <div class="pos-line">
+                            <select class="form-select" name="items[{{ $i }}][product_id]" data-cart-product="{{ $i }}">
+                                <option value="">Product / Quick Sale</option>
+                                @foreach($products as $product)
+                                    <option value="{{ $product->id }}" @selected($selectedProduct?->id === $product->id)>{{ $product->name }} · {{ $product->sku }}</option>
+                                @endforeach
+                            </select>
+                            <input class="form-control" name="items[{{ $i }}][quantity]" data-cart-quantity="{{ $i }}" type="number" step="0.001" min="0.001" value="{{ $i === 0 ? 1 : '' }}" placeholder="Qty">
+                            <input class="form-control" name="items[{{ $i }}][unit_price]" data-cart-price="{{ $i }}" type="number" step="0.01" min="0" value="{{ $selectedProduct ? (float) $selectedProduct->price : '' }}" placeholder="Price">
+                            <div class="pos-line-total" data-cart-line-total="{{ $i }}">0.00</div>
+                            <button class="btn btn-outline-dark pos-icon-btn" type="button" data-bs-toggle="collapse" data-bs-target="#cartLineMore{{ $i }}" aria-expanded="false" aria-controls="cartLineMore{{ $i }}" title="Line options" aria-label="Line options">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                        </div>
+                        <div class="collapse" id="cartLineMore{{ $i }}">
+                            <div class="pos-line-more">
+                                <input class="form-control" name="items[{{ $i }}][description]" data-cart-description="{{ $i }}" placeholder="Item note or quick sale name" value="{{ $selectedProduct?->name }}">
+                                <input class="form-control" name="items[{{ $i }}][discount]" data-cart-discount="{{ $i }}" type="number" step="0.01" min="0" placeholder="Discount">
+                                <input class="form-control" name="items[{{ $i }}][tax_rate]" data-cart-tax="{{ $i }}" type="number" step="0.01" min="0" max="100" value="{{ $selectedTaxRate }}" placeholder="Tax %">
+                            </div>
+                        </div>
                     </div>
                 @endfor
             </div>
 
             <div class="pos-band">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h2 class="h5 mb-0">Split Payments</h2>
-                    <span class="status-pill">Cash · Card · Mobile Money · Bank Transfer · Wallet · Gift Card · Store Credit</span>
+                    <h2 class="h5 mb-0">Payment</h2>
+                    <span class="status-pill">Cashier checkout</span>
                 </div>
                 @for($i = 0; $i < 3; $i++)
-                    <div class="pos-pay mb-2">
+                    <div class="pos-pay mb-2 {{ $i > 0 ? 'collapse' : '' }}" @if($i > 0) id="extraPayment{{ $i }}" @endif>
                         <select class="form-select" name="payments[{{ $i }}][method_type]">
                             @foreach($paymentTypes as $type)
                                 <option @selected($i === 0 && $type === 'Cash')>{{ $type }}</option>
                             @endforeach
                         </select>
-                        <select class="form-select" name="payments[{{ $i }}][payment_method_id]">
-                            <option value="">Shared payment method</option>
-                            @foreach($paymentMethods as $method)
-                                <option value="{{ $method->id }}">{{ $method->name }}</option>
-                            @endforeach
-                        </select>
                         <input class="form-control" name="payments[{{ $i }}][amount]" type="number" step="0.01" min="0" placeholder="Amount">
                         <input class="form-control" name="payments[{{ $i }}][reference]" placeholder="Reference">
-                        <select class="form-select" name="payments[{{ $i }}][retail_gift_card_id]">
-                            <option value="">Gift card</option>
-                            @foreach($giftCards as $card)
-                                <option value="{{ $card->id }}">{{ $card->card_number }} · {{ number_format((float) $card->balance, 2) }}</option>
-                            @endforeach
-                        </select>
+                        <button class="btn btn-outline-dark pos-icon-btn" type="button" data-bs-toggle="collapse" data-bs-target="#paymentMore{{ $i }}" aria-expanded="false" aria-controls="paymentMore{{ $i }}" title="Payment options" aria-label="Payment options">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <div class="collapse pos-pay-more" id="paymentMore{{ $i }}">
+                            <select class="form-select" name="payments[{{ $i }}][payment_method_id]">
+                                <option value="">Shared payment method</option>
+                                @foreach($paymentMethods as $method)
+                                    <option value="{{ $method->id }}">{{ $method->name }}</option>
+                                @endforeach
+                            </select>
+                            <select class="form-select" name="payments[{{ $i }}][retail_gift_card_id]">
+                                <option value="">Gift card</option>
+                                @foreach($giftCards as $card)
+                                    <option value="{{ $card->id }}">{{ $card->card_number }} · {{ number_format((float) $card->balance, 2) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 @endfor
                 <div class="pos-actions mt-3">
                     <button class="btn btn-success"><i class="bi bi-cart-check me-1"></i>Complete Sale</button>
+                    <button class="btn btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#extraPayment1,#extraPayment2" aria-expanded="false" aria-controls="extraPayment1 extraPayment2"><i class="bi bi-credit-card-2-back me-1"></i>Split payment</button>
                     <button class="btn btn-outline-dark" name="sale_type" value="Layaway"><i class="bi bi-clock-history me-1"></i>Save Layaway</button>
                     <a class="btn btn-outline-dark" href="{{ route('retail.returns.index') }}"><i class="bi bi-arrow-left-right me-1"></i>Return / Exchange</a>
                 </div>
@@ -296,6 +325,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const products = @json($posSearchProducts);
+    const productsById = new Map(products.map((product) => [String(product.id), product]));
     const search = document.getElementById('posProductSearch');
     const suggestions = document.getElementById('posProductSuggestions');
     const identifier = document.getElementById('posIdentifier');
@@ -309,13 +339,26 @@ document.addEventListener('DOMContentLoaded', () => {
         return product.barcode || product.sku || String(product.id);
     }
 
-    function selectProduct(product) {
-        search.value = `${product.name} (${product.sku || productCode(product)})`;
-        identifier.value = productCode(product);
-        identifierType.value = product.barcode ? 'barcode' : 'sku';
-        suggestions.style.display = 'none';
+    function updateLineTotal(row) {
+        const quantity = document.querySelector(`[data-cart-quantity="${row}"]`);
+        const price = document.querySelector(`[data-cart-price="${row}"]`);
+        const discount = document.querySelector(`[data-cart-discount="${row}"]`);
+        const tax = document.querySelector(`[data-cart-tax="${row}"]`);
+        const total = document.querySelector(`[data-cart-line-total="${row}"]`);
 
-        const row = 0;
+        if (!total) return;
+
+        const quantityValue = Number.parseFloat(quantity?.value || '0');
+        const priceValue = Number.parseFloat(price?.value || '0');
+        const discountValue = Number.parseFloat(discount?.value || '0');
+        const taxValue = Number.parseFloat(tax?.value || '0');
+        const subtotal = Math.max(quantityValue * priceValue - discountValue, 0);
+        const lineTotal = subtotal + (subtotal * taxValue / 100);
+
+        total.textContent = money.format(lineTotal || 0);
+    }
+
+    function applyProductToRow(product, row = 0) {
         const productSelect = document.querySelector(`[data-cart-product="${row}"]`);
         const quantity = document.querySelector(`[data-cart-quantity="${row}"]`);
         const price = document.querySelector(`[data-cart-price="${row}"]`);
@@ -327,6 +370,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (price) price.value = product.price;
         if (tax) tax.value = product.tax_rate;
         if (description) description.value = product.name;
+        updateLineTotal(row);
+    }
+
+    function selectProduct(product) {
+        search.value = `${product.name} (${product.sku || productCode(product)})`;
+        identifier.value = productCode(product);
+        identifierType.value = product.barcode ? 'barcode' : 'sku';
+        suggestions.style.display = 'none';
+        applyProductToRow(product);
     }
 
     function renderSuggestions(matches) {
@@ -392,6 +444,19 @@ document.addEventListener('DOMContentLoaded', () => {
             suggestions.style.display = 'none';
         }
     });
+
+    document.querySelectorAll('[data-cart-product]').forEach((select) => {
+        select.addEventListener('change', () => {
+            const product = productsById.get(select.value);
+            if (product) applyProductToRow(product, select.dataset.cartProduct);
+        });
+    });
+
+    document.querySelectorAll('[data-cart-quantity], [data-cart-price], [data-cart-discount], [data-cart-tax]').forEach((input) => {
+        input.addEventListener('input', () => updateLineTotal(input.dataset.cartQuantity || input.dataset.cartPrice || input.dataset.cartDiscount || input.dataset.cartTax));
+    });
+
+    document.querySelectorAll('[data-cart-line-total]').forEach((total) => updateLineTotal(total.dataset.cartLineTotal));
 });
 </script>
 @endsection

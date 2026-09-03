@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Support\ActiveTenant;
+use App\Support\ActiveBusiness;
 use App\Support\BamaBilling;
 use App\Support\SchemaCache;
 use Illuminate\Support\Collection;
@@ -82,7 +83,7 @@ class NavigationManager
 
         $modules = app(ModuleRegistry::class);
 
-        return $items
+        return $this->applyUserIndustryPreferences($items)
             ->when(
                 ! $items->contains(fn ($item) => ($item['label'] ?? null) === 'Messaging')
                     && $this->itemAvailable(['module' => 'shared-communication', 'shared' => true, 'label' => 'Messaging', 'route' => 'communication.center', 'icon' => 'bi-chat-dots', 'tables' => ['communication_channels'], 'permission' => 'communication.view']),
@@ -123,6 +124,39 @@ class NavigationManager
                 fn (Collection $items) => $items->push(['module' => 'administration', 'label' => 'Administration', 'route' => 'administration.index', 'icon' => 'bi-shield-lock', 'permission' => 'administration.view'])
             )
             ->pipe(fn (Collection $items) => $this->nestFinanceItems($items))
+            ->values();
+    }
+
+    public function currentIndustryMenuOptions(): Collection
+    {
+        $industry = $this->currentIndustrySlug();
+
+        if (! $industry) {
+            return collect();
+        }
+
+        return $this->packageMenus($industry)
+            ->map(fn ($item) => [
+                'module' => $industry,
+                'label' => $item['label'] ?? null,
+                'route' => $item['route'] ?? null,
+                'icon' => $item['icon'] ?? 'bi-grid',
+                'permission' => $item['permission'] ?? null,
+                'permissions' => $item['permissions'] ?? null,
+                'tables' => $item['tables'] ?? [],
+                'active_routes' => $item['active_routes'] ?? [],
+                'params' => $item['params'] ?? [],
+                'section' => $item['section'] ?? null,
+            ])
+            ->filter(fn ($item) => $item['label'] && $item['route'])
+            ->reject(fn ($item) => in_array($item['label'], ['Dashboard', 'Settings', 'Administration', 'Bama Billing'], true))
+            ->filter(fn ($item) => Route::has($item['route']) && $this->tablesReady($item['tables']))
+            ->filter(fn ($item) => $this->allowed($item))
+            ->map(function ($item) {
+                $item['preference_key'] = app(UserIndustryPreferenceService::class)->menuKey($item);
+
+                return $item;
+            })
             ->values();
     }
 
@@ -229,5 +263,15 @@ class NavigationManager
         $slug = Str::of($industry)->snake(' ')->slug('-')->toString();
 
         return $slug ?: null;
+    }
+
+    private function currentIndustrySlug(): ?string
+    {
+        return $this->industrySlug(ActiveTenant::current()?->industry ?: ActiveBusiness::current()?->industry);
+    }
+
+    private function applyUserIndustryPreferences(Collection $items): Collection
+    {
+        return app(UserIndustryPreferenceService::class)->filterMenus($items, auth()->user(), $this->currentIndustrySlug());
     }
 }

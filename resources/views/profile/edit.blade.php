@@ -3,6 +3,25 @@
 @section('title','My Profile')
 
 @section('content')
+<style>
+    .profile-pref-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .profile-pref-card{border:1px solid #e5e7eb;border-radius:8px;padding:12px;background:#fbfcfd}
+    .profile-pref-card .form-check{display:flex;align-items:flex-start;gap:8px;min-height:34px}
+    .profile-pref-card .form-check-input{margin-top:.2rem;flex:0 0 auto}
+    .profile-pref-icon{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:#EAF8F0;color:#007A3B;flex:0 0 30px}
+    .profile-pref-empty{border:1px dashed #cfd5df;border-radius:8px;padding:14px;color:#667085;background:#fff}
+    @media(max-width:640px){.profile-pref-grid{grid-template-columns:1fr}}
+</style>
+@php
+    $workspace = $industryWorkspace ?? [];
+    $workspaceMenus = collect($workspace['menus'] ?? []);
+    $workspaceWidgets = collect($workspace['widgets'] ?? []);
+    $hiddenMenuKeys = collect($workspace['hidden_menu_keys'] ?? []);
+    $hiddenWidgetSlugs = collect($workspace['hidden_widget_slugs'] ?? []);
+    $enabledMenuKeys = collect(old('industry_workspace.enabled_menu_keys', $workspaceMenus->pluck('preference_key')->diff($hiddenMenuKeys)->values()->all()));
+    $enabledWidgetSlugs = collect(old('industry_workspace.enabled_widget_slugs', $workspaceWidgets->pluck('slug')->diff($hiddenWidgetSlugs)->values()->all()));
+    $componentDensity = old('industry_workspace.component_density', $workspace['component_density'] ?? 'comfortable');
+@endphp
 <div class="row justify-content-center g-3">
     <div class="col-lg-8">
         <div class="card p-4">
@@ -53,6 +72,71 @@
                         @endforeach
                     </div>
                 </div>
+                @if(!empty($workspace))
+                    <div class="col-12">
+                        <hr>
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                            <div>
+                                <strong>My industry workspace</strong>
+                                <div class="text-muted small">{{ $workspace['name'] }} features and dashboard components for your profile only.</div>
+                            </div>
+                            <span class="status-pill">Personal</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Component density</label>
+                                <select class="form-select" name="industry_workspace[component_density]">
+                                    <option value="comfortable" @selected($componentDensity === 'comfortable')>Comfortable</option>
+                                    <option value="compact" @selected($componentDensity === 'compact')>Compact</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="small text-muted fw-semibold text-uppercase mb-2">Features in my sidebar</div>
+                        @if($workspaceMenus->isNotEmpty())
+                            <div class="profile-pref-grid">
+                                @foreach($workspaceMenus as $item)
+                                    <div class="profile-pref-card">
+                                        <label class="form-check mb-0">
+                                            <input class="form-check-input" type="checkbox" name="industry_workspace[enabled_menu_keys][]" value="{{ $item['preference_key'] }}" @checked($enabledMenuKeys->contains($item['preference_key']))>
+                                            <span class="profile-pref-icon"><i class="bi {{ $item['icon'] ?? 'bi-grid' }}"></i></span>
+                                            <span>
+                                                <span class="fw-semibold d-block">{{ $item['label'] }}</span>
+                                                <span class="text-muted small">{{ $item['route'] }}</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="profile-pref-empty">No customizable industry features are available for this profile.</div>
+                        @endif
+                    </div>
+
+                    <div class="col-12">
+                        <div class="small text-muted fw-semibold text-uppercase mb-2">Dashboard components</div>
+                        @if($workspaceWidgets->isNotEmpty())
+                            <div class="profile-pref-grid">
+                                @foreach($workspaceWidgets as $widget)
+                                    <div class="profile-pref-card">
+                                        <label class="form-check mb-0">
+                                            <input class="form-check-input" type="checkbox" name="industry_workspace[enabled_widget_slugs][]" value="{{ $widget->slug }}" @checked($enabledWidgetSlugs->contains($widget->slug))>
+                                            <span class="profile-pref-icon"><i class="bi bi-grid-1x2"></i></span>
+                                            <span>
+                                                <span class="fw-semibold d-block">{{ $widget->name }}</span>
+                                                <span class="text-muted small">{{ $widget->component ?: $widget->slug }}</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="profile-pref-empty">Dashboard components will appear here after widgets are registered for this industry.</div>
+                        @endif
+                    </div>
+                @endif
                 <div class="col-12">
                     <button class="btn btn-warning">Save profile</button>
                 </div>

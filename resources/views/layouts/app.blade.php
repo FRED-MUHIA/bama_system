@@ -812,11 +812,20 @@
         html[data-theme="dark"] .table{--bs-table-color:#dedad3;--bs-table-border-color:#383838;--bs-table-hover-color:#fff;--bs-table-hover-bg:rgba(0,166,81,.055);color:#dedad3}html[data-theme="dark"] .table thead th{color:#9e9a93;border-color:#444;background:transparent}html[data-theme="dark"] .table tbody td{border-color:#333}html[data-theme="dark"] .nav-tabs{border-color:#3b3b3b}html[data-theme="dark"] .nav-tabs .nav-link{color:#aaa69f}html[data-theme="dark"] .nav-tabs .nav-link.active{color:#79D9A3}html[data-theme="dark"] .nav-pills{background:#242424}html[data-theme="dark"] .nav-pills .nav-link{color:#aaa69f}html[data-theme="dark"] .nav-pills .nav-link.active{background:#00A651;color:#fff}
         html[data-theme="dark"] .btn-dark{background:var(--bama-button-dark);border-color:var(--bama-button-outline-border);color:var(--bama-button-dark-text)}html[data-theme="dark"] .btn-dark:hover,html[data-theme="dark"] .btn-dark:focus{background:var(--bama-button-dark-hover);border-color:#777;color:#fff}html[data-theme="dark"] .btn-outline-dark{color:#e8e4de;border-color:var(--bama-button-outline-border)}html[data-theme="dark"] .btn-outline-dark:hover,html[data-theme="dark"] .btn-outline-dark:focus{background:var(--bama-button-outline-hover-bg);border-color:var(--bama-button-outline-hover-bg);color:var(--bama-button-outline-hover-ink)}html[data-theme="dark"] .btn-outline-warning{color:#93f6bf;border-color:rgba(113,240,173,.62)}html[data-theme="dark"] .btn-outline-warning:hover,html[data-theme="dark"] .btn-outline-warning:focus{background:#00A651;border-color:#00A651;color:#fff}html[data-theme="dark"] .page-link{background:#202020;color:#ddd;border-color:#444}html[data-theme="dark"] .client-item,html[data-theme="dark"] .chart-card{background:#202020!important;border-color:#383838!important}html[data-theme="dark"] .stat-value,html[data-theme="dark"] .soft-link{color:#f2efe9}
         html[data-theme="dark"] .login-auth-panel{background:#121212}html[data-theme="dark"] .login-auth-intro,html[data-theme="dark"] .login-auth-label{color:#aaa69f}html[data-theme="dark"] .login-card .nav-pills{background:#242424}html[data-theme="dark"] .password-toggle{color:#aaa}html[data-theme="dark"] .password-toggle:hover{background:#303030;color:#fff}html[data-theme="dark"] .guest-theme-toggle{background:rgba(30,30,30,.9);color:#eee;border-color:#555}html[data-theme="dark"] .alert-success{background:#15251a;border-color:#31593a;color:#b9dfc0}html[data-theme="dark"] .alert-warning{background:#2a2118;border-color:#654525;color:#f2c79e}html[data-theme="dark"] .alert-danger{background:#2b1818;border-color:#663737;color:#efb5b5}
+        body.workspace-density-compact .card.p-4{padding:1rem!important}body.workspace-density-compact .panel-body{padding:1rem!important}body.workspace-density-compact .table td,body.workspace-density-compact .table th{padding:.48rem .6rem}body.workspace-density-compact .form-control,body.workspace-density-compact .form-select,body.workspace-density-compact .btn{padding-top:.42rem;padding-bottom:.42rem}body.workspace-density-compact .stat-card{min-height:88px;padding:12px}
     </style>
     <style>:root { {!! $tenantCssVariables ?? '--tenant-primary:#00A651; --tenant-secondary:#000000; --tenant-accent:#00A651;' !!} }</style>
     @vite('resources/css/app.css')
 </head>
-<body>
+@php
+    $workspaceDensity = 'comfortable';
+    if (auth()->check()) {
+        $industryPreferenceService = app(\App\Services\UserIndustryPreferenceService::class);
+        $workspaceIndustry = $industryPreferenceService->normalizeIndustry(($activeTenant ?? null)?->industry ?: ($activeBusiness ?? null)?->industry);
+        $workspaceDensity = $industryPreferenceService->preferences(auth()->user(), $workspaceIndustry)['component_density'] ?? 'comfortable';
+    }
+@endphp
+<body class="{{ $workspaceDensity === 'compact' ? 'workspace-density-compact' : '' }}">
 @include('mobile.pwa-shell')
 @php
     $currentUser = auth()->user();
