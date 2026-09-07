@@ -21,6 +21,12 @@
 @endphp
 
 <style>
+    html:has(.app-flow),
+    body:has(.app-flow) {
+        width:100%;
+        max-width:100%;
+        overflow:hidden;
+    }
     body:has(.app-flow) { padding-bottom:0 !important; background:#061512 !important; overscroll-behavior:none; }
     main > section:has(.app-flow) { max-width:none; padding:0 !important; overflow:hidden; }
     main > section:has(.app-flow) > .alert {
@@ -41,7 +47,10 @@
         --teal-dark:#0fa899;
         --night:#061512;
         position:relative;
-        width:100vw;
+        width:100%;
+        max-width:100%;
+        min-height:100vh;
+        min-height:100svh;
         height:100vh;
         height:100dvh;
         overflow:hidden;
@@ -52,18 +61,19 @@
     .app-flow * { letter-spacing:0; }
     .app-flow-track {
         display:flex;
-        width:300vw;
+        width:300%;
         height:100%;
-        transform:translateX(calc(var(--step) * -100vw));
+        transform:translateX(calc(var(--step) * -33.333333%));
         transition:transform .38s cubic-bezier(.2,.78,.18,1);
     }
     .app-screen {
         position:relative;
-        flex:0 0 100vw;
-        width:100vw;
+        flex:0 0 33.333333%;
+        width:33.333333%;
         min-height:100%;
-        padding:calc(28px + env(safe-area-inset-top)) clamp(22px,6vw,42px) calc(28px + env(safe-area-inset-bottom));
-        overflow:hidden auto;
+        padding:calc(24px + env(safe-area-inset-top)) clamp(18px,5vw,42px) calc(28px + env(safe-area-inset-bottom));
+        overflow-x:hidden;
+        overflow-y:auto;
         background:
             linear-gradient(180deg,rgba(4,22,18,.28),rgba(4,14,12,.97)),
             linear-gradient(90deg,rgba(3,20,16,.9),rgba(3,20,16,.38) 62%,rgba(3,20,16,.9)),
@@ -81,7 +91,9 @@
     }
     .app-screen > * { position:relative; z-index:1; }
     .app-screen-center {
-        min-height:calc(100dvh - 56px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        width:min(100%,520px);
+        min-height:calc(100dvh - 52px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        margin-inline:auto;
         display:flex;
         flex-direction:column;
     }
@@ -91,7 +103,7 @@
         margin-bottom:auto;
     }
     .app-logo img {
-        width:clamp(142px,38vw,210px);
+        width:clamp(118px,34vw,180px);
         height:auto;
         object-fit:contain;
         filter:drop-shadow(0 14px 28px rgba(0,0,0,.2));
@@ -114,33 +126,33 @@
         box-shadow:0 0 18px rgba(49,198,187,.5);
     }
     .app-title {
-        margin:28px 0 0;
+        margin:24px 0 0;
         max-width:690px;
         color:#fff;
-        font-size:clamp(4.1rem,17vw,8rem);
+        font-size:clamp(2.9rem,14vw,5.8rem);
         font-weight:850 !important;
-        line-height:.95;
+        line-height:1;
         text-shadow:0 18px 45px rgba(0,0,0,.32);
     }
     .app-copy {
         max-width:540px;
-        margin:28px 0 0;
+        margin:20px 0 0;
         color:rgba(255,255,255,.76);
-        font-size:clamp(1.02rem,4.6vw,1.45rem);
+        font-size:clamp(.98rem,3.7vw,1.18rem);
         line-height:1.42;
     }
     .app-primary,
     .app-secondary {
         width:100%;
-        min-height:64px;
+        min-height:54px;
         display:inline-flex;
         align-items:center;
         justify-content:center;
         gap:12px;
-        border-radius:999px;
+        border-radius:14px;
         border:0;
         text-decoration:none;
-        font-size:1.04rem;
+        font-size:1rem;
         font-weight:950;
     }
     .app-primary {
@@ -158,7 +170,7 @@
 
     .app-choice-card,
     .app-auth-card {
-        width:min(100%,560px);
+        width:min(100%,420px);
         margin-inline:auto;
         border:1px solid rgba(255,255,255,.09);
         background:rgba(2,15,13,.92);
@@ -167,16 +179,16 @@
     }
     .app-choice-card {
         margin-top:auto;
-        padding:28px 22px;
-        border-radius:32px 32px 8px 8px;
+        padding:22px;
+        border-radius:18px;
     }
     .app-choice-card h2,
     .app-auth-card h2 {
         margin:0 0 10px;
         color:#fff;
-        font-size:clamp(2.1rem,8vw,3.4rem);
+        font-size:clamp(1.65rem,6vw,2.25rem);
         font-weight:850 !important;
-        line-height:1.02;
+        line-height:1.08;
     }
     .app-choice-card p {
         margin:0 0 26px;
@@ -217,7 +229,7 @@
     }
 
     .app-auth-top {
-        width:min(100%,560px);
+        width:min(100%,420px);
         margin:0 auto 14px;
         display:flex;
         align-items:center;
@@ -235,28 +247,29 @@
         color:#fff;
     }
     .app-auth-card {
-        padding:22px;
-        border-radius:28px 28px 8px 8px;
+        padding:20px;
+        border-radius:18px;
     }
     .app-tabs {
         display:grid;
         grid-template-columns:repeat(3,minmax(0,1fr));
-        gap:5px;
-        margin:0 0 20px !important;
-        padding:5px;
+        gap:4px;
+        margin:0 0 18px !important;
+        padding:4px;
         border:1px solid rgba(255,255,255,.08);
-        border-radius:999px;
+        border-radius:14px;
         background:rgba(255,255,255,.05);
     }
     .app-tabs .nav-item { display:grid; }
     .app-tabs .nav-link {
-        min-height:42px;
-        border-radius:999px;
+        min-height:40px;
+        border-radius:10px;
         color:rgba(255,255,255,.72);
-        font-size:.72rem;
+        font-size:.74rem;
         font-weight:950;
-        padding:.42rem .32rem;
-        white-space:nowrap;
+        padding:.42rem .28rem;
+        white-space:normal;
+        line-height:1.08;
     }
     .app-tabs .nav-link.active {
         background:#00A651;
@@ -270,13 +283,13 @@
         text-transform:uppercase;
     }
     .app-auth-card .form-control {
-        min-height:62px;
+        min-height:52px;
         border:1px solid rgba(255,255,255,.16);
-        border-radius:24px;
+        border-radius:12px;
         background:rgba(255,255,255,.11);
         color:#fff;
-        font-size:1rem;
-        padding:1rem 1.18rem;
+        font-size:16px;
+        padding:.78rem .95rem;
         box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
     }
     .app-auth-card .form-control:focus {
@@ -304,12 +317,12 @@
         text-underline-offset:4px;
     }
     .app-auth-card .btn-warning {
-        min-height:62px;
+        min-height:54px;
         border:0;
-        border-radius:999px;
+        border-radius:14px;
         background:linear-gradient(135deg,#42d5ca,#0fa899);
         color:#fff;
-        font-size:1.02rem;
+        font-size:1rem;
         font-weight:950;
         box-shadow:0 18px 44px rgba(17,170,156,.28);
     }
@@ -318,9 +331,56 @@
         background:linear-gradient(135deg,#48ddd2,#0fa899);
         color:#fff;
     }
+    .app-auth-card .btn-warning.is-loading {
+        opacity:.82;
+        cursor:wait;
+    }
+    .app-submit-spinner {
+        width:1rem;
+        height:1rem;
+        display:inline-block;
+        border:2px solid rgba(255,255,255,.46);
+        border-top-color:#fff;
+        border-radius:50%;
+        animation:appSpin .72s linear infinite;
+    }
+    .app-loading-overlay {
+        position:fixed;
+        inset:0;
+        z-index:80;
+        display:grid;
+        place-items:center;
+        padding:24px;
+        background:rgba(2,15,13,.9);
+        backdrop-filter:blur(12px);
+    }
+    .app-loading-overlay[hidden] {
+        display:none;
+    }
+    .app-loading-panel {
+        display:grid;
+        place-items:center;
+        gap:14px;
+        color:#fff;
+        text-align:center;
+    }
+    .app-loading-ring {
+        width:74px;
+        height:74px;
+        border:5px solid rgba(255,255,255,.18);
+        border-top-color:#42d5ca;
+        border-right-color:#fff;
+        border-radius:50%;
+        animation:appSpin .72s linear infinite;
+        box-shadow:0 0 34px rgba(49,198,187,.24);
+    }
+    .app-loading-panel strong {
+        font-size:1rem;
+        font-weight:950;
+    }
     .app-register-link {
-        min-height:60px;
-        border-radius:999px;
+        min-height:52px;
+        border-radius:14px;
         border:0;
         background:#fff;
         color:#061512 !important;
@@ -332,9 +392,9 @@
     .password-toggle {
         position:absolute;
         top:50%;
-        right:12px;
-        width:42px;
-        height:42px;
+        right:8px;
+        width:38px;
+        height:38px;
         transform:translateY(-50%);
         border:0;
         border-radius:50%;
@@ -384,6 +444,9 @@
         width:22px;
         background:var(--teal);
     }
+    @keyframes appSpin {
+        to { transform:rotate(360deg); }
+    }
 
     @media (min-width:768px) {
         .app-screen {
@@ -395,13 +458,84 @@
             width:min(100%,680px);
             min-height:min(820px, calc(100dvh - 80px));
         }
+        .app-choice-card,
+        .app-auth-card,
+        .app-auth-top {
+            width:min(100%,520px);
+        }
+        .app-title {
+            font-size:clamp(4.5rem,9vw,8rem);
+            line-height:.95;
+        }
+        .app-primary,
+        .app-secondary,
+        .app-auth-card .btn-warning,
+        .app-register-link {
+            min-height:62px;
+            border-radius:999px;
+        }
+        .app-tabs {
+            border-radius:999px;
+        }
+        .app-tabs .nav-link {
+            border-radius:999px;
+            white-space:nowrap;
+        }
+        .app-auth-card .form-control {
+            min-height:62px;
+            border-radius:24px;
+            padding:1rem 1.18rem;
+        }
+    }
+    @media (max-width:767.98px) {
+        .app-screen:nth-child(3) {
+            padding-top:calc(14px + env(safe-area-inset-top));
+        }
+        .app-screen:nth-child(3) .app-screen-center {
+            justify-content:flex-start;
+            min-height:auto;
+            padding-bottom:44px;
+        }
+        .app-auth-top .app-logo img {
+            width:112px;
+        }
+        .app-icon-button {
+            width:42px;
+            height:42px;
+        }
+        .app-security {
+            font-size:.74rem;
+        }
+        .app-legal {
+            margin-top:14px;
+            font-size:.7rem;
+        }
     }
     @media (max-width:380px) {
-        .app-screen { padding-inline:16px; }
-        .app-title { font-size:3.65rem; }
-        .app-auth-card { padding-inline:14px; }
-        .app-tabs { border-radius:18px; }
-        .app-tabs .nav-link { white-space:normal; line-height:1.05; }
+        .app-screen { padding-inline:14px; }
+        .app-title { font-size:2.72rem; }
+        .app-auth-card,
+        .app-choice-card { padding-inline:14px; }
+        .app-tabs .nav-link { font-size:.68rem; }
+        .app-auth-card .form-label { font-size:.78rem; }
+    }
+    @media (max-height:680px) and (max-width:767.98px) {
+        .app-logo {
+            margin-bottom:24px;
+        }
+        .app-title {
+            margin-top:16px;
+            font-size:2.65rem;
+        }
+        .app-copy {
+            margin-top:14px;
+        }
+        .app-choice-card {
+            margin-top:24px;
+        }
+        .app-stat-grid {
+            display:none;
+        }
     }
     @media (prefers-reduced-motion:reduce) {
         .app-flow-track { transition:none; }
@@ -574,6 +708,13 @@
         <button class="app-dot" type="button" data-app-go="1" aria-label="Continue"></button>
         <button class="app-dot" type="button" data-app-go="2" aria-label="Login"></button>
     </div>
+
+    <div class="app-loading-overlay" data-app-loading hidden aria-live="polite" aria-label="Loading">
+        <div class="app-loading-panel">
+            <span class="app-loading-ring" aria-hidden="true"></span>
+            <strong>Signing in</strong>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -597,6 +738,17 @@
 
         document.querySelectorAll('[data-app-go]').forEach((button) => {
             button.addEventListener('click', () => setStep(button.dataset.appGo));
+        });
+
+        flow?.querySelectorAll('form').forEach((form) => {
+            form.addEventListener('submit', () => {
+                const button = form.querySelector('button[type="submit"], button:not([type]), .btn-warning');
+                if (! button || button.disabled) return;
+                button.disabled = true;
+                button.classList.add('is-loading');
+                button.innerHTML = '<span class="app-submit-spinner" aria-hidden="true"></span><span>Please wait</span>';
+                flow.querySelector('[data-app-loading]')?.removeAttribute('hidden');
+            });
         });
 
         flow?.addEventListener('touchstart', (event) => {

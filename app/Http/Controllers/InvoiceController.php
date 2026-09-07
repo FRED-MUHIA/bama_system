@@ -56,11 +56,7 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice)
     {
-        $methods = PaymentMethod::withoutGlobalScope('business')
-            ->where('business_id', $invoice->business_id)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        $methods = PaymentMethod::shownOnInvoicesFor($invoice->business_id);
 
         return view('invoices.show', [
             'invoice' => $invoice->load($this->invoiceRelationships()),
@@ -145,7 +141,7 @@ class InvoiceController extends Controller
             'invoice' => $invoice,
             'settings' => $settings,
             'signatory' => $this->defaultSignatoryForBusiness($invoice->business_id),
-            'paymentMethods' => PaymentMethod::withoutGlobalScope('business')->where('business_id', $invoice->business_id)->where('is_active', true)->get(),
+            'paymentMethods' => PaymentMethod::shownOnInvoicesFor($invoice->business_id),
             'verificationUrl' => $this->verification->url($invoice),
             'qrCode' => $this->verification->qrCodeDataUri($invoice, 170),
         ]);
@@ -636,7 +632,7 @@ class InvoiceController extends Controller
             'document' => $invoice,
             'settings' => $this->companySettingsForBusiness($invoice->business_id),
             'signatory' => $this->defaultSignatoryForBusiness($invoice->business_id),
-            'paymentMethods' => PaymentMethod::withoutGlobalScope('business')->where('business_id', $invoice->business_id)->where('is_active', true)->get(),
+            'paymentMethods' => PaymentMethod::shownOnInvoicesFor($invoice->business_id),
             'verificationUrl' => $this->verification->url($invoice),
             'qrCode' => $this->verification->qrCodeDataUri($invoice, 150),
         ]);

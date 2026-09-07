@@ -740,7 +740,7 @@ class PrintingOperationsController extends Controller
             'pricingRules' => PricingRule::latest()->get(),
             'machines' => Machine::latest()->limit(20)->get(),
             'companySettings' => $this->activeCompanySettings(),
-            'paymentMethods' => Schema::hasTable('payment_methods') ? PaymentMethod::where('is_active', true)->latest()->get() : collect(),
+            'paymentMethods' => Schema::hasTable('payment_methods') ? PaymentMethod::latest()->get() : collect(),
             'terms' => Schema::hasTable('terms_conditions') ? TermsCondition::latest()->get() : collect(),
             'signatories' => Schema::hasTable('signatories') ? Signatory::where('is_active', true)->orderBy('name')->get() : collect(),
         ]);

@@ -416,6 +416,78 @@ class PrintingBrandingIndustryTest extends TestCase
         $this->assertSame('300gsm Art Card', $job->specifications['Material']);
     }
 
+    public function test_saved_printing_payment_methods_appear_on_invoices(): void
+    {
+        $details = "Account name: GENEQO ENTERPRISES LTD\nBank: National bank of kenya\nAccount number: 7718879690\nPaybill number: 625625";
+
+        $this->post(route('printing-branding.settings.payment-methods.store'), [
+            'name' => 'Bank',
+            'type' => 'bank',
+            'details' => $details,
+            'is_active' => '1',
+        ])->assertRedirect();
+
+        $this->post(route('printing-branding.settings.payment-methods.store'), [
+            'name' => 'Hidden Till',
+            'type' => 'mpesa',
+            'details' => 'Do not print this method.',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('payment_methods', [
+            'business_id' => $this->business->id,
+            'name' => 'Bank',
+            'type' => 'bank',
+            'is_active' => true,
+        ]);
+        $this->assertDatabaseHas('payment_methods', [
+            'business_id' => $this->business->id,
+            'name' => 'Hidden Till',
+            'is_active' => false,
+        ]);
+
+        $this->get(route('printing-branding.settings'))
+            ->assertOk()
+            ->assertSee('Bank')
+            ->assertSee('Hidden Till');
+
+        $client = Client::create(['name' => 'Invoice Client', 'type' => 'company']);
+        $invoice = Invoice::create([
+            'client_id' => $client->id,
+            'invoice_number' => 'INV-PAYMENT-METHODS',
+            'public_token' => 'payment-method-token',
+            'invoice_date' => '2026-08-25',
+            'due_date' => '2026-08-30',
+            'payment_status' => 'unpaid',
+            'subtotal' => 1000,
+            'discount_total' => 0,
+            'tax_total' => 0,
+            'total' => 1000,
+            'amount_paid' => 0,
+            'balance' => 1000,
+        ]);
+        $invoice->items()->create([
+            'title' => 'Print Job',
+            'description' => 'Payment method regression invoice',
+            'quantity' => 1,
+            'unit_price' => 1000,
+            'discount' => 0,
+            'tax_rate' => 0,
+            'line_total' => 1000,
+        ]);
+
+        $this->get(route('invoices.show', $invoice))
+            ->assertOk()
+            ->assertSee('Payment methods')
+            ->assertSee('GENEQO ENTERPRISES LTD')
+            ->assertSee('Paybill number: 625625')
+            ->assertDontSee('Hidden Till');
+
+        $this->get(route('public.invoices.show', $invoice->public_token))
+            ->assertOk()
+            ->assertSee('GENEQO ENTERPRISES LTD')
+            ->assertDontSee('Hidden Till');
+    }
+
     public function test_sidebar_features_have_working_create_and_update_actions(): void
     {
         $client = Client::create(['name' => 'Workflow Client', 'type' => 'company']);

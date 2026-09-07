@@ -55,8 +55,8 @@
         <form method="post" action="{{ route('payment-methods.store') }}" class="border-bottom pb-3 mb-3">@csrf
             <div class="row g-2"><div class="col-md-7"><input class="form-control" name="name" placeholder="Bank, M-Pesa, Cash" required></div><div class="col-md-5"><select class="form-select" name="type"><option value="bank">Bank</option><option value="mpesa">M-Pesa</option><option value="cash">Cash</option><option value="custom">Other</option></select></div></div>
             <textarea class="form-control mt-2" name="details" rows="3" placeholder="Account name, account number, Paybill/Till, branch, payment instructions"></textarea>
-            <label class="form-check mt-2"><input class="form-check-input" type="checkbox" name="is_active" value="1" checked> <span class="form-check-label">Active</span></label>
-            <button class="btn btn-outline-warning btn-sm mt-2">Add Method</button>
+            <label class="form-check mt-2"><input class="form-check-input" type="checkbox" name="is_active" value="1" checked> <span class="form-check-label">Show on invoices</span></label>
+            <button class="btn btn-outline-warning btn-sm mt-2">Add Payment Method</button>
         </form>
         @foreach($methods as $method)
             <div class="border-top py-2">
@@ -70,8 +70,8 @@
                         <div class="col-md-7"><input class="form-control" name="name" value="{{ old('name',$method->name) }}" required></div>
                         <div class="col-md-5"><select class="form-select" name="type">@foreach(['bank'=>'Bank','mpesa'=>'M-Pesa','cash'=>'Cash','custom'=>'Other'] as $value=>$label)<option value="{{ $value }}" @selected(old('type',$method->type)===$value)>{{ $label }}</option>@endforeach</select></div>
                         <div class="col-12"><textarea class="form-control" name="details" rows="3">{{ old('details',$method->details) }}</textarea></div>
-                        <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_active" value="1" @checked(old('is_active',$method->is_active))> <span class="form-check-label">Active</span></label></div>
-                        <div class="col-12"><button class="btn btn-warning btn-sm">Update Method</button></div>
+                        <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_active" value="1" @checked(old('is_active',$method->is_active))> <span class="form-check-label">Show on invoices</span></label></div>
+                        <div class="col-12"><button class="btn btn-warning btn-sm">Update Payment Method</button></div>
                     </form>
                 </details>
             </div>

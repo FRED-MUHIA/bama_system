@@ -46,11 +46,7 @@ class QuotationController extends Controller
             'quotation' => $quotation->load($relationships),
             'settings' => $this->companySettingsForBusiness($quotation->business_id),
             'signatory' => $this->defaultSignatoryForBusiness($quotation->business_id),
-            'paymentMethods' => PaymentMethod::withoutGlobalScope('business')
-                ->where('business_id', $quotation->business_id)
-                ->where('is_active', true)
-                ->orderBy('name')
-                ->get(),
+            'paymentMethods' => PaymentMethod::shownOnInvoicesFor($quotation->business_id),
         ]);
     }
 
@@ -266,7 +262,7 @@ class QuotationController extends Controller
             'document' => $quotation->load(array_filter(['client', 'items', Quotation::supportsProjectLinks() ? 'site' : null, Quotation::supportsProjectLinks() ? 'project' : null, Quotation::supportsProjectLinks() ? 'contact' : null])),
             'settings' => $this->companySettingsForBusiness($quotation->business_id),
             'signatory' => $this->defaultSignatoryForBusiness($quotation->business_id),
-            'paymentMethods' => PaymentMethod::withoutGlobalScope('business')->where('business_id', $quotation->business_id)->where('is_active', true)->get(),
+            'paymentMethods' => PaymentMethod::shownOnInvoicesFor($quotation->business_id),
             'verificationUrl' => null,
             'qrCode' => null,
         ]);
