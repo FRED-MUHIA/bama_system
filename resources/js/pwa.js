@@ -111,32 +111,6 @@ function configurePageLoader() {
         hide: hideLoader,
     };
 
-    document.addEventListener('click', (event) => {
-        const link = event.target.closest('a[href]');
-        if (! link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-        if (link.target && link.target.toLowerCase() !== '_self') return;
-        if (link.hasAttribute('download') || link.hasAttribute('data-no-page-loader')) return;
-
-        const destination = new URL(link.href, window.location.href);
-        const currentWithoutHash = `${window.location.origin}${window.location.pathname}${window.location.search}`;
-        const destinationWithoutHash = `${destination.origin}${destination.pathname}${destination.search}`;
-        if (destination.origin !== window.location.origin || destinationWithoutHash === currentWithoutHash) return;
-
-        window.setTimeout(() => {
-            if (! event.defaultPrevented) showLoader();
-        }, 0);
-    });
-
-    document.addEventListener('submit', (event) => {
-        const form = event.target;
-        if (form.hasAttribute('data-no-page-loader') || (form.target && form.target.toLowerCase() !== '_self')) return;
-
-        window.setTimeout(() => {
-            if (! event.defaultPrevented) showLoader();
-        }, 0);
-    });
-
-    window.addEventListener('beforeunload', showLoader);
     window.addEventListener('pageshow', () => window.setTimeout(hideLoader, 180));
     window.setTimeout(hideLoader, 350);
 }

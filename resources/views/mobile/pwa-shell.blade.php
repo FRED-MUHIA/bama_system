@@ -1,10 +1,26 @@
-<div class="bama-loading-screen" data-bama-loader role="status" aria-live="polite" aria-label="Loading">
+<div class="bama-loading-screen" data-bama-loader role="status" aria-live="polite" aria-label="Loading" hidden>
     <span class="bama-radial-loader" aria-hidden="true">
-        @for ($spoke = 0; $spoke < 16; $spoke++)
+        @for ($spoke = 0; $spoke < 8; $spoke++)
             <span style="--spoke: {{ $spoke }}"></span>
         @endfor
     </span>
 </div>
+<script>
+    (() => {
+        const loader = document.currentScript.previousElementSibling;
+
+        try {
+            const sessionKey = 'bama-initial-loader-shown';
+
+            if (!sessionStorage.getItem(sessionKey)) {
+                sessionStorage.setItem(sessionKey, 'true');
+                loader.hidden = false;
+            }
+        } catch (error) {
+            loader.hidden = false;
+        }
+    })();
+</script>
 <noscript><style>.bama-loading-screen { display: none !important; }</style></noscript>
 
 <div class="bama-offline-banner" data-bama-offline hidden>

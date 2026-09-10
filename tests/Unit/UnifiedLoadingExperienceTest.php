@@ -13,10 +13,14 @@ class UnifiedLoadingExperienceTest extends TestCase
 
         $this->assertStringContainsString('data-bama-loader', $shell);
         $this->assertStringContainsString('bama-radial-loader', $shell);
-        $this->assertStringContainsString('$spoke < 16', $shell);
+        $this->assertStringContainsString('$spoke < 8', $shell);
+        $this->assertStringContainsString('bama-initial-loader-shown', $shell);
+        $this->assertStringContainsString('sessionStorage.getItem(sessionKey)', $shell);
         $this->assertStringContainsString('<noscript><style>.bama-loading-screen { display: none !important; }</style></noscript>', $shell);
         $this->assertStringContainsString('background: #fff', $styles);
-        $this->assertStringContainsString('background: #00c81f', $styles);
+        $this->assertStringContainsString('width: 64px', $styles);
+        $this->assertStringContainsString('background: #7ed342', $styles);
+        $this->assertStringContainsString('background: #349b36', $styles);
         $this->assertStringContainsString('@keyframes bama-loader-pulse', $styles);
 
         $this->assertStringNotContainsString('bama-pwa-splash-mark', $shell.$styles);
@@ -24,15 +28,15 @@ class UnifiedLoadingExperienceTest extends TestCase
         $this->assertStringNotContainsString('bama-pwa-splash-tagline', $shell.$styles);
     }
 
-    public function test_loader_runs_for_browser_and_installed_app_navigation(): void
+    public function test_loader_is_not_reopened_for_every_navigation(): void
     {
         $script = file_get_contents(resource_path('js/pwa.js'));
 
         $this->assertStringContainsString('function configurePageLoader()', $script);
         $this->assertStringContainsString('window.BamaLoader', $script);
-        $this->assertStringContainsString("document.addEventListener('click'", $script);
-        $this->assertStringContainsString("document.addEventListener('submit'", $script);
-        $this->assertStringContainsString("window.addEventListener('beforeunload'", $script);
+        $this->assertStringNotContainsString("document.addEventListener('click'", $script);
+        $this->assertStringNotContainsString("document.addEventListener('submit'", $script);
+        $this->assertStringNotContainsString("window.addEventListener('beforeunload'", $script);
         $this->assertStringNotContainsString('configureSplash', $script);
         $this->assertStringNotContainsString("splash.remove()", $script);
     }
