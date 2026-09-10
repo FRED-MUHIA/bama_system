@@ -51,6 +51,12 @@
             "short_name": "Messages",
             "url": "/communication",
             "icons": [{ "src": "/pwa-icons/icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Bama Billing",
+            "short_name": "Pay",
+            "url": "/billing",
+            "icons": [{ "src": "/pwa-icons/icon-192.png", "sizes": "192x192" }]
         }
     ]
 }

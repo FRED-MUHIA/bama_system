@@ -1,4 +1,4 @@
-const BAMA_SW_VERSION = 'bama-pwa-v3';
+const BAMA_SW_VERSION = 'bama-pwa-v4';
 const STATIC_CACHE = `${BAMA_SW_VERSION}-static`;
 const RUNTIME_CACHE = `${BAMA_SW_VERSION}-runtime`;
 
@@ -25,6 +25,7 @@ const SAFE_STATIC_PATHS = [
 
 const PRIVATE_PATHS = [
     '/api/',
+    '/billing',
     '/uploads/',
     '/storage/',
     '/invoice/',
@@ -74,6 +75,13 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
+    // Payment pages and status responses must always come directly from the
+    // server. This also lets POST requests and external checkout redirects
+    // pass through untouched when Bama is running as an installed web app.
+    if (isPrivatePath(url.pathname)) {
+        return;
+    }
+
     if (request.mode === 'navigate') {
         event.respondWith(
             fetch(request).catch(() => caches.match('/offline.html'))
@@ -82,7 +90,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    if (isPrivatePath(url.pathname) || ! isSafeStaticRequest(request, url)) {
+    if (! isSafeStaticRequest(request, url)) {
         return;
     }
 
