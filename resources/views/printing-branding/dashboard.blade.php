@@ -21,9 +21,6 @@
     .print-shell .text-muted{color:var(--print-muted)!important}
     .print-shell .btn-dark{background:var(--print-button-bg);border-color:var(--print-button-bg);color:#fff;transition:background-color .18s ease,border-color .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease}
     .print-shell .btn-dark:hover,.print-shell .btn-dark:focus{background:var(--print-button-hover);border-color:var(--print-button-hover);color:#fff;box-shadow:0 10px 22px rgba(16,24,40,.16)}
-    html[data-theme="dark"] .print-shell{--print-surface:#1b1f1d;--print-surface-soft:#151816;--print-border:#313a35;--print-border-soft:#2a332e;--print-ink:#f4f7f2;--print-muted:#b7c0b9;--print-kicker:#71f0ad;--print-pill-bg:rgba(113,240,173,.14);--print-pill-ink:#93f6bf;--print-button-bg:#00A651;--print-button-hover:#17bf68}
-    html[data-theme="dark"] .print-card{box-shadow:none}
-    html[data-theme="dark"] .print-item{background:var(--print-surface-soft)}
     @media(max-width:1100px){.print-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.print-board{grid-template-columns:1fr}}
     @media(max-width:640px){.print-grid{grid-template-columns:1fr}.print-hero{padding:20px}}
 </style>

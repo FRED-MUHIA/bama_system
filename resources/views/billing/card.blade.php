@@ -44,7 +44,8 @@ const showMessage = (text, type = 'warning') => {
 
 button.addEventListener('click', async () => {
     button.disabled = true;
-    button.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+    button.textContent = 'Processing...';
+    window.BamaLoader?.show();
     showMessage('Additional verification may be required by your bank.', 'info');
 
     const { error } = await stripe.confirmPayment({
@@ -55,6 +56,7 @@ button.addEventListener('click', async () => {
     });
 
     if (error) {
+        window.BamaLoader?.hide();
         showMessage(error.message || 'The card payment was not completed.', 'danger');
         button.disabled = false;
         button.innerHTML = '<i class="bi bi-credit-card-2-front"></i> Pay Securely';

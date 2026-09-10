@@ -335,49 +335,6 @@
         opacity:.82;
         cursor:wait;
     }
-    .app-submit-spinner {
-        width:1rem;
-        height:1rem;
-        display:inline-block;
-        border:2px solid rgba(255,255,255,.46);
-        border-top-color:#fff;
-        border-radius:50%;
-        animation:appSpin .72s linear infinite;
-    }
-    .app-loading-overlay {
-        position:fixed;
-        inset:0;
-        z-index:80;
-        display:grid;
-        place-items:center;
-        padding:24px;
-        background:rgba(2,15,13,.9);
-        backdrop-filter:blur(12px);
-    }
-    .app-loading-overlay[hidden] {
-        display:none;
-    }
-    .app-loading-panel {
-        display:grid;
-        place-items:center;
-        gap:14px;
-        color:#fff;
-        text-align:center;
-    }
-    .app-loading-ring {
-        width:74px;
-        height:74px;
-        border:5px solid rgba(255,255,255,.18);
-        border-top-color:#42d5ca;
-        border-right-color:#fff;
-        border-radius:50%;
-        animation:appSpin .72s linear infinite;
-        box-shadow:0 0 34px rgba(49,198,187,.24);
-    }
-    .app-loading-panel strong {
-        font-size:1rem;
-        font-weight:950;
-    }
     .app-register-link {
         min-height:52px;
         border-radius:14px;
@@ -444,10 +401,6 @@
         width:22px;
         background:var(--teal);
     }
-    @keyframes appSpin {
-        to { transform:rotate(360deg); }
-    }
-
     @media (min-width:768px) {
         .app-screen {
             display:grid;
@@ -709,12 +662,6 @@
         <button class="app-dot" type="button" data-app-go="2" aria-label="Login"></button>
     </div>
 
-    <div class="app-loading-overlay" data-app-loading hidden aria-live="polite" aria-label="Loading">
-        <div class="app-loading-panel">
-            <span class="app-loading-ring" aria-hidden="true"></span>
-            <strong>Signing in</strong>
-        </div>
-    </div>
 </div>
 
 <script>
@@ -746,8 +693,7 @@
                 if (! button || button.disabled) return;
                 button.disabled = true;
                 button.classList.add('is-loading');
-                button.innerHTML = '<span class="app-submit-spinner" aria-hidden="true"></span><span>Please wait</span>';
-                flow.querySelector('[data-app-loading]')?.removeAttribute('hidden');
+                button.textContent = 'Please wait';
             });
         });
 

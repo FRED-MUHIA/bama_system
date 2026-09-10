@@ -227,7 +227,7 @@ document.querySelectorAll('[data-mpesa-form]').forEach((form) => {
         normalize();
         if (button) {
             button.disabled = true;
-            button.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+            button.textContent = 'Sending...';
         }
     });
 });
@@ -237,7 +237,7 @@ document.querySelectorAll('[data-payment-form]').forEach((form) => {
         const button = form.querySelector('[data-payment-submit]');
         if (button) {
             button.disabled = true;
-            button.innerHTML = '<i class="bi bi-hourglass-split"></i> Connecting...';
+            button.textContent = 'Connecting...';
         }
     });
 });

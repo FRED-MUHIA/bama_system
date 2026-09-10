@@ -1,10 +1,11 @@
-<div class="bama-pwa-splash" data-bama-splash aria-hidden="true">
-    <div class="bama-pwa-splash-mark">
-        <img src="{{ asset('pwa-icons/icon-192.png') }}" alt="">
-    </div>
-    <div class="bama-pwa-splash-name">Bama</div>
-    <div class="bama-pwa-splash-tagline">Business Management Anywhere</div>
+<div class="bama-loading-screen" data-bama-loader role="status" aria-live="polite" aria-label="Loading">
+    <span class="bama-radial-loader" aria-hidden="true">
+        @for ($spoke = 0; $spoke < 16; $spoke++)
+            <span style="--spoke: {{ $spoke }}"></span>
+        @endfor
+    </span>
 </div>
+<noscript><style>.bama-loading-screen { display: none !important; }</style></noscript>
 
 <div class="bama-offline-banner" data-bama-offline hidden>
     <strong>You're offline</strong>

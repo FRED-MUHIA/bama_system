@@ -199,7 +199,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     button.addEventListener('click', async () => {
         button.disabled = true;
-        button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>';
+        button.textContent = 'Loading...';
+        window.BamaLoader?.show();
         setStatus('Fetching live rate...');
 
         try {
@@ -217,6 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             setStatus(error.message || 'Live rate is unavailable right now.', 'text-danger');
         } finally {
+            window.BamaLoader?.hide();
             button.disabled = false;
             button.innerHTML = originalButtonHtml;
         }

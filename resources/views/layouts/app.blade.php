@@ -1,12 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#00A651">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
     <title>@yield('title', 'Bama Admin')</title>
-    <script>document.documentElement.dataset.theme=localStorage.getItem('bama-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');</script>
     @php
         $appFaviconPath = 'images/bama-favicon.png';
         $appFaviconUrl = asset($appFaviconPath);
@@ -580,7 +581,7 @@
             .nav-tabs { flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none; }
             .nav-tabs::-webkit-scrollbar { display:none; }
             button,.btn,.form-control,.form-select { touch-action:manipulation; }
-            body.dashboard-hero-condensed .app-header{flex-wrap:wrap;height:auto;padding-bottom:.55rem!important}.header-context-actions{order:3;width:100%;overflow-x:auto;padding-top:.45rem;margin:0;scrollbar-width:none}.header-context-actions::-webkit-scrollbar{display:none}.header-context-actions .context-label{display:none}.header-context-actions .btn{flex:0 0 auto;display:inline-grid;place-items:center;width:42px;height:42px;padding:0;border-color:#6b6b6b;color:#f7f3ed;background:rgba(255,255,255,.04)}.header-context-actions .btn.btn-success{background:var(--tenant-primary,#00A651);border-color:var(--tenant-primary,#00A651);color:#fff}.header-context-actions .btn:hover,.header-context-actions .btn:focus{border-color:var(--tenant-primary,#00A651);color:#fff;background:rgba(0,166,81,.18)}.header-context-actions .btn span{display:none}.header-context-actions .btn i{margin:0!important;font-size:1rem}.header-greeting{display:none}.app-header-actions{gap:.35rem}.app-header-actions .btn-sm:not(.theme-toggle){padding:.36rem .5rem}.app-header-actions .btn-sm span,.app-header-actions .btn-sm.profile-link{font-size:0}.app-header-actions .btn-sm.profile-link i{font-size:.9rem}
+            body.dashboard-hero-condensed .app-header{flex-wrap:wrap;height:auto;padding-bottom:.55rem!important}.header-context-actions{order:3;width:100%;overflow-x:auto;padding-top:.45rem;margin:0;scrollbar-width:none}.header-context-actions::-webkit-scrollbar{display:none}.header-context-actions .context-label{display:none}.header-context-actions .btn{flex:0 0 auto;display:inline-grid;place-items:center;width:42px;height:42px;padding:0;border-color:#6b6b6b;color:#f7f3ed;background:rgba(255,255,255,.04)}.header-context-actions .btn.btn-success{background:var(--tenant-primary,#00A651);border-color:var(--tenant-primary,#00A651);color:#fff}.header-context-actions .btn:hover,.header-context-actions .btn:focus{border-color:var(--tenant-primary,#00A651);color:#fff;background:rgba(0,166,81,.18)}.header-context-actions .btn span{display:none}.header-context-actions .btn i{margin:0!important;font-size:1rem}.header-greeting{display:none}.app-header-actions{gap:.35rem}.app-header-actions .btn-sm{padding:.36rem .5rem}.app-header-actions .btn-sm span,.app-header-actions .btn-sm.profile-link{font-size:0}.app-header-actions .btn-sm.profile-link i{font-size:.9rem}
         }
         @media (max-width:991px) {
             body { background:#f7f8fb !important; padding-bottom:calc(70px + env(safe-area-inset-bottom)); }
@@ -600,8 +601,7 @@
             .app-header-actions .header-greeting,
             .app-header-actions .header-context-actions,
             .app-header-actions .profile-link,
-            .app-header-actions form,
-            .app-header-actions .theme-toggle { display:none !important; }
+            .app-header-actions form { display:none !important; }
             .header-alert-btn { width:40px;height:40px;border:0 !important;background:#fff !important;color:#111827 !important;box-shadow:none !important; }
             .header-alert-btn i { font-size:1.12rem; }
             .header-notification-menu {
@@ -674,45 +674,45 @@
             .app-install-footer { padding:.1rem .85rem calc(1rem + env(safe-area-inset-bottom)); }
             .app-install-footer-inner { flex-wrap:wrap;justify-content:center;text-align:center; }
             .app-install-footer .btn { width:100%;min-height:44px; }
-            html:not([data-theme="dark"]) body,
-            html:not([data-theme="dark"]) main,
-            html:not([data-theme="dark"]) main > section,
-            html:not([data-theme="dark"]) .card,
-            html:not([data-theme="dark"]) .modal-content,
-            html:not([data-theme="dark"]) .dropdown-menu,
-            html:not([data-theme="dark"]) .list-group-item,
-            html:not([data-theme="dark"]) .table,
-            html:not([data-theme="dark"]) .table tbody td,
-            html:not([data-theme="dark"]) .mobile-overflow-sheet,
-            html:not([data-theme="dark"]) .mobile-overflow-sheet a,
-            html:not([data-theme="dark"]) .mobile-overflow-sheet button,
-            html:not([data-theme="dark"]) .mobile-bottom-nav a,
-            html:not([data-theme="dark"]) .mobile-bottom-nav button {
+            body,
+            main,
+            main > section,
+            .card,
+            .modal-content,
+            .dropdown-menu,
+            .list-group-item,
+            .table,
+            .table tbody td,
+            .mobile-overflow-sheet,
+            .mobile-overflow-sheet a,
+            .mobile-overflow-sheet button,
+            .mobile-bottom-nav a,
+            .mobile-bottom-nav button {
                 color:#111827 !important;
             }
-            html:not([data-theme="dark"]) .text-muted,
-            html:not([data-theme="dark"]) .form-text,
-            html:not([data-theme="dark"]) small,
-            html:not([data-theme="dark"]) .small,
-            html:not([data-theme="dark"]) .table thead th,
-            html:not([data-theme="dark"]) .form-label,
-            html:not([data-theme="dark"]) .nav-tabs .nav-link,
-            html:not([data-theme="dark"]) .nav-pills .nav-link,
-            html:not([data-theme="dark"]) .dropdown-item,
-            html:not([data-theme="dark"]) .page-link,
-            html:not([data-theme="dark"]) .sheet-title,
-            html:not([data-theme="dark"]) .mobile-header-name {
+            .text-muted,
+            .form-text,
+            small,
+            .small,
+            .table thead th,
+            .form-label,
+            .nav-tabs .nav-link,
+            .nav-pills .nav-link,
+            .dropdown-item,
+            .page-link,
+            .sheet-title,
+            .mobile-header-name {
                 color:#111827 !important;
             }
-            html:not([data-theme="dark"]) .form-control,
-            html:not([data-theme="dark"]) .form-select,
-            html:not([data-theme="dark"]) .form-control:disabled,
-            html:not([data-theme="dark"]) .form-select:disabled {
+            .form-control,
+            .form-select,
+            .form-control:disabled,
+            .form-select:disabled {
                 color:#111827 !important;
                 -webkit-text-fill-color:#111827;
                 opacity:1;
             }
-            html:not([data-theme="dark"]) .form-control::placeholder {
+            .form-control::placeholder {
                 color:#111827 !important;
                 opacity:.82;
             }
@@ -806,12 +806,6 @@
         @media (prefers-reduced-motion:reduce) {
             *,*::before,*::after { scroll-behavior:auto !important;transition-duration:.01ms !important;animation-duration:.01ms !important;animation-iteration-count:1 !important; }
         }
-        .theme-toggle{display:inline-grid;place-items:center;width:36px;height:36px;padding:0;border-radius:9px}.guest-theme-toggle{position:fixed;right:18px;top:18px;z-index:1080;background:rgba(255,253,250,.9);backdrop-filter:blur(10px)}
-        html[data-theme="dark"]{color-scheme:dark;--bama-warm:#121212;--bama-paper:#1b1b1b;--bama-ink:#f2efe9;--bama-line:#353535;--bama-muted:#aaa69f;--bama-button-dark:#252525;--bama-button-dark-hover:#303030;--bama-button-dark-text:#f8f6f1;--bama-button-outline-border:#5a5a5a;--bama-button-outline-hover-bg:#f2efe9;--bama-button-outline-hover-ink:#171717;--bama-scroll-thumb:#55514d}html[data-theme="dark"] body{background:#121212;color:#e9e6e0}html[data-theme="dark"] .app-header{background:rgba(23,23,23,.95);border-color:#353535!important}html[data-theme="dark"] .app-header h1,html[data-theme="dark"] h1,html[data-theme="dark"] h2,html[data-theme="dark"] h3,html[data-theme="dark"] h4,html[data-theme="dark"] h5,html[data-theme="dark"] h6{color:#f2efe9}html[data-theme="dark"] .app-header .text-muted,html[data-theme="dark"] .text-muted{color:var(--bama-muted)!important}html[data-theme="dark"] .header-greeting,html[data-theme="dark"] .header-notification-head,html[data-theme="dark"] .header-notification-menu{background:#1b1b1b;border-color:#353535}html[data-theme="dark"] .header-notification-item{border-color:#2d2d2d;color:#f2efe9}html[data-theme="dark"] .header-notification-item:hover{background:#24211f}html[data-theme="dark"] .header-notification-foot{background:#181818;border-color:#353535}html[data-theme="dark"] .header-alert-btn .header-badge{border-color:#1b1b1b}
-        html[data-theme="dark"] .card,html[data-theme="dark"] .panel-card,html[data-theme="dark"] .stat-card,html[data-theme="dark"] .login-card{background:#1b1b1b!important;border-color:#383838!important;color:#e9e6e0;box-shadow:none}html[data-theme="dark"] .form-control,html[data-theme="dark"] .form-select{background-color:#202020;color:#f1eee8;border-color:#444}html[data-theme="dark"] .form-control::placeholder{color:#777}html[data-theme="dark"] .form-label{color:#aaa69f}
-        html[data-theme="dark"] .table{--bs-table-color:#dedad3;--bs-table-border-color:#383838;--bs-table-hover-color:#fff;--bs-table-hover-bg:rgba(0,166,81,.055);color:#dedad3}html[data-theme="dark"] .table thead th{color:#9e9a93;border-color:#444;background:transparent}html[data-theme="dark"] .table tbody td{border-color:#333}html[data-theme="dark"] .nav-tabs{border-color:#3b3b3b}html[data-theme="dark"] .nav-tabs .nav-link{color:#aaa69f}html[data-theme="dark"] .nav-tabs .nav-link.active{color:#79D9A3}html[data-theme="dark"] .nav-pills{background:#242424}html[data-theme="dark"] .nav-pills .nav-link{color:#aaa69f}html[data-theme="dark"] .nav-pills .nav-link.active{background:#00A651;color:#fff}
-        html[data-theme="dark"] .btn-dark{background:var(--bama-button-dark);border-color:var(--bama-button-outline-border);color:var(--bama-button-dark-text)}html[data-theme="dark"] .btn-dark:hover,html[data-theme="dark"] .btn-dark:focus{background:var(--bama-button-dark-hover);border-color:#777;color:#fff}html[data-theme="dark"] .btn-outline-dark{color:#e8e4de;border-color:var(--bama-button-outline-border)}html[data-theme="dark"] .btn-outline-dark:hover,html[data-theme="dark"] .btn-outline-dark:focus{background:var(--bama-button-outline-hover-bg);border-color:var(--bama-button-outline-hover-bg);color:var(--bama-button-outline-hover-ink)}html[data-theme="dark"] .btn-outline-warning{color:#93f6bf;border-color:rgba(113,240,173,.62)}html[data-theme="dark"] .btn-outline-warning:hover,html[data-theme="dark"] .btn-outline-warning:focus{background:#00A651;border-color:#00A651;color:#fff}html[data-theme="dark"] .page-link{background:#202020;color:#ddd;border-color:#444}html[data-theme="dark"] .client-item,html[data-theme="dark"] .chart-card{background:#202020!important;border-color:#383838!important}html[data-theme="dark"] .stat-value,html[data-theme="dark"] .soft-link{color:#f2efe9}
-        html[data-theme="dark"] .login-auth-panel{background:#121212}html[data-theme="dark"] .login-auth-intro,html[data-theme="dark"] .login-auth-label{color:#aaa69f}html[data-theme="dark"] .login-card .nav-pills{background:#242424}html[data-theme="dark"] .password-toggle{color:#aaa}html[data-theme="dark"] .password-toggle:hover{background:#303030;color:#fff}html[data-theme="dark"] .guest-theme-toggle{background:rgba(30,30,30,.9);color:#eee;border-color:#555}html[data-theme="dark"] .alert-success{background:#15251a;border-color:#31593a;color:#b9dfc0}html[data-theme="dark"] .alert-warning{background:#2a2118;border-color:#654525;color:#f2c79e}html[data-theme="dark"] .alert-danger{background:#2b1818;border-color:#663737;color:#efb5b5}
         body.workspace-density-compact .card.p-4{padding:1rem!important}body.workspace-density-compact .panel-body{padding:1rem!important}body.workspace-density-compact .table td,body.workspace-density-compact .table th{padding:.48rem .6rem}body.workspace-density-compact .form-control,body.workspace-density-compact .form-select,body.workspace-density-compact .btn{padding-top:.42rem;padding-bottom:.42rem}body.workspace-density-compact .stat-card{min-height:88px;padding:12px}
     </style>
     <style>:root { {!! $tenantCssVariables ?? '--tenant-primary:#00A651; --tenant-secondary:#000000; --tenant-accent:#00A651;' !!} }</style>
@@ -989,7 +983,6 @@
                                 </div>
                             </div>
                         @endif
-                        <button type="button" class="btn btn-outline-dark btn-sm theme-toggle" data-theme-toggle aria-label="Switch colour theme"><i class="bi bi-moon-stars"></i></button>
                         <button type="button" class="btn btn-outline-dark btn-sm" data-bama-install hidden><i class="bi bi-download"></i> <span>Install App</span></button>
                         <a class="btn btn-outline-dark btn-sm profile-link" href="{{route('profile.edit')}}"><i class="bi bi-person"></i> <span>My Profile</span></a>
                         <form method="post" action="{{ route('logout') }}">@csrf<button class="btn btn-outline-dark btn-sm"><i class="bi bi-box-arrow-right"></i> <span>Logout</span></button></form>
@@ -1026,7 +1019,6 @@
         </main>
     </div>
 </div>
-@if(! $currentUser)<button type="button" class="btn btn-outline-dark theme-toggle guest-theme-toggle" data-theme-toggle aria-label="Switch colour theme"><i class="bi bi-moon-stars"></i></button>@endif
 @if($currentUser && ! $isClientPortal)
     <div class="mobile-shell-backdrop" id="mobile-shell-backdrop" aria-hidden="true"></div>
     <aside class="mobile-shell-drawer" id="mobile-shell-drawer" role="dialog" aria-modal="true" aria-label="Mobile navigation" aria-hidden="true" tabindex="-1">
@@ -1117,7 +1109,6 @@
                 <a href="{{ route('communication.center') }}" class="{{ request()->routeIs('communication.*') ? 'active' : '' }}"><i class="bi bi-chat-dots"></i><span>Messages</span></a>
             @endif
             <a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.*') ? 'active' : '' }}"><i class="bi bi-person"></i><span>Profile</span></a>
-            <button type="button" data-theme-toggle><i class="bi bi-moon-stars"></i><span>Switch theme</span></button>
             <form method="post" action="{{ route('logout') }}">@csrf<button type="submit"><i class="bi bi-box-arrow-right"></i><span>Logout</span></button></form>
         </nav>
     </aside>
@@ -1324,7 +1315,6 @@
         @foreach($mobileOverflowItems as $item)
             <a href="{{ route($item['route'], $mobileRouteParams($item)) }}" class="{{ $mobileRouteMatches($item) ? 'active' : '' }}"><i class="bi {{ $item['icon'] }}"></i> {{ $item['label'] }}</a>
         @endforeach
-        <button type="button" data-theme-toggle><i class="bi bi-moon-stars"></i> <span>Switch theme</span></button>
         <form method="post" action="{{ route('logout') }}">
             @csrf
             <button type="submit"><i class="bi bi-box-arrow-right"></i> Logout</button>
@@ -1332,13 +1322,6 @@
     </div>
 @endif
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
-    const buttons=document.querySelectorAll('[data-theme-toggle]');
-    const render=()=>{const dark=document.documentElement.dataset.theme==='dark';buttons.forEach(button=>{button.querySelector('i').className=dark?'bi bi-sun':'bi bi-moon-stars';const label=button.querySelector('span');if(label)label.textContent=dark?'Use light mode':'Use dark mode';button.setAttribute('aria-label',dark?'Use light mode':'Use dark mode')})};
-    buttons.forEach(button=>button.addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=next;localStorage.setItem('bama-theme',next);render()}));render();
-});
-</script>
 @auth
 <script>
 document.addEventListener('DOMContentLoaded', () => {
