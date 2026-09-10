@@ -6,8 +6,21 @@
     $subscription = $tenant->subscription;
     $enabled = fn (string $provider) => (bool) ($paymentSettings[$provider]->is_enabled ?? false);
     $mpesaSetting = $paymentSettings['mpesa'] ?? null;
+    $mpesaConfig = $mpesaSetting?->config ?? [];
+    $mpesaCallbackUrl = data_get($mpesaConfig, 'callback_url')
+        ?: config('services.mpesa.callback_url')
+        ?: route('api.payments.mpesa.callback');
     $mpesaLive = $enabled('mpesa') && ($mpesaSetting?->mode ?? 'sandbox') === 'live';
+    $mpesaConfigured = filled($mpesaSetting?->public_key ?: config('services.mpesa.consumer_key'))
+        && filled($mpesaSetting?->secret_key ?: config('services.mpesa.consumer_secret'))
+        && filled(data_get($mpesaConfig, 'shortcode', config('services.mpesa.shortcode')))
+        && filled(data_get($mpesaConfig, 'passkey', config('services.mpesa.passkey')))
+        && str_starts_with((string) $mpesaCallbackUrl, 'https://');
+    $mpesaReady = $mpesaLive && $mpesaConfigured;
     $paypalSetting = $paymentSettings['paypal'] ?? null;
+    $paypalConfigured = filled($paypalSetting?->public_key ?: config('services.paypal.client_id'))
+        && filled($paypalSetting?->secret_key ?: config('services.paypal.secret'));
+    $paypalReady = $enabled('paypal') && $paypalConfigured;
     $paypalKesUsdRate = (float) data_get($paypalSetting?->config ?? [], 'kes_usd_rate', 0);
     $paypalSupportedCurrencies = ['AUD', 'BRL', 'CAD', 'CNY', 'CZK', 'DKK', 'EUR', 'HKD', 'HUF', 'ILS', 'JPY', 'MYR', 'MXN', 'TWD', 'NZD', 'NOK', 'PHP', 'PLN', 'GBP', 'SGD', 'SEK', 'CHF', 'THB', 'USD'];
     $invoiceCurrency = $invoice ? strtoupper($invoice->currency) : null;
@@ -55,10 +68,15 @@
                     $latestMpesaPayment = $invoice->payments->firstWhere('provider', 'mpesa');
                     $latestMpesaResult = $latestMpesaPayment
                         ? (data_get($latestMpesaPayment->callback_payload, 'stk_query.ResultDesc')
-                            ?? data_get($latestMpesaPayment->callback_payload, 'Body.stkCallback.ResultDesc')
+                            ?? data_get($latestMpesaPayment->callback_payload, 'callback.Body.stkCallback.ResultDesc')
                             ?? data_get($latestMpesaPayment->callback_payload, 'ResponseDescription'))
                         : null;
                     $latestMpesaResult = $mpesaResultMessage($latestMpesaResult);
+                    $latestPaypalPayment = $invoice->payments->firstWhere('provider', 'paypal');
+                    $reusablePaypalPayment = $latestPaypalPayment
+                        && $latestPaypalPayment->status === 'requires_action'
+                        && filled($latestPaypalPayment->payment_url)
+                        && $latestPaypalPayment->created_at?->gte(now()->subHours(2));
                 @endphp
                 <div class="border rounded-2 p-3 mb-4">
                     <div class="d-flex flex-wrap justify-content-between gap-3">
@@ -80,12 +98,12 @@
                             <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-phone text-success"></i><strong>M-PESA STK</strong></div>
                             <form method="post" action="{{ route('billing.invoices.mpesa', $invoice) }}" class="d-grid gap-2" data-mpesa-form>
                                 @csrf
-                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="0700000000 or 254700000000" pattern="(?:254\d{9}|0\d{9}|[17]\d{8})" maxlength="12" title="Enter 0700000000 or 254700000000" data-mpesa-phone @disabled(! $mpesaLive || ! $invoicePayable) required>
+                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="0700000000 or 254700000000" pattern="(?:254\d{9}|0\d{9}|[17]\d{8})" maxlength="12" title="Enter 0700000000 or 254700000000" data-mpesa-phone @disabled(! $mpesaReady || ! $invoicePayable) required>
                                 <div class="form-text">Any payer number: 0700000000 or 254700000000.</div>
                                 @if($enabled('mpesa') && ! $mpesaLive)
                                     <div class="small text-warning-emphasis">M-PESA is in sandbox mode. Sandbox accepts test requests but does not prompt a real phone. Switch to live keys in the owner console.</div>
                                 @endif
-                                <button class="btn btn-warning" data-mpesa-submit @disabled(! $mpesaLive || ! $invoicePayable)><i class="bi bi-send"></i> Prompt Phone</button>
+                                <button class="btn btn-warning" data-mpesa-submit @disabled(! $mpesaReady || ! $invoicePayable)><i class="bi bi-send"></i> Prompt Phone</button>
                             </form>
                             @if($latestMpesaPayment)
                                 <div class="border-top mt-3 pt-3 small">
@@ -98,24 +116,27 @@
                                         <div class="text-muted mt-1">{{ $latestMpesaResult }}</div>
                                     @endif
                                     @if($latestMpesaPayment->status === 'pending' && $latestMpesaPayment->checkout_request_id)
-                                        <form method="post" action="{{ route('billing.payments.mpesa-status', $latestMpesaPayment) }}" class="mt-2">
+                                        <form method="post" action="{{ route('billing.payments.mpesa-status', $latestMpesaPayment) }}" class="mt-2" data-mpesa-status-form>
                                             @csrf
-                                            <button class="btn btn-sm btn-outline-warning w-100"><i class="bi bi-arrow-repeat"></i> Check Payment Status</button>
+                                            <button class="btn btn-sm btn-outline-warning w-100" data-mpesa-status-button><i class="bi bi-arrow-repeat"></i> Check Payment Status</button>
                                         </form>
+                                        <div class="mt-2 text-muted" role="status" data-mpesa-status-output>Safaricom accepted the request. Waiting for handset delivery or a final result.</div>
                                     @endif
                                 </div>
                             @endif
                             @unless($enabled('mpesa'))<div class="small text-muted mt-2">M-PESA is not enabled by owner yet.</div>@endunless
+                            @if($enabled('mpesa') && $mpesaLive && ! $mpesaConfigured)<div class="small text-danger mt-2">M-PESA live credentials, shortcode, passkey, or HTTPS callback URL are incomplete.</div>@endif
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="border rounded-2 p-3 h-100">
                             <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-paypal text-primary"></i><strong>PayPal</strong></div>
-                            <form method="post" action="{{ route('billing.invoices.paypal', $invoice) }}">
+                            <form method="post" action="{{ route('billing.invoices.paypal', $invoice) }}" data-payment-form>
                                 @csrf
-                                <button class="btn btn-outline-dark w-100" @disabled(! $enabled('paypal') || ! $invoicePayable || ! $paypalCurrencySupported)><i class="bi bi-box-arrow-up-right"></i> Pay with PayPal</button>
+                                <button class="btn btn-outline-dark w-100" data-payment-submit @disabled(! $paypalReady || ! $invoicePayable || ! $paypalCurrencySupported)><i class="bi bi-box-arrow-up-right"></i> {{ $reusablePaypalPayment ? 'Continue PayPal Checkout' : 'Pay with PayPal' }}</button>
                             </form>
                             @unless($enabled('paypal'))<div class="small text-muted mt-2">PayPal is not enabled by owner yet.</div>@endunless
+                            @if($enabled('paypal') && ! $paypalConfigured)<div class="small text-danger mt-2">PayPal client ID or secret is missing in the owner payment settings.</div>@endif
                             @if($enabled('paypal') && $invoiceCurrency === 'KES' && $paypalConvertedUsd)
                                 <div class="small text-muted mt-2">Charges about USD {{ $paypalConvertedUsd }} at KES {{ number_format($paypalKesUsdRate, 2) }} per USD.</div>
                             @elseif($enabled('paypal') && $invoiceCurrency === 'KES')
@@ -125,14 +146,23 @@
                             @elseif($enabled('paypal'))
                                 <div class="small text-muted mt-2">Continue with PayPal to approve your payment.</div>
                             @endif
+                            @if($latestPaypalPayment)
+                                <div class="border-top mt-3 pt-3 small">
+                                    <div class="d-flex justify-content-between gap-2">
+                                        <span class="text-muted">Latest PayPal attempt</span>
+                                        <span class="badge {{ $latestPaypalPayment->isSuccessful() ? 'text-bg-success' : (in_array($latestPaypalPayment->status, ['failed', 'cancelled', 'expired'], true) ? 'text-bg-danger' : 'text-bg-light') }}">{{ str($latestPaypalPayment->status)->headline() }}</span>
+                                    </div>
+                                    @if($latestPaypalPayment->failure_message)<div class="text-danger mt-1">{{ $latestPaypalPayment->failure_message }}</div>@endif
+                                </div>
+                            @endif
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="border rounded-2 p-3 h-100">
                             <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-credit-card text-success"></i><strong>Card</strong></div>
-                            <form method="post" action="{{ route('billing.invoices.card', $invoice) }}">
+                            <form method="post" action="{{ route('billing.invoices.card', $invoice) }}" data-payment-form>
                                 @csrf
-                                <button class="btn btn-outline-dark w-100" @disabled(! $enabled('card') || ! $invoicePayable)><i class="bi bi-credit-card-2-front"></i> Pay by Card</button>
+                                <button class="btn btn-outline-dark w-100" data-payment-submit @disabled(! $enabled('card') || ! $invoicePayable)><i class="bi bi-credit-card-2-front"></i> Pay by Card</button>
                             </form>
                             @unless($enabled('card'))<div class="small text-muted mt-2">Card checkout is not enabled by owner yet.</div>@endunless
                             @if($enabled('card'))<div class="small text-muted mt-2">Additional bank verification is handled securely by Stripe when required.</div>@endif
@@ -199,6 +229,66 @@ document.querySelectorAll('[data-mpesa-form]').forEach((form) => {
             button.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
         }
     });
+});
+
+document.querySelectorAll('[data-payment-form]').forEach((form) => {
+    form.addEventListener('submit', () => {
+        const button = form.querySelector('[data-payment-submit]');
+        if (button) {
+            button.disabled = true;
+            button.innerHTML = '<i class="bi bi-hourglass-split"></i> Connecting...';
+        }
+    });
+});
+
+document.querySelectorAll('[data-mpesa-status-form]').forEach((form) => {
+    const button = form.querySelector('[data-mpesa-status-button]');
+    const output = document.querySelector('[data-mpesa-status-output]');
+    let attempts = 0;
+
+    const checkStatus = async () => {
+        if (button?.disabled) return { final: false };
+        if (button) button.disabled = true;
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: new FormData(form),
+            });
+            const payload = await response.json();
+            if (output) {
+                output.textContent = payload.message || 'Unable to read the M-PESA status.';
+                output.className = 'mt-2 ' + (payload.status === 'error' || ['failed', 'cancelled', 'expired'].includes(payload.status) ? 'text-danger' : 'text-muted');
+            }
+            if (payload.final) window.location.reload();
+
+            return payload;
+        } catch (error) {
+            if (output) {
+                output.textContent = 'Could not check M-PESA status. Tap the button to retry.';
+                output.className = 'mt-2 text-danger';
+            }
+
+            return { final: false };
+        } finally {
+            if (button) button.disabled = false;
+        }
+    };
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        checkStatus();
+    });
+
+    const poll = async () => {
+        if (document.visibilityState !== 'visible') return;
+        attempts++;
+        const result = await checkStatus();
+        if (! result.final && attempts < 4) window.setTimeout(poll, 15000);
+    };
+
+    window.setTimeout(poll, 12000);
 });
 </script>
 @endsection

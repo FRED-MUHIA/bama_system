@@ -10,6 +10,7 @@ use App\Models\SubscriptionPayment;
 use App\Services\ExchangeRateService;
 use App\Services\Payments\PaymentAuditService;
 use App\Services\Payments\SubscriptionPaymentService;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -70,9 +71,18 @@ class PaymentGatewayService
                 ->post($mpesa['base_url'].'/mpesa/stkpush/v1/processrequest', $payload)
                 ->throw()
                 ->json();
+        } catch (ConnectionException $e) {
+            $message = 'M-PESA could not be reached. Check the server internet connection and try again.';
+            $this->failPayment($payment, 'connection_failed', $message);
+
+            throw new RuntimeException($message, previous: $e);
         } catch (RequestException $e) {
             $this->failPaymentFromException($payment, $e, 'mpesa_stk_push');
             throw $this->mpesaRequestException($e, 'stk_push');
+        } catch (RuntimeException $e) {
+            $this->failPayment($payment, 'authorization_failed', $e->getMessage());
+
+            throw $e;
         }
 
         try {
@@ -202,6 +212,8 @@ class PaymentGatewayService
                 ])
                 ->throw()
                 ->json();
+        } catch (ConnectionException $e) {
+            throw new RuntimeException('M-PESA could not be reached while checking payment status. Please try again.', previous: $e);
         } catch (RequestException $e) {
             throw $this->mpesaRequestException($e, 'stk_query');
         }
@@ -251,14 +263,28 @@ class PaymentGatewayService
     {
         $setting = $this->setting('paypal');
         $config = $setting->config ?? [];
-        $clientId = $setting->public_key ?: config('services.paypal.client_id');
-        $secret = $setting->secret_key ?: config('services.paypal.secret');
+        $clientId = trim((string) ($setting->public_key ?: config('services.paypal.client_id')));
+        $secret = trim((string) ($setting->secret_key ?: config('services.paypal.secret')));
         $currency = strtoupper($invoice->currency);
-        $paypalAmount = $this->paypalCheckoutAmount($invoice, $config);
 
         if (! $clientId || ! $secret) {
             throw new RuntimeException('PayPal is not fully configured in the owner console.');
         }
+
+        $reusablePayment = $invoice->payments()
+            ->where('provider', 'paypal')
+            ->where('status', PaymentStatus::RequiresAction->value)
+            ->whereNotNull('provider_order_id')
+            ->whereNotNull('payment_url')
+            ->where('created_at', '>=', now()->subHours(2))
+            ->latest()
+            ->first();
+
+        if ($reusablePayment) {
+            return $reusablePayment;
+        }
+
+        $paypalAmount = $this->paypalCheckoutAmount($invoice, $config);
 
         $payment = $invoice->payments()->create([
             'tenant_id' => $invoice->tenant_id,
@@ -271,13 +297,12 @@ class PaymentGatewayService
         ]);
 
         $baseUrl = $this->paypalBaseUrl($setting->mode);
-        $token = $this->paypalAccessToken($baseUrl, $clientId, $secret, 'authorization');
         $orderPayload = [
             'intent' => 'CAPTURE',
             'purchase_units' => [[
                 'reference_id' => $invoice->invoice_number,
                 'custom_id' => $payment->merchant_reference,
-                'invoice_id' => $invoice->invoice_number,
+                'invoice_id' => $payment->merchant_reference,
                 'description' => 'Bama '.$invoice->plan?->name.' subscription',
                 'amount' => [
                     'currency_code' => $paypalAmount['currency'],
@@ -293,19 +318,37 @@ class PaymentGatewayService
         ];
 
         try {
+            $token = $this->paypalAccessToken($baseUrl, $clientId, $secret, 'authorization');
             $order = Http::withToken($token)
+                ->withHeaders(['PayPal-Request-Id' => $payment->merchant_reference])
                 ->acceptJson()
                 ->asJson()
                 ->timeout(30)
                 ->post($baseUrl.'/v2/checkout/orders', $orderPayload)
                 ->throw()
                 ->json();
+        } catch (ConnectionException $e) {
+            $message = 'PayPal could not be reached. Check the server internet connection and try again.';
+            $this->failPayment($payment, 'connection_failed', $message);
+
+            throw new RuntimeException($message, previous: $e);
         } catch (RequestException $e) {
             $this->failPaymentFromException($payment, $e, 'paypal_create_order');
             throw $this->paypalRequestException($e, 'create_order');
+        } catch (RuntimeException $e) {
+            $this->failPayment($payment, 'authorization_failed', $e->getMessage());
+
+            throw $e;
         }
 
         $approvalUrl = collect($order['links'] ?? [])->firstWhere('rel', 'approve')['href'] ?? null;
+
+        if (blank($order['id'] ?? null) || ! is_string($approvalUrl) || ! str_starts_with($approvalUrl, 'https://')) {
+            $message = 'PayPal did not return a valid approval link. Please try again.';
+            $this->failPayment($payment, 'invalid_order_response', $message, $order);
+
+            throw new RuntimeException($message);
+        }
 
         return $this->payments->transition($payment, PaymentStatus::RequiresAction, [
             'provider_order_id' => $order['id'] ?? null,
@@ -332,20 +375,32 @@ class PaymentGatewayService
         }
 
         $setting = $this->setting('paypal');
-        $clientId = $setting->public_key ?: config('services.paypal.client_id');
-        $secret = $setting->secret_key ?: config('services.paypal.secret');
+        $clientId = trim((string) ($setting->public_key ?: config('services.paypal.client_id')));
+        $secret = trim((string) ($setting->secret_key ?: config('services.paypal.secret')));
         $baseUrl = $this->paypalBaseUrl($setting->mode);
-        $token = $this->paypalAccessToken($baseUrl, $clientId, $secret, 'capture_authorization');
+
+        if (! $clientId || ! $secret) {
+            throw new RuntimeException('PayPal is not fully configured in the owner console.');
+        }
 
         try {
+            $token = $this->paypalAccessToken($baseUrl, $clientId, $secret, 'capture_authorization');
             $capture = Http::withToken($token)
+                ->withHeaders(['PayPal-Request-Id' => ($payment->merchant_reference ?: 'payment-'.$payment->id).'-capture'])
                 ->acceptJson()
                 ->asJson()
                 ->timeout(30)
                 ->post($baseUrl.'/v2/checkout/orders/'.$orderId.'/capture', new \stdClass)
                 ->throw()
                 ->json();
+        } catch (ConnectionException $e) {
+            throw new RuntimeException('PayPal could not be reached while confirming the payment. Please try again.', previous: $e);
         } catch (RequestException $e) {
+            $issue = data_get($e->response->json(), 'details.0.issue');
+            if (in_array($issue, ['ORDER_ALREADY_CAPTURED', 'ORDER_ALREADY_AUTHORIZED'], true)) {
+                return $this->queryPayPalOrder($payment);
+            }
+
             throw $this->paypalRequestException($e, 'capture_order');
         }
 
@@ -359,18 +414,24 @@ class PaymentGatewayService
         }
 
         $setting = $this->setting('paypal');
-        $clientId = $setting->public_key ?: config('services.paypal.client_id');
-        $secret = $setting->secret_key ?: config('services.paypal.secret');
+        $clientId = trim((string) ($setting->public_key ?: config('services.paypal.client_id')));
+        $secret = trim((string) ($setting->secret_key ?: config('services.paypal.secret')));
         $baseUrl = $this->paypalBaseUrl($setting->mode);
-        $token = $this->paypalAccessToken($baseUrl, $clientId, $secret, 'order_lookup_authorization');
+
+        if (! $clientId || ! $secret) {
+            throw new RuntimeException('PayPal is not fully configured in the owner console.');
+        }
 
         try {
+            $token = $this->paypalAccessToken($baseUrl, $clientId, $secret, 'order_lookup_authorization');
             $order = Http::withToken($token)
                 ->acceptJson()
                 ->timeout(30)
                 ->get($baseUrl.'/v2/checkout/orders/'.$payment->provider_order_id)
                 ->throw()
                 ->json();
+        } catch (ConnectionException $e) {
+            throw new RuntimeException('PayPal could not be reached while checking the order. Please try again.', previous: $e);
         } catch (RequestException $e) {
             throw $this->paypalRequestException($e, 'order_lookup');
         }
@@ -384,6 +445,26 @@ class PaymentGatewayService
         }
 
         return $payment->refresh();
+    }
+
+    public function cancelPayPalCheckout(SubscriptionPayment $payment): SubscriptionPayment
+    {
+        if ($payment->provider !== 'paypal') {
+            throw new RuntimeException('Only PayPal checkouts can be cancelled here.');
+        }
+
+        if (! in_array($payment->status, [
+            PaymentStatus::Created->value,
+            PaymentStatus::RequiresAction->value,
+            PaymentStatus::Processing->value,
+        ], true)) {
+            return $payment->refresh();
+        }
+
+        return $this->payments->transition($payment, PaymentStatus::Cancelled, [
+            'failure_code' => 'payer_cancelled',
+            'failure_message' => 'The payer cancelled PayPal checkout.',
+        ]);
     }
 
     public function handlePayPalWebhook(Request $request): ?SubscriptionPayment
@@ -666,6 +747,8 @@ class PaymentGatewayService
                     ->get($mpesa['base_url'].'/oauth/v1/generate', ['grant_type' => 'client_credentials'])
                     ->throw()
                     ->json('access_token');
+            } catch (ConnectionException $e) {
+                throw new RuntimeException('M-PESA authorization service could not be reached.', previous: $e);
             } catch (RequestException $e) {
                 throw $this->mpesaRequestException($e, $stage);
             }
@@ -694,6 +777,8 @@ class PaymentGatewayService
                     ->post($baseUrl.'/v1/oauth2/token', ['grant_type' => 'client_credentials'])
                     ->throw()
                     ->json('access_token');
+            } catch (ConnectionException $e) {
+                throw new RuntimeException('PayPal authorization service could not be reached.', previous: $e);
             } catch (RequestException $e) {
                 throw $this->paypalRequestException($e, $stage);
             }
@@ -829,6 +914,24 @@ class PaymentGatewayService
             'failure_message' => $payload['errorMessage'] ?? $payload['message'] ?? $payload['ResponseDescription'] ?? "{$stage} failed.",
             'response_payload' => $this->audit->sanitize($payload ?: ['body' => $response->body()]),
         ]);
+    }
+
+    private function failPayment(SubscriptionPayment $payment, string $code, string $message, array $response = []): void
+    {
+        if (PaymentStatus::tryFrom($payment->status)?->isFinal()) {
+            return;
+        }
+
+        $attributes = [
+            'failure_code' => $code,
+            'failure_message' => $message,
+        ];
+
+        if ($response) {
+            $attributes['response_payload'] = $this->audit->sanitize($response);
+        }
+
+        $this->payments->transition($payment, PaymentStatus::Failed, $attributes);
     }
 
     private function mpesaRequestException(RequestException $exception, string $stage): RuntimeException

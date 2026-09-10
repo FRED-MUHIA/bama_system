@@ -42,21 +42,29 @@ class SubscriptionManager
             ];
         }
 
+        $expiresAt = $this->expiresAt($subscription);
+
+        if ($this->repairStaleBillingLock($tenant, $subscription, $expiresAt)) {
+            $tenant->refresh();
+            $subscription->refresh()->loadMissing('plan');
+        }
+
         if ($tenant->status === 'suspended' || $subscription->locked_at || in_array($subscription->status, ['paused', 'cancelled'], true)) {
             return [
                 'state' => 'locked',
-                'message' => 'This workspace is locked because the Bama subscription is overdue. Renew the package to restore access.',
-                'expires_at' => $subscription->renews_at,
+                'message' => $subscription->status === 'cancelled'
+                    ? 'This workspace is locked because the Bama subscription was cancelled.'
+                    : 'This workspace is locked because the Bama subscription is overdue. Renew the package to restore access.',
+                'expires_at' => $expiresAt,
                 'grace_ends_at' => $subscription->grace_ends_at,
             ];
         }
 
-        $expiresAt = $this->expiresAt($subscription);
         if (! $expiresAt) {
             return ['state' => 'active', 'message' => null, 'expires_at' => null, 'grace_ends_at' => null];
         }
 
-        $graceEndsAt = $subscription->grace_ends_at ?: $expiresAt->copy()->addDays(2);
+        $graceEndsAt = $this->graceEndsAt($subscription, $expiresAt);
         $daysUntilExpiry = (int) Carbon::now()->startOfDay()->diffInDays($expiresAt->copy()->startOfDay(), false);
 
         if ($expiresAt->isPast()) {
@@ -87,7 +95,7 @@ class SubscriptionManager
         $tenant ??= ActiveTenant::current();
         $subscription = $tenant?->subscription;
 
-        if (! $tenant || ! $subscription || $subscription->locked_at) {
+        if (! $tenant || ! $subscription) {
             return false;
         }
 
@@ -96,7 +104,11 @@ class SubscriptionManager
             return false;
         }
 
-        $graceEndsAt = $subscription->grace_ends_at ?: $expiresAt->copy()->addDays(2);
+        if ($this->repairStaleBillingLock($tenant, $subscription, $expiresAt) || $subscription->locked_at || $expiresAt->isFuture()) {
+            return false;
+        }
+
+        $graceEndsAt = $this->graceEndsAt($subscription, $expiresAt);
         if ($graceEndsAt->isFuture()) {
             return false;
         }
@@ -158,5 +170,35 @@ class SubscriptionManager
         return $subscription->status === 'trialing' && $subscription->trial_ends_at
             ? $subscription->trial_ends_at
             : ($subscription->renews_at ?: $subscription->trial_ends_at);
+    }
+
+    private function graceEndsAt($subscription, Carbon $expiresAt): Carbon
+    {
+        return $subscription->grace_ends_at && $subscription->grace_ends_at->isAfter($expiresAt)
+            ? $subscription->grace_ends_at
+            : $expiresAt->copy()->addDays(2);
+    }
+
+    private function repairStaleBillingLock(Tenant $tenant, $subscription, ?Carbon $expiresAt): bool
+    {
+        if (! $expiresAt?->isFuture()
+            || ! $subscription->locked_at
+            || $subscription->status !== 'paused'
+            || ! $subscription->grace_ends_at?->isPast()) {
+            return false;
+        }
+
+        $subscription->forceFill([
+            'status' => 'active',
+            'grace_ends_at' => null,
+            'ends_at' => null,
+            'locked_at' => null,
+        ])->save();
+
+        if ($tenant->status === 'suspended') {
+            $tenant->forceFill(['status' => 'active'])->save();
+        }
+
+        return true;
     }
 }

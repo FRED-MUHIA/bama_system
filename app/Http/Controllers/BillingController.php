@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use RuntimeException;
+use Throwable;
 
 class BillingController extends Controller
 {
@@ -73,8 +74,10 @@ class BillingController extends Controller
 
         try {
             $payment = $gateway->mpesaStkPush($invoice, $data['phone']);
-        } catch (RuntimeException $e) {
-            return back()->withErrors(['mpesa' => $e->getMessage()])->withInput();
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()->withErrors(['mpesa' => $this->gatewayError($e, 'M-PESA')])->withInput();
         }
 
         $mode = data_get($payment->callback_payload, 'normalized_request.mode', 'sandbox');
@@ -89,35 +92,57 @@ class BillingController extends Controller
 
         return back()->with(
             'status',
-            'M-PESA payment request initiated for '.$phone.'. Complete the request on that phone, or use Check Payment Status if no prompt appears. Reference: '.$payment->checkout_request_id
+            'Safaricom accepted the M-PESA request for '.$phone.', but handset delivery is not confirmed yet. If no prompt appears within 30 seconds, use Check Payment Status for the reason. Reference: '.$payment->checkout_request_id
         );
     }
 
-    public function mpesaStatus(SubscriptionPayment $payment, PaymentGatewayService $gateway)
+    public function mpesaStatus(Request $request, SubscriptionPayment $payment, PaymentGatewayService $gateway)
     {
         $this->authorizePayment($payment);
 
         try {
             $payment = $gateway->queryMpesaStatus($payment);
-        } catch (RuntimeException $e) {
-            return back()->withErrors(['mpesa' => $e->getMessage()]);
+        } catch (Throwable $e) {
+            report($e);
+            $message = $this->gatewayError($e, 'M-PESA');
+
+            if ($request->expectsJson()) {
+                return response()->json(['status' => 'error', 'message' => $message, 'final' => false], 422);
+            }
+
+            return back()->withErrors(['mpesa' => $message]);
         }
 
         $result = data_get($payment->callback_payload, 'stk_query.ResultDesc')
-            ?? data_get($payment->callback_payload, 'Body.stkCallback.ResultDesc')
+            ?? data_get($payment->callback_payload, 'callback.Body.stkCallback.ResultDesc')
             ?? data_get($payment->callback_payload, 'ResponseDescription')
             ?? 'Safaricom has not returned a final result yet.';
         $result = $this->mpesaResultMessage($result);
 
+        $message = match (true) {
+            $payment->isSuccessful() => 'M-PESA payment confirmed and subscription renewed.',
+            $payment->status === 'failed' => 'M-PESA STK failed: '.$result,
+            $payment->status === 'cancelled' => $result,
+            default => 'M-PESA status: '.$result,
+        };
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => $payment->status,
+                'message' => $message,
+                'final' => in_array($payment->status, ['successful', 'failed', 'cancelled', 'expired'], true),
+            ]);
+        }
+
         if ($payment->isSuccessful()) {
-            return back()->with('status', 'M-PESA payment confirmed and subscription renewed.');
+            return back()->with('status', $message);
         }
 
-        if ($payment->status === 'failed') {
-            return back()->withErrors(['mpesa' => 'M-PESA STK failed: '.$result]);
+        if (in_array($payment->status, ['failed', 'cancelled', 'expired'], true)) {
+            return back()->withErrors(['mpesa' => $message]);
         }
 
-        return back()->with('status', 'M-PESA STK status: '.$result);
+        return back()->with('status', $message);
     }
 
     public function mpesaRedirect()
@@ -143,8 +168,10 @@ class BillingController extends Controller
 
         try {
             $payment = $gateway->createPayPalOrder($invoice);
-        } catch (RuntimeException $e) {
-            return back()->withErrors(['paypal' => $e->getMessage()]);
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()->withErrors(['paypal' => $this->gatewayError($e, 'PayPal')]);
         }
 
         if (! $payment->payment_url) {
@@ -161,17 +188,34 @@ class BillingController extends Controller
 
         try {
             $payment = $gateway->capturePayPalOrder($orderId);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
 
-            return redirect()->route('billing.index')->withErrors(['paypal' => 'PayPal capture failed: '.$e->getMessage()]);
+            return redirect()->route('billing.index')->withErrors(['paypal' => $this->gatewayError($e, 'PayPal')]);
+        }
+
+        if (! $payment->isSuccessful()) {
+            return redirect()->route('billing.index')->with(
+                'warning',
+                'PayPal received the payment request, but settlement is still processing. The subscription will activate after PayPal confirms the capture.'
+            );
         }
 
         return redirect()->route('billing.index')->with('status', 'PayPal payment verified and subscription renewed. Reference: '.$payment->provider_receipt.'.');
     }
 
-    public function paypalCancel()
+    public function paypalCancel(Request $request, PaymentGatewayService $gateway)
     {
+        $orderId = $request->query('token');
+        $payment = $orderId
+            ? SubscriptionPayment::where('provider', 'paypal')->where('provider_order_id', $orderId)->latest()->first()
+            : null;
+
+        if ($payment && ActiveTenant::id() && (int) $payment->tenant_id === (int) ActiveTenant::id()
+            && in_array($payment->status, ['created', 'requires_action', 'processing'], true)) {
+            $gateway->cancelPayPalCheckout($payment);
+        }
+
         return redirect()->route('billing.index')->with('warning', 'PayPal payment was cancelled.');
     }
 
@@ -181,8 +225,10 @@ class BillingController extends Controller
 
         try {
             $payment = $gateway->cardCheckout($invoice);
-        } catch (RuntimeException $e) {
-            return back()->withErrors(['card' => $e->getMessage()]);
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()->withErrors(['card' => $this->gatewayError($e, 'Card')]);
         }
 
         return redirect()->route('billing.payments.card-confirm', $payment);
@@ -248,5 +294,14 @@ class BillingController extends Controller
             str_contains(strtolower($result), 'cancel') => 'The payer cancelled the M-PESA prompt. Send a new prompt to try again.',
             default => $result,
         };
+    }
+
+    private function gatewayError(Throwable $exception, string $provider): string
+    {
+        if ($exception instanceof RuntimeException) {
+            return $exception->getMessage();
+        }
+
+        return $provider.' payments are temporarily unavailable. The error has been logged; please try again or contact support.';
     }
 }

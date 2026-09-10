@@ -185,7 +185,9 @@ class SubscriptionBillingService
                         continue;
                     }
 
-                    $graceEndsAt = $subscription->grace_ends_at ?: $expiresAt->copy()->addDays(2);
+                    $graceEndsAt = $subscription->grace_ends_at && $subscription->grace_ends_at->isAfter($expiresAt)
+                        ? $subscription->grace_ends_at
+                        : $expiresAt->copy()->addDays(2);
 
                     $daysUntilExpiry = (int) $date->copy()->startOfDay()->diffInDays($expiresAt->copy()->startOfDay(), false);
 
@@ -208,7 +210,7 @@ class SubscriptionBillingService
                         ])->save();
                     }
 
-                    if ($graceEndsAt->isPast() && ! $subscription->locked_at) {
+                    if ($expiresAt->isPast() && $graceEndsAt->isPast() && ! $subscription->locked_at) {
                         $subscription->forceFill([
                             'status' => 'paused',
                             'grace_ends_at' => $graceEndsAt,
@@ -353,15 +355,15 @@ class SubscriptionBillingService
 
         if ($kind === 'paid') {
             return $body
-                ."Paid at: ".($invoice->paid_at?->format('d M Y H:i') ?? now()->format('d M Y H:i'))."\n\n"
+                .'Paid at: '.($invoice->paid_at?->format('d M Y H:i') ?? now()->format('d M Y H:i'))."\n\n"
                 ."Your workspace subscription is active.\n\n"
-                ."Bama Solutions";
+                .'Bama Solutions';
         }
 
         return $body
             ."Grace ends: {$grace}\n\n"
             ."Pay by card, M-PESA STK Push, or PayPal here:\n{$billingUrl}\n\n"
             ."If payment is not received by the end of the grace period, the workspace is locked automatically until renewal is completed.\n\n"
-            ."Bama Solutions";
+            .'Bama Solutions';
     }
 }

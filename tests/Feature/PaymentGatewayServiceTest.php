@@ -335,8 +335,52 @@ class PaymentGatewayServiceTest extends TestCase
 
             return str_contains($request->url(), '/v2/checkout/orders')
                 && data_get($data, 'purchase_units.0.amount.currency_code') === 'USD'
-                && data_get($data, 'purchase_units.0.amount.value') === '0.10';
+                && data_get($data, 'purchase_units.0.amount.value') === '0.10'
+                && data_get($data, 'purchase_units.0.invoice_id') === data_get($data, 'purchase_units.0.custom_id')
+                && data_get($data, 'purchase_units.0.invoice_id') !== data_get($data, 'purchase_units.0.reference_id')
+                && $request->hasHeader('PayPal-Request-Id', data_get($data, 'purchase_units.0.invoice_id'));
         });
+
+        $gateway = app(PaymentGatewayService::class);
+        $retried = $gateway->createPayPalOrder($invoice);
+        $this->assertSame($payment->id, $retried->id);
+        $this->assertCount(1, Http::recorded(fn ($request) => str_contains($request->url(), '/v2/checkout/orders')));
+
+        $cancelled = $gateway->cancelPayPalCheckout($payment);
+        $this->assertSame('cancelled', $cancelled->status);
+
+        $newAttempt = $gateway->createPayPalOrder($invoice);
+        $this->assertNotSame($payment->id, $newAttempt->id);
+        $this->assertCount(2, Http::recorded(fn ($request) => str_contains($request->url(), '/v2/checkout/orders')));
+    }
+
+    public function test_paypal_checkout_rejects_an_order_without_a_secure_approval_link(): void
+    {
+        Http::fake([
+            'https://api-m.sandbox.paypal.com/v1/oauth2/token' => Http::response([
+                'access_token' => 'paypal-token',
+            ]),
+            'https://api-m.sandbox.paypal.com/v2/checkout/orders' => Http::response([
+                'id' => 'PAYPAL-ORDER-WITHOUT-APPROVAL',
+                'links' => [],
+            ]),
+        ]);
+
+        $invoice = $this->mpesaFixture(currency: 'USD');
+        $this->paypalSettingFixture();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('PayPal did not return a valid approval link. Please try again.');
+
+        try {
+            app(PaymentGatewayService::class)->createPayPalOrder($invoice);
+        } finally {
+            $this->assertDatabaseHas('subscription_payments', [
+                'provider' => 'paypal',
+                'status' => 'failed',
+                'failure_code' => 'invalid_order_response',
+            ]);
+        }
     }
 
     public function test_paypal_capture_posts_well_formed_empty_json_and_activates_after_completed_capture(): void

@@ -11,6 +11,8 @@ use App\Models\SubscriptionPayment;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Billing\SubscriptionBillingService;
+use App\Services\SubscriptionManager;
+use App\Support\ActiveTenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -33,7 +35,7 @@ class SubscriptionBillingEmailTest extends TestCase
         $this->assertSame(['billing@bama.test'], $billing->billingEmails($tenant));
         $this->assertSame(1, $sent);
         $this->assertDatabaseHas('email_logs', [
-            'emailable_type' => (new SubscriptionInvoice())->getMorphClass(),
+            'emailable_type' => (new SubscriptionInvoice)->getMorphClass(),
             'emailable_id' => $invoice->id,
             'recipient_email' => 'billing@bama.test',
             'status' => 'sent',
@@ -72,6 +74,49 @@ class SubscriptionBillingEmailTest extends TestCase
             'payment received',
             $paidInvoice->emailLogs()->latest()->firstOrFail()->subject
         );
+    }
+
+    public function test_future_renewal_repairs_a_stale_automatic_billing_lock(): void
+    {
+        [$tenant, , $subscription] = $this->subscriptionFixture();
+        $tenant->forceFill(['status' => 'suspended'])->save();
+        $subscription->forceFill([
+            'status' => 'paused',
+            'renews_at' => now()->addDays(3),
+            'grace_ends_at' => now()->subDay(),
+            'ends_at' => now()->subDays(2),
+            'locked_at' => now()->subDay(),
+        ])->save();
+        ActiveTenant::switchTo($tenant);
+
+        $state = app(SubscriptionManager::class)->billingState($tenant->fresh(['subscription']));
+
+        $this->assertSame('renewal_due', $state['state']);
+        $this->assertSame('active', $tenant->fresh()->status);
+        $this->assertDatabaseHas('subscriptions', [
+            'id' => $subscription->id,
+            'status' => 'active',
+            'grace_ends_at' => null,
+            'ends_at' => null,
+            'locked_at' => null,
+        ]);
+    }
+
+    public function test_billing_sweep_does_not_lock_a_future_renewal_with_an_old_grace_date(): void
+    {
+        Mail::fake();
+        [$tenant, , $subscription] = $this->subscriptionFixture();
+        $subscription->forceFill([
+            'renews_at' => now()->addDays(10),
+            'grace_ends_at' => now()->subDay(),
+        ])->save();
+
+        $stats = app(SubscriptionBillingService::class)->sweep();
+
+        $this->assertSame(0, $stats['locked']);
+        $this->assertSame('active', $tenant->fresh()->status);
+        $this->assertSame('active', $subscription->fresh()->status);
+        $this->assertNull($subscription->fresh()->locked_at);
     }
 
     private function subscriptionFixture(): array
