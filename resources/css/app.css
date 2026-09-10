@@ -406,20 +406,20 @@
     .bama-radial-loader {
         position: relative;
         display: block;
-        width: 64px;
-        height: 64px;
+        width: 48px;
+        height: 48px;
     }
 
     .bama-radial-loader > span {
         position: absolute;
-        top: 1px;
-        left: 28px;
-        width: 8px;
-        height: 20px;
+        top: 2px;
+        left: 20.5px;
+        width: 7px;
+        height: 12px;
         border-radius: 999px;
         background: #349b36;
         transform: rotate(calc(var(--spoke) * 45deg));
-        transform-origin: 4px 31px;
+        transform-origin: 3.5px 22px;
         animation: bama-loader-pulse .8s linear infinite;
         animation-delay: calc(var(--spoke) * -.1s);
     }

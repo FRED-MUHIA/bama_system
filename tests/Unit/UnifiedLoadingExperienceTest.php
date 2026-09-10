@@ -18,7 +18,9 @@ class UnifiedLoadingExperienceTest extends TestCase
         $this->assertStringContainsString('sessionStorage.getItem(sessionKey)', $shell);
         $this->assertStringContainsString('<noscript><style>.bama-loading-screen { display: none !important; }</style></noscript>', $shell);
         $this->assertStringContainsString('background: #fff', $styles);
-        $this->assertStringContainsString('width: 64px', $styles);
+        $this->assertStringContainsString('width: 48px', $styles);
+        $this->assertStringContainsString('height: 12px', $styles);
+        $this->assertStringContainsString('transform-origin: 3.5px 22px', $styles);
         $this->assertStringContainsString('background: #7ed342', $styles);
         $this->assertStringContainsString('background: #349b36', $styles);
         $this->assertStringContainsString('@keyframes bama-loader-pulse', $styles);
