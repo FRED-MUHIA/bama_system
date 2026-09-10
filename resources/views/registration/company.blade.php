@@ -50,7 +50,7 @@
                         <p class="text-xs font-bold uppercase text-[#007A3B]">Industry dashboard</p>
                         <h2 id="industry-preview-title" class="mt-1 text-xl font-black text-black">Dashboard profile</h2>
                     </div>
-                    <button type="button" class="industry-preview-toggle inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#00A651]/20 bg-white text-[#007A3B] shadow-sm" aria-controls="industry-preview-body" aria-expanded="false" aria-label="Expand industry dashboard preview">
+                    <button type="button" class="industry-preview-toggle inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#00A651]/20 bg-white text-[#007A3B] shadow-sm" aria-controls="industry-preview-body" aria-expanded="false" aria-label="Expand industry dashboard preview">
                         <i class="bi bi-chevron-down"></i>
                     </button>
                 </div>

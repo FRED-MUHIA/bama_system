@@ -36,6 +36,7 @@
 
     .website-login {
         min-height:100vh;
+        min-height:100dvh;
         display:grid;
         grid-template-columns:minmax(390px,.82fr) minmax(520px,1.18fr);
         background:#fff;
@@ -46,6 +47,7 @@
         position:relative;
         display:flex;
         min-height:100vh;
+        min-height:100dvh;
         flex-direction:column;
         justify-content:space-between;
         padding:clamp(28px,4vw,54px);
@@ -63,7 +65,8 @@
         background-size:34px 34px,34px 34px,100% 100%;
     }
     .website-login-logo img {
-        width:150px;
+        width:auto;
+        max-width:100%;
         height:auto;
         object-fit:contain;
     }
@@ -133,7 +136,7 @@
         padding:clamp(24px,4vw,54px);
         background:#fff;
     }
-    .website-login-wrap { width:min(100%,540px); }
+    .website-login-wrap { width:min(100%,420px); min-width:0; }
     .website-login-label {
         color:#00A651;
         font-size:.72rem;
@@ -154,9 +157,9 @@
         line-height:1.6;
     }
     .website-login-card {
-        padding:22px;
+        padding:20px;
         border:1px solid #dfe5e1;
-        border-radius:8px;
+        border-radius:16px;
         background:#fff;
         box-shadow:0 16px 44px rgba(15,23,42,.07);
     }
@@ -190,11 +193,13 @@
         text-transform:uppercase;
     }
     .website-login-card .form-control {
-        min-height:48px;
+        min-height:50px;
         border-color:#d7ddd9;
-        border-radius:8px;
+        border-radius:12px;
         background:#fff;
         color:#111827;
+        padding-inline:15px;
+        font-size:16px;
     }
     .website-login-card .form-control:focus {
         border-color:#00A651;
@@ -207,11 +212,11 @@
     .website-login-card .btn-warning {
         min-height:50px;
         border:0;
-        border-radius:8px;
+        border-radius:12px;
         background:#00A651;
         color:#fff;
         font-size:.9rem;
-        font-weight:900;
+        font-weight:600;
         box-shadow:0 12px 26px rgba(0,166,81,.22);
     }
     .website-login-card .btn-warning:hover,
@@ -223,10 +228,10 @@
     .password-wrap .form-control { padding-right:46px; }
     .password-toggle {
         position:absolute;
-        right:7px;
-        top:6px;
-        width:36px;
-        height:36px;
+        right:3px;
+        top:3px;
+        width:44px;
+        height:44px;
         border:0;
         border-radius:8px;
         background:transparent;
@@ -250,25 +255,38 @@
         .website-login { grid-template-columns:1fr; }
         .website-login-brand {
             min-height:auto;
-            padding:24px 34px;
+            padding:max(16px, env(safe-area-inset-top)) 24px 12px;
         }
-        .website-login-copy { margin-top:28px; max-width:680px; }
-        .website-login-copy h1 { max-width:650px; font-size:2.6rem; }
-        .website-login-panel { min-height:auto; padding:34px 24px; }
+        .website-login-brand > div:first-child {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:16px;
+        }
+        .website-login-copy,
+        .website-login-meta { display:none; }
+        .website-login-home { min-height:44px; margin-top:0; }
+        .website-login-panel {
+            min-height:auto;
+            place-items:start center;
+            padding:16px 24px max(24px, env(safe-area-inset-bottom));
+        }
+        .website-login-wrap > h2 { font-size:clamp(1.75rem,7vw,2.125rem); }
+        .website-login-intro { margin-bottom:16px; line-height:1.45; }
     }
     @media (max-width:680px) {
-        .website-login-brand { padding:22px 20px 42px; }
-        .website-login-copy h1 { font-size:2.35rem; }
-        .website-login-panel { padding:24px 16px calc(28px + env(safe-area-inset-bottom)); }
-        .website-login-card { padding:18px 15px; box-shadow:none; }
+        .website-login-brand { padding-inline:16px; }
+        .website-login-panel { padding:12px 16px max(20px, env(safe-area-inset-bottom)); }
+        .website-login-card { padding:16px; box-shadow:none; }
     }
 </style>
 
+<x-auth-layout variant="bare">
 <div class="website-login">
     <section class="website-login-brand" aria-label="Bama website access">
         <div>
             <a href="{{ route('landing') }}" class="website-login-logo" aria-label="Back to Bama home">
-                <img src="{{ $brandLogoUrl }}" alt="Bama Solutions">
+                <x-bama-logo variant="compact" :src="$brandLogoUrl" alt="BAMA" />
             </a>
             <a href="{{ route('landing') }}" class="website-login-home"><i class="bi bi-arrow-left"></i> Back home</a>
         </div>
@@ -424,4 +442,5 @@
         @endif
     });
 </script>
+</x-auth-layout>
 @endsection

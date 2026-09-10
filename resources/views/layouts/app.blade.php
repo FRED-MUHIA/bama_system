@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#00A651">
     <meta name="color-scheme" content="light">
@@ -924,7 +924,8 @@
                         @if(! $isClientPortal)
                             <button type="button" class="mobile-menu-button" id="mobile-shell-open" aria-controls="mobile-shell-drawer" aria-expanded="false" aria-label="Open navigation"><i class="bi bi-list"></i></button>
                         @endif
-                        <div class="mobile-header-avatar">{{ strtoupper(substr($currentUser->name ?? 'U', 0, 1)) }}</div>
+                        <x-bama-logo variant="header" alt="BAMA" />
+                        <span class="mobile-header-divider" aria-hidden="true"></span>
                         <div class="mobile-header-name">{{ $activeBusiness?->name ?? $activeTenant?->name ?? $currentUser->name }}</div>
                     </div>
                     <div class="app-header-title">

@@ -11,7 +11,8 @@
     $registrationLogoAlt = data_get($brand, 'logo_alt', $registrationBrandName);
 @endphp
 
-<main class="min-h-screen bg-[#F7F8F5] text-black">
+<x-auth-layout variant="bare">
+<main class="bg-[#F7F8F5] text-black">
     <style>
         @font-face {
             font-family: 'McQueen';
@@ -31,6 +32,11 @@
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            width: 100%;
+            min-width: 0;
+            min-height: 100svh;
+            min-height: 100dvh;
+            overflow-x: clip;
         }
 
         .registration-page * { letter-spacing: 0; }
@@ -72,23 +78,19 @@
         }
 
         .registration-page .field-control {
+            width: 100%;
+            min-height: 50px;
             border: 1px solid #d4d4d8;
+            border-radius: 12px;
             background: #ffffff;
             color: #000000;
+            font-size: 16px;
             box-shadow: 0 1px 0 rgba(15, 23, 42, .02);
         }
 
         .registration-page .field-control:focus {
             border-color: #00A651;
             box-shadow: 0 0 0 4px rgba(0, 166, 81, .12);
-        }
-
-        .registration-logo {
-            display: block;
-            width: 170px;
-            max-width: 42vw;
-            height: auto;
-            object-fit: contain;
         }
 
         .registration-brand {
@@ -116,15 +118,47 @@
             font-weight: 900;
             line-height: 1;
         }
+
+        .registration-page button,
+        .registration-page a {
+            touch-action: manipulation;
+        }
+
+        .registration-page button:focus-visible,
+        .registration-page a:focus-visible,
+        .registration-page input:focus-visible,
+        .registration-page select:focus-visible {
+            outline: 3px solid rgba(0, 166, 81, .24);
+            outline-offset: 2px;
+        }
+
+        .registration-page button:active,
+        .registration-page a:active {
+            transform: scale(.98);
+        }
+
+        .registration-content {
+            min-width: 0;
+            min-height: 100svh;
+            min-height: 100dvh;
+        }
+
+        @media (max-width: 1023.98px) {
+            .registration-content {
+                min-height: auto;
+                align-items: flex-start;
+                padding-top: max(1rem, env(safe-area-inset-top));
+                padding-bottom: max(1rem, env(safe-area-inset-bottom));
+            }
+        }
     </style>
     <div class="registration-page mx-auto grid min-h-screen max-w-7xl lg:grid-cols-[.72fr_1.28fr]">
         <aside class="relative hidden overflow-hidden border-r border-zinc-200 bg-white px-8 py-7 lg:block">
             <a href="{{ route('landing') }}" class="registration-brand" aria-label="Back to {{ $registrationBrandName }} home">
                 @if($registrationLogoUrl)
-                    <img src="{{ $registrationLogoUrl }}" alt="{{ $registrationLogoAlt }}" class="registration-logo">
+                    <x-bama-logo variant="auth" :src="$registrationLogoUrl" :alt="$registrationLogoAlt" />
                 @else
-                    <span class="registration-brand-mark">{{ strtoupper(substr($registrationBrandName, 0, 1)) }}</span>
-                    <span class="registration-brand-name">{{ $registrationBrandName }}</span>
+                    <x-bama-logo variant="auth" :alt="$registrationLogoAlt" />
                 @endif
             </a>
             <div class="mt-14">
@@ -142,15 +176,14 @@
             </div>
         </aside>
 
-        <section class="flex min-h-screen items-center justify-center px-4 py-5 sm:px-6">
-            <div class="w-full max-w-4xl">
-                <div class="mb-5 flex items-center justify-between lg:hidden">
+        <section class="registration-content flex items-center justify-center px-4 py-5 sm:px-6">
+            <div class="w-full min-w-0 max-w-[440px]">
+                <div class="mb-4 flex min-w-0 items-center justify-between gap-3 lg:hidden">
                     <a href="{{ route('landing') }}" class="registration-brand" aria-label="Back to {{ $registrationBrandName }} home">
                         @if($registrationLogoUrl)
-                            <img src="{{ $registrationLogoUrl }}" alt="{{ $registrationLogoAlt }}" class="registration-logo">
+                            <x-bama-logo variant="compact" :src="$registrationLogoUrl" :alt="$registrationLogoAlt" />
                         @else
-                            <span class="registration-brand-mark">{{ strtoupper(substr($registrationBrandName, 0, 1)) }}</span>
-                            <span class="registration-brand-name">{{ $registrationBrandName }}</span>
+                            <x-bama-logo variant="compact" :alt="$registrationLogoAlt" />
                         @endif
                     </a>
                     <span class="rounded-lg border border-zinc-200 bg-white px-3 py-1 text-sm text-black">Step {{ $step }} of 5</span>
@@ -160,3 +193,4 @@
         </section>
     </div>
 </main>
+</x-auth-layout>

@@ -1,9 +1,14 @@
 <div class="bama-loading-screen" data-bama-loader role="status" aria-live="polite" aria-label="Loading" hidden>
-    <span class="bama-radial-loader" aria-hidden="true">
-        @for ($spoke = 0; $spoke < 8; $spoke++)
-            <span style="--spoke: {{ $spoke }}"></span>
-        @endfor
-    </span>
+    <div class="bama-splash-content">
+        <x-bama-logo variant="splash" mark alt="" aria-hidden="true" />
+        <strong class="bama-splash-name">BAMA</strong>
+        <span class="bama-splash-tagline">Business Management Anywhere</span>
+        <span class="bama-radial-loader" aria-hidden="true">
+            @for ($spoke = 0; $spoke < 8; $spoke++)
+                <span style="--spoke: {{ $spoke }}"></span>
+            @endfor
+        </span>
+    </div>
 </div>
 <script>
     (() => {

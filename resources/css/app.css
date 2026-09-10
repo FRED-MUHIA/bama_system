@@ -88,6 +88,155 @@
         display: none !important;
     }
 
+    .bama-brand-logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        max-width: 100%;
+        flex: 0 0 auto;
+    }
+
+    .bama-brand-logo img {
+        display: block;
+        width: auto;
+        max-width: 100%;
+        height: auto;
+        object-fit: contain;
+        object-position: center;
+    }
+
+    .bama-brand-logo--auth {
+        width: clamp(7.5rem, 38vw, 9.375rem);
+    }
+
+    .bama-brand-logo--compact {
+        width: clamp(6.75rem, 32vw, 8.5rem);
+    }
+
+    .bama-brand-logo--header {
+        width: min(4.75rem, 24vw);
+    }
+
+    .bama-brand-logo--splash {
+        width: clamp(4.75rem, 22vw, 5.75rem);
+    }
+
+    .auth-layout {
+        width: 100%;
+        min-width: 0;
+        min-height: 100svh;
+        min-height: var(--bama-visual-viewport-height, 100dvh);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        overflow-x: clip;
+        overflow-y: auto;
+        padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+        background: var(--bama-page, #F7F8F5);
+        color: var(--bama-ink, #000);
+        scroll-padding-block: 5rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .auth-layout--bare {
+        display: block;
+        min-height: 0;
+        padding: 0;
+        overflow: visible;
+        background: transparent;
+    }
+
+    .auth-layout--embedded {
+        min-height: auto;
+        padding: 0;
+        background: transparent;
+    }
+
+    body:has(.auth-layout:not(.auth-layout--bare)) {
+        padding-bottom: 0 !important;
+        background: var(--bama-page, #F7F8F5) !important;
+    }
+
+    main > section:has(.auth-layout:not(.auth-layout--bare)) {
+        max-width: none;
+        padding: 0 !important;
+    }
+
+    .auth-layout-card {
+        position: relative;
+        width: 100%;
+        max-width: 420px;
+        min-width: 0;
+        padding: 1rem;
+        border: 1px solid var(--bama-line, #e5e7eb);
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 12px 34px rgba(15, 23, 42, .07);
+    }
+
+    .auth-layout-card > .bama-brand-logo {
+        display: flex;
+        margin-inline: auto;
+    }
+
+    .auth-layout-back {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        margin-bottom: .75rem;
+        border-radius: 12px;
+        color: #111827;
+        text-decoration: none;
+    }
+
+    .auth-layout-heading {
+        margin-top: 1.25rem;
+        text-align: center;
+    }
+
+    .auth-layout-heading h1 {
+        margin: 0;
+        font-size: clamp(1.65rem, 7vw, 2rem);
+        line-height: 1.05;
+    }
+
+    .auth-layout-heading p {
+        margin: .5rem 0 0;
+        color: #667085;
+        font-size: .925rem;
+        line-height: 1.45;
+    }
+
+    .auth-layout-content {
+        margin-top: 1.25rem;
+        min-width: 0;
+    }
+
+    .auth-layout-card .form-label,
+    .auth-layout-card label > span:first-child {
+        font-size: .8125rem;
+        line-height: 1.3;
+    }
+
+    .auth-layout-card .form-control,
+    .auth-layout-card .form-select,
+    .auth-layout-card .field-control {
+        width: 100%;
+        min-height: 50px;
+        border-radius: 12px;
+        padding-inline: .9375rem;
+        font-size: 16px;
+    }
+
+    .auth-layout-card .btn,
+    .auth-layout-card button[type='submit'] {
+        min-height: 50px;
+        border-radius: 12px;
+        font-size: .9375rem;
+        font-weight: 600;
+    }
+
     .page-shell {
         width: 100%;
         max-width: 1600px;
@@ -389,7 +538,7 @@
         display: grid;
         place-items: center;
         padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
-        background: #fff;
+        background: #007A3B;
         opacity: 1;
         transition: opacity .18s ease, visibility .18s ease;
     }
@@ -403,23 +552,49 @@
         opacity: 0;
     }
 
+    .bama-splash-content {
+        width: min(100%, 320px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        color: #fff;
+        text-align: center;
+    }
+
+    .bama-splash-name {
+        margin-top: .25rem;
+        font-family: var(--font-brand);
+        font-size: clamp(1.75rem, 8vw, 2.125rem);
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .bama-splash-tagline {
+        color: rgba(255, 255, 255, .84);
+        font-size: clamp(.875rem, 3.8vw, 1rem);
+        line-height: 1.35;
+    }
+
     .bama-radial-loader {
         position: relative;
         display: block;
-        width: 48px;
-        height: 48px;
+        width: 42px;
+        height: 42px;
+        margin-top: .75rem;
     }
 
     .bama-radial-loader > span {
         position: absolute;
         top: 2px;
-        left: 20.5px;
-        width: 7px;
-        height: 12px;
+        left: 18px;
+        width: 6px;
+        height: 10px;
         border-radius: 999px;
-        background: #349b36;
+        background: rgba(255, 255, 255, .48);
         transform: rotate(calc(var(--spoke) * 45deg));
-        transform-origin: 3.5px 22px;
+        transform-origin: 3px 19px;
         animation: bama-loader-pulse .8s linear infinite;
         animation-delay: calc(var(--spoke) * -.1s);
     }
@@ -429,7 +604,7 @@
             background: #7ed342;
         }
         50%, 100% {
-            background: #349b36;
+            background: rgba(255, 255, 255, .48);
         }
     }
 
@@ -543,19 +718,17 @@
     }
 
     .auth-mobile-stage {
-        min-height: min(82vh, 760px);
-        display: grid;
-        place-items: center;
-        padding: 1rem;
+        min-height: auto;
+        display: block;
+        padding: 0;
     }
 
     .auth-mobile-card {
-        width: min(100%, 440px);
-        padding: 1.25rem;
-        border: 1px solid #dfe5e1;
-        border-radius: 8px;
-        background: #fff;
-        box-shadow: 0 16px 44px rgba(15, 23, 42, .08);
+        width: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
     }
 
     .auth-mobile-brand {
@@ -594,10 +767,10 @@
 
     .password-toggle {
         position: absolute;
-        right: 7px;
-        top: 5px;
-        width: 36px;
-        height: 36px;
+        right: 3px;
+        top: 3px;
+        width: 44px;
+        height: 44px;
         border: 0;
         border-radius: 8px;
         background: transparent;
@@ -671,6 +844,21 @@
     }
 }
 
+@media (min-width: 768px) {
+    .bama-brand-logo--auth {
+        width: 10rem;
+    }
+
+    .auth-layout {
+        padding-inline: 1.5rem;
+    }
+
+    .auth-layout-card {
+        max-width: 440px;
+        padding: 1.75rem;
+    }
+}
+
 @media (min-width: 1024px) {
     .dashboard-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -700,6 +888,124 @@
 }
 
 @media (max-width: 991px) {
+    html,
+    body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: clip;
+    }
+
+    body {
+        padding-bottom: calc(64px + env(safe-area-inset-bottom)) !important;
+    }
+
+    .app-header {
+        min-height: calc(58px + env(safe-area-inset-top)) !important;
+        padding: max(.45rem, env(safe-area-inset-top)) .75rem .45rem !important;
+    }
+
+    .mobile-header-identity {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .mobile-menu-button,
+    .header-alert-btn,
+    .drawer-close {
+        width: 44px !important;
+        height: 44px !important;
+        flex: 0 0 44px !important;
+    }
+
+    .mobile-header-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        flex-basis: 32px !important;
+    }
+
+    .mobile-header-name {
+        max-width: none !important;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .mobile-header-divider {
+        width: 1px;
+        height: 24px;
+        flex: 0 0 1px;
+        background: #e5e7eb;
+    }
+
+    .app-header-actions {
+        flex: 0 0 auto;
+    }
+
+    .mobile-bottom-nav {
+        min-height: calc(62px + env(safe-area-inset-bottom)) !important;
+        padding: 6px 6px calc(6px + env(safe-area-inset-bottom)) !important;
+    }
+
+    .mobile-bottom-nav a,
+    .mobile-bottom-nav button {
+        min-width: 0;
+        min-height: 44px !important;
+        gap: 3px !important;
+        font-size: .6875rem !important;
+        touch-action: manipulation;
+    }
+
+    .mobile-bottom-nav i {
+        font-size: 1.25rem !important;
+    }
+
+    .mobile-overflow-sheet {
+        left: 12px !important;
+        right: 12px !important;
+        width: auto !important;
+        max-height: 90dvh !important;
+    }
+
+    .mobile-bottom-nav a.active,
+    .mobile-bottom-nav button.active {
+        color: var(--tenant-primary, #00A651) !important;
+    }
+
+    button,
+    .btn,
+    [role='button'],
+    input,
+    select,
+    textarea {
+        touch-action: manipulation;
+    }
+
+    button:active,
+    .btn:active,
+    [role='button']:active,
+    .mobile-bottom-nav a:active {
+        transform: scale(.98);
+    }
+
+    button,
+    .btn,
+    [role='button'],
+    a {
+        -webkit-tap-highlight-color: rgba(0, 166, 81, .12);
+    }
+
+    button:focus-visible,
+    .btn:focus-visible,
+    [role='button']:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible {
+        outline: 3px solid rgba(0, 166, 81, .3);
+        outline-offset: 2px;
+    }
+
     .page-header {
         flex-direction: column;
         gap: .85rem;
@@ -778,16 +1084,17 @@
     }
 
     .modal-dialog {
+        width: calc(100% - 24px);
         max-width: none;
-        margin: 0;
-        min-height: 100dvh;
+        margin: 12px;
+        min-height: calc(100dvh - 24px);
         display: flex;
         align-items: flex-end;
     }
 
     .modal-content {
         width: 100%;
-        max-height: calc(100dvh - 16px);
+        max-height: 90dvh;
         overflow-y: auto;
         border-radius: 16px 16px 0 0;
     }
@@ -871,5 +1178,30 @@
     .saas-card-body,
     .form-section {
         padding: .9rem;
+    }
+}
+
+@media (max-width: 359px) {
+    .bama-brand-logo--auth {
+        width: 7.75rem;
+    }
+
+    .auth-layout {
+        padding-inline: .875rem;
+    }
+
+    .auth-layout-card {
+        padding: .875rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
     }
 }

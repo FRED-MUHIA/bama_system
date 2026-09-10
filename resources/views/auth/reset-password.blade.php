@@ -1,11 +1,11 @@
 @extends('layouts.app')
 @section('title','Reset Password')
 @section('content')
-<div class="auth-mobile-stage">
-    <div class="auth-mobile-card">
-        <div class="auth-mobile-brand">Bama</div>
-        <h1>Choose a new password</h1>
-        <p>Use a strong password for your workspace account.</p>
+<x-auth-layout
+    title="Choose a new password"
+    intro="Use a strong password for your workspace account."
+    :back-url="route('login')"
+>
         <form method="post" action="{{ route('password.update') }}">
             @csrf
             <input type="hidden" name="token" value="{{ $token }}">
@@ -29,6 +29,5 @@
             </div>
             <button class="btn btn-warning w-100">Reset password</button>
         </form>
-    </div>
-</div>
+</x-auth-layout>
 @endsection

@@ -32,14 +32,14 @@
                     <span class="text-xs font-bold uppercase text-black">Password</span>
                     <span class="relative">
                         <input id="register-password" type="password" name="password" autocomplete="new-password" required class="field-control w-full rounded-lg px-4 py-3 pr-12 outline-none transition">
-                        <button type="button" class="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg text-zinc-500" aria-label="Show password" data-password-toggle="register-password"><i class="bi bi-eye"></i></button>
+                        <button type="button" class="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-zinc-500" aria-label="Show password" data-password-toggle="register-password"><i class="bi bi-eye"></i></button>
                     </span>
                 </label>
                 <label class="grid gap-2">
                     <span class="text-xs font-bold uppercase text-black">Confirm Password</span>
                     <span class="relative">
                         <input id="register-password-confirmation" type="password" name="password_confirmation" autocomplete="new-password" required class="field-control w-full rounded-lg px-4 py-3 pr-12 outline-none transition">
-                        <button type="button" class="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg text-zinc-500" aria-label="Show password" data-password-toggle="register-password-confirmation"><i class="bi bi-eye"></i></button>
+                        <button type="button" class="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-zinc-500" aria-label="Show password" data-password-toggle="register-password-confirmation"><i class="bi bi-eye"></i></button>
                     </span>
                 </label>
             </div>

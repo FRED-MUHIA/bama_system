@@ -3,11 +3,11 @@
 @section('title', 'Create tenant')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-lg-7">
-        <div class="card">
-            <div class="card-header">Tenant provisioning</div>
-            <div class="card-body">
+<x-auth-layout
+    variant="embedded"
+    title="Tenant provisioning"
+    intro="Create your organization and primary business workspace."
+>
                 <form method="post" action="{{ route('onboarding.tenant.store') }}" class="row g-3">
                     @csrf
                     <div class="col-md-6">
@@ -41,14 +41,11 @@
                     <div class="col-12">
                         <div class="rounded border bg-light p-3" id="tenant-industry-preview" aria-live="polite"></div>
                     </div>
-                    <div class="col-12 d-flex justify-content-end">
-                        <button class="btn btn-warning">Provision tenant</button>
+                    <div class="col-12">
+                        <button class="btn btn-warning w-100">Provision tenant</button>
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
-</div>
+</x-auth-layout>
 
 <script>
     const tenantIndustries = @json($industries->values());

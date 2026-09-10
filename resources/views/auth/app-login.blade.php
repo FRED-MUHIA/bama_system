@@ -52,7 +52,7 @@
         min-height:100vh;
         min-height:100svh;
         height:100vh;
-        height:100dvh;
+        height:var(--bama-visual-viewport-height,100dvh);
         overflow:hidden;
         color:#fff;
         background:#061512;
@@ -74,6 +74,7 @@
         padding:calc(24px + env(safe-area-inset-top)) clamp(18px,5vw,42px) calc(28px + env(safe-area-inset-bottom));
         overflow-x:hidden;
         overflow-y:auto;
+        scroll-padding-block:96px;
         background:
             linear-gradient(180deg,rgba(4,22,18,.28),rgba(4,14,12,.97)),
             linear-gradient(90deg,rgba(3,20,16,.9),rgba(3,20,16,.38) 62%,rgba(3,20,16,.9)),
@@ -91,7 +92,7 @@
     }
     .app-screen > * { position:relative; z-index:1; }
     .app-screen-center {
-        width:min(100%,520px);
+        width:min(100%,440px);
         min-height:calc(100dvh - 52px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         margin-inline:auto;
         display:flex;
@@ -100,12 +101,10 @@
     .app-logo {
         display:flex;
         justify-content:center;
-        margin-bottom:auto;
+        margin-bottom:clamp(24px,7dvh,56px);
     }
-    .app-logo img {
-        width:clamp(118px,34vw,180px);
-        height:auto;
-        object-fit:contain;
+    .app-logo .bama-brand-logo {
+        width:clamp(120px,38vw,150px);
         filter:drop-shadow(0 14px 28px rgba(0,0,0,.2));
     }
     .app-kicker {
@@ -126,17 +125,17 @@
         box-shadow:0 0 18px rgba(49,198,187,.5);
     }
     .app-title {
-        margin:24px 0 0;
+        margin:20px 0 0;
         max-width:690px;
         color:#fff;
-        font-size:clamp(2.9rem,14vw,5.8rem);
+        font-size:clamp(2.15rem,10vw,3.25rem);
         font-weight:850 !important;
-        line-height:1;
+        line-height:.98;
         text-shadow:0 18px 45px rgba(0,0,0,.32);
     }
     .app-copy {
         max-width:540px;
-        margin:20px 0 0;
+        margin:16px 0 0;
         color:rgba(255,255,255,.76);
         font-size:clamp(.98rem,3.7vw,1.18rem);
         line-height:1.42;
@@ -144,7 +143,7 @@
     .app-primary,
     .app-secondary {
         width:100%;
-        min-height:54px;
+        min-height:50px;
         display:inline-flex;
         align-items:center;
         justify-content:center;
@@ -152,8 +151,9 @@
         border-radius:14px;
         border:0;
         text-decoration:none;
-        font-size:1rem;
-        font-weight:950;
+        font-size:.975rem;
+        font-weight:700;
+        transition:transform .15s ease,filter .15s ease,background-color .15s ease;
     }
     .app-primary {
         margin-top:auto;
@@ -179,7 +179,7 @@
     }
     .app-choice-card {
         margin-top:auto;
-        padding:22px;
+        padding:20px;
         border-radius:18px;
     }
     .app-choice-card h2,
@@ -191,7 +191,7 @@
         line-height:1.08;
     }
     .app-choice-card p {
-        margin:0 0 26px;
+        margin:0 0 20px;
         color:rgba(255,255,255,.72);
         font-size:1rem;
         line-height:1.55;
@@ -237,8 +237,8 @@
         gap:12px;
     }
     .app-icon-button {
-        width:46px;
-        height:46px;
+        width:44px;
+        height:44px;
         display:grid;
         place-items:center;
         border:0;
@@ -247,8 +247,21 @@
         color:#fff;
     }
     .app-auth-card {
-        padding:20px;
+        padding:18px;
         border-radius:18px;
+    }
+    .app-auth-heading {
+        margin-bottom:16px;
+        text-align:center;
+    }
+    .app-auth-heading h2 {
+        margin:0;
+        font-size:clamp(1.65rem,7vw,2rem);
+    }
+    .app-auth-heading p {
+        margin:6px 0 0;
+        color:rgba(255,255,255,.72);
+        font-size:.9rem;
     }
     .app-tabs {
         display:grid;
@@ -264,7 +277,7 @@
     .app-tabs .nav-link {
         min-height:40px;
         border-radius:10px;
-        color:rgba(255,255,255,.72);
+        color:rgba(255,255,255,.72) !important;
         font-size:.74rem;
         font-weight:950;
         padding:.42rem .28rem;
@@ -273,23 +286,23 @@
     }
     .app-tabs .nav-link.active {
         background:#00A651;
-        color:#fff;
+        color:#fff !important;
     }
     .app-auth-card .form-label {
-        margin-bottom:10px;
+        margin-bottom:6px;
         color:#fff;
         font-size:.86rem;
         font-weight:950;
         text-transform:uppercase;
     }
     .app-auth-card .form-control {
-        min-height:52px;
+        min-height:50px;
         border:1px solid rgba(255,255,255,.16);
         border-radius:12px;
         background:rgba(255,255,255,.11);
         color:#fff;
         font-size:16px;
-        padding:.78rem .95rem;
+        padding:.7rem .95rem;
         box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
     }
     .app-auth-card .form-control:focus {
@@ -317,13 +330,13 @@
         text-underline-offset:4px;
     }
     .app-auth-card .btn-warning {
-        min-height:54px;
+        min-height:50px;
         border:0;
         border-radius:14px;
         background:linear-gradient(135deg,#42d5ca,#0fa899);
         color:#fff;
-        font-size:1rem;
-        font-weight:950;
+        font-size:.975rem;
+        font-weight:700;
         box-shadow:0 18px 44px rgba(17,170,156,.28);
     }
     .app-auth-card .btn-warning:hover,
@@ -335,14 +348,31 @@
         opacity:.82;
         cursor:wait;
     }
-    .app-register-link {
-        min-height:52px;
-        border-radius:14px;
-        border:0;
-        background:#fff;
-        color:#061512 !important;
-        font-weight:950;
-        text-decoration:none !important;
+    .app-auth-links {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        margin:0 0 16px;
+        font-size:.82rem;
+    }
+    .app-auth-links .form-check {
+        min-height:44px;
+        display:flex;
+        align-items:center;
+        margin:0;
+    }
+    .app-auth-links > a {
+        min-height:44px;
+        display:inline-flex;
+        align-items:center;
+        text-align:right;
+    }
+    .app-create-account {
+        margin:14px 0 0;
+        color:rgba(255,255,255,.7);
+        font-size:.86rem;
+        text-align:center;
     }
     .password-wrap { position:relative; }
     .password-wrap .form-control { padding-right:58px; }
@@ -350,8 +380,8 @@
         position:absolute;
         top:50%;
         right:8px;
-        width:38px;
-        height:38px;
+        width:44px;
+        height:44px;
         transform:translateY(-50%);
         border:0;
         border-radius:50%;
@@ -405,27 +435,27 @@
         .app-screen {
             display:grid;
             place-items:center;
-            padding-inline:48px;
+            padding-inline:32px;
         }
         .app-screen-center {
-            width:min(100%,680px);
-            min-height:min(820px, calc(100dvh - 80px));
+            width:min(100%,560px);
+            min-height:min(760px, calc(100dvh - 64px));
         }
         .app-choice-card,
         .app-auth-card,
         .app-auth-top {
-            width:min(100%,520px);
+            width:min(100%,440px);
         }
         .app-title {
-            font-size:clamp(4.5rem,9vw,8rem);
+            font-size:clamp(3rem,7vw,4rem);
             line-height:.95;
         }
         .app-primary,
         .app-secondary,
         .app-auth-card .btn-warning,
         .app-register-link {
-            min-height:62px;
-            border-radius:999px;
+            min-height:52px;
+            border-radius:16px;
         }
         .app-tabs {
             border-radius:999px;
@@ -435,9 +465,9 @@
             white-space:nowrap;
         }
         .app-auth-card .form-control {
-            min-height:62px;
-            border-radius:24px;
-            padding:1rem 1.18rem;
+            min-height:52px;
+            border-radius:14px;
+            padding:.8rem 1rem;
         }
     }
     @media (max-width:767.98px) {
@@ -449,8 +479,8 @@
             min-height:auto;
             padding-bottom:44px;
         }
-        .app-auth-top .app-logo img {
-            width:112px;
+        .app-auth-top .app-logo .bama-brand-logo {
+            width:120px;
         }
         .app-icon-button {
             width:42px;
@@ -466,7 +496,7 @@
     }
     @media (max-width:380px) {
         .app-screen { padding-inline:14px; }
-        .app-title { font-size:2.72rem; }
+        .app-title { font-size:clamp(2.15rem,10vw,2.625rem); }
         .app-auth-card,
         .app-choice-card { padding-inline:14px; }
         .app-tabs .nav-link { font-size:.68rem; }
@@ -474,11 +504,11 @@
     }
     @media (max-height:680px) and (max-width:767.98px) {
         .app-logo {
-            margin-bottom:24px;
+            margin-bottom:16px;
         }
         .app-title {
             margin-top:16px;
-            font-size:2.65rem;
+            font-size:clamp(2.1rem,9vw,2.5rem);
         }
         .app-copy {
             margin-top:14px;
@@ -495,12 +525,13 @@
     }
 </style>
 
+<x-auth-layout variant="bare">
 <div class="app-flow" data-app-flow data-initial-step="{{ $initialStep }}">
     <div class="app-flow-track" data-app-track>
         <section class="app-screen" aria-label="Bama app welcome">
             <div class="app-screen-center">
                 <div class="app-logo">
-                    <img src="{{ $brandLogoUrl }}" alt="Bama Solutions">
+                    <x-bama-logo variant="auth" :src="$brandLogoUrl" alt="BAMA" />
                 </div>
                 <div>
                     <div class="app-kicker">Bama Workspace</div>
@@ -516,7 +547,7 @@
         <section class="app-screen" aria-label="Choose app access method">
             <div class="app-screen-center">
                 <div class="app-logo">
-                    <img src="{{ $brandLogoUrl }}" alt="Bama Solutions">
+                    <x-bama-logo variant="auth" :src="$brandLogoUrl" alt="BAMA" />
                 </div>
                 <div class="app-choice-card">
                     <h2>Continue with email</h2>
@@ -543,12 +574,16 @@
                         <i class="bi bi-arrow-left"></i>
                     </button>
                     <div class="app-logo m-0">
-                        <img src="{{ $brandLogoUrl }}" alt="Bama Solutions">
+                        <x-bama-logo variant="compact" :src="$brandLogoUrl" alt="BAMA" />
                     </div>
                     <span class="app-icon-button" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
                 </div>
 
                 <div class="app-auth-card">
+                    <div class="app-auth-heading">
+                        <h2>Welcome Back</h2>
+                        <p>Sign in to your workspace</p>
+                    </div>
                     @if ($otpAvailable)
                         <ul class="nav nav-pills app-tabs" role="tablist">
                             <li class="nav-item">
@@ -570,24 +605,24 @@
                         <input type="hidden" name="login_context" value="{{ $loginContext }}">
                         <div class="mb-3">
                             <label class="form-label">Email address</label>
-                            <input name="username" value="{{ old('username') }}" class="form-control" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
+                            <input name="username" value="{{ old('username') }}" class="form-control" autocomplete="username" autocapitalize="none" spellcheck="false" required @if($initialStep === 2) autofocus @endif>
                         </div>
-                        <div class="mb-4">
+                        <div class="mb-2">
                             <label class="form-label">Password</label>
                             <div class="password-wrap">
                                 <input id="app-login-password" name="password" type="password" class="form-control" autocomplete="current-password" required>
                                 <button class="password-toggle" type="button" aria-label="Show password" data-password-toggle="app-login-password"><i class="bi bi-eye"></i></button>
                             </div>
                         </div>
-                        <button class="btn btn-warning w-100" type="submit">Sign in</button>
-                        <a href="{{ route('register.account') }}" class="btn app-register-link w-100 mt-3">Create business account</a>
-                        <div class="text-center mt-4">
+                        <div class="app-auth-links">
+                            <label class="form-check gap-2">
+                                <input class="form-check-input" type="checkbox" name="remember">
+                                <span class="form-check-label">Remember me</span>
+                            </label>
                             <a href="{{ route('password.request') }}">Forgot password?</a>
                         </div>
-                        <label class="form-check d-flex justify-content-center gap-2 mt-3">
-                            <input class="form-check-input" type="checkbox" name="remember">
-                            <span class="form-check-label">Keep me signed in</span>
-                        </label>
+                        <button class="btn btn-warning w-100" type="submit">Login</button>
+                        <p class="app-create-account">Don't have an account? <a href="{{ route('register.account') }}">Create Account</a></p>
                     </form>
 
                     @if ($otpAvailable)
@@ -731,4 +766,5 @@
         setStep(step);
     });
 </script>
+</x-auth-layout>
 @endsection

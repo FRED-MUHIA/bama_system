@@ -6,28 +6,28 @@ use Tests\TestCase;
 
 class UnifiedLoadingExperienceTest extends TestCase
 {
-    public function test_shared_shell_uses_the_simple_green_radial_loader(): void
+    public function test_shared_shell_uses_the_compact_branded_splash_loader(): void
     {
         $shell = file_get_contents(resource_path('views/mobile/pwa-shell.blade.php'));
         $styles = file_get_contents(resource_path('css/app.css'));
 
         $this->assertStringContainsString('data-bama-loader', $shell);
         $this->assertStringContainsString('bama-radial-loader', $shell);
+        $this->assertStringContainsString('bama-splash-content', $shell);
+        $this->assertStringContainsString('Business Management Anywhere', $shell);
+        $this->assertStringContainsString('<x-bama-logo variant="splash"', $shell);
         $this->assertStringContainsString('$spoke < 8', $shell);
         $this->assertStringContainsString('bama-initial-loader-shown', $shell);
         $this->assertStringContainsString('sessionStorage.getItem(sessionKey)', $shell);
         $this->assertStringContainsString('<noscript><style>.bama-loading-screen { display: none !important; }</style></noscript>', $shell);
-        $this->assertStringContainsString('background: #fff', $styles);
-        $this->assertStringContainsString('width: 48px', $styles);
-        $this->assertStringContainsString('height: 12px', $styles);
-        $this->assertStringContainsString('transform-origin: 3.5px 22px', $styles);
+        $this->assertStringContainsString('background: #007A3B', $styles);
+        $this->assertStringContainsString('width: 42px', $styles);
+        $this->assertStringContainsString('height: 10px', $styles);
+        $this->assertStringContainsString('transform-origin: 3px 19px', $styles);
         $this->assertStringContainsString('background: #7ed342', $styles);
-        $this->assertStringContainsString('background: #349b36', $styles);
+        $this->assertStringContainsString('background: rgba(255, 255, 255, .48)', $styles);
         $this->assertStringContainsString('@keyframes bama-loader-pulse', $styles);
 
-        $this->assertStringNotContainsString('bama-pwa-splash-mark', $shell.$styles);
-        $this->assertStringNotContainsString('bama-pwa-splash-name', $shell.$styles);
-        $this->assertStringNotContainsString('bama-pwa-splash-tagline', $shell.$styles);
     }
 
     public function test_loader_is_not_reopened_for_every_navigation(): void

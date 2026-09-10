@@ -5,6 +5,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileMedia = window.matchMedia('(max-width: 991px)');
     const desktopMedia = window.matchMedia('(min-width: 992px)');
     const eagerImageCount = mobileMedia.matches ? 1 : 2;
+    const visualViewport = window.visualViewport;
+
+    const keepFocusedControlVisible = () => {
+        if (! mobileMedia.matches) return;
+
+        const focused = document.activeElement;
+        if (! focused?.matches('input, select, textarea')) return;
+
+        window.requestAnimationFrame(() => focused.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
+    };
+
+    const syncVisualViewport = () => {
+        const height = visualViewport?.height || window.innerHeight;
+        document.documentElement.style.setProperty('--bama-visual-viewport-height', `${Math.round(height)}px`);
+        keepFocusedControlVisible();
+    };
+
+    syncVisualViewport();
+    visualViewport?.addEventListener('resize', syncVisualViewport, { passive: true });
+    window.addEventListener('orientationchange', syncVisualViewport, { passive: true });
+    document.addEventListener('focusin', (event) => {
+        if (event.target.matches('input, select, textarea')) {
+            window.setTimeout(keepFocusedControlVisible, 120);
+        }
+    });
 
     document.querySelectorAll('img').forEach((image, index) => {
         image.decoding = image.decoding || 'async';
