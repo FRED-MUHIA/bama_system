@@ -154,6 +154,51 @@ class PaymentGatewayServiceTest extends TestCase
         $this->assertSame('254745506619', $payment->phone);
     }
 
+    public function test_mpesa_stk_push_accepts_formatted_international_phone_number(): void
+    {
+        Http::fake([
+            'https://sandbox.safaricom.co.ke/oauth/v1/generate*' => Http::response([
+                'access_token' => 'test-token',
+            ]),
+            'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest' => Http::response([
+                'ResponseCode' => '0',
+                'ResponseDescription' => 'Success. Request accepted for processing',
+                'CheckoutRequestID' => 'ws_CO_formatted',
+                'MerchantRequestID' => 'mr_formatted',
+            ]),
+        ]);
+
+        $invoice = $this->mpesaFixture();
+
+        $payment = app(PaymentGatewayService::class)->mpesaStkPush($invoice, '+254 745 506 619');
+
+        $this->assertSame('254745506619', $payment->phone);
+    }
+
+    public function test_saved_sandbox_mode_is_not_overridden_by_live_environment_config(): void
+    {
+        config(['services.mpesa.environment' => 'live']);
+
+        Http::fake([
+            'https://sandbox.safaricom.co.ke/oauth/v1/generate*' => Http::response([
+                'access_token' => 'test-token',
+            ]),
+            'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest' => Http::response([
+                'ResponseCode' => '0',
+                'ResponseDescription' => 'Success. Request accepted for processing',
+                'CheckoutRequestID' => 'ws_CO_sandbox',
+                'MerchantRequestID' => 'mr_sandbox',
+            ]),
+        ]);
+
+        $invoice = $this->mpesaFixture(mpesaSetting: ['mode' => 'sandbox']);
+
+        $payment = app(PaymentGatewayService::class)->mpesaStkPush($invoice, '0745506619');
+
+        $this->assertSame('sandbox', data_get($payment->callback_payload, 'normalized_request.mode'));
+        Http::assertNotSent(fn ($request) => str_starts_with($request->url(), 'https://api.safaricom.co.ke'));
+    }
+
     public function test_mpesa_stk_push_rejects_overlong_phone_number(): void
     {
         $invoice = $this->mpesaFixture();

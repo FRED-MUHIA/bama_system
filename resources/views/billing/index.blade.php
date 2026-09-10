@@ -98,8 +98,8 @@
                             <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-phone text-success"></i><strong>M-PESA STK</strong></div>
                             <form method="post" action="{{ route('billing.invoices.mpesa', $invoice) }}" class="d-grid gap-2" data-mpesa-form>
                                 @csrf
-                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="0700000000 or 254700000000" pattern="(?:254\d{9}|0\d{9}|[17]\d{8})" maxlength="12" title="Enter 0700000000 or 254700000000" data-mpesa-phone @disabled(! $mpesaReady || ! $invoicePayable) required>
-                                <div class="form-text">Any payer number: 0700000000 or 254700000000.</div>
+                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="0700000000 or +254 700 000 000" pattern="[+0-9 ()-]{9,20}" maxlength="20" title="Enter 0700000000, 254700000000, or +254 700 000 000" data-mpesa-phone @disabled(! $mpesaReady || ! $invoicePayable) required>
+                                <div class="form-text">Any payer number: 0700000000, 254700000000, or +254 700 000 000.</div>
                                 @if($enabled('mpesa') && ! $mpesaLive)
                                     <div class="small text-warning-emphasis">M-PESA is in sandbox mode. Sandbox accepts test requests but does not prompt a real phone. Switch to live keys in the owner console.</div>
                                 @endif
@@ -222,6 +222,7 @@ document.querySelectorAll('[data-mpesa-form]').forEach((form) => {
     };
 
     input?.addEventListener('input', normalize);
+    normalize();
     form.addEventListener('submit', () => {
         normalize();
         if (button) {

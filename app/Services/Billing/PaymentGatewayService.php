@@ -67,6 +67,7 @@ class PaymentGatewayService
         try {
             $response = Http::withToken($this->mpesaAccessToken($mpesa, 'authorization'))
                 ->acceptJson()
+                ->asJson()
                 ->timeout(30)
                 ->post($mpesa['base_url'].'/mpesa/stkpush/v1/processrequest', $payload)
                 ->throw()
@@ -203,6 +204,7 @@ class PaymentGatewayService
         try {
             $response = Http::withToken($this->mpesaAccessToken($mpesa, 'status_authorization'))
                 ->acceptJson()
+                ->asJson()
                 ->timeout(30)
                 ->post($mpesa['base_url'].'/mpesa/stkpushquery/v1/query', [
                     'BusinessShortCode' => $mpesa['shortcode'],
@@ -696,7 +698,10 @@ class PaymentGatewayService
         $config = $setting->config ?? [];
         $transactionType = trim((string) ($config['transaction_type'] ?? config('services.mpesa.transaction_type', 'CustomerPayBillOnline')));
         $callbackUrl = trim((string) ($config['callback_url'] ?? config('services.mpesa.callback_url') ?? route('api.payments.mpesa.callback')));
-        $mode = $setting->mode === 'live' ? 'live' : config('services.mpesa.environment', 'sandbox');
+        // Once a gateway setting exists, the owner-console selection is the
+        // source of truth. Falling back to MPESA_ENVIRONMENT for a saved
+        // "sandbox" value can make the UI and the Daraja endpoint disagree.
+        $mode = $setting->mode === 'live' ? 'live' : 'sandbox';
 
         $mpesa = [
             'mode' => $mode === 'live' ? 'live' : 'sandbox',
