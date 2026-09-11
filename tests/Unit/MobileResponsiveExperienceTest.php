@@ -6,15 +6,13 @@ use Tests\TestCase;
 
 class MobileResponsiveExperienceTest extends TestCase
 {
-    public function test_authentication_surfaces_share_the_responsive_layout_and_logo(): void
+    public function test_app_authentication_surfaces_share_the_responsive_layout_and_logo(): void
     {
         $views = collect([
             'auth/app-login.blade.php',
-            'auth/login.blade.php',
             'auth/forgot-password.blade.php',
             'auth/reset-password.blade.php',
             'auth/verify-email.blade.php',
-            'components/registration-shell.blade.php',
             'onboarding/tenant.blade.php',
         ])->mapWithKeys(fn (string $view) => [
             $view => file_get_contents(resource_path('views/'.$view)),
@@ -32,6 +30,19 @@ class MobileResponsiveExperienceTest extends TestCase
         $this->assertStringContainsString('width: clamp(7.5rem, 38vw, 9.375rem)', $styles);
         $this->assertStringContainsString('max-width: 420px', $styles);
         $this->assertStringContainsString('max-width: 440px', $styles);
+    }
+
+    public function test_website_login_and_registration_use_the_marketing_layout(): void
+    {
+        $login = file_get_contents(resource_path('views/auth/login.blade.php'));
+        $account = file_get_contents(resource_path('views/registration/account.blade.php'));
+        $registrationShell = file_get_contents(resource_path('views/components/registration-shell.blade.php'));
+
+        $this->assertStringContainsString("extends('layouts.marketing'", $login);
+        $this->assertStringContainsString("extends('layouts.marketing'", $account);
+        $this->assertStringNotContainsString('x-auth-layout', $login.$registrationShell);
+        $this->assertStringNotContainsString('route(\'app.login\')', $account);
+        $this->assertStringContainsString('route(\'login\')', $account);
     }
 
     public function test_mobile_viewport_keyboard_safe_area_and_touch_contracts_are_present(): void
