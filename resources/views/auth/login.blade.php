@@ -475,6 +475,12 @@
                     <i class="bi bi-shield-check"></i>
                     <span>Your access is encrypted, role-controlled, and recorded for security.</span>
                 </div>
+                @if($loginContext === 'business')
+                    <div class="text-center mt-3">
+                        <span class="text-muted">Do not have an account?</span>
+                        <a href="{{ route('register.account') }}">Create Account</a>
+                    </div>
+                @endif
             </div>
         </div>
     </section>

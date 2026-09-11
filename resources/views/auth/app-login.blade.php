@@ -407,6 +407,9 @@
         font-size:.86rem;
         text-align:center;
     }
+    .app-register-link {
+        margin-top:14px;
+    }
     .password-wrap { position:relative; }
     .password-wrap .form-control { padding-right:58px; }
     .password-toggle {
@@ -666,6 +669,8 @@
                             </div>
                         </div>
                     @endif
+
+                    <a class="app-primary app-register-link" href="{{ route('register.account') }}">Get Started</a>
 
                     <div class="app-security">
                         <i class="bi bi-shield-check"></i>

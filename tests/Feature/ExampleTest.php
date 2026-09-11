@@ -27,13 +27,21 @@ class ExampleTest extends TestCase
             ->assertRedirect(route('dashboard'));
     }
 
-    public function test_app_login_does_not_render_home_or_signup_panels(): void
+    public function test_app_login_keeps_registration_entry_without_home_panels(): void
     {
         $this->get(route('app.login'))
             ->assertOk()
             ->assertSee('Welcome Back')
-            ->assertDontSee('Get Started')
-            ->assertDontSee('Continue with email')
-            ->assertDontSee('Create Account');
+            ->assertSee('Get Started')
+            ->assertSee(route('register.account'), false)
+            ->assertDontSee('Continue with email');
+    }
+
+    public function test_web_login_keeps_registration_link(): void
+    {
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('Create Account')
+            ->assertSee(route('register.account'), false);
     }
 }
