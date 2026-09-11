@@ -12,7 +12,7 @@
 @endphp
 
 <x-auth-layout variant="bare">
-<main class="bg-[#050806] text-white">
+<main class="registration-shell bg-[#050806] text-white">
     <style>
         @font-face {
             font-family: 'McQueen';
@@ -20,6 +20,13 @@
             font-weight: 600;
             font-style: normal;
             font-display: swap;
+        }
+
+        .registration-shell {
+            width: 100%;
+            min-width: 0;
+            overflow-x: clip;
+            background: #050806;
         }
 
         .registration-page {
@@ -33,11 +40,11 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             width: 100%;
-            max-width: 1280px;
+            max-width: none;
             min-width: 0;
             min-height: 100svh;
             min-height: 100dvh;
-            margin-inline: auto;
+            margin-inline: 0;
             overflow-x: clip;
             background-color: #050806;
             background-image:
@@ -212,7 +219,7 @@
             }
         }
     </style>
-    <div class="registration-page mx-auto grid min-h-screen max-w-7xl lg:grid-cols-[.72fr_1.28fr]">
+    <div class="registration-page grid min-h-screen lg:grid-cols-[.72fr_1.28fr]">
         <aside class="relative hidden overflow-hidden border-r border-zinc-200 bg-white px-8 py-7 lg:block">
             <a href="{{ route('app') }}" class="registration-brand" aria-label="Open {{ $registrationBrandName }} app">
                 @if($registrationLogoUrl)
