@@ -43,9 +43,9 @@
 
     .app-flow {
         --step:0;
-        --teal:#31c6bb;
-        --teal-dark:#0fa899;
-        --night:#061512;
+        --teal:#dfff45;
+        --teal-dark:#c7ee36;
+        --night:#050806;
         position:relative;
         width:100%;
         max-width:100%;
@@ -55,7 +55,7 @@
         height:var(--bama-visual-viewport-height,100dvh);
         overflow:hidden;
         color:#fff;
-        background:#061512;
+        background:#050806;
         touch-action:pan-y;
     }
     .app-flow * { letter-spacing:0; }
@@ -75,10 +75,12 @@
         overflow-x:hidden;
         overflow-y:auto;
         scroll-padding-block:96px;
-        background:
-            linear-gradient(180deg,rgba(4,22,18,.28),rgba(4,14,12,.97)),
-            linear-gradient(90deg,rgba(3,20,16,.9),rgba(3,20,16,.38) 62%,rgba(3,20,16,.9)),
-            url("{{ $heroImageUrl }}") center/cover no-repeat;
+        background-color:#050806;
+        background-image:
+            radial-gradient(circle at 50% 13%,rgba(199,238,54,.12),transparent 24rem),
+            radial-gradient(circle,rgba(223,255,69,.11) 1px,transparent 1.25px),
+            linear-gradient(180deg,#0a1008,#050806 66%);
+        background-size:auto,13px 13px,auto;
         -webkit-overflow-scrolling:touch;
     }
     .app-screen::after {
@@ -86,8 +88,8 @@
         position:absolute;
         inset:0;
         background:
-            radial-gradient(circle at 76% 10%,rgba(49,198,187,.35),transparent 28%),
-            linear-gradient(180deg,rgba(49,198,187,.08),transparent 30%);
+            radial-gradient(circle at 50% 9%,rgba(223,255,69,.12),transparent 24%),
+            linear-gradient(180deg,rgba(223,255,69,.025),transparent 30%);
         pointer-events:none;
     }
     .app-screen > * { position:relative; z-index:1; }
@@ -122,7 +124,7 @@
         height:4px;
         border-radius:999px;
         background:var(--teal);
-        box-shadow:0 0 18px rgba(49,198,187,.5);
+        box-shadow:0 0 18px rgba(223,255,69,.38);
     }
     .app-title {
         margin:20px 0 0;
@@ -157,25 +159,26 @@
     }
     .app-primary {
         margin-top:auto;
-        background:linear-gradient(135deg,#42d5ca,#0fa899);
-        color:#fff;
-        box-shadow:0 18px 44px rgba(17,170,156,.35);
+        background:linear-gradient(90deg,#c8f32f,#e8ff59);
+        color:#071006;
+        box-shadow:0 18px 44px rgba(202,246,50,.16);
     }
-    .app-primary:hover { color:#fff; filter:brightness(1.04); }
+    .app-primary:hover { color:#071006; filter:brightness(1.04); }
     .app-secondary {
-        background:#fff;
-        color:#061512 !important;
+        border:1px solid rgba(255,255,255,.13);
+        background:rgba(255,255,255,.035);
+        color:#f6f8f2 !important;
     }
-    .app-secondary:hover { color:#061512 !important; background:#f6fbfa; }
+    .app-secondary:hover { color:#fff !important; background:rgba(255,255,255,.08); }
 
     .app-choice-card,
     .app-auth-card {
         width:min(100%,420px);
         margin-inline:auto;
-        border:1px solid rgba(255,255,255,.09);
-        background:rgba(2,15,13,.92);
-        box-shadow:0 30px 70px rgba(0,0,0,.3);
-        backdrop-filter:blur(18px);
+        border:1px solid rgba(223,255,69,.09);
+        background:linear-gradient(180deg,rgba(13,18,11,.82),rgba(5,8,6,.92));
+        box-shadow:0 30px 70px rgba(0,0,0,.34);
+        backdrop-filter:blur(12px);
     }
     .app-choice-card {
         margin-top:auto;
@@ -236,6 +239,28 @@
         justify-content:space-between;
         gap:12px;
     }
+    .app-auth-orb {
+        position:relative;
+        display:grid;
+        width:76px;
+        height:76px;
+        place-items:center;
+        border:1px solid rgba(223,255,69,.5);
+        border-radius:50%;
+        background:radial-gradient(circle at 38% 30%,rgba(241,255,163,.35),transparent 22%),radial-gradient(circle,#425d0b,#121d05 58%,#050806 76%);
+        box-shadow:0 0 0 7px rgba(223,255,69,.035),0 0 34px rgba(199,238,54,.2),inset 0 0 20px rgba(223,255,69,.22);
+    }
+    .app-auth-orb::before {
+        content:"";
+        position:absolute;
+        inset:-15px;
+        border:1px solid rgba(223,255,69,.08);
+        border-radius:50%;
+    }
+    .app-auth-orb .bama-brand-logo {
+        width:46px !important;
+        filter:saturate(1.15) brightness(1.12) drop-shadow(0 0 10px rgba(223,255,69,.35));
+    }
     .app-icon-button {
         width:44px;
         height:44px;
@@ -285,8 +310,8 @@
         line-height:1.08;
     }
     .app-tabs .nav-link.active {
-        background:#00A651;
-        color:#fff !important;
+        background:#dfff45;
+        color:#071006 !important;
     }
     .app-auth-card .form-label {
         margin-bottom:6px;
@@ -299,17 +324,17 @@
         min-height:50px;
         border:1px solid rgba(255,255,255,.16);
         border-radius:12px;
-        background:rgba(255,255,255,.11);
+        background:rgba(2,5,3,.74);
         color:#fff;
         font-size:16px;
         padding:.7rem .95rem;
-        box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
+        box-shadow:inset 0 0 12px rgba(0,0,0,.2);
     }
     .app-auth-card .form-control:focus {
         border-color:var(--teal);
-        background:rgba(255,255,255,.14);
+        background:#090d08;
         color:#fff;
-        box-shadow:0 0 0 .22rem rgba(49,198,187,.18);
+        box-shadow:0 0 0 .2rem rgba(223,255,69,.14);
     }
     .app-auth-card .form-check-input {
         border-color:rgba(255,255,255,.4);
@@ -324,7 +349,7 @@
         color:rgba(255,255,255,.72) !important;
     }
     .app-auth-card a {
-        color:#dffdfa;
+        color:#dfff45;
         font-weight:950;
         text-decoration-thickness:2px;
         text-underline-offset:4px;
@@ -333,16 +358,16 @@
         min-height:50px;
         border:0;
         border-radius:14px;
-        background:linear-gradient(135deg,#42d5ca,#0fa899);
-        color:#fff;
+        background:linear-gradient(90deg,#c8f32f,#e8ff59);
+        color:#071006;
         font-size:.975rem;
         font-weight:700;
-        box-shadow:0 18px 44px rgba(17,170,156,.28);
+        box-shadow:0 18px 44px rgba(202,246,50,.14);
     }
     .app-auth-card .btn-warning:hover,
     .app-auth-card .btn-warning:focus {
-        background:linear-gradient(135deg,#48ddd2,#0fa899);
-        color:#fff;
+        background:#edff77;
+        color:#071006;
     }
     .app-auth-card .btn-warning.is-loading {
         opacity:.82;
@@ -482,6 +507,13 @@
         .app-auth-top .app-logo .bama-brand-logo {
             width:120px;
         }
+        .app-auth-card {
+            padding-inline:0;
+            border:0;
+            background:transparent;
+            box-shadow:none;
+            backdrop-filter:none;
+        }
         .app-icon-button {
             width:42px;
             height:42px;
@@ -573,8 +605,8 @@
                     <button class="app-icon-button" type="button" data-app-go="1" aria-label="Back">
                         <i class="bi bi-arrow-left"></i>
                     </button>
-                    <div class="app-logo m-0">
-                        <x-bama-logo variant="compact" :src="$brandLogoUrl" alt="BAMA" />
+                    <div class="app-auth-orb">
+                        <x-bama-logo variant="splash" mark alt="" aria-hidden="true" />
                     </div>
                     <span class="app-icon-button" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
                 </div>
@@ -621,7 +653,7 @@
                             </label>
                             <a href="{{ route('password.request') }}">Forgot password?</a>
                         </div>
-                        <button class="btn btn-warning w-100" type="submit">Login</button>
+                        <button class="btn btn-warning w-100" type="submit"><i class="bi bi-stars me-2"></i> Sign in</button>
                         <p class="app-create-account">Don't have an account? <a href="{{ route('register.account') }}">Create Account</a></p>
                     </form>
 

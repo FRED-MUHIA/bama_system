@@ -15,7 +15,7 @@
 
         <form method="POST" action="{{ route('verification.send') }}">
             @csrf
-            <button class="w-full rounded-xl bg-[#00A651] px-5 py-3 font-semibold text-white shadow-lg shadow-[#00A651]/20">Resend verification email</button>
+            <button class="auth-primary-action w-full rounded-xl px-5 py-3 font-semibold">Resend verification email</button>
         </form>
         <form method="POST" action="{{ route('logout') }}" class="mt-3 text-center">
             @csrf

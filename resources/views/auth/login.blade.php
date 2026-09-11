@@ -22,7 +22,7 @@
 @endphp
 
 <style>
-    body:has(.website-login) { padding-bottom:0 !important; background:#F7F8F5 !important; }
+    body:has(.website-login) { padding-bottom:0 !important; background:#050806 !important; }
     main > section:has(.website-login) { max-width:none; padding:0 !important; }
     main > section:has(.website-login) > .alert {
         position:fixed;
@@ -39,8 +39,8 @@
         min-height:100dvh;
         display:grid;
         grid-template-columns:minmax(390px,.82fr) minmax(520px,1.18fr);
-        background:#fff;
-        color:#111827;
+        background:#050806;
+        color:#f7f9f2;
     }
     .website-login * { letter-spacing:0; }
     .website-login-brand {
@@ -51,7 +51,7 @@
         flex-direction:column;
         justify-content:space-between;
         padding:clamp(28px,4vw,54px);
-        background:#071B12;
+        background:#071006;
         color:#fff;
         overflow:hidden;
         isolation:isolate;
@@ -61,8 +61,8 @@
         position:absolute;
         inset:0;
         z-index:-1;
-        background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px),radial-gradient(circle at 78% 8%,rgba(0,166,81,.34),transparent 30%);
-        background-size:34px 34px,34px 34px,100% 100%;
+        background-image:radial-gradient(circle,rgba(223,255,69,.1) 1px,transparent 1.25px),radial-gradient(circle at 78% 8%,rgba(223,255,69,.12),transparent 30%);
+        background-size:13px 13px,100% 100%;
     }
     .website-login-logo {
         display:inline-flex;
@@ -140,11 +140,33 @@
         min-height:100vh;
         place-items:center;
         padding:clamp(24px,4vw,54px);
-        background:#fff;
+        background:
+            radial-gradient(circle at 50% 10%,rgba(223,255,69,.1),transparent 25rem),
+            linear-gradient(180deg,#0a1008,#050806 72%);
     }
     .website-login-wrap { width:min(100%,420px); min-width:0; }
+    .website-login-orb {
+        position:relative;
+        display:grid;
+        width:80px;
+        height:80px;
+        place-items:center;
+        margin:0 auto 30px;
+        border:1px solid rgba(223,255,69,.5);
+        border-radius:50%;
+        background:radial-gradient(circle at 38% 30%,rgba(241,255,163,.35),transparent 22%),radial-gradient(circle,#425d0b,#121d05 58%,#050806 76%);
+        box-shadow:0 0 0 7px rgba(223,255,69,.035),0 0 34px rgba(199,238,54,.2),inset 0 0 20px rgba(223,255,69,.22);
+    }
+    .website-login-orb::before {
+        content:"";
+        position:absolute;
+        inset:-16px;
+        border:1px solid rgba(223,255,69,.08);
+        border-radius:50%;
+    }
+    .website-login-orb .bama-brand-logo { width:48px; filter:brightness(1.12) drop-shadow(0 0 10px rgba(223,255,69,.35)); }
     .website-login-label {
-        color:#00A651;
+        color:#dfff45;
         font-size:.72rem;
         font-weight:800;
         text-transform:uppercase;
@@ -152,22 +174,22 @@
     }
     .website-login-wrap > h2 {
         margin-bottom:8px;
-        color:#111827;
+        color:#f7f9f2;
         font-size:clamp(2rem,3.4vw,3rem);
         font-weight:700 !important;
         line-height:1.05;
     }
     .website-login-intro {
         margin-bottom:22px;
-        color:#475467;
+        color:#969d91;
         line-height:1.6;
     }
     .website-login-card {
         padding:20px;
-        border:1px solid #dfe5e1;
+        border:1px solid rgba(223,255,69,.09);
         border-radius:16px;
-        background:#fff;
-        box-shadow:0 16px 44px rgba(15,23,42,.07);
+        background:linear-gradient(180deg,rgba(13,18,11,.86),rgba(5,8,6,.96));
+        box-shadow:0 24px 64px rgba(0,0,0,.3);
     }
     .website-login-tabs {
         display:grid;
@@ -176,25 +198,25 @@
         padding:4px;
         margin-bottom:18px !important;
         border-radius:8px;
-        background:#EAF8F0;
+        background:rgba(255,255,255,.045);
     }
     .website-login-tabs .nav-item { display:grid; }
     .website-login-tabs .nav-link {
         border-radius:7px;
-        color:#111827;
+        color:#c7ccc3;
         padding:.62rem .45rem;
         font-size:.82rem;
         font-weight:800;
     }
     .website-login-tabs .nav-link.active {
-        background:#00A651;
-        color:#fff;
-        box-shadow:0 6px 14px rgba(0,166,81,.18);
+        background:#dfff45;
+        color:#071006;
+        box-shadow:0 6px 18px rgba(202,246,50,.12);
     }
     .website-login-card .form-label {
         display:block;
         margin-bottom:7px;
-        color:#111827;
+        color:#e9ede4;
         font-size:.78rem;
         font-weight:800;
         text-transform:uppercase;
@@ -203,19 +225,20 @@
         display:block;
         width:100%;
         min-height:50px;
-        border:1px solid #d7ddd9;
+        border:1px solid #2c332a;
         border-radius:12px;
-        background:#fff;
-        color:#111827;
+        background:rgba(2,5,3,.78);
+        color:#f7f9f2;
         padding-inline:15px;
         font-size:16px;
     }
     .website-login-card .form-control:focus {
-        border-color:#00A651;
-        box-shadow:0 0 0 .2rem rgba(0,166,81,.16);
+        border-color:#dfff45;
+        background:#090d08;
+        box-shadow:0 0 0 .2rem rgba(223,255,69,.13);
     }
     .website-login-card a {
-        color:#007A3B;
+        color:#dfff45;
         font-weight:800;
     }
     .website-login-card .btn-warning {
@@ -226,16 +249,16 @@
         min-height:50px;
         border:0;
         border-radius:12px;
-        background:#00A651;
-        color:#fff;
+        background:linear-gradient(90deg,#c8f32f,#e8ff59);
+        color:#071006;
         font-size:.9rem;
         font-weight:600;
-        box-shadow:0 12px 26px rgba(0,166,81,.22);
+        box-shadow:0 12px 28px rgba(202,246,50,.14);
     }
     .website-login-card .btn-warning:hover,
     .website-login-card .btn-warning:focus {
-        background:#008F45;
-        color:#fff;
+        background:#edff77;
+        color:#071006;
     }
     .password-wrap { position:relative; }
     .password-wrap .form-control { padding-right:46px; }
@@ -248,18 +271,18 @@
         border:0;
         border-radius:8px;
         background:transparent;
-        color:#67706c;
+        color:#aeb6aa;
     }
     .password-toggle:hover {
-        background:#eef3f0;
-        color:#111827;
+        background:rgba(255,255,255,.08);
+        color:#fff;
     }
     .website-login-note {
         display:flex;
         align-items:center;
         gap:9px;
         margin-top:16px;
-        color:#475467;
+        color:#92998e;
         font-size:.78rem;
     }
     .website-login-note i { color:#00A651; }
@@ -310,7 +333,11 @@
     @media (max-width:680px) {
         .website-login-brand { padding-inline:16px; }
         .website-login-panel { padding:12px 16px max(20px, env(safe-area-inset-bottom)); }
-        .website-login-card { padding:16px; box-shadow:none; }
+        .website-login-orb { width:72px; height:72px; margin-bottom:26px; }
+        .website-login-label { display:none; }
+        .website-login-wrap > h2,
+        .website-login-intro { text-align:center; }
+        .website-login-card { padding:0; border:0; background:transparent; box-shadow:none; }
     }
 </style>
 
@@ -340,6 +367,9 @@
 
     <section class="website-login-panel">
         <div class="website-login-wrap">
+            <div class="website-login-orb" aria-hidden="true">
+                <x-bama-logo variant="splash" mark alt="" />
+            </div>
             <div class="website-login-label">{{ $loginCopy['label'] }}</div>
             <h2>{{ $loginCopy['title'] }}</h2>
             <p class="website-login-intro">{{ $loginCopy['intro'] }}</p>
@@ -382,7 +412,7 @@
                         </label>
                         <a href="{{ route('password.request') }}">Forgot password?</a>
                     </div>
-                    <button class="btn btn-warning w-100">Login <i class="bi bi-arrow-right ms-1"></i></button>
+                    <button class="btn btn-warning w-100"><i class="bi bi-stars me-2"></i> Sign in</button>
                 </form>
 
                 @if ($otpAvailable)

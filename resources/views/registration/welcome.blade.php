@@ -3,7 +3,7 @@
 @section('body')
 <x-registration-shell :step="5">
     @php($emailVerified = auth()->user()?->hasVerifiedEmail())
-    <div class="rounded-[18px] border border-zinc-200 bg-white p-5 shadow-2xl shadow-zinc-200/70 sm:p-6">
+    <div class="registration-card rounded-[18px] border border-zinc-200 bg-white p-5 shadow-2xl shadow-zinc-200/70 sm:p-6">
         @if (session('status'))
             <div class="mb-4 rounded-lg border border-[#00A651]/25 bg-[#EAF8F0] p-3 text-sm text-[#007A3B]">{{ session('status') }}</div>
         @endif

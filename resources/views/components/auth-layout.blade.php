@@ -20,7 +20,9 @@
             @endif
 
             @if ($showLogo)
-                <x-bama-logo variant="auth" :src="$logoSrc" :alt="$logoAlt" />
+                <div class="auth-layout-orb" aria-hidden="true">
+                    <x-bama-logo variant="splash" mark alt="" />
+                </div>
             @endif
 
             @if ($title || $intro)
