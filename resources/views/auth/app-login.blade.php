@@ -296,7 +296,7 @@
     }
     .app-auth-card .form-label {
         margin-bottom:6px;
-        color:#fff;
+        color:#dfff45 !important;
         font-size:.86rem;
         font-weight:950;
         text-transform:uppercase;
@@ -306,7 +306,8 @@
         border:1px solid rgba(255,255,255,.16);
         border-radius:12px;
         background:rgba(2,5,3,.74);
-        color:#fff;
+        color:#fff !important;
+        -webkit-text-fill-color:#fff;
         font-size:16px;
         padding:.7rem .95rem;
         box-shadow:inset 0 0 12px rgba(0,0,0,.2);
@@ -314,8 +315,20 @@
     .app-auth-card .form-control:focus {
         border-color:var(--teal);
         background:#090d08;
-        color:#fff;
+        color:#fff !important;
+        -webkit-text-fill-color:#fff;
         box-shadow:0 0 0 .2rem rgba(223,255,69,.14);
+    }
+    .app-auth-card .form-control::placeholder {
+        color:rgba(255,255,255,.48) !important;
+        -webkit-text-fill-color:rgba(255,255,255,.48);
+    }
+    .app-auth-card .form-control:-webkit-autofill,
+    .app-auth-card .form-control:-webkit-autofill:hover,
+    .app-auth-card .form-control:-webkit-autofill:focus {
+        -webkit-text-fill-color:#fff !important;
+        box-shadow:0 0 0 1000px #090d08 inset, 0 0 0 .2rem rgba(223,255,69,.14);
+        caret-color:#fff;
     }
     .app-auth-card .form-check-input {
         border-color:rgba(255,255,255,.4);

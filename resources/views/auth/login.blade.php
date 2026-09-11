@@ -195,7 +195,7 @@
     .website-login-card .form-label {
         display:block;
         margin-bottom:7px;
-        color:#e9ede4;
+        color:#dfff45 !important;
         font-size:.78rem;
         font-weight:800;
         text-transform:uppercase;
@@ -207,14 +207,28 @@
         border:1px solid #2c332a;
         border-radius:12px;
         background:rgba(2,5,3,.78);
-        color:#f7f9f2;
+        color:#f7f9f2 !important;
+        -webkit-text-fill-color:#f7f9f2;
         padding-inline:15px;
         font-size:16px;
     }
     .website-login-card .form-control:focus {
         border-color:#dfff45;
         background:#090d08;
+        color:#f7f9f2 !important;
+        -webkit-text-fill-color:#f7f9f2;
         box-shadow:0 0 0 .2rem rgba(223,255,69,.13);
+    }
+    .website-login-card .form-control::placeholder {
+        color:rgba(247,249,242,.48) !important;
+        -webkit-text-fill-color:rgba(247,249,242,.48);
+    }
+    .website-login-card .form-control:-webkit-autofill,
+    .website-login-card .form-control:-webkit-autofill:hover,
+    .website-login-card .form-control:-webkit-autofill:focus {
+        -webkit-text-fill-color:#f7f9f2 !important;
+        box-shadow:0 0 0 1000px #090d08 inset, 0 0 0 .2rem rgba(223,255,69,.13);
+        caret-color:#f7f9f2;
     }
     .website-login-card a {
         color:#dfff45;
