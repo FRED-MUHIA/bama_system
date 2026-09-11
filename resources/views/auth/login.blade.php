@@ -22,8 +22,17 @@
 @endphp
 
 <style>
+    html,
+    body {
+        width:100%;
+        max-width:100%;
+        overflow-x:hidden;
+    }
+    body,
     body:has(.website-login) { padding-bottom:0 !important; background:#050806 !important; }
+    main > section,
     main > section:has(.website-login) { max-width:none; padding:0 !important; }
+    main > section > .alert,
     main > section:has(.website-login) > .alert {
         position:fixed;
         top:14px;

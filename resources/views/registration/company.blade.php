@@ -82,7 +82,7 @@
             </div>
             <div class="flex flex-col gap-3 sm:flex-row">
                 <a href="{{ route('register.account') }}" class="rounded-lg border border-zinc-300 bg-white px-6 py-3 text-center font-bold text-black">Back</a>
-                <button class="flex-1 rounded-lg bg-[#00A651] px-6 py-3 text-base font-black text-white shadow-xl shadow-[#00A651]/20">Continue to plan selection</button>
+                <button type="submit" class="flex-1 rounded-lg bg-[#00A651] px-6 py-3 text-base font-black text-white shadow-xl shadow-[#00A651]/20">Continue to plan selection</button>
             </div>
         </form>
     </div>

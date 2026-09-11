@@ -19,14 +19,19 @@
 @endphp
 
 <style>
+    html,
+    body,
     html:has(.app-flow),
     body:has(.app-flow) {
         width:100%;
         max-width:100%;
         overflow:hidden;
     }
+    body,
     body:has(.app-flow) { padding-bottom:0 !important; background:#050806 !important; overscroll-behavior:none; }
+    main > section,
     main > section:has(.app-flow) { max-width:none; padding:0 !important; overflow:hidden; }
+    main > section > .alert,
     main > section:has(.app-flow) > .alert {
         position:fixed;
         top:calc(10px + env(safe-area-inset-top));
@@ -37,6 +42,7 @@
         border-radius:8px;
         box-shadow:0 18px 42px rgba(0,0,0,.24);
     }
+    body .guest-theme-toggle,
     body:has(.app-flow) .guest-theme-toggle { display:none !important; }
 
     .app-flow {
@@ -59,9 +65,10 @@
     .app-flow * { letter-spacing:0; }
     .app-flow-track {
         display:flex;
-        width:300%;
+        width:100%;
+        min-width:100%;
         height:100%;
-        transform:translate3d(calc((var(--step) * -33.333333%) + var(--drag-offset, 0px)),0,0);
+        transform:translate3d(calc((var(--step) * -100%) + var(--drag-offset, 0px)),0,0);
         transition:transform .38s cubic-bezier(.2,.78,.18,1);
         will-change:transform;
     }
@@ -70,8 +77,9 @@
     }
     .app-screen {
         position:relative;
-        flex:0 0 33.333333%;
-        width:33.333333%;
+        flex:0 0 100%;
+        width:100%;
+        min-width:0;
         min-height:100%;
         padding:calc(24px + env(safe-area-inset-top)) clamp(18px,5vw,42px) calc(28px + env(safe-area-inset-bottom));
         overflow-x:hidden;
@@ -96,10 +104,12 @@
     .app-screen > * { position:relative; z-index:1; }
     .app-screen-center {
         width:min(100%,440px);
+        max-width:100%;
         min-height:calc(100dvh - 52px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         margin-inline:auto;
         display:flex;
         flex-direction:column;
+        padding-bottom:34px;
     }
     .app-logo {
         display:flex;
@@ -154,12 +164,15 @@
         border-radius:14px;
         border:0;
         text-decoration:none;
+        text-align:center;
         font-size:.975rem;
         font-weight:700;
+        padding-inline:18px;
+        touch-action:manipulation;
+        -webkit-tap-highlight-color:transparent;
         transition:transform .15s ease,filter .15s ease,background-color .15s ease;
     }
     .app-primary {
-        margin-top:auto;
         background:linear-gradient(90deg,#c8f32f,#e8ff59);
         color:#071006;
         box-shadow:0 18px 44px rgba(202,246,50,.16);
@@ -171,6 +184,39 @@
         color:#f6f8f2 !important;
     }
     .app-secondary:hover { color:#fff !important; background:rgba(255,255,255,.08); }
+    .app-welcome-actions {
+        margin-top:auto;
+        display:grid;
+        gap:12px;
+        padding-top:28px;
+    }
+    .app-direct-actions {
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:10px;
+    }
+    .app-link-button {
+        min-height:44px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+        border:1px solid rgba(255,255,255,.14);
+        border-radius:12px;
+        background:rgba(255,255,255,.055);
+        color:#f7f9f2;
+        text-decoration:none;
+        font-size:.9rem;
+        font-weight:850;
+        text-align:center;
+        touch-action:manipulation;
+        -webkit-tap-highlight-color:transparent;
+    }
+    .app-link-button:hover,
+    .app-link-button:focus {
+        color:#fff;
+        background:rgba(255,255,255,.1);
+    }
 
     .app-choice-card,
     .app-auth-card {
@@ -408,10 +454,16 @@
         text-align:right;
     }
     .app-create-account {
-        margin:14px 0 0;
+        margin:16px 0 0;
         color:rgba(255,255,255,.7);
         font-size:.86rem;
         text-align:center;
+    }
+    .app-create-account a {
+        color:#dfff45;
+        font-weight:950;
+        text-decoration-thickness:2px;
+        text-underline-offset:4px;
     }
     .app-register-link {
         margin-top:14px;
@@ -509,6 +561,7 @@
         }
         .app-primary,
         .app-secondary,
+        .app-link-button,
         .app-auth-card .btn-warning,
         .app-register-link {
             min-height:52px;
@@ -565,6 +618,8 @@
         .app-choice-card { padding-inline:14px; }
         .app-tabs .nav-link { font-size:.68rem; }
         .app-auth-card .form-label { font-size:.78rem; }
+        .app-direct-actions { gap:8px; }
+        .app-link-button { font-size:.84rem; padding-inline:10px; }
     }
     @media (max-height:680px) and (max-width:767.98px) {
         .app-logo {
@@ -579,6 +634,9 @@
         }
         .app-choice-card {
             margin-top:24px;
+        }
+        .app-welcome-actions {
+            padding-top:18px;
         }
         .app-stat-grid {
             display:none;
@@ -602,9 +660,19 @@
                     <h1 class="app-title">Manage<br>Your<br>Business</h1>
                     <p class="app-copy">Sign up or log in to see business activity, finance, clients, stock, projects, and reports in one dashboard.</p>
                 </div>
-                <button class="app-primary" type="button" data-app-go="1">
-                    Get Started <i class="bi bi-arrow-right"></i>
-                </button>
+                <div class="app-welcome-actions">
+                    <button class="app-primary" type="button" data-app-go="1">
+                        Get Started <i class="bi bi-arrow-right"></i>
+                    </button>
+                    <div class="app-direct-actions" aria-label="Account access">
+                        <button class="app-link-button" type="button" data-app-go="2">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </button>
+                        <a class="app-link-button" href="{{ route('register.account') }}">
+                            <i class="bi bi-person-plus"></i> Register
+                        </a>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -748,6 +816,9 @@
                         <i class="bi bi-shield-check"></i>
                         <span>Accounts are checked against the system database and successful sign-ins open the dashboard.</span>
                     </div>
+                    <div class="app-create-account">
+                        New to Bama? <a href="{{ route('register.account') }}">Register an account</a>
+                    </div>
                 </div>
 
                 <div class="app-legal">
@@ -817,6 +888,22 @@
 
         document.querySelectorAll('[data-app-go]').forEach((button) => {
             button.addEventListener('click', () => setStep(button.dataset.appGo, { history:true }));
+        });
+
+        flow?.querySelectorAll('.app-tabs [data-bs-target]').forEach((tab) => {
+            tab.addEventListener('click', () => {
+                flow.querySelectorAll('.app-tabs [data-bs-target]').forEach((item) => {
+                    const active = item === tab;
+                    item.classList.toggle('active', active);
+                    item.setAttribute('aria-selected', active ? 'true' : 'false');
+                });
+
+                flow.querySelectorAll('.app-auth-card .tab-pane').forEach((panel) => {
+                    const active = `#${panel.id}` === tab.dataset.bsTarget;
+                    panel.classList.toggle('active', active);
+                    panel.classList.toggle('show', active);
+                });
+            });
         });
 
         flow?.querySelectorAll('form').forEach((form) => {

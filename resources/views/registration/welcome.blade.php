@@ -42,7 +42,7 @@
                 Check your inbox and click the verification link to activate dashboard access.
                 <form method="POST" action="{{ route('verification.send') }}" class="mt-2">
                     @csrf
-                    <button class="font-bold text-amber-900 underline">Resend verification link</button>
+                    <button type="submit" class="font-bold text-amber-900 underline">Resend verification link</button>
                 </form>
             </div>
         @endif
@@ -63,7 +63,7 @@
             @else
                 <form method="POST" action="{{ route('verification.send') }}" class="flex-1">
                     @csrf
-                    <button class="w-full rounded-lg bg-[#00A651] px-6 py-3 text-center font-black text-white shadow-xl shadow-[#00A651]/20">Resend verification link</button>
+                    <button type="submit" class="w-full rounded-lg bg-[#00A651] px-6 py-3 text-center font-black text-white shadow-xl shadow-[#00A651]/20">Resend verification link</button>
                 </form>
                 <a href="{{ route('verification.notice') }}" class="rounded-lg border border-zinc-300 bg-white px-6 py-3 text-center font-bold text-black">Verification instructions</a>
             @endif

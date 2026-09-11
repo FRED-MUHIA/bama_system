@@ -43,8 +43,8 @@
                     </span>
                 </label>
             </div>
-            <button class="mt-1 rounded-lg bg-[#00A651] px-6 py-3 text-base font-black text-white shadow-xl shadow-[#00A651]/20">Continue to company setup</button>
-            <p class="text-center text-sm text-black">Already have an account? <a href="{{ route('login') }}" class="font-bold text-[#00A651]">Sign in</a></p>
+            <button type="submit" class="mt-1 rounded-lg bg-[#00A651] px-6 py-3 text-base font-black text-white shadow-xl shadow-[#00A651]/20">Continue to company setup</button>
+            <p class="text-center text-sm text-black">Already have an account? <a href="{{ route('app.login') }}" class="font-bold text-[#00A651]">Sign in</a></p>
         </form>
     </div>
 </x-registration-shell>
