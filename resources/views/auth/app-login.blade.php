@@ -28,7 +28,7 @@
         overflow:hidden;
     }
     body,
-    body:has(.app-flow) { padding-bottom:0 !important; background:#050806 !important; overscroll-behavior:none; }
+    body:has(.app-flow) { padding-bottom:0 !important; background:#070a12 !important; overscroll-behavior:none; }
     .container-fluid,
     body:has(.app-flow) .container-fluid {
         --bs-gutter-x:0;
@@ -77,9 +77,9 @@
 
     .app-flow {
         --step:0;
-        --teal:#dfff45;
-        --teal-dark:#c7ee36;
-        --night:#050806;
+        --teal:#38bdf8;
+        --teal-dark:#0ea5e9;
+        --night:#070a12;
         position:relative;
         width:100%;
         max-width:100%;
@@ -89,7 +89,7 @@
         height:var(--bama-visual-viewport-height,100dvh);
         overflow:hidden;
         color:#fff;
-        background:#050806;
+        background:#070a12;
         touch-action:pan-y;
     }
     .app-flow * { letter-spacing:0; }
@@ -115,10 +115,10 @@
         overflow-x:hidden;
         overflow-y:auto;
         scroll-padding-block:96px;
-        background-color:#050806;
+        background-color:#070a12;
         background-image:
-            radial-gradient(circle at 50% 13%,rgba(199,238,54,.12),transparent 24rem),
-            linear-gradient(180deg,#0a1008,#050806 66%);
+            radial-gradient(circle at 50% 13%,rgba(56,189,248,.16),transparent 24rem),
+            linear-gradient(180deg,#111827,#070a12 66%);
         background-size:auto;
         -webkit-overflow-scrolling:touch;
     }
@@ -127,8 +127,8 @@
         position:absolute;
         inset:0;
         background:
-            radial-gradient(circle at 50% 9%,rgba(223,255,69,.12),transparent 24%),
-            linear-gradient(180deg,rgba(223,255,69,.025),transparent 30%);
+            radial-gradient(circle at 50% 9%,rgba(52,211,153,.12),transparent 24%),
+            linear-gradient(180deg,rgba(56,189,248,.035),transparent 30%);
         pointer-events:none;
     }
     .app-screen > * { position:relative; z-index:1; }
@@ -165,7 +165,7 @@
         height:4px;
         border-radius:999px;
         background:var(--teal);
-        box-shadow:0 0 18px rgba(223,255,69,.38);
+        box-shadow:0 0 18px rgba(56,189,248,.36);
     }
     .app-title {
         margin:20px 0 0;
@@ -203,11 +203,11 @@
         transition:transform .15s ease,filter .15s ease,background-color .15s ease;
     }
     .app-primary {
-        background:linear-gradient(90deg,#c8f32f,#e8ff59);
-        color:#071006;
-        box-shadow:0 18px 44px rgba(202,246,50,.16);
+        background:linear-gradient(90deg,#38bdf8,#34d399);
+        color:#041014;
+        box-shadow:0 18px 44px rgba(56,189,248,.18);
     }
-    .app-primary:hover { color:#071006; filter:brightness(1.04); }
+    .app-primary:hover { color:#041014; filter:brightness(1.04); }
     .app-secondary {
         border:1px solid rgba(255,255,255,.13);
         background:rgba(255,255,255,.035);
@@ -222,7 +222,7 @@
     }
     .app-direct-actions {
         display:grid;
-        grid-template-columns:repeat(2,minmax(0,1fr));
+        grid-template-columns:minmax(0,1fr);
         gap:10px;
     }
     .app-link-button {
@@ -252,8 +252,8 @@
     .app-auth-card {
         width:min(100%,420px);
         margin-inline:auto;
-        border:1px solid rgba(223,255,69,.09);
-        background:linear-gradient(180deg,rgba(13,18,11,.82),rgba(5,8,6,.92));
+        border:1px solid rgba(56,189,248,.16);
+        background:linear-gradient(180deg,rgba(15,23,42,.86),rgba(7,10,18,.94));
         box-shadow:0 30px 70px rgba(0,0,0,.34);
         backdrop-filter:blur(12px);
     }
@@ -373,12 +373,12 @@
         line-height:1.08;
     }
     .app-tabs .nav-link.active {
-        background:#dfff45;
-        color:#071006 !important;
+        background:var(--teal);
+        color:#041014 !important;
     }
     .app-auth-card .form-label {
         margin-bottom:6px;
-        color:#dfff45 !important;
+        color:#7dd3fc !important;
         font-size:.86rem;
         font-weight:950;
         text-transform:uppercase;
@@ -399,7 +399,7 @@
         background:#090d08;
         color:#fff !important;
         -webkit-text-fill-color:#fff;
-        box-shadow:0 0 0 .2rem rgba(223,255,69,.14);
+        box-shadow:0 0 0 .2rem rgba(56,189,248,.18);
     }
     .app-auth-card .form-control::placeholder {
         color:rgba(255,255,255,.48) !important;
@@ -409,7 +409,7 @@
     .app-auth-card .form-control:-webkit-autofill:hover,
     .app-auth-card .form-control:-webkit-autofill:focus {
         -webkit-text-fill-color:#fff !important;
-        box-shadow:0 0 0 1000px #090d08 inset, 0 0 0 .2rem rgba(223,255,69,.14);
+        box-shadow:0 0 0 1000px #0b1020 inset, 0 0 0 .2rem rgba(56,189,248,.18);
         caret-color:#fff;
     }
     .app-auth-card .form-check-input {
@@ -425,13 +425,13 @@
         color:rgba(255,255,255,.72) !important;
     }
     .app-auth-card a {
-        color:#dfff45;
+        color:#7dd3fc;
         font-weight:950;
         text-decoration-thickness:2px;
         text-underline-offset:4px;
     }
     .app-auth-card .btn-link {
-        color:#dfff45 !important;
+        color:#7dd3fc !important;
         font-weight:950;
         text-decoration-thickness:2px;
         text-underline-offset:4px;
@@ -448,16 +448,16 @@
         min-height:50px;
         border:0;
         border-radius:14px;
-        background:linear-gradient(90deg,#c8f32f,#e8ff59);
-        color:#071006;
+        background:linear-gradient(90deg,#38bdf8,#34d399);
+        color:#041014;
         font-size:.975rem;
         font-weight:700;
-        box-shadow:0 18px 44px rgba(202,246,50,.14);
+        box-shadow:0 18px 44px rgba(56,189,248,.18);
     }
     .app-auth-card .btn-warning:hover,
     .app-auth-card .btn-warning:focus {
-        background:#edff77;
-        color:#071006;
+        background:#7dd3fc;
+        color:#041014;
     }
     .app-auth-card .btn-warning.is-loading {
         opacity:.82;
@@ -482,21 +482,6 @@
         display:inline-flex;
         align-items:center;
         text-align:right;
-    }
-    .app-create-account {
-        margin:16px 0 0;
-        color:rgba(255,255,255,.7);
-        font-size:.86rem;
-        text-align:center;
-    }
-    .app-create-account a {
-        color:#dfff45;
-        font-weight:950;
-        text-decoration-thickness:2px;
-        text-underline-offset:4px;
-    }
-    .app-register-link {
-        margin-top:14px;
     }
     .password-wrap { position:relative; }
     .password-wrap .form-control { padding-right:58px; }
@@ -531,8 +516,8 @@
         text-align:center;
     }
     .app-flow .bama-install-card {
-        border-color:rgba(223,255,69,.12);
-        background:linear-gradient(180deg,rgba(13,18,11,.86),rgba(5,8,6,.94));
+        border-color:rgba(56,189,248,.18);
+        background:linear-gradient(180deg,rgba(15,23,42,.88),rgba(7,10,18,.96));
         color:#f7f9f2;
         box-shadow:0 24px 54px rgba(0,0,0,.26);
     }
@@ -592,8 +577,7 @@
         .app-primary,
         .app-secondary,
         .app-link-button,
-        .app-auth-card .btn-warning,
-        .app-register-link {
+        .app-auth-card .btn-warning {
             min-height:52px;
             border-radius:16px;
         }
@@ -637,7 +621,6 @@
             text-align:left;
         }
         .app-auth-heading,
-        .app-auth-card .app-create-account,
         .app-auth-card .otp-success {
             text-align:center;
         }
@@ -716,9 +699,9 @@
                     <x-bama-logo variant="auth" :src="$brandLogoUrl" alt="BAMA" />
                 </div>
                 <div>
-                    <div class="app-kicker">Bama Workspace</div>
-                    <h1 class="app-title">Manage<br>Your<br>Business</h1>
-                    <p class="app-copy">Sign up or log in to see business activity, finance, clients, stock, projects, and reports in one dashboard.</p>
+                    <div class="app-kicker">Bama Web App</div>
+                    <h1 class="app-title">Workspace<br>Console</h1>
+                    <p class="app-copy">Use your existing workspace credentials to open dashboards, operations, finance, clients, stock, projects, and reports.</p>
                 </div>
                 <div class="app-welcome-actions">
                     <button class="app-primary" type="button" data-app-go="1">
@@ -726,11 +709,8 @@
                     </button>
                     <div class="app-direct-actions" aria-label="Account access">
                         <button class="app-link-button" type="button" data-app-go="2">
-                            <i class="bi bi-box-arrow-in-right"></i> Login
+                            <i class="bi bi-box-arrow-in-right"></i> Workspace Login
                         </button>
-                        <a class="app-link-button" href="{{ route('register.account') }}">
-                            <i class="bi bi-person-plus"></i> Register
-                        </a>
                     </div>
                 </div>
             </div>
@@ -748,11 +728,10 @@
                     <x-bama-logo variant="auth" :src="$brandLogoUrl" alt="BAMA" />
                 </div>
                 <div class="app-choice-card">
-                    <h2>Continue with email</h2>
-                    <p>Use your Bama account to open the app dashboard, or create a workspace if your business is new.</p>
+                    <h2>App access</h2>
+                    <p>This console is for existing workspace users. New user access is issued by the workspace administrator.</p>
                     <div class="app-choice-actions">
-                        <button class="app-primary mt-0" type="button" data-app-go="2">Continue With Email</button>
-                        <a class="app-secondary" href="{{ route('register.account') }}">Create business account</a>
+                        <button class="app-primary mt-0" type="button" data-app-go="2">Continue to Sign In</button>
                     </div>
                     <div class="app-stat-grid" aria-label="System status">
                         <span><strong>{{ $system['workspaces'] }}</strong><small>Workspaces</small></span>
@@ -776,8 +755,8 @@
 
                 <div class="app-auth-card">
                     <div class="app-auth-heading">
-                        <h2>Welcome Back</h2>
-                        <p>Sign in to your workspace</p>
+                        <h2>Workspace Sign In</h2>
+                        <p>Authorized app users only</p>
                     </div>
                     @if ($otpAvailable)
                         <ul class="nav nav-pills app-tabs" role="tablist">
@@ -874,15 +853,12 @@
 
                     <div class="app-security">
                         <i class="bi bi-shield-check"></i>
-                        <span>Accounts are checked against the system database and successful sign-ins open the dashboard.</span>
-                    </div>
-                    <div class="app-create-account">
-                        New to Bama? <a href="{{ route('register.account') }}">Register an account</a>
+                        <span>Accounts are checked against the workspace database before the dashboard opens.</span>
                     </div>
                 </div>
 
                 <div class="app-legal">
-                    By signing up or logging in, I accept the Bama Terms of Service and Privacy Policy.
+                    By signing in, I accept the Bama Terms of Service and Privacy Policy.
                 </div>
             </div>
         </section>

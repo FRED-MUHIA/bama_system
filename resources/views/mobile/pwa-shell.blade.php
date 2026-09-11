@@ -1,6 +1,6 @@
 <div class="bama-loading-screen" data-bama-loader role="status" aria-live="polite" aria-label="Loading" hidden>
     <div class="bama-splash-content">
-        <x-bama-logo variant="splash" mark alt="" aria-hidden="true" />
+        <x-bama-logo variant="splash" mark :src="asset('images/bama-splash-icon.png')" alt="" aria-hidden="true" />
         <strong class="bama-splash-name">BAMA</strong>
         <span class="bama-splash-tagline">Business Management Anywhere</span>
         <span class="bama-radial-loader" aria-hidden="true">

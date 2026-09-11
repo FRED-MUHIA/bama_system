@@ -16,6 +16,7 @@ class UnifiedLoadingExperienceTest extends TestCase
         $this->assertStringContainsString('bama-splash-content', $shell);
         $this->assertStringContainsString('Business Management Anywhere', $shell);
         $this->assertStringContainsString('<x-bama-logo variant="splash"', $shell);
+        $this->assertStringContainsString('images/bama-splash-icon.png', $shell);
         $this->assertStringContainsString('$spoke < 8', $shell);
         $this->assertStringContainsString('bama-initial-loader-shown', $shell);
         $this->assertStringContainsString('sessionStorage.getItem(sessionKey)', $shell);
@@ -61,7 +62,7 @@ class UnifiedLoadingExperienceTest extends TestCase
         $this->assertStringContainsString("worker?.postMessage({ type: 'SKIP_WAITING' })", $script);
         $this->assertStringContainsString('controllerRefreshing', $script);
         $this->assertStringContainsString('window.location.reload()', $script);
-        $this->assertStringContainsString('bama-pwa-v8', $worker);
+        $this->assertStringContainsString('bama-pwa-v10', $worker);
         $this->assertStringNotContainsString('data-bama-update-now', $shell.$script);
     }
 
