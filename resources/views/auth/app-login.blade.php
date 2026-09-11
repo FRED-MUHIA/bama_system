@@ -29,6 +29,32 @@
     }
     body,
     body:has(.app-flow) { padding-bottom:0 !important; background:#050806 !important; overscroll-behavior:none; }
+    .container-fluid,
+    body:has(.app-flow) .container-fluid {
+        --bs-gutter-x:0;
+        width:100%;
+        max-width:100%;
+        padding-left:0 !important;
+        padding-right:0 !important;
+        overflow:hidden;
+    }
+    .container-fluid > .row,
+    body:has(.app-flow) .container-fluid > .row {
+        --bs-gutter-x:0;
+        width:100%;
+        max-width:100%;
+        min-height:100vh;
+        margin-left:0 !important;
+        margin-right:0 !important;
+    }
+    main[class*="col-"],
+    body:has(.app-flow) main[class*="col-"] {
+        flex:0 0 100% !important;
+        width:100% !important;
+        max-width:100% !important;
+        padding-left:0 !important;
+        padding-right:0 !important;
+    }
     main > section,
     main > section:has(.app-flow) { max-width:none; padding:0 !important; overflow:hidden; }
     main > section > .alert,
@@ -581,6 +607,36 @@
         }
     }
     @media (max-width:767.98px) {
+        .app-screen {
+            padding-inline:clamp(20px,6vw,26px);
+        }
+        .app-screen-center {
+            width:min(100%,420px);
+            text-align:center;
+        }
+        .app-kicker {
+            justify-content:center;
+            gap:12px;
+        }
+        .app-kicker::before {
+            width:42px;
+        }
+        .app-title,
+        .app-copy {
+            margin-left:auto;
+            margin-right:auto;
+            text-align:center;
+        }
+        .app-auth-card,
+        .app-auth-card form,
+        .app-auth-links {
+            text-align:left;
+        }
+        .app-auth-heading,
+        .app-auth-card .app-create-account,
+        .app-auth-card .otp-success {
+            text-align:center;
+        }
         .app-screen:nth-child(3) {
             padding-top:calc(14px + env(safe-area-inset-top));
         }

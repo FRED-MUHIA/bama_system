@@ -118,7 +118,7 @@
     }
 
     .bama-brand-logo--splash {
-        width: clamp(3.25rem, 15vw, 4rem);
+        width: clamp(2.25rem, 10vw, 3rem);
     }
 
     .bama-loading-screen .bama-brand-logo--splash {
@@ -636,7 +636,7 @@
     .bama-splash-name {
         margin-top: .25rem;
         font-family: var(--font-brand);
-        font-size: clamp(1.75rem, 8vw, 2.125rem);
+        font-size: clamp(1.25rem, 5.5vw, 1.625rem);
         font-weight: 800;
         line-height: 1;
     }
@@ -704,6 +704,33 @@
     @media (prefers-reduced-motion: reduce) {
         .bama-loading-screen .bama-brand-logo--splash {
             animation: none;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .bama-loading-screen {
+            padding-inline: 20px;
+        }
+
+        .bama-splash-content {
+            gap: .375rem;
+        }
+
+        .bama-brand-logo--splash {
+            width: clamp(2rem, 9vw, 2.75rem);
+        }
+
+        .bama-radial-loader {
+            width: 34px;
+            height: 34px;
+            margin-top: .5rem;
+        }
+
+        .bama-radial-loader > span {
+            left: 14px;
+            width: 5px;
+            height: 8px;
+            transform-origin: 2.5px 15px;
         }
     }
 
