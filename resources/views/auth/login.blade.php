@@ -64,9 +64,15 @@
         background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px),radial-gradient(circle at 78% 8%,rgba(0,166,81,.34),transparent 30%);
         background-size:34px 34px,34px 34px,100% 100%;
     }
+    .website-login-logo {
+        display:inline-flex;
+        flex:0 0 auto;
+        width:clamp(120px,32vw,148px);
+    }
+    .website-login-logo .bama-brand-logo { width:100%; }
     .website-login-logo img {
-        width:auto;
-        max-width:100%;
+        width:100%;
+        max-width:none;
         height:auto;
         object-fit:contain;
     }
@@ -186,6 +192,7 @@
         box-shadow:0 6px 14px rgba(0,166,81,.18);
     }
     .website-login-card .form-label {
+        display:block;
         margin-bottom:7px;
         color:#111827;
         font-size:.78rem;
@@ -193,8 +200,10 @@
         text-transform:uppercase;
     }
     .website-login-card .form-control {
+        display:block;
+        width:100%;
         min-height:50px;
-        border-color:#d7ddd9;
+        border:1px solid #d7ddd9;
         border-radius:12px;
         background:#fff;
         color:#111827;
@@ -210,6 +219,10 @@
         font-weight:800;
     }
     .website-login-card .btn-warning {
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        width:100%;
         min-height:50px;
         border:0;
         border-radius:12px;
@@ -250,11 +263,31 @@
         font-size:.78rem;
     }
     .website-login-note i { color:#00A651; }
+    .website-login-card form { display:grid; gap:16px; }
+    .website-login-card form > .mb-3,
+    .website-login-card form > .mb-4 { margin-bottom:0 !important; }
+    .website-login-card form > .d-flex {
+        display:flex;
+        flex-wrap:wrap;
+        align-items:center;
+        justify-content:space-between;
+        gap:8px;
+    }
+    .website-login-card .form-check { display:flex; align-items:center; gap:7px; }
+    .website-login-card .form-check-input { width:16px; height:16px; margin:0; }
+    .website-login-card .tab-content > .tab-pane { display:none; }
+    .website-login-card .tab-content > .tab-pane.active { display:block; }
 
     @media (max-width:980px) {
-        .website-login { grid-template-columns:1fr; }
+        .website-login {
+            grid-template-columns:1fr;
+            grid-template-rows:auto 1fr;
+            align-content:start;
+        }
         .website-login-brand {
             min-height:auto;
+            align-self:start;
+            justify-content:flex-start;
             padding:max(16px, env(safe-area-inset-top)) 24px 12px;
         }
         .website-login-brand > div:first-child {
@@ -422,6 +455,21 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        const loginTabs = document.querySelectorAll('.website-login-tabs [data-bs-target]');
+        loginTabs.forEach((tab) => {
+            tab.addEventListener('click', () => {
+                loginTabs.forEach((item) => {
+                    item.classList.toggle('active', item === tab);
+                    item.setAttribute('aria-selected', item === tab ? 'true' : 'false');
+                });
+                document.querySelectorAll('.website-login-card .tab-pane').forEach((panel) => {
+                    const active = `#${panel.id}` === tab.dataset.bsTarget;
+                    panel.classList.toggle('active', active);
+                    panel.classList.toggle('show', active);
+                });
+            });
+        });
+
         @if ($otpSent)
             const button = document.querySelector('#resend-otp');
             const countdown = document.querySelector('#otp-countdown');

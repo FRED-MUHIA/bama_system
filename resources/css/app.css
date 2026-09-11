@@ -608,8 +608,7 @@
         }
     }
 
-    .bama-offline-banner,
-    .bama-update-toast {
+    .bama-offline-banner {
         position: fixed;
         left: 50%;
         z-index: 2147482000;
@@ -636,7 +635,6 @@
     }
 
     .bama-offline-banner button,
-    .bama-update-toast button,
     .bama-install-card button {
         min-height: 38px;
         border: 0;
@@ -649,26 +647,6 @@
         padding-inline: .9rem;
         background: #00A651;
         color: #fff;
-    }
-
-    .bama-update-toast {
-        right: auto;
-        bottom: calc(86px + env(safe-area-inset-bottom));
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: .75rem;
-        padding: .7rem;
-        background: #fff;
-        color: #000;
-        border: 1px solid #dfe5e1;
-    }
-
-    .bama-update-toast button {
-        padding-inline: .85rem;
-        background: #00A651;
-        color: #fff;
-        white-space: nowrap;
     }
 
     .bama-install-card {

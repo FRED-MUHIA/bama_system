@@ -43,6 +43,25 @@ class UnifiedLoadingExperienceTest extends TestCase
         $this->assertStringNotContainsString("splash.remove()", $script);
     }
 
+    public function test_new_pwa_builds_activate_and_reload_automatically(): void
+    {
+        $meta = file_get_contents(resource_path('views/mobile/pwa-meta.blade.php'));
+        $shell = file_get_contents(resource_path('views/mobile/pwa-shell.blade.php'));
+        $script = file_get_contents(resource_path('js/pwa.js'));
+        $worker = file_get_contents(public_path('sw.js'));
+
+        $this->assertStringContainsString('bama-build-version', $meta);
+        $this->assertStringContainsString("hash_file('sha256', \$viteManifest)", $meta);
+        $this->assertStringContainsString('function configureAutomaticAppUpdates(registration)', $script);
+        $this->assertStringContainsString('registration.update()', $script);
+        $this->assertStringContainsString('APP_UPDATE_INTERVAL', $script);
+        $this->assertStringContainsString("worker?.postMessage({ type: 'SKIP_WAITING' })", $script);
+        $this->assertStringContainsString('controllerRefreshing', $script);
+        $this->assertStringContainsString('window.location.reload()', $script);
+        $this->assertStringContainsString('bama-pwa-v5', $worker);
+        $this->assertStringNotContainsString('data-bama-update-now', $shell.$script);
+    }
+
     public function test_old_payment_and_login_loading_icons_are_removed(): void
     {
         $views = implode("\n", [

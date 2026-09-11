@@ -33,8 +33,3 @@
     <span>Some actions need an internet connection.</span>
     <button type="button" data-bama-retry>Retry</button>
 </div>
-
-<div class="bama-update-toast" data-bama-update hidden>
-    <span>A new Bama version is available.</span>
-    <button type="button" data-bama-update-now>Update Now</button>
-</div>

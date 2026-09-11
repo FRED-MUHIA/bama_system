@@ -3,17 +3,9 @@ const isStandalone = () => standaloneMedia.matches || window.navigator.standalon
 const isIos = () => /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 const isAndroid = () => /android/i.test(window.navigator.userAgent);
 const INSTALL_DISMISS_DAYS = 14;
+const APP_UPDATE_INTERVAL = 60 * 1000;
 
 let deferredInstallPrompt = null;
-let waitingWorker = null;
-
-function showElement(element) {
-    if (element) element.hidden = false;
-}
-
-function hideElement(element) {
-    if (element) element.hidden = true;
-}
 
 function configureInstallCards() {
     const cards = document.querySelectorAll('[data-bama-install-card]');
@@ -115,22 +107,48 @@ function configurePageLoader() {
     window.setTimeout(hideLoader, 350);
 }
 
-function configureServiceWorkerUpdate(registration) {
-    const toast = document.querySelector('[data-bama-update]');
-    const updateButton = document.querySelector('[data-bama-update-now]');
+async function sha256(value) {
+    const bytes = new TextEncoder().encode(value);
+    const digest = await window.crypto.subtle.digest('SHA-256', bytes);
 
-    const showUpdate = (worker) => {
-        waitingWorker = worker;
-        showElement(toast);
-    };
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
 
-    updateButton?.addEventListener('click', () => {
-        waitingWorker?.postMessage({ type: 'SKIP_WAITING' });
-    });
+async function checkForAppUpdate() {
+    const currentVersion = document.querySelector('meta[name="bama-build-version"]')?.content;
 
-    if (registration.waiting) {
-        showUpdate(registration.waiting);
+    if (! currentVersion || currentVersion === 'development' || ! window.crypto?.subtle) return;
+
+    try {
+        const response = await fetch(`/build/manifest.json?update=${Date.now()}`, {
+            cache: 'no-store',
+            credentials: 'same-origin',
+        });
+
+        if (! response.ok) return;
+
+        const latestVersion = await sha256(await response.text());
+        const reloadKey = 'bama-auto-update-version';
+
+        if (latestVersion === currentVersion) {
+            sessionStorage.removeItem(reloadKey);
+            return;
+        }
+
+        if (sessionStorage.getItem(reloadKey) === latestVersion) return;
+
+        sessionStorage.setItem(reloadKey, latestVersion);
+        window.location.reload();
+    } catch {
+        // Update checks are best-effort and should never interrupt offline use.
     }
+}
+
+function configureAutomaticAppUpdates(registration) {
+    let controllerRefreshing = false;
+    const activate = (worker) => worker?.postMessage({ type: 'SKIP_WAITING' });
+
+    activate(registration.waiting);
 
     registration.addEventListener('updatefound', () => {
         const worker = registration.installing;
@@ -138,14 +156,27 @@ function configureServiceWorkerUpdate(registration) {
 
         worker.addEventListener('statechange', () => {
             if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-                showUpdate(worker);
+                activate(worker);
             }
         });
     });
 
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-        hideElement(toast);
+        if (controllerRefreshing) return;
+        controllerRefreshing = true;
         window.location.reload();
+    });
+
+    const check = () => {
+        registration.update().catch(() => {});
+        checkForAppUpdate();
+    };
+
+    check();
+    window.setInterval(check, APP_UPDATE_INTERVAL);
+    window.addEventListener('online', check);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') check();
     });
 }
 
@@ -168,8 +199,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('bama-install-ready', renderInstallCards);
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-            .then(configureServiceWorkerUpdate)
+        const buildVersion = document.querySelector('meta[name="bama-build-version"]')?.content || 'development';
+
+        navigator.serviceWorker.register(`/sw.js?v=${encodeURIComponent(buildVersion)}`)
+            .then(configureAutomaticAppUpdates)
             .catch(() => {});
     }
 });
