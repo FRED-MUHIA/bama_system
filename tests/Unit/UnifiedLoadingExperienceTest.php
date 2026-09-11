@@ -61,7 +61,7 @@ class UnifiedLoadingExperienceTest extends TestCase
         $this->assertStringContainsString("worker?.postMessage({ type: 'SKIP_WAITING' })", $script);
         $this->assertStringContainsString('controllerRefreshing', $script);
         $this->assertStringContainsString('window.location.reload()', $script);
-        $this->assertStringContainsString('bama-pwa-v7', $worker);
+        $this->assertStringContainsString('bama-pwa-v8', $worker);
         $this->assertStringNotContainsString('data-bama-update-now', $shell.$script);
     }
 

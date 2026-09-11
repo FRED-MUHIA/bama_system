@@ -27,12 +27,15 @@
     $paypalCurrencySupported = $invoice && (in_array($invoiceCurrency, $paypalSupportedCurrencies, true) || $invoiceCurrency === 'KES');
     $paypalConvertedUsd = $invoiceCurrency === 'KES' && $paypalKesUsdRate > 0 ? number_format(max(0.01, (float) $invoice->total / $paypalKesUsdRate), 2) : null;
     $invoicePayable = $invoice && $invoice->status !== 'paid' && (float) $invoice->total > 0;
+    $mpesaPhonePattern = '(?:\+?254|0)?[\s-]*[17]\d{2}[\s-]*\d{3}[\s-]*\d{3}';
     $mpesaResultMessage = function (?string $result): ?string {
         if (! $result) return null;
         $lower = strtolower($result);
 
         return match (true) {
-            str_contains($lower, 'wrong credentials') => 'The payer entered the wrong M-PESA PIN or could not be authenticated. Send a new prompt and enter the correct PIN.',
+            str_contains($lower, 'wrong credentials') || str_contains($lower, 'initiator information is invalid') || str_contains($lower, 'invalid credentials') => 'M-PESA could not authenticate this STK request. If no phone prompt appeared, check the Live shortcode, passkey, transaction type, and Daraja app environment. If a prompt appeared, send a new prompt and enter the correct M-PESA PIN.',
+            str_contains($lower, 'invalid phone') || str_contains($lower, 'invalid phonenumber') => 'Enter a valid Safaricom M-PESA number, for example 0700000000 or +254 700 000 000.',
+            str_contains($lower, 'unable to lock subscriber') || str_contains($lower, 'transaction is already in process') => 'That phone already has an M-PESA request in progress. Wait a moment, complete or cancel it, then send a new prompt.',
             str_contains($lower, 'timeout') || str_contains($lower, 'cannot be reached') => 'The phone could not be reached or the STK prompt timed out. Confirm the phone has signal, then send a new prompt.',
             str_contains($lower, 'cancel') => 'The payer cancelled the M-PESA prompt. Send a new prompt to try again.',
             default => $result,
@@ -98,8 +101,8 @@
                             <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-phone text-success"></i><strong>M-PESA STK</strong></div>
                             <form method="post" action="{{ route('billing.invoices.mpesa', $invoice) }}" class="d-grid gap-2" data-mpesa-form>
                                 @csrf
-                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="0700000000 or +254 700 000 000" pattern="[+0-9 ()-]{9,20}" maxlength="20" title="Enter 0700000000, 254700000000, or +254 700 000 000" data-mpesa-phone @disabled(! $mpesaReady || ! $invoicePayable) required>
-                                <div class="form-text">Any payer number: 0700000000, 254700000000, or +254 700 000 000.</div>
+                                <input class="form-control" type="tel" inputmode="tel" autocomplete="tel" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="0700000000 or +254 700 000 000" pattern="{{ $mpesaPhonePattern }}" maxlength="17" title="Enter a valid Safaricom M-PESA number: 0700000000, 254700000000, or +254 700 000 000" data-mpesa-phone @disabled(! $mpesaReady || ! $invoicePayable) required>
+                                <div class="form-text">Use the payer's M-PESA number: 0700000000, 254700000000, or +254 700 000 000.</div>
                                 @if($enabled('mpesa') && ! $mpesaLive)
                                     <div class="small text-warning-emphasis">M-PESA is in sandbox mode. Sandbox accepts test requests but does not prompt a real phone. Switch to live keys in the owner console.</div>
                                 @endif
@@ -215,16 +218,27 @@
 document.querySelectorAll('[data-mpesa-form]').forEach((form) => {
     const input = form.querySelector('[data-mpesa-phone]');
     const button = form.querySelector('[data-mpesa-submit]');
-    const normalize = () => {
-        let value = input.value.replace(/\D+/g, '');
+    const error = 'Enter a valid Safaricom M-PESA number: 0700000000, 254700000000, or +254 700 000 000.';
+    const normalizePhone = (phone) => {
+        let value = phone.replace(/\D+/g, '');
         if (value.startsWith('2540')) value = '254' + value.slice(4);
-        input.value = value;
+        if (value.startsWith('0')) value = '254' + value.slice(1);
+        if (value.startsWith('7') || value.startsWith('1')) value = '254' + value;
+
+        return /^254[17]\d{8}$/.test(value) ? value : null;
     };
 
-    input?.addEventListener('input', normalize);
-    normalize();
-    form.addEventListener('submit', () => {
-        normalize();
+    input?.addEventListener('input', () => input.setCustomValidity(''));
+    form.addEventListener('submit', (event) => {
+        const normalized = input ? normalizePhone(input.value) : null;
+        if (! normalized) {
+            event.preventDefault();
+            input?.setCustomValidity(error);
+            input?.reportValidity();
+            return;
+        }
+
+        input.value = normalized;
         if (button) {
             button.disabled = true;
             button.textContent = 'Sending...';

@@ -69,7 +69,9 @@ class BillingController extends Controller
         $this->authorizeInvoice($invoice);
 
         $data = $request->validate([
-            'phone' => ['required', 'string', 'max:30'],
+            'phone' => ['required', 'string', 'max:30', 'regex:/^(?:\+?254|0)?[\s-]*[17]\d{2}[\s-]*\d{3}[\s-]*\d{3}$/'],
+        ], [
+            'phone.regex' => 'Enter a valid Safaricom M-PESA number: 0700000000, 254700000000, or +254 700 000 000.',
         ]);
 
         try {
@@ -288,10 +290,14 @@ class BillingController extends Controller
 
     private function mpesaResultMessage(string $result): string
     {
+        $lower = strtolower($result);
+
         return match (true) {
-            str_contains(strtolower($result), 'wrong credentials') => 'The payer entered the wrong M-PESA PIN or could not be authenticated. Send a new prompt and enter the correct PIN.',
-            str_contains(strtolower($result), 'timeout') || str_contains(strtolower($result), 'cannot be reached') => 'The phone could not be reached or the STK prompt timed out. Confirm the phone has signal, then send a new prompt.',
-            str_contains(strtolower($result), 'cancel') => 'The payer cancelled the M-PESA prompt. Send a new prompt to try again.',
+            str_contains($lower, 'wrong credentials') || str_contains($lower, 'initiator information is invalid') || str_contains($lower, 'invalid credentials') => 'M-PESA could not authenticate this STK request. If no phone prompt appeared, check the Live shortcode, passkey, transaction type, and Daraja app environment. If a prompt appeared, send a new prompt and enter the correct M-PESA PIN.',
+            str_contains($lower, 'invalid phone') || str_contains($lower, 'invalid phonenumber') => 'Enter a valid Safaricom M-PESA number, for example 0700000000 or +254 700 000 000.',
+            str_contains($lower, 'unable to lock subscriber') || str_contains($lower, 'transaction is already in process') => 'That phone already has an M-PESA request in progress. Wait a moment, complete or cancel it, then send a new prompt.',
+            str_contains($lower, 'timeout') || str_contains($lower, 'cannot be reached') => 'The phone could not be reached or the STK prompt timed out. Confirm the phone has signal, then send a new prompt.',
+            str_contains($lower, 'cancel') => 'The payer cancelled the M-PESA prompt. Send a new prompt to try again.',
             default => $result,
         };
     }

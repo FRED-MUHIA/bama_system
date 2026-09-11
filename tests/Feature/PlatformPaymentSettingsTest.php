@@ -64,4 +64,38 @@ class PlatformPaymentSettingsTest extends TestCase
             ->assertStatus(502)
             ->assertJson(['message' => 'Live USD to KES exchange rate is unavailable right now.']);
     }
+
+    public function test_enabled_mpesa_settings_require_complete_live_prompt_configuration(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'status' => 'Active',
+        ]);
+
+        $this->actingAs($user)
+            ->from(route('platform.payments'))
+            ->put(route('platform.payment-settings.update'), [
+                'providers' => [
+                    'mpesa' => [
+                        'is_enabled' => '1',
+                        'mode' => 'live',
+                        'public_key' => 'consumer-key',
+                        'secret_key' => 'consumer-secret',
+                        'config' => [
+                            'shortcode' => 'paybill-123',
+                            'passkey' => '',
+                            'callback_url' => 'http://bama.test/api/payments/mpesa/callback',
+                            'transaction_type' => 'CustomerPayBillOnline',
+                        ],
+                    ],
+                ],
+            ])
+            ->assertRedirect(route('platform.payments'))
+            ->assertSessionHasErrors([
+                'providers.mpesa.config.shortcode',
+                'providers.mpesa.config.passkey',
+                'providers.mpesa.config.callback_url',
+            ]);
+    }
 }

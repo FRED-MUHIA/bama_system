@@ -10,8 +10,10 @@ class MpesaCheckoutMarkupTest extends TestCase
     {
         $view = file_get_contents(resource_path('views/billing/index.blade.php'));
 
-        $this->assertStringContainsString('pattern="[+0-9 ()-]{9,20}"', $view);
-        $this->assertStringContainsString('maxlength="20"', $view);
-        $this->assertStringContainsString("input?.addEventListener('input', normalize);\n    normalize();", $view);
+        $this->assertStringContainsString('$mpesaPhonePattern', $view);
+        $this->assertStringContainsString('maxlength="17"', $view);
+        $this->assertStringContainsString("normalizePhone(input.value)", $view);
+        $this->assertStringContainsString("input?.setCustomValidity(error)", $view);
+        $this->assertStringContainsString('M-PESA could not authenticate this STK request.', $view);
     }
 }

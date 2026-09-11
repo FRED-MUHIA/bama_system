@@ -14,6 +14,7 @@ use App\Services\ExchangeRateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use RuntimeException;
 
@@ -263,6 +264,8 @@ class PlatformController extends Controller
                 ->reject(fn ($value) => blank($value))
                 ->all();
 
+            $this->validatePaymentProviderSettings($provider, $payload, $setting, $config);
+
             $setting->fill([
                 'is_enabled' => (bool) ($payload['is_enabled'] ?? false),
                 'mode' => $payload['mode'],
@@ -279,5 +282,55 @@ class PlatformController extends Controller
         }
 
         return back()->with('status', 'Payment integrations updated.');
+    }
+
+    private function validatePaymentProviderSettings(string $provider, array $payload, PlatformPaymentSetting $setting, array $config): void
+    {
+        if (! (bool) ($payload['is_enabled'] ?? false)) {
+            return;
+        }
+
+        $errors = [];
+        $hasPublicKey = filled($payload['public_key'] ?? null);
+        $hasSecretKey = filled($payload['secret_key'] ?? null) || filled($setting->secret_key);
+        $prefix = "providers.{$provider}";
+
+        if (! $hasPublicKey) {
+            $errors["{$prefix}.public_key"] = 'Enter the public key before enabling this payment provider.';
+        }
+
+        if (! $hasSecretKey) {
+            $errors["{$prefix}.secret_key"] = 'Enter the secret key before enabling this payment provider.';
+        }
+
+        if ($provider === 'mpesa') {
+            $shortcode = (string) ($config['shortcode'] ?? '');
+            $callbackUrl = (string) ($config['callback_url'] ?? '');
+            $transactionType = (string) ($config['transaction_type'] ?? '');
+
+            if (! preg_match('/^\d+$/', $shortcode)) {
+                $errors["{$prefix}.config.shortcode"] = 'Enter the numeric M-PESA PayBill or Till shortcode.';
+            }
+
+            if (! filled($config['passkey'] ?? null)) {
+                $errors["{$prefix}.config.passkey"] = 'Enter the Lipa Na M-PESA Online passkey for this shortcode.';
+            }
+
+            if (! filter_var($callbackUrl, FILTER_VALIDATE_URL) || ! str_starts_with($callbackUrl, 'https://')) {
+                $errors["{$prefix}.config.callback_url"] = 'Enter a publicly reachable HTTPS callback URL for Daraja.';
+            }
+
+            if (! in_array($transactionType, ['CustomerPayBillOnline', 'CustomerBuyGoodsOnline'], true)) {
+                $errors["{$prefix}.config.transaction_type"] = 'Choose PayBill or Buy Goods for the M-PESA transaction type.';
+            }
+        }
+
+        if ($provider === 'paypal' && filled($config['kes_usd_rate'] ?? null) && (float) $config['kes_usd_rate'] <= 0) {
+            $errors["{$prefix}.config.kes_usd_rate"] = 'Enter a positive KES per USD exchange rate.';
+        }
+
+        if ($errors) {
+            throw ValidationException::withMessages($errors);
+        }
     }
 }

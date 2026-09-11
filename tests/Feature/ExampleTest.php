@@ -35,8 +35,15 @@ class ExampleTest extends TestCase
             ->assertSee('Get Started')
             ->assertSee('Continue With Email')
             ->assertSee(route('register.account'), false)
+            ->assertSee('data-app-screen', false)
             ->assertSee('data-app-go="1"', false)
             ->assertSee('data-app-go="2"', false)
+            ->assertSee('Back to welcome')
+            ->assertSee('Back to access options')
+            ->assertSee('aria-controls="app-step-login"', false)
+            ->assertSee('touchmove', false)
+            ->assertSee('ArrowRight')
+            ->assertSee('popstate')
             ->assertDontSee('Back home');
     }
 

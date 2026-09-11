@@ -61,8 +61,12 @@
         display:flex;
         width:300%;
         height:100%;
-        transform:translateX(calc(var(--step) * -33.333333%));
+        transform:translate3d(calc((var(--step) * -33.333333%) + var(--drag-offset, 0px)),0,0);
         transition:transform .38s cubic-bezier(.2,.78,.18,1);
+        will-change:transform;
+    }
+    .app-flow.is-dragging .app-flow-track {
+        transition:none;
     }
     .app-screen {
         position:relative;
@@ -588,7 +592,7 @@
 <x-auth-layout variant="bare">
 <div class="app-flow" data-app-flow data-initial-step="{{ $initialStep }}">
     <div class="app-flow-track" data-app-track>
-        <section class="app-screen" aria-label="Bama app welcome">
+        <section class="app-screen" id="app-step-welcome" data-app-screen aria-label="Bama app welcome">
             <div class="app-screen-center">
                 <div class="app-logo">
                     <x-bama-logo variant="auth" :src="$brandLogoUrl" alt="BAMA" />
@@ -604,8 +608,14 @@
             </div>
         </section>
 
-        <section class="app-screen" aria-label="Choose app access method">
+        <section class="app-screen" id="app-step-access" data-app-screen aria-label="Choose app access method">
             <div class="app-screen-center">
+                <div class="app-auth-top">
+                    <button class="app-icon-button" type="button" data-app-go="0" aria-label="Back to welcome">
+                        <i class="bi bi-arrow-left"></i>
+                    </button>
+                    <span class="app-icon-button" aria-hidden="true"><i class="bi bi-envelope-check"></i></span>
+                </div>
                 <div class="app-logo">
                     <x-bama-logo variant="auth" :src="$brandLogoUrl" alt="BAMA" />
                 </div>
@@ -627,10 +637,10 @@
             </div>
         </section>
 
-        <section class="app-screen" aria-label="Bama app login">
+        <section class="app-screen" id="app-step-login" data-app-screen aria-label="Bama app login">
             <div class="app-screen-center">
                 <div class="app-auth-top">
-                    <button class="app-icon-button" type="button" data-app-go="1" aria-label="Back">
+                    <button class="app-icon-button" type="button" data-app-go="1" aria-label="Back to access options">
                         <i class="bi bi-arrow-left"></i>
                     </button>
                     <span class="app-icon-button" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
@@ -748,33 +758,65 @@
     </div>
 
     <div class="app-dots" aria-label="App login progress">
-        <button class="app-dot" type="button" data-app-go="0" aria-label="Welcome"></button>
-        <button class="app-dot" type="button" data-app-go="1" aria-label="Continue"></button>
-        <button class="app-dot" type="button" data-app-go="2" aria-label="Login"></button>
+        <button class="app-dot" type="button" data-app-go="0" aria-label="Welcome" aria-controls="app-step-welcome"></button>
+        <button class="app-dot" type="button" data-app-go="1" aria-label="Continue" aria-controls="app-step-access"></button>
+        <button class="app-dot" type="button" data-app-go="2" aria-label="Login" aria-controls="app-step-login"></button>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const flow = document.querySelector('[data-app-flow]');
+        const screens = Array.from(flow?.querySelectorAll('[data-app-screen]') || []);
         const dots = document.querySelectorAll('.app-dot');
         let step = Number(flow?.dataset.initialStep || 0);
         let touchStartX = 0;
         let touchStartY = 0;
+        let touchDeltaX = 0;
+        let touchDeltaY = 0;
 
-        const setStep = (next) => {
+        const syncHistory = (next) => {
+            if (! window.history?.pushState) return;
+            window.history.pushState({ appFlow: true, step: next }, '', window.location.href);
+        };
+
+        const focusLoginField = () => {
+            const activeInput = screens[2]?.querySelector('.tab-pane.show.active [autofocus], [autofocus], input:not([type="hidden"])');
+            window.setTimeout(() => activeInput?.focus({ preventScroll:true }), 360);
+        };
+
+        const setStep = (next, options = {}) => {
             if (! flow) return;
+            const previousStep = step;
             step = Math.max(0, Math.min(2, Number(next)));
             flow.style.setProperty('--step', step);
-            dots.forEach((dot, index) => dot.classList.toggle('active', index === step));
+            flow.style.setProperty('--drag-offset', '0px');
+            flow.classList.remove('is-dragging');
+
+            screens.forEach((screen, index) => {
+                const active = index === step;
+                screen.toggleAttribute('aria-hidden', ! active);
+                screen.inert = ! active;
+            });
+
+            dots.forEach((dot, index) => {
+                const active = index === step;
+                dot.classList.toggle('active', active);
+                dot.setAttribute('aria-current', active ? 'step' : 'false');
+                dot.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+
+            if (options.history && step !== previousStep) {
+                syncHistory(step);
+            }
 
             if (step === 2) {
-                setTimeout(() => document.querySelector('input[name="username"]')?.focus({ preventScroll:true }), 360);
+                focusLoginField();
             }
         };
 
         document.querySelectorAll('[data-app-go]').forEach((button) => {
-            button.addEventListener('click', () => setStep(button.dataset.appGo));
+            button.addEventListener('click', () => setStep(button.dataset.appGo, { history:true }));
         });
 
         flow?.querySelectorAll('form').forEach((form) => {
@@ -790,14 +832,43 @@
         flow?.addEventListener('touchstart', (event) => {
             touchStartX = event.touches[0].clientX;
             touchStartY = event.touches[0].clientY;
+            touchDeltaX = 0;
+            touchDeltaY = 0;
+        }, { passive:true });
+
+        flow?.addEventListener('touchmove', (event) => {
+            touchDeltaX = event.touches[0].clientX - touchStartX;
+            touchDeltaY = event.touches[0].clientY - touchStartY;
+            if (Math.abs(touchDeltaX) < 12 || Math.abs(touchDeltaX) < Math.abs(touchDeltaY)) return;
+
+            const edgeResistance = (step === 0 && touchDeltaX > 0) || (step === 2 && touchDeltaX < 0) ? .24 : .72;
+            flow.classList.add('is-dragging');
+            flow.style.setProperty('--drag-offset', `${Math.round(touchDeltaX * edgeResistance)}px`);
         }, { passive:true });
 
         flow?.addEventListener('touchend', (event) => {
             const dx = event.changedTouches[0].clientX - touchStartX;
             const dy = event.changedTouches[0].clientY - touchStartY;
-            if (Math.abs(dx) < 54 || Math.abs(dx) < Math.abs(dy)) return;
-            setStep(step + (dx < 0 ? 1 : -1));
+            if (Math.abs(dx) >= 54 && Math.abs(dx) > Math.abs(dy) * 1.1) {
+                setStep(step + (dx < 0 ? 1 : -1), { history:true });
+                return;
+            }
+            setStep(step);
         }, { passive:true });
+
+        flow?.addEventListener('touchcancel', () => setStep(step), { passive:true });
+
+        document.addEventListener('keydown', (event) => {
+            if (! flow || ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) return;
+            if (event.key === 'ArrowRight') setStep(step + 1, { history:true });
+            if (event.key === 'ArrowLeft') setStep(step - 1, { history:true });
+        });
+
+        window.addEventListener('popstate', (event) => {
+            if (event.state?.appFlow) {
+                setStep(event.state.step);
+            }
+        });
 
         @if ($otpSent)
             const button = document.querySelector('#resend-otp');
@@ -819,6 +890,10 @@
         @endif
 
         setStep(step);
+
+        if (window.history?.replaceState) {
+            window.history.replaceState({ appFlow: true, step }, '', window.location.href);
+        }
     });
 </script>
 </x-auth-layout>

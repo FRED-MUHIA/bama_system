@@ -1,4 +1,4 @@
-const BAMA_SW_VERSION = 'bama-pwa-v7';
+const BAMA_SW_VERSION = 'bama-pwa-v8';
 const STATIC_CACHE = `${BAMA_SW_VERSION}-static`;
 const RUNTIME_CACHE = `${BAMA_SW_VERSION}-runtime`;
 
