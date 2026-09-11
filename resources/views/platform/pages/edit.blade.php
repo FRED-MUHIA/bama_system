@@ -93,8 +93,6 @@
                             </div>
                         </div>
                         <div class="col-md-6"><label class="form-label">Logo Alt Text</label><input class="form-control" name="sections[brand][logo_alt]" value="{{ data_get($sections, 'brand.logo_alt', 'Bama Solutions') }}"></div>
-                        <div class="col-md-6"><label class="form-label">Login URL</label><input class="form-control" name="sections[header][login_url]" value="{{ data_get($sections, 'header.login_url', '/login') }}"></div>
-                        <div class="col-md-3"><label class="form-label">Login Label</label><input class="form-control" name="sections[header][login_label]" value="{{ data_get($sections, 'header.login_label', 'Login') }}"></div>
                         <div class="col-md-3"><label class="form-label">Demo Label</label><input class="form-control" name="sections[header][demo_label]" value="{{ data_get($sections, 'header.demo_label', 'Book Demo') }}"></div>
                         <div class="col-md-6"><label class="form-label">Demo URL</label><input class="form-control" name="sections[header][demo_url]" value="{{ data_get($sections, 'header.demo_url', 'mailto:sales@bama.co.ke?subject=Demo%20Request') }}"></div>
                         <div class="col-md-3"><label class="form-label">CTA Label</label><input class="form-control" name="sections[header][cta_label]" value="{{ data_get($sections, 'header.cta_label', 'Start Free Trial') }}"></div>

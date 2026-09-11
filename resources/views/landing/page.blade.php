@@ -43,9 +43,6 @@
                 @endforeach
             </div>
             <div class="flex items-center gap-2">
-                @if(data_get($headerContent, 'login_label'))
-                    <a href="{{ $marketingUrl(data_get($headerContent, 'login_url'), route('login')) }}" class="hidden px-3 py-2 text-sm font-bold text-black hover:text-[#00A651] sm:inline-flex">{{ data_get($headerContent, 'login_label', 'Login') }}</a>
-                @endif
                 @if(data_get($headerContent, 'cta_label'))
                     <a href="{{ $marketingUrl(data_get($headerContent, 'cta_url'), route('register.account')) }}" class="rounded-lg bg-[#00A651] px-4 py-2 text-sm font-black text-white">{{ data_get($headerContent, 'cta_label', 'Start Free Trial') }}</a>
                 @endif

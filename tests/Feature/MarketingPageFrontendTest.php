@@ -13,6 +13,16 @@ class MarketingPageFrontendTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_public_homepage_renders_without_the_app_login_surface(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Run Your Entire Business From One Unified Platform')
+            ->assertDontSee('Bama app login', false)
+            ->assertDontSee('href="/login"', false)
+            ->assertDontSee('href="/app/login"', false);
+    }
+
     public function test_homepage_updates_do_not_replace_the_app_entry(): void
     {
         Storage::fake('public');

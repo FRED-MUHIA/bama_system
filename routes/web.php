@@ -79,19 +79,7 @@ use Shared\Compliance\Etims\Controllers\EtimsComplianceController;
 
 Route::get('/uploads/{path}', PublicUploadController::class)->where('path', '.*')->name('uploads.public');
 
-Route::get('/', function () {
-    $user = auth()->user();
-
-    if (! $user) {
-        return redirect()->route('app.login');
-    }
-
-    return redirect()->route(match ($user->role) {
-        'super_admin' => 'platform.dashboard',
-        'client_portal' => 'portal.dashboard',
-        default => 'dashboard',
-    });
-})->name('landing');
+Route::get('/', LandingController::class)->name('landing');
 Route::get('/industries/{industry}', [LandingController::class, 'industry'])->name('industries.show');
 Route::get('/pages/{slug}', [MarketingPageController::class, 'show'])->name('marketing.pages.show');
 Route::get('/activate/{token}', [AdministrationController::class, 'activateForm'])->name('administration.activate');

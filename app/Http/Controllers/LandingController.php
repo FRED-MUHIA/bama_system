@@ -10,6 +10,16 @@ class LandingController extends Controller
 {
     public function __invoke(IndustrySetupService $industries, PlanSelectionService $plans)
     {
+        $user = auth()->user();
+
+        if ($user) {
+            return redirect()->route(match ($user->role) {
+                'super_admin' => 'platform.dashboard',
+                'client_portal' => 'portal.dashboard',
+                default => 'dashboard',
+            });
+        }
+
         $page = MarketingPage::resolve('home');
 
         return view('landing.index', [

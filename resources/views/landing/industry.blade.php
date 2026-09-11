@@ -43,7 +43,6 @@
                 <a href="{{ route('landing') }}#pricing" class="hover:text-[var(--accent)]">Pricing</a>
             </div>
             <div class="flex gap-2">
-                <a href="{{ route('login') }}" class="hidden rounded-lg border border-zinc-300 px-4 py-2 text-sm font-black text-black no-underline sm:inline-flex">Login</a>
                 <a href="{{ route('register.account') }}" class="rounded-lg px-4 py-2 text-sm font-black text-white no-underline" style="background:var(--accent)">Start Free Trial</a>
             </div>
         </nav>
