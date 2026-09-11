@@ -38,6 +38,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'subscription.active' => EnsureSubscriptionActive::class,
             'verified' => EnsureEmailIsVerified::class,
         ]);
+        $middleware->redirectUsersTo(function (Request $request) {
+            return route(match ($request->user()?->role) {
+                'super_admin' => 'platform.dashboard',
+                'client_portal' => 'portal.dashboard',
+                default => 'dashboard',
+            });
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (TokenMismatchException $e, Request $request) {

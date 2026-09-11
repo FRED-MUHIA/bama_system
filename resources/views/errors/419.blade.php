@@ -112,7 +112,7 @@
         <p>{{ $user ? 'That form session expired, but your account is already authenticated. Continue to your dashboard from a fresh secure page.' : 'Your secure form session timed out or changed. Open the login page again and submit the form from the fresh page.' }}</p>
         <div class="actions">
             <a class="primary" href="{{ $primaryUrl }}">{{ $primaryLabel }}</a>
-            <a class="secondary" href="{{ url('/') }}">Back home</a>
+            <a class="secondary" href="{{ route('app') }}">Back to app</a>
         </div>
     </main>
 </body>

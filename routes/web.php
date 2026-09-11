@@ -79,7 +79,19 @@ use Shared\Compliance\Etims\Controllers\EtimsComplianceController;
 
 Route::get('/uploads/{path}', PublicUploadController::class)->where('path', '.*')->name('uploads.public');
 
-Route::get('/', LandingController::class)->name('landing');
+Route::get('/', function () {
+    $user = auth()->user();
+
+    if (! $user) {
+        return redirect()->route('app.login');
+    }
+
+    return redirect()->route(match ($user->role) {
+        'super_admin' => 'platform.dashboard',
+        'client_portal' => 'portal.dashboard',
+        default => 'dashboard',
+    });
+})->name('landing');
 Route::get('/industries/{industry}', [LandingController::class, 'industry'])->name('industries.show');
 Route::get('/pages/{slug}', [MarketingPageController::class, 'show'])->name('marketing.pages.show');
 Route::get('/activate/{token}', [AdministrationController::class, 'activateForm'])->name('administration.activate');
@@ -96,7 +108,19 @@ Route::post('/portal/activate/{token}', [PortalController::class, 'activate'])->
 Route::get('/hospitality/menu', [HospitalityFrontController::class, 'menu'])->name('public.hospitality.menu');
 Route::post('/hospitality/menu/reserve', [HospitalityFrontController::class, 'reserve'])->name('public.hospitality.reserve');
 Route::post('/billing/mpesa/callback', [BillingController::class, 'mpesaCallback'])->name('billing.mpesa.callback');
-Route::get('/app', fn () => auth()->check() ? redirect()->route('dashboard') : redirect()->route('app.login'))->name('app');
+Route::get('/app', function () {
+    $user = auth()->user();
+
+    if (! $user) {
+        return redirect()->route('app.login');
+    }
+
+    return redirect()->route(match ($user->role) {
+        'super_admin' => 'platform.dashboard',
+        'client_portal' => 'portal.dashboard',
+        default => 'dashboard',
+    });
+})->name('app');
 
 Route::prefix('public')->group(function () {
     Route::get('/activate/{token}', [AdministrationController::class, 'activateForm'])->name('public.administration.activate');

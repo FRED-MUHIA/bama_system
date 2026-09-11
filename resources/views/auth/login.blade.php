@@ -338,10 +338,9 @@
 <div class="website-login">
     <section class="website-login-brand" aria-label="Bama website access">
         <div>
-            <a href="{{ route('landing') }}" class="website-login-logo" aria-label="Back to Bama home">
+            <div class="website-login-logo" aria-label="Bama secure access">
                 <x-bama-logo variant="compact" :src="$brandLogoUrl" alt="BAMA" />
-            </a>
-            <a href="{{ route('landing') }}" class="website-login-home"><i class="bi bi-arrow-left"></i> Back home</a>
+            </div>
         </div>
 
         <div class="website-login-copy">
@@ -462,12 +461,6 @@
                     <i class="bi bi-shield-check"></i>
                     <span>Your access is encrypted, role-controlled, and recorded for security.</span>
                 </div>
-                @if($loginContext === 'business')
-                    <div class="text-center mt-3">
-                        <span class="text-muted">Do not have an account?</span>
-                        <a href="{{ route('register.account') }}">Create Account</a>
-                    </div>
-                @endif
             </div>
         </div>
     </section>

@@ -13,7 +13,7 @@ class MarketingPageFrontendTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_owner_page_update_is_rendered_on_homepage(): void
+    public function test_homepage_updates_do_not_replace_the_app_entry(): void
     {
         Storage::fake('public');
 
@@ -66,17 +66,7 @@ class MarketingPageFrontendTest extends TestCase
             ])
             ->assertRedirect();
 
-        $response = $this->get('/');
-
-        $response
-            ->assertOk()
-            ->assertSee('BAMA Updated Browser Title')
-            ->assertSee('Updated Homepage Headline')
-            ->assertSee('Updated homepage body copy that should render publicly.')
-            ->assertSee('See Demo')
-            ->assertSee('/pages/demo')
-            ->assertSee('Talk to Sales')
-            ->assertSee('mailto:sales@example.test')
-            ->assertSee('/uploads/marketing/branding/', false);
+        $this->get('/')
+            ->assertRedirect(route('platform.dashboard'));
     }
 }

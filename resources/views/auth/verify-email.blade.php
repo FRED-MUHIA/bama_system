@@ -4,7 +4,6 @@
 <x-auth-layout
     title="Verify your email"
     intro="Use the verification link sent to your inbox to secure your new workspace."
-    :back-url="route('landing')"
 >
         @if (session('status'))
             <div class="mb-3 rounded-xl border border-[#00A651]/40 bg-[#EAF8F0] p-3 text-sm text-[#007A3B]">{{ session('status') }}</div>

@@ -193,7 +193,7 @@
     </style>
     <div class="registration-page mx-auto grid min-h-screen max-w-7xl lg:grid-cols-[.72fr_1.28fr]">
         <aside class="relative hidden overflow-hidden border-r border-zinc-200 bg-white px-8 py-7 lg:block">
-            <a href="{{ route('landing') }}" class="registration-brand" aria-label="Back to {{ $registrationBrandName }} home">
+            <a href="{{ route('app') }}" class="registration-brand" aria-label="Open {{ $registrationBrandName }} app">
                 @if($registrationLogoUrl)
                     <x-bama-logo variant="auth" :src="$registrationLogoUrl" :alt="$registrationLogoAlt" />
                 @else
@@ -218,7 +218,7 @@
         <section class="registration-content flex items-center justify-center px-4 py-5 sm:px-6">
             <div class="w-full min-w-0 max-w-[440px]">
                 <div class="mb-4 flex min-w-0 items-center justify-between gap-3 lg:hidden">
-                    <a href="{{ route('landing') }}" class="registration-brand" aria-label="Back to {{ $registrationBrandName }} home">
+                    <a href="{{ route('app') }}" class="registration-brand" aria-label="Open {{ $registrationBrandName }} app">
                         @if($registrationLogoUrl)
                             <x-bama-logo variant="compact" :src="$registrationLogoUrl" :alt="$registrationLogoAlt" />
                         @else

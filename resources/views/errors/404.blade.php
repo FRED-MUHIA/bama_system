@@ -81,8 +81,8 @@
     <main>
         <div class="code">404 error</div>
         <h1>Page not found.</h1>
-        <p>The address may be mistyped, moved, or no longer available. Return home and continue from the main Bama page.</p>
-        <a href="{{ url('/') }}">Back home</a>
+        <p>The address may be mistyped, moved, or no longer available. Return to the app and continue from the secure workspace.</p>
+        <a href="{{ route('app') }}">Back to app</a>
     </main>
 </body>
 </html>
