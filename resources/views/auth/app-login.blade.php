@@ -12,6 +12,8 @@
         'otpVerify' => route($publicLoginPrefix.'login.otp.verify'),
         'magic' => route($publicLoginPrefix.'login.magic.request'),
     ];
+    $system = $loginSystem ?? ['workspaces' => 'Ready', 'modules' => 'Live', 'industries' => 'Many', 'security' => 'Encrypted'];
+    $initialStep = ($errors->any() || $otpSent) ? 2 : 0;
     $brandLogoPath = 'images/bama-solutions-02.png';
     $brandLogoUrl = asset($brandLogoPath).'?v='.(file_exists(public_path($brandLogoPath)) ? filemtime(public_path($brandLogoPath)) : time());
 @endphp
@@ -462,6 +464,26 @@
         background:rgba(49,198,187,.12);
         color:#dffdfa;
     }
+    .app-dots {
+        position:fixed;
+        left:50%;
+        bottom:calc(12px + env(safe-area-inset-bottom));
+        z-index:20;
+        display:flex;
+        gap:7px;
+        transform:translateX(-50%);
+    }
+    .app-dot {
+        width:7px;
+        height:7px;
+        border:0;
+        border-radius:99px;
+        background:rgba(255,255,255,.34);
+    }
+    .app-dot.active {
+        width:22px;
+        background:var(--teal);
+    }
     @media (min-width:768px) {
         .app-screen {
             display:grid;
@@ -564,12 +586,54 @@
 </style>
 
 <x-auth-layout variant="bare">
-<div class="app-flow" data-app-flow>
+<div class="app-flow" data-app-flow data-initial-step="{{ $initialStep }}">
     <div class="app-flow-track" data-app-track>
+        <section class="app-screen" aria-label="Bama app welcome">
+            <div class="app-screen-center">
+                <div class="app-logo">
+                    <x-bama-logo variant="auth" :src="$brandLogoUrl" alt="BAMA" />
+                </div>
+                <div>
+                    <div class="app-kicker">Bama Workspace</div>
+                    <h1 class="app-title">Manage<br>Your<br>Business</h1>
+                    <p class="app-copy">Sign up or log in to see business activity, finance, clients, stock, projects, and reports in one dashboard.</p>
+                </div>
+                <button class="app-primary" type="button" data-app-go="1">
+                    Get Started <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <section class="app-screen" aria-label="Choose app access method">
+            <div class="app-screen-center">
+                <div class="app-logo">
+                    <x-bama-logo variant="auth" :src="$brandLogoUrl" alt="BAMA" />
+                </div>
+                <div class="app-choice-card">
+                    <h2>Continue with email</h2>
+                    <p>Use your Bama account to open the app dashboard, or create a workspace if your business is new.</p>
+                    <div class="app-choice-actions">
+                        <button class="app-primary mt-0" type="button" data-app-go="2">Continue With Email</button>
+                        <a class="app-secondary" href="{{ route('register.account') }}">Create business account</a>
+                    </div>
+                    <div class="app-stat-grid" aria-label="System status">
+                        <span><strong>{{ $system['workspaces'] }}</strong><small>Workspaces</small></span>
+                        <span><strong>{{ $system['modules'] }}</strong><small>Modules</small></span>
+                        <span><strong>{{ $system['industries'] }}</strong><small>Industries</small></span>
+                        <span><strong>{{ $system['security'] }}</strong><small>Access</small></span>
+                    </div>
+                </div>
+                @include('mobile.install-card')
+            </div>
+        </section>
+
         <section class="app-screen" aria-label="Bama app login">
             <div class="app-screen-center">
-                <div class="app-auth-top app-auth-top--solo">
-                    <x-bama-logo variant="auth" :src="$brandLogoUrl" alt="BAMA" />
+                <div class="app-auth-top">
+                    <button class="app-icon-button" type="button" data-app-go="1" aria-label="Back">
+                        <i class="bi bi-arrow-left"></i>
+                    </button>
+                    <span class="app-icon-button" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
                 </div>
 
                 <div class="app-auth-card">
@@ -670,8 +734,6 @@
                         </div>
                     @endif
 
-                    <a class="app-primary app-register-link" href="{{ route('register.account') }}">Get Started</a>
-
                     <div class="app-security">
                         <i class="bi bi-shield-check"></i>
                         <span>Accounts are checked against the system database and successful sign-ins open the dashboard.</span>
@@ -684,11 +746,36 @@
             </div>
         </section>
     </div>
+
+    <div class="app-dots" aria-label="App login progress">
+        <button class="app-dot" type="button" data-app-go="0" aria-label="Welcome"></button>
+        <button class="app-dot" type="button" data-app-go="1" aria-label="Continue"></button>
+        <button class="app-dot" type="button" data-app-go="2" aria-label="Login"></button>
+    </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const flow = document.querySelector('[data-app-flow]');
+        const dots = document.querySelectorAll('.app-dot');
+        let step = Number(flow?.dataset.initialStep || 0);
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        const setStep = (next) => {
+            if (! flow) return;
+            step = Math.max(0, Math.min(2, Number(next)));
+            flow.style.setProperty('--step', step);
+            dots.forEach((dot, index) => dot.classList.toggle('active', index === step));
+
+            if (step === 2) {
+                setTimeout(() => document.querySelector('input[name="username"]')?.focus({ preventScroll:true }), 360);
+            }
+        };
+
+        document.querySelectorAll('[data-app-go]').forEach((button) => {
+            button.addEventListener('click', () => setStep(button.dataset.appGo));
+        });
 
         flow?.querySelectorAll('form').forEach((form) => {
             form.addEventListener('submit', () => {
@@ -699,6 +786,18 @@
                 button.textContent = 'Please wait';
             });
         });
+
+        flow?.addEventListener('touchstart', (event) => {
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+        }, { passive:true });
+
+        flow?.addEventListener('touchend', (event) => {
+            const dx = event.changedTouches[0].clientX - touchStartX;
+            const dy = event.changedTouches[0].clientY - touchStartY;
+            if (Math.abs(dx) < 54 || Math.abs(dx) < Math.abs(dy)) return;
+            setStep(step + (dx < 0 ? 1 : -1));
+        }, { passive:true });
 
         @if ($otpSent)
             const button = document.querySelector('#resend-otp');
@@ -718,6 +817,8 @@
                 tick();
             }
         @endif
+
+        setStep(step);
     });
 </script>
 </x-auth-layout>

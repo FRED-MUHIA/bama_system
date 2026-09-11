@@ -27,14 +27,17 @@ class ExampleTest extends TestCase
             ->assertRedirect(route('dashboard'));
     }
 
-    public function test_app_login_keeps_registration_entry_without_home_panels(): void
+    public function test_app_login_keeps_slide_flow_and_registration_entry(): void
     {
         $this->get(route('app.login'))
             ->assertOk()
             ->assertSee('Welcome Back')
             ->assertSee('Get Started')
+            ->assertSee('Continue With Email')
             ->assertSee(route('register.account'), false)
-            ->assertDontSee('Continue with email');
+            ->assertSee('data-app-go="1"', false)
+            ->assertSee('data-app-go="2"', false)
+            ->assertDontSee('Back home');
     }
 
     public function test_web_login_keeps_registration_link(): void

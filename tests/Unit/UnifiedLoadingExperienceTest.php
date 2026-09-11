@@ -27,6 +27,9 @@ class UnifiedLoadingExperienceTest extends TestCase
         $this->assertStringContainsString('background: #dfff45', $styles);
         $this->assertStringContainsString('background: rgba(247, 249, 242, .48)', $styles);
         $this->assertStringContainsString('@keyframes bama-loader-pulse', $styles);
+        $this->assertStringContainsString('animation: bama-logo-heartbeat 1.15s ease-in-out infinite', $styles);
+        $this->assertStringContainsString('@keyframes bama-logo-heartbeat', $styles);
+        $this->assertStringContainsString('@media (prefers-reduced-motion: reduce)', $styles);
 
     }
 
@@ -58,7 +61,7 @@ class UnifiedLoadingExperienceTest extends TestCase
         $this->assertStringContainsString("worker?.postMessage({ type: 'SKIP_WAITING' })", $script);
         $this->assertStringContainsString('controllerRefreshing', $script);
         $this->assertStringContainsString('window.location.reload()', $script);
-        $this->assertStringContainsString('bama-pwa-v6', $worker);
+        $this->assertStringContainsString('bama-pwa-v7', $worker);
         $this->assertStringNotContainsString('data-bama-update-now', $shell.$script);
     }
 
