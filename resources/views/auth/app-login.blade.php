@@ -70,6 +70,10 @@
     }
     body .guest-theme-toggle,
     body:has(.app-flow) .guest-theme-toggle { display:none !important; }
+    .bama-loading-screen {
+        display:none !important;
+        pointer-events:none !important;
+    }
 
     .app-flow {
         --step:0;

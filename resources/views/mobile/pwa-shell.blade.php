@@ -13,6 +13,19 @@
 <script>
     (() => {
         const loader = document.currentScript.previousElementSibling;
+        const authPath = /^\/?(app\/login|login|owner\/login|portal\/login|public\/login|public\/owner\/login|public\/portal\/login|register|forgot-password|reset-password)(\/|$)/.test(window.location.pathname);
+
+        const hideLoader = () => {
+            loader.classList.add('is-hidden');
+            window.setTimeout(() => {
+                loader.hidden = true;
+            }, 180);
+        };
+
+        if (authPath) {
+            loader.hidden = true;
+            return;
+        }
 
         try {
             const sessionKey = 'bama-initial-loader-shown';
@@ -20,9 +33,11 @@
             if (!sessionStorage.getItem(sessionKey)) {
                 sessionStorage.setItem(sessionKey, 'true');
                 loader.hidden = false;
+                window.setTimeout(hideLoader, 1400);
             }
         } catch (error) {
             loader.hidden = false;
+            window.setTimeout(hideLoader, 1400);
         }
     })();
 </script>
