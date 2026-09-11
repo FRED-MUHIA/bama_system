@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="#00A651">
+    <meta name="theme-color" content="#050806">
     <meta name="color-scheme" content="light">
     <meta name="supported-color-schemes" content="light">
     <title>@yield('title', 'Bama Admin')</title>

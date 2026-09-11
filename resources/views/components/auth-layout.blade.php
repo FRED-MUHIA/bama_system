@@ -19,12 +19,6 @@
                 </a>
             @endif
 
-            @if ($showLogo)
-                <div class="auth-layout-orb" aria-hidden="true">
-                    <x-bama-logo variant="splash" mark alt="" />
-                </div>
-            @endif
-
             @if ($title || $intro)
                 <header class="auth-layout-heading">
                     @if ($title)

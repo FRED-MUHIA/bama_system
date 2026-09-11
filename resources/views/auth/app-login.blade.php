@@ -27,7 +27,7 @@
         max-width:100%;
         overflow:hidden;
     }
-    body:has(.app-flow) { padding-bottom:0 !important; background:#061512 !important; overscroll-behavior:none; }
+    body:has(.app-flow) { padding-bottom:0 !important; background:#050806 !important; overscroll-behavior:none; }
     main > section:has(.app-flow) { max-width:none; padding:0 !important; overflow:hidden; }
     main > section:has(.app-flow) > .alert {
         position:fixed;
@@ -78,9 +78,8 @@
         background-color:#050806;
         background-image:
             radial-gradient(circle at 50% 13%,rgba(199,238,54,.12),transparent 24rem),
-            radial-gradient(circle,rgba(223,255,69,.11) 1px,transparent 1.25px),
             linear-gradient(180deg,#0a1008,#050806 66%);
-        background-size:auto,13px 13px,auto;
+        background-size:auto;
         -webkit-overflow-scrolling:touch;
     }
     .app-screen::after {
@@ -239,28 +238,6 @@
         justify-content:space-between;
         gap:12px;
     }
-    .app-auth-orb {
-        position:relative;
-        display:grid;
-        width:76px;
-        height:76px;
-        place-items:center;
-        border:1px solid rgba(223,255,69,.5);
-        border-radius:50%;
-        background:radial-gradient(circle at 38% 30%,rgba(241,255,163,.35),transparent 22%),radial-gradient(circle,#425d0b,#121d05 58%,#050806 76%);
-        box-shadow:0 0 0 7px rgba(223,255,69,.035),0 0 34px rgba(199,238,54,.2),inset 0 0 20px rgba(223,255,69,.22);
-    }
-    .app-auth-orb::before {
-        content:"";
-        position:absolute;
-        inset:-15px;
-        border:1px solid rgba(223,255,69,.08);
-        border-radius:50%;
-    }
-    .app-auth-orb .bama-brand-logo {
-        width:46px !important;
-        filter:saturate(1.15) brightness(1.12) drop-shadow(0 0 10px rgba(223,255,69,.35));
-    }
     .app-icon-button {
         width:44px;
         height:44px;
@@ -354,6 +331,20 @@
         text-decoration-thickness:2px;
         text-underline-offset:4px;
     }
+    .app-auth-card .btn-link {
+        color:#dfff45 !important;
+        font-weight:950;
+        text-decoration-thickness:2px;
+        text-underline-offset:4px;
+    }
+    .app-auth-card .btn-link:disabled,
+    .app-auth-card [class*="text-slate-"],
+    .app-auth-card [class*="text-gray-"],
+    .app-auth-card [class*="text-zinc-"],
+    .app-auth-card [class*="text-blue-"],
+    .app-auth-card [class*="text-indigo-"] {
+        color:rgba(255,255,255,.76) !important;
+    }
     .app-auth-card .btn-warning {
         min-height:50px;
         border:0;
@@ -430,6 +421,21 @@
         font-size:.76rem;
         line-height:1.5;
         text-align:center;
+    }
+    .app-flow .bama-install-card {
+        border-color:rgba(223,255,69,.12);
+        background:linear-gradient(180deg,rgba(13,18,11,.86),rgba(5,8,6,.94));
+        color:#f7f9f2;
+        box-shadow:0 24px 54px rgba(0,0,0,.26);
+    }
+    .app-flow .bama-install-card span,
+    .app-flow .bama-install-card p {
+        color:rgba(255,255,255,.76);
+    }
+    .app-flow .bama-install-actions button:last-child {
+        border-color:rgba(255,255,255,.14);
+        background:rgba(255,255,255,.08);
+        color:#f7f9f2;
     }
     .otp-success {
         border-color:rgba(49,198,187,.32);
@@ -605,9 +611,6 @@
                     <button class="app-icon-button" type="button" data-app-go="1" aria-label="Back">
                         <i class="bi bi-arrow-left"></i>
                     </button>
-                    <div class="app-auth-orb">
-                        <x-bama-logo variant="splash" mark alt="" aria-hidden="true" />
-                    </div>
                     <span class="app-icon-button" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
                 </div>
 

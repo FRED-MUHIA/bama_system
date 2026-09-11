@@ -45,6 +45,17 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json(['message' => 'Your session expired. Please refresh and try again.'], 419);
             }
 
+            if ($user = $request->user()) {
+                $landingRoute = match ($user->role) {
+                    'super_admin' => 'platform.dashboard',
+                    'client_portal' => 'portal.dashboard',
+                    default => 'dashboard',
+                };
+
+                return redirect()->route($landingRoute)
+                    ->with('warning', 'That form session expired, but you are already signed in.');
+            }
+
             $publicPrefix = $request->is('public/*') || $request->routeIs('public.*');
 
             $loginRoute = match (true) {

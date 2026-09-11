@@ -134,9 +134,8 @@
         padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
         background-color: #050806;
         background-image:
-            radial-gradient(circle at 50% 7%, rgba(209, 255, 63, .12), transparent 25rem),
-            radial-gradient(circle, rgba(223, 255, 69, .12) 1px, transparent 1.35px);
-        background-size: auto, 13px 13px;
+            radial-gradient(circle at 50% 7%, rgba(209, 255, 63, .12), transparent 25rem);
+        background-size: auto;
         color: #f7f9f2;
         scroll-padding-block: 5rem;
         -webkit-overflow-scrolling: touch;
@@ -178,45 +177,6 @@
         box-shadow: 0 30px 90px rgba(0, 0, 0, .42), inset 0 1px rgba(255, 255, 255, .035);
     }
 
-    .auth-layout-orb {
-        position: relative;
-        display: grid;
-        width: 82px;
-        height: 82px;
-        place-items: center;
-        margin: .25rem auto 0;
-        border: 1px solid rgba(216, 255, 60, .5);
-        border-radius: 50%;
-        background:
-            radial-gradient(circle at 38% 30%, rgba(236, 255, 150, .34), transparent 24%),
-            radial-gradient(circle at 54% 58%, #425e0b 0, #152205 47%, #060a04 72%);
-        box-shadow:
-            0 0 0 7px rgba(201, 255, 55, .035),
-            0 0 36px rgba(190, 255, 49, .22),
-            inset 0 0 22px rgba(211, 255, 62, .25);
-        isolation: isolate;
-    }
-
-    .auth-layout-orb::before,
-    .auth-layout-orb::after {
-        content: '';
-        position: absolute;
-        inset: -15px;
-        z-index: -1;
-        border: 1px solid rgba(214, 255, 58, .09);
-        border-radius: 50%;
-    }
-
-    .auth-layout-orb::after {
-        inset: -29px;
-        border-color: rgba(214, 255, 58, .045);
-    }
-
-    .auth-layout-orb .bama-brand-logo {
-        width: 50px;
-        filter: saturate(1.15) brightness(1.12) drop-shadow(0 0 12px rgba(211, 255, 65, .4));
-    }
-
     .auth-layout-back {
         width: 44px;
         height: 44px;
@@ -231,7 +191,7 @@
     }
 
     .auth-layout-heading {
-        margin-top: 2rem;
+        margin-top: 1rem;
         text-align: center;
     }
 
@@ -639,7 +599,10 @@
         display: grid;
         place-items: center;
         padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
-        background: #007A3B;
+        background:
+            radial-gradient(circle at 50% 9%, rgba(223, 255, 69, .14), transparent 25rem),
+            linear-gradient(180deg, #0a1008, #050806 72%);
+        color: #f7f9f2;
         opacity: 1;
         transition: opacity .18s ease, visibility .18s ease;
     }
@@ -693,7 +656,7 @@
         width: 6px;
         height: 10px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, .48);
+        background: rgba(247, 249, 242, .48);
         transform: rotate(calc(var(--spoke) * 45deg));
         transform-origin: 3px 19px;
         animation: bama-loader-pulse .8s linear infinite;
@@ -702,10 +665,10 @@
 
     @keyframes bama-loader-pulse {
         0%, 12.5% {
-            background: #7ed342;
+            background: #dfff45;
         }
         50%, 100% {
-            background: rgba(255, 255, 255, .48);
+            background: rgba(247, 249, 242, .48);
         }
     }
 

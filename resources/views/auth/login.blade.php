@@ -61,8 +61,7 @@
         position:absolute;
         inset:0;
         z-index:-1;
-        background-image:radial-gradient(circle,rgba(223,255,69,.1) 1px,transparent 1.25px),radial-gradient(circle at 78% 8%,rgba(223,255,69,.12),transparent 30%);
-        background-size:13px 13px,100% 100%;
+        background:radial-gradient(circle at 78% 8%,rgba(223,255,69,.12),transparent 30%);
     }
     .website-login-logo {
         display:inline-flex;
@@ -145,26 +144,6 @@
             linear-gradient(180deg,#0a1008,#050806 72%);
     }
     .website-login-wrap { width:min(100%,420px); min-width:0; }
-    .website-login-orb {
-        position:relative;
-        display:grid;
-        width:80px;
-        height:80px;
-        place-items:center;
-        margin:0 auto 30px;
-        border:1px solid rgba(223,255,69,.5);
-        border-radius:50%;
-        background:radial-gradient(circle at 38% 30%,rgba(241,255,163,.35),transparent 22%),radial-gradient(circle,#425d0b,#121d05 58%,#050806 76%);
-        box-shadow:0 0 0 7px rgba(223,255,69,.035),0 0 34px rgba(199,238,54,.2),inset 0 0 20px rgba(223,255,69,.22);
-    }
-    .website-login-orb::before {
-        content:"";
-        position:absolute;
-        inset:-16px;
-        border:1px solid rgba(223,255,69,.08);
-        border-radius:50%;
-    }
-    .website-login-orb .bama-brand-logo { width:48px; filter:brightness(1.12) drop-shadow(0 0 10px rgba(223,255,69,.35)); }
     .website-login-label {
         color:#dfff45;
         font-size:.72rem;
@@ -240,6 +219,21 @@
     .website-login-card a {
         color:#dfff45;
         font-weight:800;
+    }
+    .website-login-card .btn-link {
+        color:#dfff45 !important;
+        font-weight:800;
+        text-decoration-thickness:2px;
+        text-underline-offset:4px;
+    }
+    .website-login-card .btn-link:disabled,
+    .website-login-card .text-muted,
+    .website-login-card [class*="text-slate-"],
+    .website-login-card [class*="text-gray-"],
+    .website-login-card [class*="text-zinc-"],
+    .website-login-card [class*="text-blue-"],
+    .website-login-card [class*="text-indigo-"] {
+        color:#cfd7c7 !important;
     }
     .website-login-card .btn-warning {
         display:flex;
@@ -333,7 +327,6 @@
     @media (max-width:680px) {
         .website-login-brand { padding-inline:16px; }
         .website-login-panel { padding:12px 16px max(20px, env(safe-area-inset-bottom)); }
-        .website-login-orb { width:72px; height:72px; margin-bottom:26px; }
         .website-login-label { display:none; }
         .website-login-wrap > h2,
         .website-login-intro { text-align:center; }
@@ -367,9 +360,6 @@
 
     <section class="website-login-panel">
         <div class="website-login-wrap">
-            <div class="website-login-orb" aria-hidden="true">
-                <x-bama-logo variant="splash" mark alt="" />
-            </div>
             <div class="website-login-label">{{ $loginCopy['label'] }}</div>
             <h2>{{ $loginCopy['title'] }}</h2>
             <p class="website-login-intro">{{ $loginCopy['intro'] }}</p>

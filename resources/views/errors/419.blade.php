@@ -9,10 +9,12 @@
             color-scheme: light;
             --green: #00A651;
             --green-dark: #007A3B;
+            --lime: #dfff45;
             --ink: #071B12;
-            --muted: #667085;
-            --page: #F7F8F5;
-            --line: #D8E5DC;
+            --muted: #cfd7c7;
+            --page: #050806;
+            --panel: rgba(13, 18, 11, .92);
+            --line: rgba(223, 255, 69, .12);
         }
 
         * { box-sizing: border-box; }
@@ -23,8 +25,10 @@
             display: grid;
             place-items: center;
             padding: 24px;
-            background: var(--page);
-            color: var(--ink);
+            background:
+                radial-gradient(circle at 50% 9%, rgba(223, 255, 69, .14), transparent 25rem),
+                linear-gradient(180deg, #0a1008, var(--page) 72%);
+            color: #f7f9f2;
             font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             letter-spacing: 0;
         }
@@ -33,13 +37,13 @@
             width: min(640px, 100%);
             border: 1px solid var(--line);
             border-radius: 8px;
-            background: #fff;
+            background: var(--panel);
             padding: clamp(28px, 7vw, 54px);
-            box-shadow: 0 18px 45px rgba(7, 27, 18, .08);
+            box-shadow: 0 28px 80px rgba(0, 0, 0, .34);
         }
 
         .code {
-            color: var(--green-dark);
+            color: var(--lime);
             font-size: .82rem;
             font-weight: 800;
             text-transform: uppercase;
@@ -76,28 +80,38 @@
         }
 
         .primary {
-            background: var(--green);
-            color: #fff;
+            background: linear-gradient(90deg, #c8f32f, #e8ff59);
+            color: #071006;
         }
 
         .primary:hover,
         .primary:focus {
-            background: var(--green-dark);
+            background: #edff77;
         }
 
         .secondary {
             border: 1px solid var(--line);
-            color: var(--ink);
+            color: #f7f9f2;
         }
     </style>
 </head>
 <body>
+    @php
+        $user = auth()->user();
+        $dashboardRoute = match ($user?->role) {
+            'super_admin' => 'platform.dashboard',
+            'client_portal' => 'portal.dashboard',
+            default => 'dashboard',
+        };
+        $primaryUrl = $user ? route($dashboardRoute) : route('login');
+        $primaryLabel = $user ? 'Go to dashboard' : 'Go to login';
+    @endphp
     <main>
         <div class="code">419 error</div>
-        <h1>Session expired.</h1>
-        <p>Your secure form session timed out or changed. Open the login page again and submit the form from the fresh page.</p>
+        <h1>{{ $user ? 'Still signed in.' : 'Session expired.' }}</h1>
+        <p>{{ $user ? 'That form session expired, but your account is already authenticated. Continue to your dashboard from a fresh secure page.' : 'Your secure form session timed out or changed. Open the login page again and submit the form from the fresh page.' }}</p>
         <div class="actions">
-            <a class="primary" href="{{ route('login') }}">Go to login</a>
+            <a class="primary" href="{{ $primaryUrl }}">{{ $primaryLabel }}</a>
             <a class="secondary" href="{{ url('/') }}">Back home</a>
         </div>
     </main>

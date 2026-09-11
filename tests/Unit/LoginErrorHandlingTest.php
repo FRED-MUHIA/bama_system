@@ -2,6 +2,10 @@
 
 namespace Tests\Unit;
 
+use App\Models\User;
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
 use Tests\TestCase;
 
 class LoginErrorHandlingTest extends TestCase
@@ -24,5 +28,18 @@ class LoginErrorHandlingTest extends TestCase
     {
         $this->assertTrue(view()->exists('errors.404'));
         $this->assertTrue(view()->exists('errors.419'));
+    }
+
+    public function test_authenticated_token_mismatch_redirects_to_dashboard(): void
+    {
+        $request = Request::create('/login', 'POST');
+        $request->setLaravelSession(app('session.store'));
+        $request->setUserResolver(fn () => new User(['role' => 'admin']));
+
+        $response = app(ExceptionHandler::class)->render($request, new TokenMismatchException('CSRF token mismatch.'));
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame(route('dashboard'), $response->headers->get('Location'));
+        $this->assertSame('That form session expired, but you are already signed in.', session('warning'));
     }
 }

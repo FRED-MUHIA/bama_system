@@ -20,12 +20,12 @@ class UnifiedLoadingExperienceTest extends TestCase
         $this->assertStringContainsString('bama-initial-loader-shown', $shell);
         $this->assertStringContainsString('sessionStorage.getItem(sessionKey)', $shell);
         $this->assertStringContainsString('<noscript><style>.bama-loading-screen { display: none !important; }</style></noscript>', $shell);
-        $this->assertStringContainsString('background: #007A3B', $styles);
+        $this->assertStringContainsString('linear-gradient(180deg, #0a1008, #050806 72%)', $styles);
         $this->assertStringContainsString('width: 42px', $styles);
         $this->assertStringContainsString('height: 10px', $styles);
         $this->assertStringContainsString('transform-origin: 3px 19px', $styles);
-        $this->assertStringContainsString('background: #7ed342', $styles);
-        $this->assertStringContainsString('background: rgba(255, 255, 255, .48)', $styles);
+        $this->assertStringContainsString('background: #dfff45', $styles);
+        $this->assertStringContainsString('background: rgba(247, 249, 242, .48)', $styles);
         $this->assertStringContainsString('@keyframes bama-loader-pulse', $styles);
 
     }
@@ -58,7 +58,7 @@ class UnifiedLoadingExperienceTest extends TestCase
         $this->assertStringContainsString("worker?.postMessage({ type: 'SKIP_WAITING' })", $script);
         $this->assertStringContainsString('controllerRefreshing', $script);
         $this->assertStringContainsString('window.location.reload()', $script);
-        $this->assertStringContainsString('bama-pwa-v5', $worker);
+        $this->assertStringContainsString('bama-pwa-v6', $worker);
         $this->assertStringNotContainsString('data-bama-update-now', $shell.$script);
     }
 

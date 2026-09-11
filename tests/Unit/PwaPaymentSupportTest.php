@@ -10,7 +10,7 @@ class PwaPaymentSupportTest extends TestCase
     {
         $serviceWorker = file_get_contents(public_path('sw.js'));
 
-        $this->assertStringContainsString("const BAMA_SW_VERSION = 'bama-pwa-v4'", $serviceWorker);
+        $this->assertStringContainsString("const BAMA_SW_VERSION = 'bama-pwa-v6'", $serviceWorker);
         $this->assertStringContainsString("if (request.method !== 'GET') return;", $serviceWorker);
         $this->assertStringContainsString("'/billing'", $serviceWorker);
         $this->assertStringContainsString('if (isPrivatePath(url.pathname))', $serviceWorker);

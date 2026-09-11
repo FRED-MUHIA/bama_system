@@ -39,9 +39,8 @@
             overflow-x: clip;
             background-color: #050806;
             background-image:
-                radial-gradient(circle at 50% 8%, rgba(223, 255, 69, .11), transparent 25rem),
-                radial-gradient(circle, rgba(223, 255, 69, .1) 1px, transparent 1.25px);
-            background-size: auto, 13px 13px;
+                radial-gradient(circle at 50% 8%, rgba(223, 255, 69, .11), transparent 25rem);
+            background-size: auto;
             color: #f7f9f2;
         }
 
@@ -145,8 +144,14 @@
         }
 
         .registration-page .text-black { color: #f7f9f2 !important; }
+        .registration-page .text-muted,
         .registration-page .text-zinc-500,
-        .registration-page .text-zinc-600 { color: #9da59a !important; }
+        .registration-page .text-zinc-600,
+        .registration-page [class*="text-slate-"],
+        .registration-page [class*="text-gray-"],
+        .registration-page [class*="text-zinc-"],
+        .registration-page [class*="text-blue-"],
+        .registration-page [class*="text-indigo-"] { color: #cfd7c7 !important; }
         .registration-page .text-\[\#00A651\],
         .registration-page .text-\[\#007A3B\] { color: #dfff45 !important; }
         .registration-page .bg-white { background-color: #090d08 !important; }
@@ -163,32 +168,6 @@
             border-color: rgba(223, 255, 69, .09) !important;
             background: linear-gradient(180deg, rgba(13, 18, 11, .9), rgba(5, 8, 6, .97)) !important;
             box-shadow: 0 28px 80px rgba(0, 0, 0, .34) !important;
-        }
-
-        .registration-orb {
-            position: relative;
-            display: grid;
-            width: 76px;
-            height: 76px;
-            place-items: center;
-            margin: 6px auto 28px;
-            border: 1px solid rgba(223, 255, 69, .5);
-            border-radius: 50%;
-            background: radial-gradient(circle at 38% 30%, rgba(241, 255, 163, .35), transparent 22%), radial-gradient(circle, #425d0b, #121d05 58%, #050806 76%);
-            box-shadow: 0 0 0 7px rgba(223, 255, 69, .035), 0 0 34px rgba(199, 238, 54, .2), inset 0 0 20px rgba(223, 255, 69, .22);
-        }
-
-        .registration-orb::before {
-            content: '';
-            position: absolute;
-            inset: -15px;
-            border: 1px solid rgba(223, 255, 69, .08);
-            border-radius: 50%;
-        }
-
-        .registration-orb .bama-brand-logo {
-            width: 46px;
-            filter: brightness(1.12) drop-shadow(0 0 10px rgba(223, 255, 69, .35));
         }
 
         .registration-content {
@@ -210,10 +189,6 @@
                 background: transparent !important;
                 box-shadow: none !important;
             }
-        }
-
-        @media (min-width: 1024px) {
-            .registration-orb { display: none; }
         }
     </style>
     <div class="registration-page mx-auto grid min-h-screen max-w-7xl lg:grid-cols-[.72fr_1.28fr]">
@@ -251,9 +226,6 @@
                         @endif
                     </a>
                     <span class="rounded-lg border border-zinc-200 bg-white px-3 py-1 text-sm text-black">Step {{ $step }} of 5</span>
-                </div>
-                <div class="registration-orb" aria-hidden="true">
-                    <x-bama-logo variant="splash" mark alt="" />
                 </div>
                 {{ $slot }}
             </div>

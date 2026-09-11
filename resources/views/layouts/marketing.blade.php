@@ -20,7 +20,7 @@
     <link rel="icon" href="{{ $marketingFaviconHref }}">
     <link rel="shortcut icon" href="{{ $marketingFaviconHref }}">
     <link rel="apple-touch-icon" href="{{ $marketingFaviconHref }}">
-    <meta name="theme-color" content="#00A651">
+    <meta name="theme-color" content="#050806">
     @include('mobile.pwa-meta')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
