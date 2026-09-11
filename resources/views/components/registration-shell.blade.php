@@ -33,9 +33,11 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             width: 100%;
+            max-width: 1280px;
             min-width: 0;
             min-height: 100svh;
             min-height: 100dvh;
+            margin-inline: auto;
             overflow-x: clip;
             background-color: #050806;
             background-image:
@@ -176,7 +178,26 @@
             min-height: 100dvh;
         }
 
+        .registration-form-wrap {
+            width: min(100%, 440px);
+            min-width: 0;
+        }
+
+        @media (min-width: 1024px) {
+            .registration-page {
+                grid-template-columns: minmax(360px, .72fr) minmax(0, 1.28fr);
+            }
+
+            .registration-content {
+                padding-inline: clamp(2rem, 4vw, 4rem);
+            }
+        }
+
         @media (max-width: 1023.98px) {
+            .registration-page {
+                max-width: none;
+            }
+
             .registration-content {
                 min-height: auto;
                 align-items: flex-start;
@@ -216,7 +237,7 @@
         </aside>
 
         <section class="registration-content flex items-center justify-center px-4 py-5 sm:px-6">
-            <div class="w-full min-w-0 max-w-[440px]">
+            <div class="registration-form-wrap w-full min-w-0 max-w-[440px]">
                 <div class="mb-4 flex min-w-0 items-center justify-between gap-3 lg:hidden">
                     <a href="{{ route('app') }}" class="registration-brand" aria-label="Open {{ $registrationBrandName }} app">
                         @if($registrationLogoUrl)
