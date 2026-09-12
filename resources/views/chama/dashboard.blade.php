@@ -671,7 +671,28 @@
     .chama-actions a{border:1px solid #d7eadf;border-radius:8px;padding:.58rem .72rem;text-decoration:none;color:#007A3B;font-weight:800;background:#EAF8F0}
     .chama-page .table small{display:block;color:#667085}
     .chama-check{display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:700;color:#374151;padding:2px 4px}
+    @media(max-width:1400px){.chama-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
     @media(max-width:1200px){.chama-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.chama-grid.two{grid-template-columns:1fr}.chama-hero{align-items:flex-start;flex-direction:column}.chama-module-strip{justify-content:flex-start}}
-    @media(max-width:640px){.chama-kpis{grid-template-columns:1fr}.chama-hero{padding:18px}.chama-hero h1{font-size:1.55rem}.chama-tabs a{font-size:.74rem}}
+    @media(max-width:991px){
+        .chama-page form .input-group{flex-wrap:wrap}
+        .chama-page form .input-group>.form-control,.chama-page form .input-group>.form-select{flex:1 1 170px;min-width:0}
+        .chama-page form .btn:not(.btn-sm){width:100%;min-height:46px}
+        .chama-page .table-responsive{-webkit-overflow-scrolling:touch}
+    }
+    @media(max-width:640px){
+        .chama-page .chama-hero{padding:16px;gap:14px}
+        .chama-page .chama-hero h1{font-size:1.4rem}
+        .chama-page .chama-hero span{font-size:.8rem;line-height:1.45;display:block}
+        .chama-panel{padding:14px}
+        .chama-panel-head h2{font-size:.98rem}
+        .chama-page form .input-group{flex-direction:column;align-items:stretch;gap:.45rem}
+        .chama-page form .input-group>.form-control,.chama-page form .input-group>.form-select{flex:1 1 100%;width:100%;margin-left:0}
+        .chama-page form .input-group>.form-control,.chama-page form .input-group>.form-select{border-radius:9px !important}
+        .chama-page form .input-group>.form-control:focus,.chama-page form .input-group>.form-select:focus{border-radius:9px !important}
+        .chama-page form textarea.form-control{min-height:96px}
+        .chama-page form .btn:not(.btn-sm){white-space:normal}
+        .chama-actions a{flex:1 1 44%;min-width:0;text-align:center}
+        .chama-kpis{grid-template-columns:1fr}
+    }
 </style>
 @endsection
