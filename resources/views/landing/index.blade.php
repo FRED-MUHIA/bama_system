@@ -460,6 +460,26 @@
                                     </div>
                                 </div>
                             </div>
+                        @elseif(strtolower($link['label']) === 'industries' && $industryCards->isNotEmpty())
+                            <div class="group relative py-2">
+                                <a href="{{ $link['url'] }}" class="hover:text-[#00A651]">{{ $link['label'] }}</a>
+                                <div class="invisible absolute left-1/2 top-full max-h-[70vh] w-[720px] -translate-x-1/2 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-4 opacity-0 shadow-2xl transition group-hover:visible group-hover:opacity-100">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        @foreach ($industryCards as $industry)
+                                            @php
+                                                $industrySlug = str_replace('_', '-', $industry['slug']);
+                                            @endphp
+                                            <a href="{{ route('industries.show', ['industry' => $industrySlug]) }}" class="rounded-lg p-3 hover:bg-[#EAF8F0]">
+                                                <span class="flex items-center gap-2 font-black">
+                                                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#EAF8F0] text-xs text-[#007A3B]">{{ substr($industry['name'], 0, 1) }}</span>
+                                                    <span>{{ $industry['name'] }}</span>
+                                                </span>
+                                                <span class="mt-1 block text-xs font-medium leading-5 text-zinc-500">{{ $industry['description'] }}</span>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                         @else
                             <a href="{{ $link['url'] }}" class="hover:text-[#00A651]">{{ $link['label'] }}</a>
                         @endif
