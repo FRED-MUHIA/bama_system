@@ -19,6 +19,7 @@ class MarketingPageFrontendTest extends TestCase
             ->assertOk()
             ->assertSee('Run Your Entire Business From One Unified Platform')
             ->assertSee(route('industries.show', ['industry' => 'construction']), false)
+            ->assertSee(route('industries.show', ['industry' => 'chama']), false)
             ->assertDontSee('Bama app login', false)
             ->assertDontSee('href="/login"', false)
             ->assertDontSee('href="/app/login"', false);

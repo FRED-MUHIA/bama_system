@@ -19,6 +19,7 @@ class IndustryPackageApiTest extends TestCase
             ->assertJsonFragment(['slug' => 'printing_branding'])
             ->assertJsonFragment(['slug' => 'construction'])
             ->assertJsonFragment(['slug' => 'automotive'])
+            ->assertJsonFragment(['slug' => 'chama'])
             ->assertJsonMissing(['slug' => 'banking']);
 
         foreach ($response->json('industries') as $industry) {
@@ -76,6 +77,9 @@ class IndustryPackageApiTest extends TestCase
             ->assertOk()
             ->assertSeeText('Printing & Branding')
             ->assertSeeText('Automotive')
+            ->assertSeeText('Chama Management')
+            ->assertSeeText('Table Banking')
+            ->assertSeeText('Savings Group')
             ->assertSeeText('Retail')
             ->assertSeeText('Book Store')
             ->assertSeeText('Clothing Store')

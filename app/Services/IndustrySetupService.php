@@ -14,6 +14,7 @@ class IndustrySetupService
     private const IMPLEMENTED_INDUSTRIES = [
         'agriculture',
         'automotive',
+        'chama',
         'construction',
         'fitness',
         'hospitality',

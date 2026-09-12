@@ -53,6 +53,7 @@ $agriculturePackage = file_exists(base_path('Modules/Agriculture/module.php')) ?
 $printingBrandingPackage = file_exists(base_path('Modules/PrintingBranding/module.php')) ? require base_path('Modules/PrintingBranding/module.php') : null;
 $automotivePackage = file_exists(base_path('Modules/Automotive/module.php')) ? require base_path('Modules/Automotive/module.php') : null;
 $retailPackage = file_exists(base_path('Modules/Retail/module.php')) ? require base_path('Modules/Retail/module.php') : null;
+$chamaPackage = file_exists(base_path('Modules/Chama/module.php')) ? require base_path('Modules/Chama/module.php') : null;
 
 $industries = [
     'construction' => [
@@ -121,6 +122,19 @@ $industries = [
     'insurance' => ['Insurance', 'Manage policies, claims, underwriting, premiums, renewals, agents, and risk assessment.', ['Policy Management', 'Claims Management', 'Underwriting', 'Premium Collection', 'Renewals', 'Agents Management', 'Risk Assessment']],
     'banking' => ['Banking & SACCO', 'Operate members, savings, loans, repayments, interest, share capital, statements, and mobile banking.', ['Member Management', 'Savings Accounts', 'Loans', 'Repayments', 'Interest Calculations', 'Share Capital', 'Statements', 'Mobile Banking']],
     'microfinance' => ['Microfinance', 'Manage borrowers, loans, collections, group lending, savings, guarantors, and credit scoring.', ['Borrowers', 'Loans', 'Collections', 'Group Lending', 'Savings', 'Guarantors', 'Credit Scoring']],
+    'chama' => [
+        $chamaPackage['name'] ?? 'Chama Management',
+        $chamaPackage['description'] ?? 'Manage chama members, contributions, savings, table banking, loans, welfare, investments, meetings, statements, and dividends.',
+        $chamaPackage['modules'] ?? ['Members', 'Contributions', 'Savings', 'Table Banking', 'Loans', 'Welfare', 'Investments', 'Meetings', 'Reports'],
+        [
+            'sub_industries' => $chamaPackage['sub_industries'] ?? [],
+            'registration_sub_industries' => $chamaPackage['registration_sub_industries'] ?? [],
+            'dashboard_widgets' => $chamaPackage['dashboard_features'] ?? [],
+            'reports' => $chamaPackage['reports'] ?? [],
+            'roles' => $chamaPackage['roles'] ?? [],
+            'menu_structure' => $chamaPackage['menu_structure'] ?? [],
+        ],
+    ],
     'ngo' => ['NGO & Non-Profit', 'Track donors, grants, programs, beneficiaries, fundraising, monitoring and evaluation, and impact reporting.', ['Donor Management', 'Grants Management', 'Programs', 'Beneficiaries', 'Fundraising', 'Monitoring & Evaluation', 'Impact Reporting']],
     'government' => ['Government', 'Manage citizen records, licensing, permits, revenue collection, assets, service requests, and public projects.', ['Citizen Records', 'Licensing', 'Permits', 'Revenue Collection', 'Asset Management', 'Service Requests', 'Public Projects']],
     'agriculture' => [
