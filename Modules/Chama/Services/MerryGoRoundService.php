@@ -17,11 +17,14 @@ class MerryGoRoundService
     public function createCycle(array $data): MerryGoRoundCycle
     {
         return DB::transaction(function () use ($data) {
-            $cycle = MerryGoRoundCycle::create(array_merge($data, [
-                'cycle_number' => $data['cycle_number'] ?? $this->numbers->cycleNumber(),
-                'payout_amount' => $data['payout_amount'] ?? 0,
-                'status' => $data['status'] ?? 'Planned',
-            ]));
+            $cycle = MerryGoRoundCycle::create(array_merge(
+                collect($data)->except('member_ids')->all(),
+                [
+                    'cycle_number' => $data['cycle_number'] ?? $this->numbers->cycleNumber(),
+                    'payout_amount' => $data['payout_amount'] ?? 0,
+                    'status' => $data['status'] ?? 'Planned',
+                ]
+            ));
 
             foreach (array_values($data['member_ids'] ?? []) as $index => $memberId) {
                 MerryGoRoundMember::create([
