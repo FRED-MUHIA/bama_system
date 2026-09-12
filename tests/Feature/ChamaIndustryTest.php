@@ -11,6 +11,7 @@ use App\Services\NavigationManager;
 use App\Support\ActiveBusiness;
 use App\Support\ActiveTenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ChamaIndustryTest extends TestCase
@@ -112,5 +113,22 @@ class ChamaIndustryTest extends TestCase
 
         $this->get(route('dashboard'))
             ->assertRedirect(route('chama.dashboard'));
+    }
+
+    public function test_app_shell_refreshes_chama_permissions_before_sidebar_builds(): void
+    {
+        DB::table('iam_permissions')->where('name', 'chama.dashboard')->delete();
+
+        $this->assertDatabaseMissing('iam_permissions', ['name' => 'chama.dashboard']);
+
+        $this->get(route('profile.edit'))
+            ->assertOk();
+
+        $this->assertDatabaseHas('iam_permissions', ['name' => 'chama.dashboard']);
+
+        $labels = app(NavigationManager::class)->sidebar()->pluck('label')->all();
+        $this->assertContains('Members', $labels);
+        $this->assertContains('Table Banking', $labels);
+        $this->assertContains('Loans', $labels);
     }
 }
