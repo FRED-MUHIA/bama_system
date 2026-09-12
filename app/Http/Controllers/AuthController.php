@@ -91,6 +91,8 @@ class AuthController extends Controller
                 return back()->withErrors(['username' => $this->invalidContextMessage($context)])->onlyInput('username');
             }
 
+            $this->rememberAuthSurface($request);
+
             $loginUpdates = collect([
                 'failed_login_attempts' => 0,
                 'locked_at' => null,
@@ -141,6 +143,8 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'OTP login is not available for this account.']);
         }
 
+        $this->rememberAuthSurface($request);
+
         $otp = OtpCode::create([
             'user_id' => $user->id,
             'email' => $user->email,
@@ -190,6 +194,7 @@ class AuthController extends Controller
             return redirect()->route($this->loginRouteFor($context))->withErrors(['username' => $this->invalidContextMessage($context)]);
         }
         RateLimiter::clear($throttleKey);
+        $this->rememberAuthSurface($request);
 
         return redirect()->intended($this->landingRouteFor($otp->user));
     }
@@ -208,6 +213,8 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Magic link login is not available for this account.']);
         }
 
+        $this->rememberAuthSurface($request);
+
         $token = LoginToken::create([
             'user_id' => $user->id,
             'email' => $user->email,
@@ -216,10 +223,15 @@ class AuthController extends Controller
         ]);
 
         try {
+            $magicLinkParams = ['token' => $token->token, 'context' => $context];
+            if ($this->requestUsesAppSurface($request)) {
+                $magicLinkParams['surface'] = 'app';
+            }
+
             app(OutgoingMailService::class)->sendRaw(
                 $user->email,
                 'Bama magic login link for '.$this->profileLabelFor($user, $context),
-                $this->magicLinkEmailBody($user, route('login.magic.consume', ['token' => $token->token, 'context' => $context]), $context),
+                $this->magicLinkEmailBody($user, route('login.magic.consume', $magicLinkParams), $context),
                 businessId: $this->businessIdFor($user, $context),
             );
         } catch (\Throwable $e) {
@@ -252,11 +264,15 @@ class AuthController extends Controller
             return redirect()->route($this->loginRouteFor($context))->withErrors(['username' => $this->invalidContextMessage($context)]);
         }
 
+        $this->rememberAuthSurface($request);
+
         return redirect()->intended($this->landingRouteFor($loginToken->user));
     }
 
     public function logout(Request $request)
     {
+        $returnToAppLogin = $this->shouldReturnToAppLogin($request);
+
         if (Schema::hasTable('login_activities')) {
             app(IamService::class)->recordLogin($request, $request->user(), true, 'logout');
         }
@@ -264,7 +280,9 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('status', 'You have been logged out securely.');
+        return redirect()
+            ->route($returnToAppLogin ? 'app.login' : 'login')
+            ->with('status', 'You have been logged out securely.');
     }
 
     public function forgotForm()
@@ -337,6 +355,32 @@ class AuthController extends Controller
     private function rateLimitKey(Request $request, string $scope, string $identity): string
     {
         return $scope.':'.sha1(Str::lower($identity).'|'.$request->ip());
+    }
+
+    private function rememberAuthSurface(Request $request): void
+    {
+        if ($this->requestUsesAppSurface($request)) {
+            $request->session()->put('auth_surface', 'app');
+
+            return;
+        }
+
+        $request->session()->forget('auth_surface');
+    }
+
+    private function shouldReturnToAppLogin(Request $request): bool
+    {
+        return $request->input('auth_surface') === 'app'
+            || $request->query('surface') === 'app'
+            || $request->session()->get('auth_surface') === 'app';
+    }
+
+    private function requestUsesAppSurface(Request $request): bool
+    {
+        return $request->input('auth_surface') === 'app'
+            || $request->query('surface') === 'app'
+            || $request->routeIs('app.login')
+            || $request->session()->get('auth_surface') === 'app';
     }
 
     private function accountMatchesContext(?User $user, string $context): bool

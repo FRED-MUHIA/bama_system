@@ -851,6 +851,7 @@
 
                     <form method="post" action="{{ $loginActions['password'] }}">
                         @csrf
+                        <input type="hidden" name="auth_surface" value="app">
                         <input type="hidden" name="login_context" value="{{ $loginContext }}">
                         <div class="mb-3">
                             <label class="form-label" for="app-login-username">Email or username</label>
@@ -883,6 +884,7 @@
                                     </div>
                                     <form method="post" action="{{ $loginActions['otpVerify'] }}">
                                         @csrf
+                                        <input type="hidden" name="auth_surface" value="app">
                                         <input type="hidden" name="login_context" value="{{ $loginContext }}">
                                         <input type="hidden" name="email" value="{{ session('otp_email') }}">
                                         <div class="mb-3">
@@ -895,6 +897,7 @@
                                         <small class="text-muted d-block mb-2">Check your inbox and spam folder.</small>
                                         <form method="post" action="{{ $loginActions['otpRequest'] }}">
                                             @csrf
+                                            <input type="hidden" name="auth_surface" value="app">
                                             <input type="hidden" name="login_context" value="{{ $loginContext }}">
                                             <input type="hidden" name="email" value="{{ session('otp_email') }}">
                                             <button id="resend-otp" class="btn btn-link" type="submit" disabled data-ready-at="{{ session('otp_resend_at') }}">Resend OTP in <span id="otp-countdown">60</span>s</button>
@@ -903,6 +906,7 @@
                                 @else
                                     <form method="post" action="{{ $loginActions['otpRequest'] }}">
                                         @csrf
+                                        <input type="hidden" name="auth_surface" value="app">
                                         <input type="hidden" name="login_context" value="{{ $loginContext }}">
                                         <div class="mb-3">
                                             <label class="form-label" for="app-otp-email">Work email</label>
@@ -915,6 +919,7 @@
                             <div class="tab-pane fade" id="magic-login" role="tabpanel" aria-labelledby="magic-login-tab">
                                 <form method="post" action="{{ $loginActions['magic'] }}">
                                     @csrf
+                                    <input type="hidden" name="auth_surface" value="app">
                                     <input type="hidden" name="login_context" value="{{ $loginContext }}">
                                     <div class="mb-3">
                                         <label class="form-label" for="app-magic-email">Work email</label>
