@@ -16,6 +16,7 @@
     $initialStep = ($errors->any() || $otpSent) ? 2 : 0;
     $brandLogoPath = 'images/bama-solutions-02.png';
     $brandLogoUrl = asset($brandLogoPath).'?v='.(file_exists(public_path($brandLogoPath)) ? filemtime(public_path($brandLogoPath)) : time());
+    $registerUrl = \Illuminate\Support\Facades\Route::has('register.account') ? route('register.account') : null;
 @endphp
 
 <style>
@@ -77,9 +78,15 @@
 
     .app-flow {
         --step:0;
-        --teal:#38bdf8;
-        --teal-dark:#0ea5e9;
-        --night:#070a12;
+        --brand:#00A651;
+        --brand-dark:#007A3B;
+        --brand-lime:#dfff45;
+        --brand-soft:#EAF8F0;
+        --night:#050806;
+        --surface:#071B12;
+        --surface-raised:#0b140d;
+        --field:#040705;
+        --line:rgba(223,255,69,.14);
         position:relative;
         width:100%;
         max-width:100%;
@@ -89,7 +96,7 @@
         height:var(--bama-visual-viewport-height,100dvh);
         overflow:hidden;
         color:#fff;
-        background:#070a12;
+        background:var(--night);
         touch-action:pan-y;
     }
     .app-flow * { letter-spacing:0; }
@@ -115,10 +122,10 @@
         overflow-x:hidden;
         overflow-y:auto;
         scroll-padding-block:96px;
-        background-color:#070a12;
+        background-color:var(--night);
         background-image:
-            radial-gradient(circle at 50% 13%,rgba(56,189,248,.16),transparent 24rem),
-            linear-gradient(180deg,#111827,#070a12 66%);
+            radial-gradient(circle at 50% 13%,rgba(223,255,69,.1),transparent 24rem),
+            linear-gradient(180deg,#071B12,#050806 66%);
         background-size:auto;
         -webkit-overflow-scrolling:touch;
     }
@@ -127,8 +134,8 @@
         position:absolute;
         inset:0;
         background:
-            radial-gradient(circle at 50% 9%,rgba(52,211,153,.12),transparent 24%),
-            linear-gradient(180deg,rgba(56,189,248,.035),transparent 30%);
+            radial-gradient(circle at 50% 9%,rgba(0,166,81,.12),transparent 24%),
+            linear-gradient(180deg,rgba(223,255,69,.03),transparent 30%);
         pointer-events:none;
     }
     .app-screen > * { position:relative; z-index:1; }
@@ -164,8 +171,8 @@
         width:52px;
         height:4px;
         border-radius:999px;
-        background:var(--teal);
-        box-shadow:0 0 18px rgba(56,189,248,.36);
+        background:var(--brand);
+        box-shadow:0 0 18px rgba(0,166,81,.34);
     }
     .app-title {
         margin:20px 0 0;
@@ -203,11 +210,11 @@
         transition:transform .15s ease,filter .15s ease,background-color .15s ease;
     }
     .app-primary {
-        background:linear-gradient(90deg,#38bdf8,#34d399);
-        color:#041014;
-        box-shadow:0 18px 44px rgba(56,189,248,.18);
+        background:linear-gradient(90deg,var(--brand),var(--brand-dark));
+        color:#fff;
+        box-shadow:0 18px 44px rgba(0,166,81,.2);
     }
-    .app-primary:hover { color:#041014; filter:brightness(1.04); }
+    .app-primary:hover { color:#fff; filter:brightness(1.05); }
     .app-secondary {
         border:1px solid rgba(255,255,255,.13);
         background:rgba(255,255,255,.035);
@@ -247,13 +254,21 @@
         color:#fff;
         background:rgba(255,255,255,.1);
     }
+    .app-link-button--register {
+        border-color:rgba(0,166,81,.42);
+        background:rgba(0,166,81,.12);
+        color:#f7f9f2;
+    }
+    .app-link-button--register i {
+        color:var(--brand-lime);
+    }
 
     .app-choice-card,
     .app-auth-card {
         width:min(100%,420px);
         margin-inline:auto;
-        border:1px solid rgba(56,189,248,.16);
-        background:linear-gradient(180deg,rgba(15,23,42,.86),rgba(7,10,18,.94));
+        border:1px solid var(--line);
+        background:linear-gradient(180deg,rgba(11,20,13,.9),rgba(5,8,6,.96));
         box-shadow:0 30px 70px rgba(0,0,0,.34);
         backdrop-filter:blur(12px);
     }
@@ -331,7 +346,12 @@
         place-items:center;
         border:0;
         border-radius:50%;
-        background:rgba(255,255,255,.1);
+        background:rgba(255,255,255,.08);
+        color:#fff;
+    }
+    .app-icon-button:hover,
+    .app-icon-button:focus {
+        background:rgba(0,166,81,.2);
         color:#fff;
     }
     .app-auth-card {
@@ -357,9 +377,9 @@
         gap:4px;
         margin:0 0 18px !important;
         padding:4px;
-        border:1px solid rgba(255,255,255,.08);
+        border:1px solid var(--line);
         border-radius:14px;
-        background:rgba(255,255,255,.05);
+        background:rgba(255,255,255,.045);
     }
     .app-tabs .nav-item { display:grid; }
     .app-tabs .nav-link {
@@ -373,21 +393,21 @@
         line-height:1.08;
     }
     .app-tabs .nav-link.active {
-        background:var(--teal);
-        color:#041014 !important;
+        background:var(--brand);
+        color:#fff !important;
     }
     .app-auth-card .form-label {
         margin-bottom:6px;
-        color:#7dd3fc !important;
+        color:var(--brand-lime) !important;
         font-size:.86rem;
         font-weight:950;
         text-transform:uppercase;
     }
     .app-auth-card .form-control {
         min-height:50px;
-        border:1px solid rgba(255,255,255,.16);
+        border:1px solid rgba(223,255,69,.16);
         border-radius:12px;
-        background:rgba(2,5,3,.74);
+        background:rgba(4,7,5,.82);
         color:#fff !important;
         -webkit-text-fill-color:#fff;
         font-size:16px;
@@ -395,11 +415,11 @@
         box-shadow:inset 0 0 12px rgba(0,0,0,.2);
     }
     .app-auth-card .form-control:focus {
-        border-color:var(--teal);
+        border-color:var(--brand-lime);
         background:#090d08;
         color:#fff !important;
         -webkit-text-fill-color:#fff;
-        box-shadow:0 0 0 .2rem rgba(56,189,248,.18);
+        box-shadow:0 0 0 .2rem rgba(223,255,69,.13);
     }
     .app-auth-card .form-control::placeholder {
         color:rgba(255,255,255,.48) !important;
@@ -409,7 +429,7 @@
     .app-auth-card .form-control:-webkit-autofill:hover,
     .app-auth-card .form-control:-webkit-autofill:focus {
         -webkit-text-fill-color:#fff !important;
-        box-shadow:0 0 0 1000px #0b1020 inset, 0 0 0 .2rem rgba(56,189,248,.18);
+        box-shadow:0 0 0 1000px #040705 inset, 0 0 0 .2rem rgba(223,255,69,.13);
         caret-color:#fff;
     }
     .app-auth-card .form-check-input {
@@ -417,21 +437,25 @@
         background-color:rgba(255,255,255,.08);
     }
     .app-auth-card .form-check-input:checked {
-        background-color:var(--teal);
-        border-color:var(--teal);
+        background-color:var(--brand);
+        border-color:var(--brand);
+    }
+    .app-auth-card .form-check-input:focus {
+        border-color:var(--brand-lime);
+        box-shadow:0 0 0 .2rem rgba(223,255,69,.13);
     }
     .app-auth-card .form-check-label,
     .app-auth-card .text-muted {
         color:rgba(255,255,255,.72) !important;
     }
     .app-auth-card a {
-        color:#7dd3fc;
+        color:var(--brand-lime);
         font-weight:950;
         text-decoration-thickness:2px;
         text-underline-offset:4px;
     }
     .app-auth-card .btn-link {
-        color:#7dd3fc !important;
+        color:var(--brand-lime) !important;
         font-weight:950;
         text-decoration-thickness:2px;
         text-underline-offset:4px;
@@ -446,22 +470,40 @@
     }
     .app-auth-card .btn-warning {
         min-height:50px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:10px;
         border:0;
         border-radius:14px;
-        background:linear-gradient(90deg,#38bdf8,#34d399);
-        color:#041014;
+        background:linear-gradient(90deg,var(--brand),var(--brand-dark));
+        color:#fff;
         font-size:.975rem;
         font-weight:700;
-        box-shadow:0 18px 44px rgba(56,189,248,.18);
+        box-shadow:0 18px 44px rgba(0,166,81,.2);
     }
     .app-auth-card .btn-warning:hover,
     .app-auth-card .btn-warning:focus {
-        background:#7dd3fc;
-        color:#041014;
+        background:var(--brand-dark);
+        color:#fff;
     }
     .app-auth-card .btn-warning.is-loading {
         opacity:.82;
         cursor:wait;
+    }
+    .app-auth-card .btn-link[type="submit"] {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+    }
+    .app-button-spinner {
+        width:1rem;
+        height:1rem;
+        border:2px solid rgba(255,255,255,.42);
+        border-top-color:currentColor;
+        border-radius:50%;
+        animation:app-button-spin .7s linear infinite;
     }
     .app-auth-links {
         display:flex;
@@ -482,6 +524,26 @@
         display:inline-flex;
         align-items:center;
         text-align:right;
+    }
+    .app-auth-register {
+        min-height:44px;
+        margin-top:14px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        flex-wrap:wrap;
+        gap:8px;
+        color:rgba(255,255,255,.72);
+        font-size:.82rem;
+        line-height:1.35;
+        text-align:center;
+    }
+    .app-auth-register a {
+        min-height:34px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:6px;
     }
     .password-wrap { position:relative; }
     .password-wrap .form-control { padding-right:58px; }
@@ -506,7 +568,7 @@
         font-size:.78rem;
         line-height:1.45;
     }
-    .app-security i { color:var(--teal); margin-top:1px; }
+    .app-security i { color:var(--brand); margin-top:1px; }
     .app-legal {
         width:min(100%,520px);
         margin:22px auto 0;
@@ -516,8 +578,8 @@
         text-align:center;
     }
     .app-flow .bama-install-card {
-        border-color:rgba(56,189,248,.18);
-        background:linear-gradient(180deg,rgba(15,23,42,.88),rgba(7,10,18,.96));
+        border-color:var(--line);
+        background:linear-gradient(180deg,rgba(11,20,13,.9),rgba(5,8,6,.96));
         color:#f7f9f2;
         box-shadow:0 24px 54px rgba(0,0,0,.26);
     }
@@ -531,9 +593,9 @@
         color:#f7f9f2;
     }
     .otp-success {
-        border-color:rgba(49,198,187,.32);
-        background:rgba(49,198,187,.12);
-        color:#dffdfa;
+        border-color:rgba(0,166,81,.32);
+        background:rgba(0,166,81,.12);
+        color:#eaf8f0;
     }
     .app-dots {
         position:fixed;
@@ -553,7 +615,10 @@
     }
     .app-dot.active {
         width:22px;
-        background:var(--teal);
+        background:var(--brand);
+    }
+    @keyframes app-button-spin {
+        to { transform:rotate(360deg); }
     }
     @media (min-width:768px) {
         .app-screen {
@@ -711,6 +776,11 @@
                         <button class="app-link-button" type="button" data-app-go="2">
                             <i class="bi bi-box-arrow-in-right"></i> Workspace Login
                         </button>
+                        @if ($registerUrl)
+                            <a class="app-link-button app-link-button--register" href="{{ $registerUrl }}">
+                                <i class="bi bi-person-plus"></i> Create Account
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -732,6 +802,11 @@
                     <p>This console is for existing workspace users. New user access is issued by the workspace administrator.</p>
                     <div class="app-choice-actions">
                         <button class="app-primary mt-0" type="button" data-app-go="2">Continue to Sign In</button>
+                        @if ($registerUrl)
+                            <a class="app-secondary" href="{{ $registerUrl }}">
+                                <i class="bi bi-person-plus"></i> Create Account
+                            </a>
+                        @endif
                     </div>
                     <div class="app-stat-grid" aria-label="System status">
                         <span><strong>{{ $system['workspaces'] }}</strong><small>Workspaces</small></span>
@@ -761,28 +836,28 @@
                     @if ($otpAvailable)
                         <ul class="nav nav-pills app-tabs" role="tablist">
                             <li class="nav-item">
-                                <button class="nav-link {{ $otpSent ? '' : 'active' }}" data-bs-toggle="pill" data-bs-target="#password-login" type="button">Password</button>
+                                <button id="password-login-tab" class="nav-link {{ $otpSent ? '' : 'active' }}" data-bs-toggle="pill" data-bs-target="#password-login" type="button" role="tab" aria-controls="password-login" aria-selected="{{ $otpSent ? 'false' : 'true' }}">Password</button>
                             </li>
                             <li class="nav-item">
-                                <button class="nav-link {{ $otpSent ? 'active' : '' }}" data-bs-toggle="pill" data-bs-target="#otp-login" type="button">OTP</button>
+                                <button id="otp-login-tab" class="nav-link {{ $otpSent ? 'active' : '' }}" data-bs-toggle="pill" data-bs-target="#otp-login" type="button" role="tab" aria-controls="otp-login" aria-selected="{{ $otpSent ? 'true' : 'false' }}">OTP</button>
                             </li>
                             <li class="nav-item">
-                                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#magic-login" type="button">Magic link</button>
+                                <button id="magic-login-tab" class="nav-link" data-bs-toggle="pill" data-bs-target="#magic-login" type="button" role="tab" aria-controls="magic-login" aria-selected="false">Magic link</button>
                             </li>
                         </ul>
                         <div class="tab-content">
-                            <div class="tab-pane fade {{ $otpSent ? '' : 'show active' }}" id="password-login">
+                            <div class="tab-pane fade {{ $otpSent ? '' : 'show active' }}" id="password-login" role="tabpanel" aria-labelledby="password-login-tab">
                     @endif
 
                     <form method="post" action="{{ $loginActions['password'] }}">
                         @csrf
                         <input type="hidden" name="login_context" value="{{ $loginContext }}">
                         <div class="mb-3">
-                            <label class="form-label">Email address</label>
-                            <input name="username" value="{{ old('username') }}" class="form-control" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
+                            <label class="form-label" for="app-login-username">Email or username</label>
+                            <input id="app-login-username" name="username" type="text" inputmode="email" value="{{ old('username') }}" class="form-control" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">Password</label>
+                            <label class="form-label" for="app-login-password">Password</label>
                             <div class="password-wrap">
                                 <input id="app-login-password" name="password" type="password" class="form-control" autocomplete="current-password" required>
                                 <button class="password-toggle" type="button" aria-label="Show password" data-password-toggle="app-login-password"><i class="bi bi-eye"></i></button>
@@ -800,7 +875,7 @@
 
                     @if ($otpAvailable)
                             </div>
-                            <div class="tab-pane fade {{ $otpSent ? 'show active' : '' }}" id="otp-login">
+                            <div class="tab-pane fade {{ $otpSent ? 'show active' : '' }}" id="otp-login" role="tabpanel" aria-labelledby="otp-login-tab">
                                 @if ($otpSent)
                                     <div class="alert otp-success">
                                         <strong>OTP sent</strong><br>
@@ -811,10 +886,10 @@
                                         <input type="hidden" name="login_context" value="{{ $loginContext }}">
                                         <input type="hidden" name="email" value="{{ session('otp_email') }}">
                                         <div class="mb-3">
-                                            <label class="form-label">Verification code</label>
-                                            <input class="form-control text-center fs-4" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000" required autofocus>
+                                            <label class="form-label" for="app-otp-code">Verification code</label>
+                                            <input id="app-otp-code" class="form-control text-center fs-4" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000" required autofocus>
                                         </div>
-                                        <button class="btn btn-warning w-100">Verify OTP</button>
+                                        <button class="btn btn-warning w-100" type="submit">Verify OTP</button>
                                     </form>
                                     <div class="text-center mt-3">
                                         <small class="text-muted d-block mb-2">Check your inbox and spam folder.</small>
@@ -822,7 +897,7 @@
                                             @csrf
                                             <input type="hidden" name="login_context" value="{{ $loginContext }}">
                                             <input type="hidden" name="email" value="{{ session('otp_email') }}">
-                                            <button id="resend-otp" class="btn btn-link" disabled data-ready-at="{{ session('otp_resend_at') }}">Resend OTP in <span id="otp-countdown">60</span>s</button>
+                                            <button id="resend-otp" class="btn btn-link" type="submit" disabled data-ready-at="{{ session('otp_resend_at') }}">Resend OTP in <span id="otp-countdown">60</span>s</button>
                                         </form>
                                     </div>
                                 @else
@@ -830,22 +905,22 @@
                                         @csrf
                                         <input type="hidden" name="login_context" value="{{ $loginContext }}">
                                         <div class="mb-3">
-                                            <label class="form-label">Work email</label>
-                                            <input class="form-control" name="email" type="email" value="{{ old('email') }}" required>
+                                            <label class="form-label" for="app-otp-email">Work email</label>
+                                            <input id="app-otp-email" class="form-control" name="email" type="email" value="{{ old('email') }}" autocomplete="email" autocapitalize="none" spellcheck="false" required>
                                         </div>
-                                        <button class="btn btn-warning w-100">Send one-time code</button>
+                                        <button class="btn btn-warning w-100" type="submit">Send one-time code</button>
                                     </form>
                                 @endif
                             </div>
-                            <div class="tab-pane fade" id="magic-login">
+                            <div class="tab-pane fade" id="magic-login" role="tabpanel" aria-labelledby="magic-login-tab">
                                 <form method="post" action="{{ $loginActions['magic'] }}">
                                     @csrf
                                     <input type="hidden" name="login_context" value="{{ $loginContext }}">
                                     <div class="mb-3">
-                                        <label class="form-label">Work email</label>
-                                        <input class="form-control" name="email" type="email" required>
+                                        <label class="form-label" for="app-magic-email">Work email</label>
+                                        <input id="app-magic-email" class="form-control" name="email" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" required>
                                     </div>
-                                    <button class="btn btn-warning w-100">Email secure login link</button>
+                                    <button class="btn btn-warning w-100" type="submit">Email secure login link</button>
                                 </form>
                             </div>
                         </div>
@@ -855,6 +930,12 @@
                         <i class="bi bi-shield-check"></i>
                         <span>Accounts are checked against the workspace database before the dashboard opens.</span>
                     </div>
+                    @if ($registerUrl)
+                        <div class="app-auth-register">
+                            <span>Do not have an account?</span>
+                            <a href="{{ $registerUrl }}"><i class="bi bi-person-plus"></i> Create Account</a>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="app-legal">
@@ -888,7 +969,11 @@
         };
 
         const focusLoginField = () => {
-            const activeInput = screens[2]?.querySelector('.tab-pane.show.active [autofocus], [autofocus], input:not([type="hidden"])');
+            const loginScreen = screens[2];
+            if (! loginScreen) return;
+
+            const activePane = loginScreen.querySelector('.tab-pane.show.active') || loginScreen;
+            const activeInput = activePane.querySelector('[autofocus], input:not([type="hidden"]), select, textarea');
             window.setTimeout(() => activeInput?.focus({ preventScroll:true }), 360);
         };
 
@@ -926,29 +1011,59 @@
             button.addEventListener('click', () => setStep(button.dataset.appGo, { history:true }));
         });
 
-        flow?.querySelectorAll('.app-tabs [data-bs-target]').forEach((tab) => {
-            tab.addEventListener('click', () => {
-                flow.querySelectorAll('.app-tabs [data-bs-target]').forEach((item) => {
-                    const active = item === tab;
-                    item.classList.toggle('active', active);
-                    item.setAttribute('aria-selected', active ? 'true' : 'false');
-                });
+        const authTabs = Array.from(flow?.querySelectorAll('.app-tabs [data-bs-target]') || []);
+        const setAuthTab = (tab, shouldFocus = true) => {
+            if (! flow || ! tab) return;
 
-                flow.querySelectorAll('.app-auth-card .tab-pane').forEach((panel) => {
-                    const active = `#${panel.id}` === tab.dataset.bsTarget;
-                    panel.classList.toggle('active', active);
-                    panel.classList.toggle('show', active);
-                });
+            authTabs.forEach((item) => {
+                const active = item === tab;
+                item.classList.toggle('active', active);
+                item.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+
+            flow.querySelectorAll('.app-auth-card .tab-pane').forEach((panel) => {
+                const active = `#${panel.id}` === tab.dataset.bsTarget;
+                panel.classList.toggle('active', active);
+                panel.classList.toggle('show', active);
+                panel.hidden = ! active;
+                panel.setAttribute('aria-hidden', active ? 'false' : 'true');
+            });
+
+            if (shouldFocus) {
+                focusLoginField();
+            }
+        };
+
+        authTabs.forEach((tab) => {
+            tab.addEventListener('click', (event) => {
+                event.preventDefault();
+                setAuthTab(tab);
             });
         });
 
+        if (authTabs.length) {
+            setAuthTab(authTabs.find((tab) => tab.classList.contains('active')) || authTabs[0], false);
+        }
+
+        flow?.querySelectorAll('.app-tabs [data-bs-target]').forEach((tab) => {
+            tab.addEventListener('shown.bs.tab', () => setAuthTab(tab));
+        });
+
         flow?.querySelectorAll('form').forEach((form) => {
-            form.addEventListener('submit', () => {
-                const button = form.querySelector('button[type="submit"], button:not([type]), .btn-warning');
+            form.addEventListener('submit', (event) => {
+                const submittedBy = event.submitter instanceof HTMLButtonElement ? event.submitter : null;
+                const button = submittedBy || form.querySelector('button[type="submit"]');
+
                 if (! button || button.disabled) return;
+
                 button.disabled = true;
                 button.classList.add('is-loading');
-                button.textContent = 'Please wait';
+                button.setAttribute('aria-busy', 'true');
+                button.dataset.originalLabel = button.textContent.trim();
+                button.replaceChildren(
+                    Object.assign(document.createElement('span'), { className: 'app-button-spinner' }),
+                    document.createTextNode('Please wait')
+                );
             });
         });
 
