@@ -185,7 +185,7 @@ class ChamaOperationsController extends Controller
     private function contributionData(Request $request): array
     {
         return $this->clean($request->validate([
-            'member_id' => ['nullable', $this->tenantExistsRule('chama_members')],
+            'member_id' => ['required_without:contribution_schedule_id', $this->tenantExistsRule('chama_members')],
             'contribution_type_id' => ['nullable', $this->tenantExistsRule('chama_contribution_types')],
             'contribution_schedule_id' => ['nullable', $this->tenantExistsRule('chama_contribution_schedules')],
             'period' => ['nullable', 'string', 'max:80'],

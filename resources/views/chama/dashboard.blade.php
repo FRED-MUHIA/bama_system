@@ -175,7 +175,7 @@
                 <div class="chama-panel-head"><h2>Record Contribution</h2></div>
                 <form method="post" action="{{ route('chama.records.store', 'contributions') }}" class="row g-2">
                     @csrf
-                    <select class="form-select" name="member_id"><option value="">Member</option>@foreach($members as $member)<option value="{{ $member->id }}">{{ $member->full_name }}</option>@endforeach</select>
+                    <select class="form-select" name="member_id" required><option value="">Member</option>@foreach($members as $member)<option value="{{ $member->id }}">{{ $member->full_name }}</option>@endforeach</select>
                     <select class="form-select" name="contribution_type_id"><option value="">Type</option>@foreach($contributionTypes as $type)<option value="{{ $type->id }}">{{ $type->name }}</option>@endforeach</select>
                     <input class="form-control" type="number" step="0.01" name="amount_paid" placeholder="Amount paid" required>
                     <div class="input-group"><input class="form-control" type="date" name="payment_date"><select class="form-select" name="payment_method"><option>M-PESA</option><option>Cash</option><option>Bank Transfer</option><option>Card</option><option>Other</option></select></div>
