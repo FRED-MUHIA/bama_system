@@ -676,7 +676,7 @@
     @media(max-width:991px){
         .chama-page form .input-group{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:.5rem;row-gap:.5rem;flex-wrap:unset}
         .chama-page form .input-group>.form-control,.chama-page form .input-group>.form-select{flex:1 1 100%;width:100%;min-width:0;margin-left:0;border-radius:9px !important}
-        .chama-page form .btn:not(.btn-sm){width:auto;min-width:0;min-height:46px;padding:.62rem 1.15rem;margin-inline:auto;white-space:normal}
+        .chama-page form .btn:not(.btn-sm){width:auto;min-width:0;min-height:46px;padding:.62rem 1.15rem;margin-right:auto;white-space:normal}
         .chama-page .table-responsive{-webkit-overflow-scrolling:touch}
     }
     @media(max-width:480px){
