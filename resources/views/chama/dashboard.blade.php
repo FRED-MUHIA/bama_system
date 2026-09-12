@@ -674,23 +674,19 @@
     @media(max-width:1400px){.chama-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
     @media(max-width:1200px){.chama-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.chama-grid.two{grid-template-columns:1fr}.chama-hero{align-items:flex-start;flex-direction:column}.chama-module-strip{justify-content:flex-start}}
     @media(max-width:991px){
-        .chama-page form .input-group{flex-wrap:wrap}
-        .chama-page form .input-group>.form-control,.chama-page form .input-group>.form-select{flex:1 1 170px;min-width:0}
-        .chama-page form .btn:not(.btn-sm){width:100%;min-height:46px}
+        .chama-page form .input-group{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:.5rem;row-gap:.5rem;flex-wrap:unset}
+        .chama-page form .input-group>.form-control,.chama-page form .input-group>.form-select{flex:1 1 100%;width:100%;min-width:0;margin-left:0;border-radius:9px !important}
+        .chama-page form .btn:not(.btn-sm){width:auto;min-width:0;min-height:46px;padding:.62rem 1.15rem;margin-inline:auto;white-space:normal}
         .chama-page .table-responsive{-webkit-overflow-scrolling:touch}
     }
-    @media(max-width:640px){
+    @media(max-width:480px){
         .chama-page .chama-hero{padding:16px;gap:14px}
         .chama-page .chama-hero h1{font-size:1.4rem}
         .chama-page .chama-hero span{font-size:.8rem;line-height:1.45;display:block}
         .chama-panel{padding:14px}
         .chama-panel-head h2{font-size:.98rem}
-        .chama-page form .input-group{flex-direction:column;align-items:stretch;gap:.45rem}
-        .chama-page form .input-group>.form-control,.chama-page form .input-group>.form-select{flex:1 1 100%;width:100%;margin-left:0}
-        .chama-page form .input-group>.form-control,.chama-page form .input-group>.form-select{border-radius:9px !important}
-        .chama-page form .input-group>.form-control:focus,.chama-page form .input-group>.form-select:focus{border-radius:9px !important}
+        .chama-page form .input-group{grid-template-columns:1fr}
         .chama-page form textarea.form-control{min-height:96px}
-        .chama-page form .btn:not(.btn-sm){white-space:normal}
         .chama-actions a{flex:1 1 44%;min-width:0;text-align:center}
         .chama-kpis{grid-template-columns:1fr}
     }
