@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -14,13 +15,19 @@ class AccountEmailReuseService
 {
     public const SELF_DELETION_HOLD_MONTHS = 4;
 
+    public const SUPER_ADMIN_DELETION_HOLD_MONTHS = 3;
+
+    private const REASON_SELF_DELETED = 'self_deleted';
+
+    private const REASON_SUPER_ADMIN_DELETED = 'super_admin_deleted';
+
     public function assertEmailCanRegister(string $email): void
     {
         $email = $this->normalize($email);
 
-        if ($releaseAt = $this->activeSelfDeletionReleaseAt($email)) {
+        if ($hold = $this->activeReuseHold($email)) {
             throw ValidationException::withMessages([
-                'email' => 'This email was used on a self-deleted account. You can create a new account with it from '.$releaseAt->toFormattedDateString().'.',
+                'email' => $this->registrationHoldMessage($hold->reason, Carbon::parse($hold->release_at)),
             ]);
         }
 
@@ -45,15 +52,39 @@ class AccountEmailReuseService
             ->each(fn (User $user) => $this->anonymizeUserEmail($user, 'released'));
     }
 
-    public function releaseTenantUsersImmediately(iterable $userIds): void
+    public function holdTenantUsersForSuperAdminDeletion(iterable $userIds, ?string $profileName = null): Collection
     {
-        User::whereIn('id', collect($userIds)->filter()->unique()->values())
+        return User::whereIn('id', collect($userIds)->filter()->unique()->values())
             ->get()
-            ->each(function (User $user) {
+            ->map(function (User $user) use ($profileName) {
                 if ($this->canReleaseUserEmail($user)) {
-                    $this->anonymizeUserEmail($user, 'super-admin-deleted');
+                    return $this->holdSuperAdminDeletedAccount($user, $profileName);
                 }
-            });
+
+                return null;
+            })
+            ->filter()
+            ->values();
+    }
+
+    public function sendSuperAdminDeletionNotices(iterable $notices): int
+    {
+        $sent = 0;
+
+        foreach ($notices as $notice) {
+            try {
+                app(OutgoingMailService::class)->sendRaw(
+                    $notice['email'],
+                    'Your Bama profile was deleted',
+                    $this->superAdminDeletionEmailBody($notice),
+                );
+                $sent++;
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        return $sent;
     }
 
     public function holdSelfDeletedAccount(User $user): Carbon
@@ -61,18 +92,7 @@ class AccountEmailReuseService
         $email = $this->normalize($user->email);
         $releaseAt = now()->addMonthsNoOverflow(self::SELF_DELETION_HOLD_MONTHS);
 
-        if (Schema::hasTable('account_email_reuse_holds')) {
-            DB::table('account_email_reuse_holds')->updateOrInsert(
-                ['email_hash' => $this->hash($email)],
-                [
-                    'user_id' => $user->id,
-                    'reason' => 'self_deleted',
-                    'release_at' => $releaseAt,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
-            );
-        }
+        $this->recordEmailReuseHold($email, $user, self::REASON_SELF_DELETED, $releaseAt);
 
         $this->removeAccountAccess($user);
         $this->anonymizeUserEmail($user, 'self-deleted');
@@ -80,19 +100,83 @@ class AccountEmailReuseService
         return $releaseAt;
     }
 
-    private function activeSelfDeletionReleaseAt(string $email): ?Carbon
+    private function holdSuperAdminDeletedAccount(User $user, ?string $profileName): array
+    {
+        $email = $this->normalize($user->email);
+        $releaseAt = now()->addMonthsNoOverflow(self::SUPER_ADMIN_DELETION_HOLD_MONTHS);
+        $notice = [
+            'email' => $email,
+            'name' => $user->name ?: 'there',
+            'profile_name' => $profileName ?: config('app.name'),
+            'release_at' => $releaseAt,
+        ];
+
+        $this->recordEmailReuseHold($email, $user, self::REASON_SUPER_ADMIN_DELETED, $releaseAt);
+        $this->removeAccountAccess($user);
+        $this->anonymizeUserEmail($user, 'super-admin-deleted');
+
+        return $notice;
+    }
+
+    private function activeReuseHold(string $email): ?object
     {
         if (! Schema::hasTable('account_email_reuse_holds')) {
             return null;
         }
 
-        $releaseAt = DB::table('account_email_reuse_holds')
+        return DB::table('account_email_reuse_holds')
             ->where('email_hash', $this->hash($email))
-            ->where('reason', 'self_deleted')
             ->where('release_at', '>', now())
-            ->value('release_at');
+            ->first(['reason', 'release_at']);
+    }
 
-        return $releaseAt ? Carbon::parse($releaseAt) : null;
+    private function registrationHoldMessage(string $reason, Carbon $releaseAt): string
+    {
+        if ($reason === self::REASON_SUPER_ADMIN_DELETED) {
+            return 'This email was used on a profile deleted by a super admin. You can create a new account with it from '.$releaseAt->toFormattedDateString().'.';
+        }
+
+        return 'This email was used on a self-deleted account. You can create a new account with it from '.$releaseAt->toFormattedDateString().'.';
+    }
+
+    private function recordEmailReuseHold(string $email, User $user, string $reason, Carbon $releaseAt): void
+    {
+        if (! Schema::hasTable('account_email_reuse_holds')) {
+            return;
+        }
+
+        DB::table('account_email_reuse_holds')->updateOrInsert(
+            ['email_hash' => $this->hash($email)],
+            [
+                'user_id' => $user->id,
+                'reason' => $reason,
+                'release_at' => $releaseAt,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+    }
+
+    private function superAdminDeletionEmailBody(array $notice): string
+    {
+        $releaseAt = $notice['release_at'] instanceof Carbon
+            ? $notice['release_at']
+            : Carbon::parse($notice['release_at']);
+
+        return implode("\n", [
+            'Hello '.$notice['name'].',',
+            '',
+            'A Bama profile connected to this email was deleted by the platform super admin.',
+            'Profile: '.$notice['profile_name'],
+            'Account email: '.$notice['email'],
+            '',
+            'For security, this email is temporarily held before it can be used to create a new account.',
+            'You can create a new account with this email from '.$releaseAt->toFormattedDateString().'.',
+            '',
+            'If you think this was a mistake, contact the profile owner or Bama support.',
+            '',
+            'Bama secure workspace access',
+        ]);
     }
 
     private function canReleaseUserEmail(User $user): bool

@@ -10,7 +10,7 @@ class PwaPaymentSupportTest extends TestCase
     {
         $serviceWorker = file_get_contents(public_path('sw.js'));
 
-        $this->assertStringContainsString("const BAMA_SW_VERSION = 'bama-pwa-v10'", $serviceWorker);
+        $this->assertStringContainsString("const BAMA_SW_VERSION = 'bama-pwa-v11'", $serviceWorker);
         $this->assertStringContainsString("if (request.method !== 'GET') return;", $serviceWorker);
         $this->assertStringContainsString("'/billing'", $serviceWorker);
         $this->assertStringContainsString('if (isPrivatePath(url.pathname))', $serviceWorker);
@@ -30,24 +30,26 @@ class PwaPaymentSupportTest extends TestCase
         ));
     }
 
-    public function test_launcher_icons_keep_full_size_artwork(): void
+    public function test_splash_launcher_icons_keep_compact_artwork(): void
     {
         if (! function_exists('imagecreatefrompng')) {
             $this->markTestSkipped('GD extension is required to inspect launcher icon bounds.');
         }
 
-        $this->assertVisibleIconBounds(public_path('pwa-icons/icon-192.png'), 128, 160);
-        $this->assertVisibleIconBounds(public_path('pwa-icons/icon-512.png'), 340, 430);
-        $this->assertVisibleIconBounds(public_path('pwa-icons/maskable-192.png'), 128, 160);
-        $this->assertVisibleIconBounds(public_path('pwa-icons/maskable-512.png'), 340, 430);
+        $this->assertVisibleIconBounds(public_path('pwa-icons/icon-192.png'), 70, 95, 90, 112);
+        $this->assertVisibleIconBounds(public_path('pwa-icons/icon-512.png'), 195, 250, 225, 280);
+        $this->assertVisibleIconBounds(public_path('pwa-icons/maskable-192.png'), 70, 95, 90, 112);
+        $this->assertVisibleIconBounds(public_path('pwa-icons/maskable-512.png'), 195, 250, 225, 280);
     }
 
-    private function assertVisibleIconBounds(string $path, int $minimumWidth, int $minimumHeight): void
+    private function assertVisibleIconBounds(string $path, int $minimumWidth, int $minimumHeight, int $maximumWidth, int $maximumHeight): void
     {
         [$visibleWidth, $visibleHeight] = $this->visibleIconBounds($path);
 
         $this->assertGreaterThanOrEqual($minimumWidth, $visibleWidth, $path.' visible width');
         $this->assertGreaterThanOrEqual($minimumHeight, $visibleHeight, $path.' visible height');
+        $this->assertLessThanOrEqual($maximumWidth, $visibleWidth, $path.' visible width');
+        $this->assertLessThanOrEqual($maximumHeight, $visibleHeight, $path.' visible height');
     }
 
     private function visibleIconBounds(string $path): array

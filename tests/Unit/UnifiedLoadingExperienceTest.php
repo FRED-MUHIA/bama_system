@@ -44,7 +44,7 @@ class UnifiedLoadingExperienceTest extends TestCase
         $this->assertStringNotContainsString("document.addEventListener('submit'", $script);
         $this->assertStringNotContainsString("window.addEventListener('beforeunload'", $script);
         $this->assertStringNotContainsString('configureSplash', $script);
-        $this->assertStringNotContainsString("splash.remove()", $script);
+        $this->assertStringNotContainsString('splash.remove()', $script);
     }
 
     public function test_new_pwa_builds_activate_and_reload_automatically(): void
@@ -62,7 +62,7 @@ class UnifiedLoadingExperienceTest extends TestCase
         $this->assertStringContainsString("worker?.postMessage({ type: 'SKIP_WAITING' })", $script);
         $this->assertStringContainsString('controllerRefreshing', $script);
         $this->assertStringContainsString('window.location.reload()', $script);
-        $this->assertStringContainsString('bama-pwa-v10', $worker);
+        $this->assertStringContainsString('bama-pwa-v11', $worker);
         $this->assertStringNotContainsString('data-bama-update-now', $shell.$script);
     }
 

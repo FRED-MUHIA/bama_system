@@ -283,8 +283,10 @@ class AdministrationTest extends TestCase
         $this->assertSame($roleBefore, DB::table('business_user')->where('user_id', $this->admin->id)->value('iam_role_id'));
     }
 
-    public function test_super_admin_tenant_delete_releases_account_email_immediately(): void
+    public function test_super_admin_tenant_delete_holds_account_email_for_three_months_and_notifies_member(): void
     {
+        $this->flushArrayMail();
+
         $tenant = Tenant::create([
             'name' => 'Reusable Profile',
             'slug' => 'reusable-profile',
@@ -330,8 +332,29 @@ class AdministrationTest extends TestCase
 
         $this->assertDatabaseMissing('users', ['email' => 'reuse@example.test']);
         $this->assertStringStartsWith('deleted-user-'.$deletedUser->id.'-', $deletedUser->fresh()->email);
+        $this->assertDatabaseHas('account_email_reuse_holds', ['reason' => 'super_admin_deleted']);
+
+        $releaseAt = DB::table('account_email_reuse_holds')
+            ->where('reason', 'super_admin_deleted')
+            ->value('release_at');
+        $this->assertTrue(now()->addMonthsNoOverflow(3)->isSameDay($releaseAt));
+
+        $this->assertCount(1, $this->arrayMailMessages());
+        $message = $this->arrayMailMessages()->first();
+        $this->assertSame('reuse@example.test', $message->getEnvelope()->getRecipients()[0]->getAddress());
+        $this->assertSame('Your Bama profile was deleted', $message->getOriginalMessage()->getSubject());
+        $this->assertStringContainsString('You can create a new account with this email from', $message->getOriginalMessage()->getTextBody());
 
         auth()->logout();
+        $this->post(route('register.account.store'), [
+            'name' => 'Reuse Owner',
+            'email' => 'reuse@example.test',
+            'password' => 'StrongPass1',
+            'password_confirmation' => 'StrongPass1',
+        ])->assertSessionHasErrors('email');
+
+        $this->travelTo(now()->addMonthsNoOverflow(3)->addDay());
+
         $this->post(route('register.account.store'), [
             'name' => 'Reuse Owner',
             'email' => 'reuse@example.test',

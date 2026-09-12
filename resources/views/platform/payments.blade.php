@@ -8,13 +8,13 @@
             'title' => 'M-PESA STK Push',
             'icon' => 'bi-phone',
             'summary' => 'Prompt clients on their phone when they renew a Bama package.',
-            'public' => 'Daraja consumer key',
-            'secret' => 'Daraja consumer secret',
-            'help' => 'Use Safaricom Daraja app credentials. Sandbox mode only confirms API connectivity and will not prompt a real phone. Live mode with live Daraja credentials is required for handset STK prompts. The callback URL must be reachable on HTTPS.',
+            'public' => 'Safaricom Daraja Consumer Key / API Key',
+            'secret' => 'Safaricom Daraja Consumer Secret / API Secret',
+            'help' => 'Use the Consumer Key and Consumer Secret from the Safaricom Daraja app that matches the selected environment. Sandbox keys only test API connectivity; Live / Production keys are required for real handset STK prompts. Do not mix sandbox keys with Live mode or live keys with Sandbox mode.',
             'fields' => [
-                'shortcode' => ['label' => 'PayBill / Till shortcode', 'hint' => 'The receiving Bama shortcode.'],
-                'passkey' => ['label' => 'STK passkey', 'hint' => 'Daraja Lipa Na M-PESA online passkey.'],
-                'callback_url' => ['label' => 'Callback URL', 'hint' => 'Paste this in Daraja if a callback URL is required.'],
+                'shortcode' => ['label' => 'PayBill / Till shortcode', 'hint' => 'Use the shortcode connected to the same Daraja app and environment.'],
+                'passkey' => ['label' => 'STK Push passkey', 'hint' => 'Use the Lipa Na M-PESA Online passkey for this shortcode. Leave blank to keep the saved passkey.'],
+                'callback_url' => ['label' => 'M-PESA callback URL', 'hint' => 'Use this HTTPS URL in Daraja for STK payment callbacks.'],
                 'transaction_type' => [
                     'label' => 'Transaction type',
                     'hint' => 'Choose PayBill for paybill shortcodes or Buy Goods for till numbers.',
@@ -86,6 +86,18 @@
                 $setting = $paymentSettings[$provider] ?? null;
                 $config = $setting?->config ?? [];
                 $secretSaved = filled($setting?->secret_key);
+                $publicKeyPlaceholder = match ($provider) {
+                    'mpesa' => 'Paste Consumer Key / API Key',
+                    'paypal' => 'Paste PayPal client ID',
+                    'card' => 'Paste Stripe publishable key',
+                    default => 'Paste public key',
+                };
+                $secretKeyPlaceholder = match ($provider) {
+                    'mpesa' => 'Paste Consumer Secret / API Secret',
+                    'paypal' => 'Paste PayPal client secret',
+                    'card' => 'Paste Stripe secret key',
+                    default => 'Paste secret key',
+                };
             @endphp
             <div class="col-xl-4">
                 <section class="owner-card p-3 h-100">
@@ -115,12 +127,15 @@
 
                         <div class="col-12">
                             <label class="form-label small">{{ $definition['public'] }}</label>
-                            <input class="form-control" name="providers[{{ $provider }}][public_key]" value="{{ old("providers.$provider.public_key", $setting?->public_key) }}" @disabled(! $billingTablesReady)>
+                            <input class="form-control" name="providers[{{ $provider }}][public_key]" value="{{ old("providers.$provider.public_key", $setting?->public_key) }}" placeholder="{{ $publicKeyPlaceholder }}" @disabled(! $billingTablesReady)>
+                            @if($provider === 'mpesa')
+                                <div class="form-text">Paste the Consumer Key exactly as shown in Daraja.</div>
+                            @endif
                         </div>
 
                         <div class="col-12">
                             <label class="form-label small">{{ $definition['secret'] }}</label>
-                            <input class="form-control" type="password" name="providers[{{ $provider }}][secret_key]" placeholder="{{ $secretSaved ? 'Saved - leave blank to keep current secret' : 'Paste secret key' }}" autocomplete="new-password" @disabled(! $billingTablesReady)>
+                            <input class="form-control" type="password" name="providers[{{ $provider }}][secret_key]" placeholder="{{ $secretSaved ? 'Saved - leave blank to keep current secret' : $secretKeyPlaceholder }}" autocomplete="new-password" @disabled(! $billingTablesReady)>
                             @if($secretSaved)
                                 <div class="form-text text-success"><i class="bi bi-check-circle"></i> Secret saved securely.</div>
                             @endif

@@ -13,5 +13,5 @@
 <meta name="msapplication-starturl" content="/app">
 <meta name="bama-build-version" content="{{ $bamaBuildVersion }}">
 <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
-<link rel="apple-touch-icon" sizes="192x192" href="{{ asset('pwa-icons/icon-192.png?v=splash-20260911') }}">
-<link rel="apple-touch-icon" sizes="512x512" href="{{ asset('pwa-icons/icon-512.png?v=splash-20260911') }}">
+<link rel="apple-touch-icon" sizes="192x192" href="{{ asset('pwa-icons/icon-192.png?v=splash-small-20260912') }}">
+<link rel="apple-touch-icon" sizes="512x512" href="{{ asset('pwa-icons/icon-512.png?v=splash-small-20260912') }}">

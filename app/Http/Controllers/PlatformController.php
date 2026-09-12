@@ -14,8 +14,8 @@ use App\Services\ExchangeRateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
 class PlatformController extends Controller
@@ -109,7 +109,9 @@ class PlatformController extends Controller
             'The owner management profile cannot be deleted from client management.'
         );
 
-        DB::transaction(function () use ($tenant) {
+        $notices = collect();
+
+        DB::transaction(function () use ($tenant, $emailReuse, &$notices) {
             $businessIds = Business::withoutGlobalScopes()
                 ->where('tenant_id', $tenant->id)
                 ->pluck('id');
@@ -119,6 +121,11 @@ class PlatformController extends Controller
                 ->pluck('user_id');
 
             if ($businessIds->isNotEmpty()) {
+                $userIds = $userIds
+                    ->merge(DB::table('business_user')->whereIn('business_id', $businessIds)->pluck('user_id'))
+                    ->unique()
+                    ->values();
+
                 DB::table('business_user')->whereIn('business_id', $businessIds)->delete();
 
                 Business::withoutGlobalScopes()
@@ -138,7 +145,7 @@ class PlatformController extends Controller
 
             DB::table('tenant_user')->where('tenant_id', $tenant->id)->delete();
 
-            $emailReuse->releaseTenantUsersImmediately($userIds);
+            $notices = $emailReuse->holdTenantUsersForSuperAdminDeletion($userIds, $tenant->name);
 
             Subscription::withoutGlobalScopes()
                 ->where('tenant_id', $tenant->id)
@@ -152,6 +159,8 @@ class PlatformController extends Controller
             $tenant->update(['status' => 'cancelled']);
             $tenant->delete();
         });
+
+        $emailReuse->sendSuperAdminDeletionNotices($notices);
 
         return redirect()->route('platform.tenants')->with('status', "Profile {$tenant->name} deleted.");
     }
@@ -263,13 +272,16 @@ class PlatformController extends Controller
                 ->map(fn ($value, $key) => blank($value) && array_key_exists($key, $existingConfig) ? $existingConfig[$key] : $value)
                 ->reject(fn ($value) => blank($value))
                 ->all();
+            $publicKey = filled($payload['public_key'] ?? null)
+                ? trim($payload['public_key'])
+                : $setting->public_key;
 
-            $this->validatePaymentProviderSettings($provider, $payload, $setting, $config);
+            $this->validatePaymentProviderSettings($provider, $payload, $setting, $config, $publicKey);
 
             $setting->fill([
                 'is_enabled' => (bool) ($payload['is_enabled'] ?? false),
                 'mode' => $payload['mode'],
-                'public_key' => filled($payload['public_key'] ?? null) ? trim($payload['public_key']) : null,
+                'public_key' => $publicKey,
                 'instructions' => filled($payload['instructions'] ?? null) ? trim($payload['instructions']) : null,
                 'config' => $config,
             ]);
@@ -284,23 +296,33 @@ class PlatformController extends Controller
         return back()->with('status', 'Payment integrations updated.');
     }
 
-    private function validatePaymentProviderSettings(string $provider, array $payload, PlatformPaymentSetting $setting, array $config): void
+    private function validatePaymentProviderSettings(string $provider, array $payload, PlatformPaymentSetting $setting, array $config, ?string $publicKey): void
     {
         if (! (bool) ($payload['is_enabled'] ?? false)) {
             return;
         }
 
         $errors = [];
-        $hasPublicKey = filled($payload['public_key'] ?? null);
+        $hasPublicKey = filled($publicKey);
         $hasSecretKey = filled($payload['secret_key'] ?? null) || filled($setting->secret_key);
         $prefix = "providers.{$provider}";
 
         if (! $hasPublicKey) {
-            $errors["{$prefix}.public_key"] = 'Enter the public key before enabling this payment provider.';
+            $errors["{$prefix}.public_key"] = match ($provider) {
+                'mpesa' => 'Enter the Safaricom Daraja Consumer Key / API Key before enabling M-PESA.',
+                'paypal' => 'Enter the PayPal client ID before enabling PayPal.',
+                'card' => 'Enter the Stripe publishable key before enabling card checkout.',
+                default => 'Enter the public key before enabling this payment provider.',
+            };
         }
 
         if (! $hasSecretKey) {
-            $errors["{$prefix}.secret_key"] = 'Enter the secret key before enabling this payment provider.';
+            $errors["{$prefix}.secret_key"] = match ($provider) {
+                'mpesa' => 'Enter the Safaricom Daraja Consumer Secret / API Secret before enabling M-PESA.',
+                'paypal' => 'Enter the PayPal client secret before enabling PayPal.',
+                'card' => 'Enter the Stripe secret key before enabling card checkout.',
+                default => 'Enter the secret key before enabling this payment provider.',
+            };
         }
 
         if ($provider === 'mpesa') {
