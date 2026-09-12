@@ -118,11 +118,11 @@
     }
 
     .bama-brand-logo--splash {
-        width: clamp(4.75rem, 18vw, 6rem);
+        width: clamp(3.25rem, 12vw, 4.25rem);
     }
 
     .bama-loading-screen .bama-brand-logo--splash {
-        border-radius: 24px;
+        border-radius: 18px;
         overflow: hidden;
         transform-origin: center;
         animation: bama-logo-heartbeat 1.15s ease-in-out infinite;
@@ -719,7 +719,7 @@
         }
 
         .bama-brand-logo--splash {
-            width: clamp(4.25rem, 22vw, 5.25rem);
+            width: clamp(3rem, 16vw, 3.75rem);
         }
 
         .bama-radial-loader {

@@ -97,7 +97,7 @@
         overflow:hidden;
         color:#fff;
         background:var(--night);
-        touch-action:pan-y;
+        touch-action:pan-y pinch-zoom;
     }
     .app-flow * { letter-spacing:0; }
     .app-flow-track {
@@ -106,7 +106,7 @@
         min-width:100%;
         height:100%;
         transform:translate3d(calc((var(--step) * -100%) + var(--drag-offset, 0px)),0,0);
-        transition:transform .38s cubic-bezier(.2,.78,.18,1);
+        transition:transform .26s cubic-bezier(.2,.78,.18,1);
         will-change:transform;
     }
     .app-flow.is-dragging .app-flow-track {
@@ -154,7 +154,7 @@
         margin-bottom:clamp(24px,7dvh,56px);
     }
     .app-logo .bama-brand-logo {
-        width:clamp(120px,38vw,150px);
+        width:clamp(92px,30vw,118px);
         filter:drop-shadow(0 14px 28px rgba(0,0,0,.2));
     }
     .app-kicker {
@@ -336,7 +336,7 @@
         margin-bottom:18px;
     }
     .app-auth-top--solo .bama-brand-logo {
-        width:clamp(120px,38vw,150px);
+        width:clamp(92px,30vw,118px);
         filter:drop-shadow(0 14px 28px rgba(0,0,0,.2));
     }
     .app-icon-button {
@@ -698,7 +698,7 @@
             padding-bottom:44px;
         }
         .app-auth-top .app-logo .bama-brand-logo {
-            width:120px;
+            width:96px;
         }
         .app-auth-card {
             padding-inline:0;
@@ -953,15 +953,20 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    (() => {
         const flow = document.querySelector('[data-app-flow]');
+        if (! flow) return;
+
         const screens = Array.from(flow?.querySelectorAll('[data-app-screen]') || []);
         const dots = document.querySelectorAll('.app-dot');
+        const interactiveTouchSelector = 'a, button, input, textarea, select, label, summary, [role="button"], [contenteditable="true"], .app-auth-card, .bama-install-card';
         let step = Number(flow?.dataset.initialStep || 0);
         let touchStartX = 0;
         let touchStartY = 0;
         let touchDeltaX = 0;
         let touchDeltaY = 0;
+        let swipeAllowed = false;
+        let isSwiping = false;
 
         const syncHistory = (next) => {
             if (! window.history?.pushState) return;
@@ -1002,12 +1007,12 @@
                 syncHistory(step);
             }
 
-            if (step === 2) {
+            if (step === 2 && (step !== previousStep || options.focus)) {
                 focusLoginField();
             }
         };
 
-        document.querySelectorAll('[data-app-go]').forEach((button) => {
+        flow.querySelectorAll('[data-app-go]').forEach((button) => {
             button.addEventListener('click', () => setStep(button.dataset.appGo, { history:true }));
         });
 
@@ -1067,34 +1072,64 @@
             });
         });
 
-        flow?.addEventListener('touchstart', (event) => {
+        const resetDrag = () => {
+            flow.style.setProperty('--drag-offset', '0px');
+            flow.classList.remove('is-dragging');
+            isSwiping = false;
+        };
+
+        flow.addEventListener('touchstart', (event) => {
             touchStartX = event.touches[0].clientX;
             touchStartY = event.touches[0].clientY;
             touchDeltaX = 0;
             touchDeltaY = 0;
+            const touchTarget = event.target instanceof Element ? event.target : null;
+            swipeAllowed = event.touches.length === 1 && ! touchTarget?.closest(interactiveTouchSelector);
+            isSwiping = false;
         }, { passive:true });
 
-        flow?.addEventListener('touchmove', (event) => {
+        flow.addEventListener('touchmove', (event) => {
+            if (! swipeAllowed || event.touches.length !== 1) return;
+
             touchDeltaX = event.touches[0].clientX - touchStartX;
             touchDeltaY = event.touches[0].clientY - touchStartY;
-            if (Math.abs(touchDeltaX) < 12 || Math.abs(touchDeltaX) < Math.abs(touchDeltaY)) return;
+
+            if (! isSwiping) {
+                if (Math.abs(touchDeltaX) < 28) return;
+
+                if (Math.abs(touchDeltaX) < Math.abs(touchDeltaY) * 1.35) {
+                    swipeAllowed = false;
+                    resetDrag();
+                    return;
+                }
+
+                isSwiping = true;
+            }
+
+            event.preventDefault();
 
             const edgeResistance = (step === 0 && touchDeltaX > 0) || (step === 2 && touchDeltaX < 0) ? .24 : .72;
             flow.classList.add('is-dragging');
             flow.style.setProperty('--drag-offset', `${Math.round(touchDeltaX * edgeResistance)}px`);
-        }, { passive:true });
+        }, { passive:false });
 
-        flow?.addEventListener('touchend', (event) => {
+        flow.addEventListener('touchend', (event) => {
+            if (! isSwiping) {
+                resetDrag();
+                return;
+            }
+
             const dx = event.changedTouches[0].clientX - touchStartX;
             const dy = event.changedTouches[0].clientY - touchStartY;
-            if (Math.abs(dx) >= 54 && Math.abs(dx) > Math.abs(dy) * 1.1) {
+            if (Math.abs(dx) >= 64 && Math.abs(dx) > Math.abs(dy) * 1.35) {
                 setStep(step + (dx < 0 ? 1 : -1), { history:true });
                 return;
             }
+
             setStep(step);
         }, { passive:true });
 
-        flow?.addEventListener('touchcancel', () => setStep(step), { passive:true });
+        flow.addEventListener('touchcancel', () => resetDrag(), { passive:true });
 
         document.addEventListener('keydown', (event) => {
             if (! flow || ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) return;
@@ -1127,12 +1162,12 @@
             }
         @endif
 
-        setStep(step);
+        setStep(step, { focus: step === 2 });
 
         if (window.history?.replaceState) {
             window.history.replaceState({ appFlow: true, step }, '', window.location.href);
         }
-    });
+    })();
 </script>
 </x-auth-layout>
 @endsection
