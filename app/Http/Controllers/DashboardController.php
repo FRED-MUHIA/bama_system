@@ -108,6 +108,7 @@ class DashboardController extends Controller
             ->toString();
 
         $route = match ($industry) {
+            'chama' => ['chama.dashboard', 'chama_members', 'chama'],
             'construction' => ['construction.dashboard', 'construction_project_profiles', 'construction'],
             'automotive' => ['automotive.dashboard', 'automotive_job_cards', 'automotive'],
             'printing-branding' => ['printing-branding.dashboard', 'printing_estimates', 'printing-branding'],

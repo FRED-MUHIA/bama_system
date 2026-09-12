@@ -31,6 +31,8 @@ use Modules\Agriculture\Controllers\AgricultureOperationsController;
 use Modules\Agriculture\Controllers\AgricultureReportController;
 use Modules\Automotive\Controllers\AutomotiveDashboardController;
 use Modules\Automotive\Controllers\AutomotiveOperationsController;
+use Modules\Chama\Controllers\ChamaDashboardController;
+use Modules\Chama\Controllers\ChamaOperationsController;
 use Modules\Construction\Controllers\ConstructionDashboardController;
 use Modules\Construction\Controllers\ConstructionOperationsController;
 use Modules\Fitness\Controllers\FitnessDashboardController;
@@ -606,6 +608,15 @@ Route::middleware('auth')->group(function () {
             Route::delete('/documents/{document}', [AgricultureOperationsController::class, 'destroyDocument'])->middleware('permission:agriculture.documents.manage')->name('documents.destroy');
             Route::get('/reports', [AgricultureReportController::class, 'index'])->middleware('permission:agriculture.reports')->name('reports.index');
             Route::get('/reports/{type}.csv', [AgricultureReportController::class, 'csv'])->whereIn('type', ['farms', 'fields', 'crop-plans', 'activities', 'harvests', 'livestock', 'veterinary', 'inputs', 'equipment', 'equipment-maintenance', 'sales', 'finance', 'compliance'])->middleware('permission:agriculture.reports')->name('reports.csv');
+        });
+
+        Route::prefix('chama')->name('chama.')->middleware('module.enabled:chama')->group(function () {
+            Route::get('/', ChamaDashboardController::class)->middleware('permission:chama.dashboard')->name('dashboard');
+            Route::post('/records/{type}', [ChamaOperationsController::class, 'store'])->middleware('permission:chama.view')->name('records.store');
+            Route::post('/members/{member}/approve', [ChamaOperationsController::class, 'approveMember'])->middleware('permission:members.approve')->name('members.approve');
+            Route::post('/loans/{loan}/approve', [ChamaOperationsController::class, 'approveLoan'])->middleware('permission:loans.approve')->name('loans.approve');
+            Route::post('/loans/{loan}/disburse', [ChamaOperationsController::class, 'disburseLoan'])->middleware('permission:loans.disburse')->name('loans.disburse');
+            Route::get('/reports/{type}.csv', [ChamaOperationsController::class, 'report'])->whereIn('type', ['members', 'contributions', 'arrears', 'savings', 'loans', 'fines', 'table-banking'])->middleware('permission:chama.reports')->name('reports.csv');
         });
 
         Route::prefix('construction')->name('construction.')->middleware('module.enabled:construction')->group(function () {

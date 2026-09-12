@@ -128,6 +128,19 @@ class IamService
         'technicians.manage', 'workshop.manage', 'quality_control.manage',
         'warranty.manage', 'fleet.manage', 'vehicle_sales.manage',
         'automotive.finance', 'automotive.reports', 'automotive.settings',
+        'chama.view', 'chama.dashboard',
+        'members.view', 'members.create', 'members.approve', 'members.update',
+        'contributions.view', 'contributions.manage',
+        'savings.view', 'savings.manage',
+        'merry_go_round.manage', 'table_banking.manage',
+        'loans.view', 'loans.apply', 'loans.review', 'loans.approve', 'loans.disburse',
+        'loan_repayments.manage', 'guarantors.manage',
+        'fines.manage', 'welfare.manage',
+        'investments.view', 'investments.manage',
+        'shares.manage', 'dividends.manage',
+        'meetings.manage', 'attendance.manage', 'minutes.manage',
+        'elections.manage', 'voting.manage',
+        'chama.finance', 'chama.reports', 'chama.audit', 'chama.settings',
         'salon.view', 'salon.manage', 'salon.reports',
         'salon.appointments.view', 'salon.appointments.manage',
         'salon.staff.view', 'salon.staff.manage',
@@ -256,6 +269,16 @@ class IamService
         'automotive-finance-manager' => 'Finance Manager',
         'automotive-accountant' => 'Accountant',
         'automotive-viewer' => 'Automotive Viewer',
+        'chama-administrator' => 'Chama Administrator',
+        'chairperson' => 'Chairperson',
+        'vice-chairperson' => 'Vice Chairperson',
+        'treasurer' => 'Treasurer',
+        'secretary' => 'Secretary',
+        'committee-member' => 'Committee Member',
+        'loan-officer' => 'Loan Officer',
+        'investment-officer' => 'Investment Officer',
+        'auditor' => 'Auditor',
+        'chama-member' => 'Member',
         'salon-owner' => 'Salon Owner',
         'salon-manager' => 'Salon Manager',
         'salon-receptionist' => 'Salon Receptionist',
@@ -303,6 +326,7 @@ class IamService
         $this->syncConstructionRolePermissions();
         $this->syncPrintingRolePermissions();
         $this->syncAutomotiveRolePermissions();
+        $this->syncChamaRolePermissions();
         $this->syncSalonRolePermissions();
         $this->syncCommunicationRolePermissions();
 
@@ -365,6 +389,7 @@ class IamService
         $this->syncConstructionRolePermissions();
         $this->syncPrintingRolePermissions();
         $this->syncAutomotiveRolePermissions();
+        $this->syncChamaRolePermissions();
         $this->syncSalonRolePermissions();
         $this->syncCommunicationRolePermissions();
 
@@ -854,6 +879,58 @@ class IamService
         }
     }
 
+    private function syncChamaRolePermissions(): void
+    {
+        $all = [
+            'chama.view', 'chama.dashboard',
+            'members.view', 'members.create', 'members.approve', 'members.update',
+            'contributions.view', 'contributions.manage',
+            'savings.view', 'savings.manage',
+            'merry_go_round.manage', 'table_banking.manage',
+            'loans.view', 'loans.apply', 'loans.review', 'loans.approve', 'loans.disburse',
+            'loan_repayments.manage', 'guarantors.manage',
+            'fines.manage', 'welfare.manage',
+            'investments.view', 'investments.manage',
+            'shares.manage', 'dividends.manage',
+            'meetings.manage', 'attendance.manage', 'minutes.manage',
+            'elections.manage', 'voting.manage',
+            'chama.finance', 'chama.reports', 'chama.audit', 'chama.settings',
+            'finance.view', 'finance.ar.view', 'finance.reports.view',
+            'reports.view', 'reports.export', 'documents.view', 'communication.view',
+        ];
+
+        $leadership = [
+            'chama.view', 'chama.dashboard',
+            'members.view', 'members.create', 'members.approve', 'members.update',
+            'contributions.view', 'contributions.manage',
+            'savings.view', 'savings.manage',
+            'loans.view', 'loans.review', 'loans.approve',
+            'welfare.manage', 'meetings.manage', 'attendance.manage', 'minutes.manage',
+            'voting.manage', 'chama.finance', 'chama.reports', 'communication.view',
+        ];
+
+        $map = [
+            'chama-administrator' => $all,
+            'chairperson' => array_values(array_unique(array_merge($leadership, ['chama.audit', 'chama.settings']))),
+            'vice-chairperson' => $leadership,
+            'treasurer' => ['chama.view', 'chama.dashboard', 'members.view', 'contributions.view', 'contributions.manage', 'savings.view', 'savings.manage', 'loans.view', 'loan_repayments.manage', 'fines.manage', 'welfare.manage', 'investments.view', 'shares.manage', 'dividends.manage', 'chama.finance', 'chama.reports', 'finance.view', 'finance.ar.view', 'reports.export'],
+            'secretary' => ['chama.view', 'chama.dashboard', 'members.view', 'members.create', 'members.update', 'meetings.manage', 'attendance.manage', 'minutes.manage', 'voting.manage', 'documents.view', 'communication.view'],
+            'committee-member' => ['chama.view', 'chama.dashboard', 'members.view', 'contributions.view', 'savings.view', 'loans.view', 'welfare.manage', 'meetings.manage', 'voting.manage', 'chama.reports', 'communication.view'],
+            'loan-officer' => ['chama.view', 'chama.dashboard', 'members.view', 'savings.view', 'loans.view', 'loans.apply', 'loans.review', 'loans.approve', 'loans.disburse', 'loan_repayments.manage', 'guarantors.manage', 'chama.reports'],
+            'investment-officer' => ['chama.view', 'chama.dashboard', 'members.view', 'investments.view', 'investments.manage', 'shares.manage', 'dividends.manage', 'chama.finance', 'chama.reports'],
+            'auditor' => ['chama.view', 'chama.dashboard', 'members.view', 'contributions.view', 'savings.view', 'loans.view', 'fines.manage', 'welfare.manage', 'investments.view', 'chama.reports', 'chama.audit', 'reports.export'],
+            'chama-member' => ['chama.view', 'chama.dashboard', 'members.view', 'contributions.view', 'savings.view', 'loans.view', 'meetings.manage', 'communication.view'],
+            'viewer' => ['chama.view', 'chama.dashboard', 'members.view', 'contributions.view', 'savings.view', 'loans.view', 'chama.reports'],
+        ];
+
+        foreach ($map as $slug => $permissions) {
+            $role = IamRole::where('business_id', ActiveBusiness::id())->where('slug', $slug)->first();
+            if ($role) {
+                $role->permissions()->syncWithoutDetaching(IamPermission::whereIn('name', $permissions)->pluck('id'));
+            }
+        }
+    }
+
     private function syncSalonRolePermissions(): void
     {
         $all = [
@@ -930,6 +1007,8 @@ class IamService
             'equipment-manager', 'salon-owner', 'salon-manager', 'salon-branch-manager',
             'printing-administrator', 'managing-director', 'printing-sales-manager',
             'production-manager', 'printing-store-manager', 'dispatch-officer',
+            'chama-administrator', 'chairperson', 'vice-chairperson', 'treasurer',
+            'secretary', 'committee-member', 'loan-officer', 'investment-officer',
         ];
 
         foreach (self::ROLES as $slug => $label) {
