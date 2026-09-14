@@ -143,8 +143,8 @@ class ProductController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        $data['code'] = $data['code'] ?: Str::upper(Str::slug($data['name'], '-'));
-        $data['slug'] = $data['slug'] ?: Str::slug($data['name']);
+        $data['code'] = $data['code'] ?? Str::upper(Str::slug($data['name'], '-'));
+        $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
         $data['is_active'] = $request->boolean('is_active', true);
 
         ProductCategory::create(collect($data)->reject(fn ($value) => $value === null)->all());
@@ -162,7 +162,7 @@ class ProductController extends Controller
             'status' => ['required', Rule::in(['Active', 'Inactive'])],
         ]);
 
-        $data['code'] = $data['code'] ?: Str::upper(Str::slug($data['name'], '-'));
+        $data['code'] = $data['code'] ?? Str::upper(Str::slug($data['name'], '-'));
         $data['slug'] = Str::slug($data['name']);
 
         ProductBrand::create(collect($data)->reject(fn ($value) => $value === null)->all());
@@ -184,7 +184,7 @@ class ProductController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        $data['code'] = $data['code'] ?: Str::slug($data['name'], '_');
+        $data['code'] = $data['code'] ?? Str::slug($data['name'], '_');
         $data['is_variant_attribute'] = $request->boolean('is_variant_attribute');
         $data['is_filterable'] = $request->boolean('is_filterable');
         $data['is_searchable'] = $request->boolean('is_searchable');
@@ -207,7 +207,7 @@ class ProductController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        $data['code'] = $data['code'] ?: Str::upper(Str::slug($data['value'], '-'));
+        $data['code'] = $data['code'] ?? Str::upper(Str::slug($data['value'], '-'));
         $data['is_active'] = $request->boolean('is_active', true);
 
         $attribute->values()->create(collect($data)->reject(fn ($value) => $value === null)->all());
