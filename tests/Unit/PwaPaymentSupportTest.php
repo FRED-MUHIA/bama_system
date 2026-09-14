@@ -10,10 +10,12 @@ class PwaPaymentSupportTest extends TestCase
     {
         $serviceWorker = file_get_contents(public_path('sw.js'));
 
-        $this->assertStringContainsString("const BAMA_SW_VERSION = 'bama-pwa-v11'", $serviceWorker);
+        $this->assertStringContainsString("const BAMA_SW_VERSION = 'bama-pwa-v12'", $serviceWorker);
         $this->assertStringContainsString("if (request.method !== 'GET') return;", $serviceWorker);
         $this->assertStringContainsString("'/billing'", $serviceWorker);
+        $this->assertStringContainsString("'/images/optimized/'", $serviceWorker);
         $this->assertStringContainsString('if (isPrivatePath(url.pathname))', $serviceWorker);
+        $this->assertStringNotContainsString('analytics-command-center.png', $serviceWorker);
     }
 
     public function test_the_installed_web_app_exposes_a_billing_shortcut(): void

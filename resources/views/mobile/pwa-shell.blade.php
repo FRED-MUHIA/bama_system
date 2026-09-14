@@ -22,6 +22,21 @@
             }, 180);
         };
 
+        const showInitialLoader = () => {
+            loader.hidden = false;
+
+            const hideAfterPaint = () => window.setTimeout(hideLoader, 120);
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', hideAfterPaint, { once: true });
+            } else {
+                hideAfterPaint();
+            }
+
+            window.addEventListener('pageshow', hideLoader, { once: true });
+            window.setTimeout(hideLoader, 700);
+        };
+
         if (authPath) {
             loader.hidden = true;
             return;
@@ -32,12 +47,10 @@
 
             if (!sessionStorage.getItem(sessionKey)) {
                 sessionStorage.setItem(sessionKey, 'true');
-                loader.hidden = false;
-                window.setTimeout(hideLoader, 1400);
+                showInitialLoader();
             }
         } catch (error) {
-            loader.hidden = false;
-            window.setTimeout(hideLoader, 1400);
+            showInitialLoader();
         }
     })();
 </script>

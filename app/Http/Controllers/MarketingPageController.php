@@ -112,10 +112,12 @@ class MarketingPageController extends Controller
         $page = MarketingPage::published()->where('slug', $slug)->firstOrFail();
 
         abort_if($page->slug === 'home', 404);
+        $homePage = MarketingPage::resolve('home');
 
         return view('landing.page', [
             'page' => $page,
             'blocks' => $page->sections['blocks'] ?? [],
+            'marketingSiteContent' => $homePage->sections ?: MarketingPage::defaultSections('home'),
         ]);
     }
 

@@ -11,6 +11,11 @@
     $menus = collect($industry['dashboard']['menu_structure'] ?? $industry['menus'] ?? [])->map(fn ($menu) => is_array($menu) ? ($menu['label'] ?? $menu['module'] ?? 'Module') : $menu);
     $brandLogoUrl = \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png');
     $accent = ['#00A651', '#071B12'];
+    $mosaicImageSrcset = implode(', ', [
+        asset('images/optimized/people-industry-mosaic-640.webp').' 640w',
+        asset('images/optimized/people-industry-mosaic-960.webp').' 960w',
+        asset('images/optimized/people-industry-mosaic-1254.webp').' 1254w',
+    ]);
     $featureIcon = function ($feature) {
         $label = str($feature)->lower();
 
@@ -50,7 +55,18 @@
 
     <section class="relative overflow-hidden px-5 py-12 text-white md:py-16" style="background:var(--dark)">
         <div class="absolute inset-y-0 right-0 hidden w-1/2 opacity-35 lg:block">
-            <img src="{{ asset('images/people-industry-mosaic.png') }}" alt="{{ $industry['industry'] }} teams using Bama" class="h-full w-full object-cover">
+            <picture class="block h-full w-full">
+                <source type="image/webp" srcset="{{ $mosaicImageSrcset }}" sizes="50vw">
+                <img
+                    src="{{ asset('images/people-industry-mosaic.png') }}"
+                    alt="{{ $industry['industry'] }} teams using Bama"
+                    width="1254"
+                    height="1254"
+                    class="h-full w-full object-cover"
+                    fetchpriority="high"
+                    decoding="async"
+                >
+            </picture>
         </div>
         <div class="relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-[.95fr_.7fr]">
             <div class="max-w-3xl">

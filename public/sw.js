@@ -1,4 +1,4 @@
-const BAMA_SW_VERSION = 'bama-pwa-v11';
+const BAMA_SW_VERSION = 'bama-pwa-v12';
 const STATIC_CACHE = `${BAMA_SW_VERSION}-static`;
 const RUNTIME_CACHE = `${BAMA_SW_VERSION}-runtime`;
 
@@ -11,7 +11,6 @@ const CORE_ASSETS = [
     '/images/bama-logo-cropped.png',
     '/images/bama-splash-icon.png',
     '/images/bama-solutions-02.png',
-    '/images/analytics-command-center.png',
     '/pwa-icons/icon-192.png?v=splash-small-20260912',
     '/pwa-icons/icon-512.png?v=splash-small-20260912',
     '/pwa-icons/maskable-192.png?v=splash-small-20260912',
@@ -20,6 +19,7 @@ const CORE_ASSETS = [
 
 const SAFE_STATIC_PATHS = [
     '/build/',
+    '/images/optimized/',
     '/images/bama-',
     '/pwa-icons/'
 ];

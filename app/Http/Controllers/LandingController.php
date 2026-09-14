@@ -21,12 +21,14 @@ class LandingController extends Controller
         }
 
         $page = MarketingPage::resolve('home');
+        $marketingContent = $page->sections ?: MarketingPage::defaultSections('home');
 
         return view('landing.index', [
             'industries' => $industries->implementedIndustries(),
             'plans' => $plans->all(),
             'marketingPage' => $page,
-            'marketingContent' => $page->sections ?: MarketingPage::defaultSections('home'),
+            'marketingContent' => $marketingContent,
+            'marketingSiteContent' => $marketingContent,
         ]);
     }
 
@@ -43,6 +45,7 @@ class LandingController extends Controller
             ],
             'industries' => $industries->implementedIndustries(),
             'plans' => $plans->all(),
+            'marketingSiteContent' => MarketingPage::resolve('home')->sections ?: MarketingPage::defaultSections('home'),
         ]);
     }
 }

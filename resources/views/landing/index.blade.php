@@ -85,6 +85,16 @@
             'core_modules_count' => count($industry['core_modules'] ?? []),
         ],
     ]);
+    $heroImageSrcset = implode(', ', [
+        asset('images/optimized/hero-green-team-960.webp').' 960w',
+        asset('images/optimized/hero-green-team-1280.webp').' 1280w',
+        asset('images/optimized/hero-green-team-1672.webp').' 1672w',
+    ]);
+    $mosaicImageSrcset = implode(', ', [
+        asset('images/optimized/people-industry-mosaic-640.webp').' 640w',
+        asset('images/optimized/people-industry-mosaic-960.webp').' 960w',
+        asset('images/optimized/people-industry-mosaic-1254.webp').' 1254w',
+    ]);
 @endphp
 
 @section('body')
@@ -498,13 +508,19 @@
         </nav>
     </header>
     <section class="hero-field relative isolate overflow-hidden bg-black px-5 py-12 text-white sm:py-14 lg:min-h-[590px] lg:py-0">
-        <img
-            src="{{ asset('images/hero-green-team.png') }}"
-            alt="Business leaders using Bama cloud ERP"
-            class="hero-image-clear absolute inset-y-0 right-0 z-[-1] hidden h-full object-contain object-right-center lg:block"
-            style="width: auto; max-width: none;"
-            fetchpriority="high"
-        >
+        <picture class="absolute inset-y-0 right-0 z-[-1] hidden h-full lg:block" style="width: auto; max-width: none;">
+            <source type="image/webp" srcset="{{ $heroImageSrcset }}" sizes="58vw">
+            <img
+                src="{{ asset('images/hero-green-team.png') }}"
+                alt="Business leaders using Bama cloud ERP"
+                width="1672"
+                height="941"
+                class="hero-image-clear h-full w-auto max-w-none object-contain object-right-center"
+                style="width: auto; max-width: none;"
+                fetchpriority="high"
+                decoding="async"
+            >
+        </picture>
 
         <div class="mx-auto flex max-w-7xl items-center lg:min-h-[590px]">
             <div class="max-w-2xl py-7">
@@ -530,11 +546,18 @@
                     @endforeach
                 </div>
                 <div class="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-[#062515] lg:hidden" style="aspect-ratio: 1672 / 941;">
-                    <img
-                        src="{{ asset('images/hero-green-team.png') }}"
-                        alt="Business leaders using Bama cloud ERP"
-                        class="hero-image-clear h-full w-full object-cover object-center"
-                    >
+                    <picture class="block h-full w-full">
+                        <source type="image/webp" srcset="{{ $heroImageSrcset }}" sizes="100vw">
+                        <img
+                            src="{{ asset('images/hero-green-team.png') }}"
+                            alt="Business leaders using Bama cloud ERP"
+                            width="1672"
+                            height="941"
+                            class="hero-image-clear h-full w-full object-cover object-center"
+                            fetchpriority="high"
+                            decoding="async"
+                        >
+                    </picture>
                 </div>
             </div>
         </div>
@@ -543,12 +566,18 @@
     <section class="bg-[#F7F8F5] px-5 py-7">
         <div class="mx-auto grid max-w-6xl overflow-hidden rounded-[22px] border border-zinc-200 bg-[#071B12] shadow-2xl shadow-zinc-200/70 lg:grid-cols-[.95fr_1fr]">
             <div class="relative h-[220px] sm:h-[270px] lg:h-[330px]">
-                <img
-                    src="{{ asset('images/people-industry-mosaic.png') }}"
-                    alt="Diverse teams across industries using one business platform"
-                    class="absolute inset-0 h-full w-full object-cover"
-                    loading="lazy"
-                >
+                <picture class="absolute inset-0 block h-full w-full">
+                    <source type="image/webp" srcset="{{ $mosaicImageSrcset }}" sizes="(min-width: 1024px) 50vw, 100vw">
+                    <img
+                        src="{{ asset('images/people-industry-mosaic.png') }}"
+                        alt="Diverse teams across industries using one business platform"
+                        width="1254"
+                        height="1254"
+                        class="h-full w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                    >
+                </picture>
                 <div class="absolute inset-0 bg-gradient-to-r from-transparent via-[#071B12]/15 to-[#071B12]"></div>
             </div>
             <div class="relative flex flex-col justify-center gap-5 bg-[#071B12] p-7 text-white sm:p-9 lg:p-10">
@@ -624,12 +653,18 @@
                         A complete operating suite for CRM, finance, accounting, projects, inventory, procurement, HR, documents, reporting, and portal workflows.
                     </p>
                     <div class="mt-4 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
-                        <img
-                            src="{{ asset('images/people-industry-mosaic.png') }}"
-                            alt="Diverse teams using the platform"
-                            class="h-32 w-full object-cover sm:h-36 lg:h-40"
-                            loading="lazy"
-                        >
+                        <picture class="block">
+                            <source type="image/webp" srcset="{{ $mosaicImageSrcset }}" sizes="(min-width: 1024px) 28vw, 100vw">
+                            <img
+                                src="{{ asset('images/people-industry-mosaic.png') }}"
+                                alt="Diverse teams using the platform"
+                                width="1254"
+                                height="1254"
+                                class="h-32 w-full object-cover sm:h-36 lg:h-40"
+                                loading="lazy"
+                                decoding="async"
+                            >
+                        </picture>
                     </div>
                 </div>
                 <div class="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">

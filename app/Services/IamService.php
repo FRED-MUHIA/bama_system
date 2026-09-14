@@ -11,11 +11,15 @@ use App\Models\UserDevice;
 use App\Support\ActiveBusiness;
 use App\Support\SchemaCache;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Throwable;
 
 class IamService
 {
+    private const BOOTSTRAP_CACHE_TTL_SECONDS = 21600;
+
     private static array $bootstrappedBusinesses = [];
 
     private static array $permissionCache = [];
@@ -299,6 +303,7 @@ class IamService
         }
 
         self::$permissionCache = [];
+        $businessId = ActiveBusiness::id();
 
         foreach (self::PERMISSIONS as $name) {
             IamPermission::firstOrCreate(['name' => $name], ['module' => Str::before($name, '.')]);
@@ -344,6 +349,11 @@ class IamService
                 'created_at' => now(),
             ]);
         }
+
+        if ($businessId) {
+            self::$bootstrappedBusinesses[$businessId] = true;
+            $this->markBusinessPermissionsCurrent($businessId);
+        }
     }
 
     public function bootstrap(): void
@@ -352,16 +362,22 @@ class IamService
             return;
         }
 
-        self::$permissionCache = [];
-
         $businessId = ActiveBusiness::id();
         if (
             $businessId
             && (self::$bootstrappedBusinesses[$businessId] ?? false)
-            && $this->businessPermissionsAreCurrent($businessId)
+            && (! app()->environment('testing') || $this->businessPermissionsAreCurrent($businessId))
         ) {
             return;
         }
+
+        if ($businessId && $this->businessPermissionsMarkedCurrent($businessId)) {
+            self::$bootstrappedBusinesses[$businessId] = true;
+
+            return;
+        }
+
+        self::$permissionCache = [];
 
         foreach (self::PERMISSIONS as $name) {
             IamPermission::firstOrCreate(['name' => $name], ['module' => Str::before($name, '.')]);
@@ -410,6 +426,7 @@ class IamService
 
         if ($businessId) {
             self::$bootstrappedBusinesses[$businessId] = true;
+            $this->markBusinessPermissionsCurrent($businessId);
         }
     }
 
@@ -532,6 +549,44 @@ class IamService
 
         return $systemAdministrator
             && $systemAdministrator->permissions()->whereIn('name', self::PERMISSIONS)->count() === count(self::PERMISSIONS);
+    }
+
+    private function businessPermissionsMarkedCurrent(int $businessId): bool
+    {
+        if ($this->skipPersistentBootstrapCache()) {
+            return false;
+        }
+
+        try {
+            return (bool) Cache::get($this->bootstrapCacheKey($businessId), false);
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    private function markBusinessPermissionsCurrent(int $businessId): void
+    {
+        if ($this->skipPersistentBootstrapCache()) {
+            return;
+        }
+
+        try {
+            Cache::put($this->bootstrapCacheKey($businessId), true, self::BOOTSTRAP_CACHE_TTL_SECONDS);
+        } catch (Throwable) {
+            return;
+        }
+    }
+
+    private function bootstrapCacheKey(int $businessId): string
+    {
+        $signature = substr(sha1(json_encode([self::PERMISSIONS, self::ROLES])), 0, 16);
+
+        return "iam.bootstrap.ready.{$businessId}.{$signature}";
+    }
+
+    private function skipPersistentBootstrapCache(): bool
+    {
+        return app()->environment('testing');
     }
 
     private function syncFinanceRolePermissions(): void

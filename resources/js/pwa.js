@@ -3,9 +3,18 @@ const isStandalone = () => standaloneMedia.matches || window.navigator.standalon
 const isIos = () => /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 const isAndroid = () => /android/i.test(window.navigator.userAgent);
 const INSTALL_DISMISS_DAYS = 14;
-const APP_UPDATE_INTERVAL = 60 * 1000;
+const APP_UPDATE_INTERVAL = 5 * 60 * 1000;
 
 let deferredInstallPrompt = null;
+
+function runWhenIdle(callback, timeout = 3000) {
+    if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(callback, { timeout });
+        return;
+    }
+
+    window.setTimeout(callback, Math.min(timeout, 1200));
+}
 
 function configureInstallCards() {
     const cards = document.querySelectorAll('[data-bama-install-card]');
@@ -168,11 +177,13 @@ function configureAutomaticAppUpdates(registration) {
     });
 
     const check = () => {
+        if (document.visibilityState === 'hidden') return;
+
         registration.update().catch(() => {});
         checkForAppUpdate();
     };
 
-    check();
+    runWhenIdle(check, 10000);
     window.setInterval(check, APP_UPDATE_INTERVAL);
     window.addEventListener('online', check);
     document.addEventListener('visibilitychange', () => {
@@ -199,10 +210,12 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('bama-install-ready', renderInstallCards);
 
     if ('serviceWorker' in navigator) {
-        const buildVersion = document.querySelector('meta[name="bama-build-version"]')?.content || 'development';
+        runWhenIdle(() => {
+            const buildVersion = document.querySelector('meta[name="bama-build-version"]')?.content || 'development';
 
-        navigator.serviceWorker.register(`/sw.js?v=${encodeURIComponent(buildVersion)}`)
-            .then(configureAutomaticAppUpdates)
-            .catch(() => {});
+            navigator.serviceWorker.register(`/sw.js?v=${encodeURIComponent(buildVersion)}`)
+                .then(configureAutomaticAppUpdates)
+                .catch(() => {});
+        });
     }
 });

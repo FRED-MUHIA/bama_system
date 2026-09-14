@@ -9,8 +9,19 @@
         <meta name="description" content="{{ $metaDescription }}">
     @endisset
     @php
-        $marketingSiteContent = $marketingSiteContent ?? \App\Models\MarketingPage::resolve('home')->sections ?? \App\Models\MarketingPage::defaultSections('home');
-        $marketingBrand = array_replace_recursive(\App\Models\MarketingPage::defaultSections('home')['brand'], (array) data_get($marketingSiteContent, 'brand', []));
+        $marketingDefaults = \App\Models\MarketingPage::defaultSections('home');
+        $marketingSiteContent = $marketingSiteContent ?? ($marketingContent ?? null);
+
+        if (! $marketingSiteContent && isset($marketingPage)) {
+            $marketingSiteContent = $marketingPage->sections;
+        }
+
+        if (! $marketingSiteContent) {
+            $marketingHomePage = \App\Models\MarketingPage::resolve('home');
+            $marketingSiteContent = $marketingHomePage->sections ?: $marketingDefaults;
+        }
+
+        $marketingBrand = array_replace_recursive($marketingDefaults['brand'], (array) data_get($marketingSiteContent, 'brand', []));
         $marketingFaviconPath = data_get($marketingBrand, 'favicon_path') ?: 'images/bama-favicon.png';
         $marketingFaviconHref = \App\Support\PublicUpload::url($marketingFaviconPath) ?: asset('images/bama-favicon.png');
         $marketingFaviconFile = \App\Support\PublicUpload::filePath($marketingFaviconPath);

@@ -5,8 +5,8 @@
 
 @section('body')
 @php
-    $marketingSiteContent = \App\Models\MarketingPage::resolve('home')->sections ?: \App\Models\MarketingPage::defaultSections('home');
     $defaults = \App\Models\MarketingPage::defaultSections('home');
+    $marketingSiteContent = $marketingSiteContent ?? (\App\Models\MarketingPage::resolve('home')->sections ?: $defaults);
     $brand = array_replace_recursive($defaults['brand'], (array) data_get($marketingSiteContent, 'brand', []));
     $headerContent = array_replace_recursive($defaults['header'], (array) data_get($marketingSiteContent, 'header', []));
     $footerContent = array_replace_recursive($defaults['footer'], (array) data_get($marketingSiteContent, 'footer', []));
