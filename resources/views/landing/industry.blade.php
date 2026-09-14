@@ -2,6 +2,7 @@
 
 @php
     $slug = str_replace('_', '-', $industry['slug']);
+    $isRetail = $slug === 'retail';
     $modules = collect($industry['modules'] ?? []);
     $features = collect($industry['dashboard']['dashboard_features'] ?? $industry['dashboard']['features'] ?? []);
     $subIndustries = collect($industry['sub_industries'] ?? []);
@@ -9,6 +10,16 @@
     $reports = collect($industry['reports'] ?? []);
     $roles = collect($industry['roles'] ?? []);
     $menus = collect($industry['dashboard']['menu_structure'] ?? $industry['menus'] ?? [])->map(fn ($menu) => is_array($menu) ? ($menu['label'] ?? $menu['module'] ?? 'Module') : $menu);
+
+    if ($isRetail) {
+        $modules = collect(['Point of Sale', 'Products & Pricing', 'Stock Control', 'Customers', 'Returns', 'Daily Reports']);
+        $features = collect(['Fast counter sales', 'Low-stock alerts', 'Simple customer records', 'Mobile money and cash']);
+        $workflows = collect(['Add products', 'Sell at the counter', 'Receive payment', 'Update stock', 'Handle returns', 'Reorder low-stock items']);
+        $reports = collect(['Daily Sales', 'Product Sales', 'Stock Levels', 'Returns']);
+        $roles = collect(['Owner', 'Shop Manager', 'Cashier', 'Stock Clerk']);
+        $menus = collect(['Dashboard', 'Point of Sale', 'Products', 'Inventory', 'Customers', 'Reports']);
+    }
+
     $brandLogoUrl = \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png');
     $accent = ['#00A651', '#071B12'];
     $mosaicImageSrcset = implode(', ', [
@@ -81,7 +92,7 @@
             <div class="rounded-lg border border-white/10 bg-white/[.08] p-5 shadow-2xl backdrop-blur">
                 <p class="text-xs font-black uppercase text-white/60">Workspace includes</p>
                 <div class="mt-4 grid gap-2">
-                    @foreach($modules->take(8) as $module)
+                    @foreach($modules->take($isRetail ? 6 : 8) as $module)
                         <div class="flex items-center gap-3 rounded-lg bg-white/[.08] px-3 py-2">
                             <i class="bi bi-check2-circle" style="color:var(--accent)"></i>
                             <span class="font-bold">{{ $module }}</span>
@@ -97,14 +108,20 @@
             <div>
                 <p class="bama-eyebrow">Operating fit</p>
                 <h2 class="mt-3 text-3xl font-black">What this workspace helps you control</h2>
-                <p class="mt-4 leading-7 text-zinc-600">Bama provisions practical screens, permissions, dashboards, reports, and workflows around the way {{ strtolower($industry['industry']) }} teams actually work.</p>
+                <p class="mt-4 leading-7 text-zinc-600">
+                    @if($isRetail)
+                        Bama keeps the counter, stock shelf, customer list, and daily reports close together for shop owners and cashiers.
+                    @else
+                        Bama provisions practical screens, permissions, dashboards, reports, and workflows around the way {{ strtolower($industry['industry']) }} teams actually work.
+                    @endif
+                </p>
             </div>
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                @foreach($features->take(6) as $feature)
+                @foreach($features->take($isRetail ? 4 : 6) as $feature)
                     <article class="bama-card p-4">
                         <span class="grid h-10 w-10 place-items-center rounded-lg text-white" style="background:var(--accent)"><i class="bi {{ $featureIcon($feature) }}"></i></span>
                         <h3 class="mt-4 font-black">{{ $feature }}</h3>
-                        <p class="mt-2 text-sm leading-6 text-zinc-600">Track activity, responsibility, status, and performance from one controlled dashboard.</p>
+                        <p class="mt-2 text-sm leading-6 text-zinc-600">{{ $isRetail ? 'Keep daily shop work clear without adding enterprise clutter.' : 'Track activity, responsibility, status, and performance from one controlled dashboard.' }}</p>
                     </article>
                 @endforeach
             </div>
@@ -128,13 +145,13 @@
                 <div class="bama-card p-5">
                     <h2 class="text-xl font-black">Workflows</h2>
                     <div class="mt-4 flex flex-wrap gap-2">
-                        @foreach($workflows->take(12) as $workflow)
+                        @foreach($workflows->take($isRetail ? 6 : 12) as $workflow)
                             <span class="bama-chip px-3 py-2 text-sm">{{ $workflow }}</span>
                         @endforeach
                     </div>
                     <h2 class="mt-6 text-xl font-black">Reports</h2>
                     <div class="mt-4 grid gap-2">
-                        @foreach($reports->take(6) as $report)
+                        @foreach($reports->take($isRetail ? 4 : 6) as $report)
                             <span class="rounded-lg border border-zinc-100 bg-[#F7F8F5] px-3 py-2 text-sm font-bold">{{ $report }}</span>
                         @endforeach
                     </div>
@@ -162,7 +179,7 @@
                 <div>
                     <p class="bama-eyebrow">Ready to operate</p>
                     <h2 class="mt-3 text-3xl font-black">Launch a {{ $industry['industry'] }} workspace with Bama</h2>
-                    <p class="mt-3 max-w-2xl leading-7 text-white/75">Start with guided onboarding, then add users, permissions, modules, documents, finance, and reports as your operation grows.</p>
+                    <p class="mt-3 max-w-2xl leading-7 text-white/75">{{ $isRetail ? 'Start with POS, products, stock, customers, and reports, then enable optional tools only when the shop needs them.' : 'Start with guided onboarding, then add users, permissions, modules, documents, finance, and reports as your operation grows.' }}</p>
                 </div>
                 <a href="{{ route('register.account') }}" class="rounded-full bg-white px-8 py-4 text-center text-sm font-black uppercase text-black no-underline">Start Free Trial</a>
             </div>

@@ -7,7 +7,7 @@
 <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
     <div>
         <h1 class="h3 mb-1">{{ $title }}</h1>
-        <div class="text-muted">Retail extension data is scoped to the active tenant and business.</div>
+        <div class="text-muted">Simple records for the active shop.</div>
     </div>
     </div>
 
@@ -430,21 +430,25 @@
     </div>
 @elseif($section === 'ecommerce')
     <div class="card p-3 mb-3">
-        <form method="POST" action="{{ route('retail.ecommerce.store') }}" class="row g-2">
+        <form method="POST" action="{{ route('retail.ecommerce.store') }}" class="row g-2 align-items-end">
             @csrf
-            <div class="col-md-2"><input class="form-control" name="channel" placeholder="Website, mobile, marketplace" required></div>
-            <div class="col-md-2"><input class="form-control" name="external_store_id" placeholder="External store ID"></div>
-            <div class="col-md-3"><input class="form-control" name="website_url" type="url" placeholder="https://store.example.com"></div>
-            <div class="col-md-2"><select class="form-select" name="status"><option>Draft</option><option>Active</option><option>Paused</option><option>Disconnected</option></select></div>
-            <div class="col-md-2 d-flex flex-wrap gap-3 align-items-center">
-                @foreach(['product_sync' => 'Products', 'inventory_sync' => 'Inventory', 'order_sync' => 'Orders', 'customer_sync' => 'Customers'] as $name => $label)
-                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" name="{{ $name }}" value="1" checked>{{ $label }}</label>
-                @endforeach
+            <input type="hidden" name="channel" value="Website">
+            <input type="hidden" name="status" value="Active">
+            @foreach(['product_sync', 'inventory_sync', 'order_sync', 'customer_sync'] as $name)
+                <input type="hidden" name="{{ $name }}" value="1">
+            @endforeach
+            <div class="col-md-7">
+                <label class="small text-muted fw-bold">Website URL</label>
+                <input class="form-control" name="website_url" type="url" placeholder="https://yourshop.com">
             </div>
-            <div class="col-md-1"><button class="btn btn-success w-100"><i class="bi bi-save"></i></button></div>
+            <div class="col-md-3">
+                <label class="small text-muted fw-bold">Store label</label>
+                <input class="form-control" name="external_store_id" placeholder="Main shop">
+            </div>
+            <div class="col-md-2"><button class="btn btn-success w-100"><i class="bi bi-save me-1"></i>Save</button></div>
         </form>
         <div class="border-top mt-3 pt-3">
-            <h2 class="h5 mb-2">Website Catalog Feed</h2>
+            <h2 class="h5 mb-2">Catalog Feed</h2>
             @forelse($records as $integration)
                 @php($apiKey = data_get($integration->settings, 'api_key'))
                 <div class="border rounded p-3 mb-2">
@@ -461,7 +465,6 @@
                             <div class="col-lg-4"><label class="small text-muted fw-bold">Categories</label><input class="form-control form-control-sm" readonly value="{{ route('api.v1.public.retail.ecommerce.categories', $integration) }}?api_key={{ $apiKey }}"></div>
                             <div class="col-lg-4"><label class="small text-muted fw-bold">Pricing</label><input class="form-control form-control-sm" readonly value="{{ route('api.v1.public.retail.ecommerce.pricing', $integration) }}?api_key={{ $apiKey }}"></div>
                         </div>
-                        <div class="small text-muted mt-2">Websites can also send the key as <code>Authorization: Bearer {{ $apiKey }}</code> or <code>X-Retail-Api-Key</code>.</div>
                     @else
                         <form method="POST" action="{{ route('retail.ecommerce.sync', $integration) }}" class="mt-2">
                             @csrf
@@ -470,7 +473,7 @@
                     @endif
                 </div>
             @empty
-                <div class="text-muted">Create a website integration to generate product, category, and pricing feed URLs.</div>
+                <div class="text-muted">No website catalog has been saved yet.</div>
             @endforelse
         </div>
     </div>

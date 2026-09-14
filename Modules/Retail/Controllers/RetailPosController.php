@@ -27,9 +27,8 @@ class RetailPosController extends Controller
         }
 
         return view('retail.pos', [
-            'metrics' => $dashboard->metrics(),
-            'topProducts' => $dashboard->topProducts(),
-            'topCashiers' => $dashboard->topCashiers(),
+            'metrics' => $dashboard->pointOfSaleMetrics(),
+            'lowStockProducts' => $dashboard->lowStockProducts(),
             'recentOrders' => PosOrder::with('client', 'retailExtension.cashier')->latest()->limit(10)->get(),
             'products' => Product::with('retailProfile')->where('is_active', true)->orderBy('name')->limit(200)->get(),
             'clients' => Client::orderBy('name')->limit(200)->get(),
@@ -39,9 +38,9 @@ class RetailPosController extends Controller
             'giftCards' => RetailGiftCard::where('status', 'Active')->orderBy('card_number')->get(),
             'drawers' => RetailCashDrawer::where('status', 'Open')->latest()->get(),
             'scanProduct' => $scanProduct,
-            'paymentTypes' => ['Cash', 'Card', 'Mobile Money', 'Bank Transfer', 'Wallet', 'Gift Card', 'Store Credit'],
-            'saleTypes' => ['Sale', 'Quick Sale', 'Return', 'Exchange', 'Refund', 'Layaway'],
-            'channels' => ['Store', 'Self Checkout', 'Mobile POS', 'Online Store'],
+            'paymentTypes' => ['Cash', 'Mobile Money', 'Card', 'Gift Card', 'Store Credit'],
+            'saleTypes' => ['Sale', 'Layaway'],
+            'channels' => ['Store'],
         ]);
     }
 

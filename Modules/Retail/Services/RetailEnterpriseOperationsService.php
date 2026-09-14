@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Services\IamService;
+use App\Support\ActiveBusiness;
 use Illuminate\Support\Facades\DB;
 use Modules\Retail\Models\RetailCustomerOffer;
 use Modules\Retail\Models\RetailCycleCount;
@@ -242,18 +243,23 @@ class RetailEnterpriseOperationsService
 
     public function skuProfitability()
     {
+        $businessId = ActiveBusiness::id();
+        $sku = "COALESCE(NULLIF(products.sku, ''), NULLIF(pos_order_items.sku_snapshot, ''), NULLIF(pos_order_items.title, ''), 'Quick sale item')";
+
         return DB::table('pos_order_items')
             ->join('pos_orders', 'pos_orders.id', '=', 'pos_order_items.pos_order_id')
             ->leftJoin('products', 'products.id', '=', 'pos_order_items.product_id')
+            ->when($businessId, fn ($query) => $query->where('pos_orders.business_id', $businessId))
             ->where('pos_orders.status', '!=', 'cancelled')
-            ->select(
-                'pos_order_items.product_id',
-                DB::raw('COALESCE(products.sku, pos_order_items.title) as sku'),
-                DB::raw('SUM(pos_order_items.line_total) as revenue'),
-                DB::raw('SUM(pos_order_items.quantity * COALESCE(products.cost_price, 0)) as cost'),
-                DB::raw('SUM(pos_order_items.line_total - (pos_order_items.quantity * COALESCE(products.cost_price, 0))) as profit')
-            )
-            ->groupBy('pos_order_items.product_id', 'products.sku', 'pos_order_items.title')
+            ->where(function ($query) {
+                $query->whereNotNull('pos_order_items.product_id')
+                    ->orWhereRaw("TRIM(COALESCE(pos_order_items.sku_snapshot, pos_order_items.title, pos_order_items.description, '')) <> ''");
+            })
+            ->selectRaw("{$sku} as sku")
+            ->selectRaw('SUM(pos_order_items.line_total) as revenue')
+            ->selectRaw('SUM(pos_order_items.quantity * COALESCE(products.cost_price, 0)) as cost')
+            ->selectRaw('SUM(pos_order_items.line_total - (pos_order_items.quantity * COALESCE(products.cost_price, 0))) as profit')
+            ->groupByRaw($sku)
             ->orderByDesc('profit')
             ->limit(20)
             ->get();

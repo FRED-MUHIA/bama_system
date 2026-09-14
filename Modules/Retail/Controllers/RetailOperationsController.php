@@ -110,7 +110,7 @@ class RetailOperationsController extends Controller
 
     public function ecommerce()
     {
-        return view('retail.module', ['title' => 'Ecommerce Integration', 'section' => 'ecommerce', 'records' => RetailEcommerceIntegration::latest()->paginate(20)]);
+        return view('retail.module', ['title' => 'Website Catalog', 'section' => 'ecommerce', 'records' => RetailEcommerceIntegration::latest()->paginate(20)]);
     }
 
     public function storeEcommerce(Request $request)
@@ -133,7 +133,7 @@ class RetailOperationsController extends Controller
             'api_key' => Str::random(48),
         ]]);
 
-        return back()->with('status', 'Ecommerce channel saved. Product, category, and pricing feed keys are ready.');
+        return back()->with('status', 'Website catalog saved. Product, category, and pricing feed keys are ready.');
     }
 
     public function syncEcommerce(RetailEcommerceIntegration $integration)
@@ -150,7 +150,7 @@ class RetailOperationsController extends Controller
             'status' => 'Active',
         ]);
 
-        return back()->with('status', 'Ecommerce sync markers updated.');
+        return back()->with('status', 'Website catalog sync markers updated.');
     }
 
     public function analytics()

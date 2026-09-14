@@ -11,9 +11,8 @@ class RetailDashboardController extends Controller
     public function __invoke(RetailDashboardService $dashboard, RetailRepository $retail)
     {
         return view('retail.dashboard', [
-            'metrics' => $dashboard->metrics(),
-            'topProducts' => $dashboard->topProducts(),
-            'topCashiers' => $dashboard->topCashiers(),
+            'metrics' => $dashboard->overviewMetrics(),
+            'lowStockProducts' => $dashboard->lowStockProducts(),
             'recentOrders' => $retail->dashboardSales()->latest()->limit(8)->get(),
         ]);
     }

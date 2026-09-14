@@ -5,23 +5,29 @@
 @include('retail.partials.nav')
 
 <style>
-    .pos-shell{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,.8fr);gap:16px}
-    .pos-band{background:#fff;border:1px solid #d9dee8;border-radius:8px;padding:16px}
+    .pos-shell{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,.7fr);gap:14px}
+    .pos-band{background:#fff;border:1px solid #d9dee8;border-radius:8px;padding:14px}
     .pos-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
     .pos-kpi{border:1px solid #e1e5ee;border-radius:8px;padding:12px;background:#fbfcfd}
     .pos-kpi span{display:block;color:#667085;font-size:.72rem;font-weight:800;text-transform:uppercase}
     .pos-kpi strong{display:block;font-size:1.2rem;color:#0f766e}
     .pos-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-    .pos-sell-grid{display:grid;grid-template-columns:minmax(180px,1.2fr) minmax(150px,.8fr) minmax(150px,.8fr) minmax(150px,.8fr);gap:10px}
+    .pos-scan-grid{display:grid;grid-template-columns:minmax(220px,1.35fr) minmax(160px,.85fr) auto auto;gap:10px;align-items:center}
+    .pos-sell-grid{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(150px,.9fr) minmax(150px,.9fr);gap:10px}
     .pos-line-item{border:1px solid #edf0f5;border-radius:8px;padding:10px;background:#fbfcfd}
     .pos-line{display:grid;grid-template-columns:minmax(220px,2fr) 88px 120px 120px 42px;gap:8px;align-items:center}
     .pos-line-total{min-height:38px;display:flex;align-items:center;justify-content:flex-end;border:1px solid #e1e5ee;border-radius:6px;padding:0 .75rem;background:#fff;color:#0f766e;font-weight:800}
     .pos-line-more{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
     .pos-icon-btn{width:42px;height:38px;display:grid;place-items:center;padding:0}
-    .pos-pay{display:grid;grid-template-columns:minmax(150px,1fr) minmax(120px,1fr) minmax(120px,1fr) 42px;gap:8px;align-items:center}
-    .pos-pay-more{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+    .pos-pay{display:grid;grid-template-columns:minmax(150px,1fr) minmax(120px,1fr) 42px;gap:8px;align-items:center}
+    .pos-pay-more{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
     .pos-actions{display:flex;flex-wrap:wrap;gap:8px}
     .pos-list-row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #edf0f5;padding:9px 0}
+    .pos-list-row:last-child{border-bottom:0}
+    .pos-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .pos-summary-tile{border:1px solid #edf0f5;border-radius:8px;background:#fbfcfd;padding:10px}
+    .pos-summary-tile span{display:block;color:#667085;font-size:.68rem;font-weight:800;text-transform:uppercase}
+    .pos-summary-tile strong{display:block;color:#0f766e;font-size:1.05rem}
     .pos-search-box{position:relative}
     .pos-suggestions{position:absolute;z-index:20;top:calc(100% + 4px);left:0;right:0;display:none;max-height:280px;overflow:auto;border:1px solid #d9dee8;border-radius:8px;background:#fff;box-shadow:0 12px 28px rgba(15,23,42,.12)}
     .pos-suggestion{width:100%;border:0;border-bottom:1px solid #edf0f5;background:#fff;padding:10px 12px;text-align:left;display:flex;justify-content:space-between;gap:12px;align-items:center}
@@ -29,52 +35,34 @@
     .pos-suggestion strong{display:block;color:#111827}
     .pos-suggestion span{display:block;color:#667085;font-size:.78rem}
     .pos-suggestion .price{font-weight:800;color:#0f766e;white-space:nowrap}
-    @media(max-width:1100px){.pos-shell{grid-template-columns:1fr}.pos-kpis,.pos-grid,.pos-sell-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pos-line,.pos-pay,.pos-line-more,.pos-pay-more{grid-template-columns:1fr 1fr}}
-    @media(max-width:640px){.pos-kpis,.pos-grid,.pos-sell-grid,.pos-line,.pos-pay,.pos-line-more,.pos-pay-more{grid-template-columns:1fr}.pos-line-total{justify-content:flex-start}.pos-icon-btn{width:100%}}
+    @media(max-width:1100px){.pos-shell{grid-template-columns:1fr}.pos-kpis,.pos-grid,.pos-scan-grid,.pos-sell-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pos-line,.pos-pay,.pos-line-more,.pos-pay-more{grid-template-columns:1fr 1fr}}
+    @media(max-width:640px){.pos-kpis,.pos-grid,.pos-scan-grid,.pos-sell-grid,.pos-line,.pos-pay,.pos-line-more,.pos-pay-more,.pos-summary{grid-template-columns:1fr}.pos-line-total{justify-content:flex-start}.pos-icon-btn{width:100%}}
 </style>
 
 <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
     <div>
         <h1 class="h3 mb-1">Point of Sale</h1>
-        <div class="text-muted">Scan items, take payment, and finish the sale quickly.</div>
+        <div class="text-muted">A simple counter screen for small retail sales.</div>
     </div>
     <div class="pos-actions">
-        <a class="btn btn-outline-dark" href="{{ route('retail.products.index') }}"><i class="bi bi-plus-square me-1"></i>Add Product</a>
+        <a class="btn btn-success" href="{{ route('retail.products.index') }}#retail-add-product"><i class="bi bi-plus-square me-1"></i>Add Product</a>
+        <a class="btn btn-outline-dark" href="{{ route('retail.products.index') }}"><i class="bi bi-box-seam me-1"></i>Products</a>
         <a class="btn btn-outline-dark" href="{{ route('retail.returns.index') }}"><i class="bi bi-arrow-counterclockwise me-1"></i>Returns</a>
-        <a class="btn btn-outline-dark" href="{{ route('retail.gift-cards.index') }}"><i class="bi bi-credit-card-2-front me-1"></i>Gift Cards</a>
-        <a class="btn btn-success" href="{{ route('pos-orders.index') }}"><i class="bi bi-receipt me-1"></i>Shared POS</a>
     </div>
-</div>
-
-<div class="pos-kpis mb-3">
-    @foreach(['Sales Today', 'Transactions Today', 'Average Basket Value', 'Net Revenue'] as $label)
-        <div class="pos-kpi">
-            <span>{{ $label }}</span>
-            <strong>{{ number_format((float) ($metrics[$label] ?? 0), str_contains($label, 'Transactions') ? 0 : 2) }}</strong>
-        </div>
-    @endforeach
 </div>
 
 <div class="pos-shell">
     <div class="d-grid gap-3">
         <div class="pos-band">
-            <form method="GET" action="{{ route('retail.pos.index') }}" class="pos-grid">
-                <select class="form-select" name="identifier_type" id="posIdentifierType">
-                    <option value="barcode">Barcode</option>
-                    <option value="sku">SKU</option>
-                    <option value="qr_product_code">QR Product Code</option>
-                    <option value="gtin">GTIN</option>
-                    <option value="upc">UPC</option>
-                    <option value="ean">EAN</option>
-                    <option value="internal_product_number">Internal Product Number</option>
-                </select>
+            <form method="GET" action="{{ route('retail.pos.index') }}" class="pos-scan-grid">
                 <div class="pos-search-box">
                     <input class="form-control" id="posProductSearch" placeholder="Search product name, SKU, barcode" autocomplete="off" aria-label="Product Search" autofocus>
                     <div class="pos-suggestions" id="posProductSuggestions" role="listbox" aria-label="Product suggestions"></div>
                 </div>
-                <input class="form-control" name="identifier" id="posIdentifier" placeholder="Scan or enter product code" value="{{ request('identifier') }}">
+                <input type="hidden" name="identifier_type" id="posIdentifierType" value="{{ request('identifier_type', 'barcode') }}">
+                <input class="form-control" name="identifier" id="posIdentifier" placeholder="Scan barcode or SKU" value="{{ request('identifier') }}">
                 <button class="btn btn-success"><i class="bi bi-upc-scan me-1"></i>Scan Product</button>
-                <a class="btn btn-outline-dark" href="{{ route('retail.scanning.index') }}"><i class="bi bi-camera me-1"></i>Camera Scan</a>
+                <a class="btn btn-outline-dark" href="{{ route('retail.scanning.index') }}" title="Camera scan" aria-label="Camera scan"><i class="bi bi-camera"></i></a>
             </form>
             @if(request()->filled('identifier'))
                 <div class="mt-3 p-3 border rounded-2">
@@ -104,7 +92,6 @@
                         @endforeach
                     </select>
                     <input class="form-control" name="customer_name" placeholder="Customer name">
-                    <input class="form-control" name="customer_phone" placeholder="Customer phone">
                     <select class="form-select" name="branch_id">
                         <option value="">Store / Branch</option>
                         @foreach($branches as $branch)
@@ -112,24 +99,12 @@
                         @endforeach
                     </select>
                 </div>
+                <input type="hidden" name="sale_type" value="Sale">
+                <input type="hidden" name="channel" value="Store">
+                <input type="hidden" name="customer_type" value="Retail Customer">
                 <div class="collapse mt-3" id="saleOptions">
                     <div class="pos-grid">
-                        <select class="form-select" name="customer_type">
-                            <option>Retail Customer</option>
-                            <option>VIP Customer</option>
-                            <option>Wholesale Customer</option>
-                            <option>Corporate Customer</option>
-                        </select>
-                        <select class="form-select" name="sale_type" id="retail-pos-sale-type">
-                            @foreach($saleTypes as $saleType)
-                                <option>{{ $saleType }}</option>
-                            @endforeach
-                        </select>
-                        <select class="form-select" name="channel">
-                            @foreach($channels as $channel)
-                                <option>{{ $channel }}</option>
-                            @endforeach
-                        </select>
+                        <input class="form-control" name="customer_phone" placeholder="Customer phone">
                         <select class="form-select" name="retail_cash_drawer_id">
                             <option value="">Cash Drawer</option>
                             @foreach($drawers as $drawer)
@@ -148,7 +123,7 @@
                     </div>
                 </div>
                 <button class="btn btn-sm btn-outline-dark mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#saleOptions" aria-expanded="false" aria-controls="saleOptions">
-                    <i class="bi bi-sliders me-1"></i>Sale options
+                    <i class="bi bi-sliders me-1"></i>More sale options
                 </button>
             </div>
 
@@ -157,7 +132,7 @@
                     <h2 class="h5 mb-0">Cart</h2>
                     <span class="status-pill">Fast sale</span>
                 </div>
-                @for($i = 0; $i < 4; $i++)
+                @for($i = 0; $i < 3; $i++)
                     @php
                         $selectedProduct = $i === 0 ? $scanProduct : null;
                         $selectedTaxRate = is_numeric($selectedProduct?->retailProfile?->tax_class) ? $selectedProduct?->retailProfile?->tax_class : '';
@@ -201,11 +176,11 @@
                             @endforeach
                         </select>
                         <input class="form-control" name="payments[{{ $i }}][amount]" type="number" step="0.01" min="0" placeholder="Amount">
-                        <input class="form-control" name="payments[{{ $i }}][reference]" placeholder="Reference">
                         <button class="btn btn-outline-dark pos-icon-btn" type="button" data-bs-toggle="collapse" data-bs-target="#paymentMore{{ $i }}" aria-expanded="false" aria-controls="paymentMore{{ $i }}" title="Payment options" aria-label="Payment options">
                             <i class="bi bi-three-dots"></i>
                         </button>
                         <div class="collapse pos-pay-more" id="paymentMore{{ $i }}">
+                            <input class="form-control" name="payments[{{ $i }}][reference]" placeholder="Reference">
                             <select class="form-select" name="payments[{{ $i }}][payment_method_id]">
                                 <option value="">Shared payment method</option>
                                 @foreach($paymentMethods as $method)
@@ -223,7 +198,7 @@
                 @endfor
                 <div class="pos-actions mt-3">
                     <button class="btn btn-success"><i class="bi bi-cart-check me-1"></i>Complete Sale</button>
-                    <button class="btn btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#extraPayment1,#extraPayment2" aria-expanded="false" aria-controls="extraPayment1 extraPayment2"><i class="bi bi-credit-card-2-back me-1"></i>Split payment</button>
+                    <button class="btn btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#extraPayment1,#extraPayment2" aria-expanded="false" aria-controls="extraPayment1 extraPayment2"><i class="bi bi-credit-card-2-back me-1"></i>Split Payments</button>
                     <button class="btn btn-outline-dark" name="sale_type" value="Layaway"><i class="bi bi-clock-history me-1"></i>Save Layaway</button>
                     <a class="btn btn-outline-dark" href="{{ route('retail.returns.index') }}"><i class="bi bi-arrow-left-right me-1"></i>Return / Exchange</a>
                 </div>
@@ -232,6 +207,18 @@
     </div>
 
     <aside class="d-grid gap-3">
+        <div class="pos-band">
+            <h2 class="h5 mb-2">Today's Summary</h2>
+            <div class="pos-summary">
+                @foreach($metrics as $label => $value)
+                    <div class="pos-summary-tile">
+                        <span>{{ $label }}</span>
+                        <strong>{{ number_format((float) $value, str_contains($label, 'Transactions') || str_contains($label, 'Stock Alerts') ? 0 : 2) }}</strong>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
         <div class="pos-band">
             <h2 class="h5 mb-2">Cash Drawer</h2>
             <form method="POST" action="{{ route('retail.pos.drawers.open') }}" class="d-grid gap-2 mb-3">
@@ -287,26 +274,14 @@
         </div>
 
         <div class="pos-band">
-            <h2 class="h5 mb-2">Top Products</h2>
-            @forelse($topProducts as $product)
+            <h2 class="h5 mb-2">Low Stock</h2>
+            @forelse($lowStockProducts as $product)
                 <div class="pos-list-row">
-                    <span>{{ $product->title }}</span>
-                    <strong>{{ number_format((float) $product->total, 2) }}</strong>
+                    <span>{{ $product->name }}</span>
+                    <strong>{{ $product->formattedStock() }}</strong>
                 </div>
             @empty
-                <div class="text-muted">Sales mix appears after checkout.</div>
-            @endforelse
-        </div>
-
-        <div class="pos-band">
-            <h2 class="h5 mb-2">Top Cashiers</h2>
-            @forelse($topCashiers as $cashier)
-                <div class="pos-list-row">
-                    <span>{{ $cashier->name }}</span>
-                    <strong>{{ number_format((float) $cashier->revenue, 2) }}</strong>
-                </div>
-            @empty
-                <div class="text-muted">Cashier KPIs appear once sales are posted.</div>
+                <div class="text-muted">Stock alerts will appear here.</div>
             @endforelse
         </div>
     </aside>
