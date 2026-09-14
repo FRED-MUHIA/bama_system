@@ -48,7 +48,7 @@ class ProductController extends Controller
 
         $this->syncRetailProfile($product, $data);
 
-        return back()->with('status', 'Product saved.')->with('open_product_form', true);
+        return back()->with('status', 'Product saved.');
     }
 
     public function update(Request $request, Product $product)

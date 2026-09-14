@@ -9,15 +9,10 @@
         <h1 class="h3 mb-1">{{ $title }}</h1>
         <div class="text-muted">Retail extension data is scoped to the active tenant and business.</div>
     </div>
-    @if($section === 'products')
-        <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#retail-add-product">
-            <i class="bi bi-plus-lg me-1"></i>Add Product
-        </button>
-    @endif
-</div>
+    </div>
 
 @if($section === 'products')
-    <div class="collapse mb-3 {{ session('open_product_form') ? 'show' : '' }}" id="retail-add-product">
+    <div class="mb-3" id="retail-add-product">
         <div class="card p-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h2 class="h5 mb-0">Add Product</h2>
@@ -25,8 +20,8 @@
                     <a class="btn btn-sm btn-outline-dark" href="{{ route('products.export', ['format' => 'csv']) }}"><i class="bi bi-download me-1"></i>CSV</a>
                     <a class="btn btn-sm btn-outline-dark" href="{{ route('products.export', ['format' => 'xls']) }}"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Excel</a>
                     <a class="btn btn-sm btn-outline-dark" href="{{ route('products.index') }}">Open Full Catalog</a>
-                </div>
-            </div>
+</div>
+</div>
             <form method="POST" action="{{ route('products.store') }}" class="row g-2">
                 @csrf
                 @include('products.partials.fields', ['product' => $product])
