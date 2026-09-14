@@ -510,28 +510,32 @@
                         <td>{{ optional($record->updated_at)->format('d M Y') }}</td>
                         <td class="text-end">
                             <div class="d-flex gap-1 justify-content-end">
-                                <button class="btn btn-sm btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#retail-product-stock-{{ $record->id }}"><i class="bi bi-boxes"></i></button>
-                                <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#retail-product-edit-{{ $record->id }}"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#retail-product-stock-{{ $record->id }}" aria-expanded="false" aria-controls="retail-product-stock-{{ $record->id }}"><i class="bi bi-boxes"></i></button>
+                                <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#retail-product-edit-{{ $record->id }}" aria-expanded="false" aria-controls="retail-product-edit-{{ $record->id }}"><i class="bi bi-pencil"></i></button>
                                 <form method="post" action="{{ route('products.destroy', $record) }}" onsubmit="return confirm('Archive this product?')">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger" aria-label="Archive {{ $record->name }}"><i class="bi bi-archive"></i></button></form>
                             </div>
                         </td>
                     </tr>
-                    <tr class="collapse" id="retail-product-stock-{{ $record->id }}">
-                        <td colspan="6">
-                            <form method="post" action="{{ route('products.stock.update', $record) }}" class="row g-2 align-items-end">@csrf
-                                <div class="col-md-3"><label class="form-label">Movement</label><select class="form-select" name="type"><option>Add</option><option>Remove</option><option>Set</option></select></div>
-                                <div class="col-md-3"><label class="form-label">Quantity ({{ $record->stock_unit ?: 'pcs' }})</label><input class="form-control" name="quantity" type="number" min="0" step="0.001" required></div>
-                                <div class="col-md-4"><label class="form-label">Notes</label><input class="form-control" name="notes" placeholder="Reason"></div>
-                                <div class="col-md-2"><button class="btn btn-success btn-sm w-100">Update Stock</button></div>
-                            </form>
+                    <tr>
+                        <td colspan="6" class="p-0 border-0">
+                            <div class="collapse border-top p-3" id="retail-product-stock-{{ $record->id }}">
+                                <form method="post" action="{{ route('products.stock.update', $record) }}" class="row g-2 align-items-end">@csrf
+                                    <div class="col-md-3"><label class="form-label">Movement</label><select class="form-select" name="type"><option>Add</option><option>Remove</option><option>Set</option></select></div>
+                                    <div class="col-md-3"><label class="form-label">Quantity ({{ $record->stock_unit ?: 'pcs' }})</label><input class="form-control" name="quantity" type="number" min="0" step="0.001" required></div>
+                                    <div class="col-md-4"><label class="form-label">Notes</label><input class="form-control" name="notes" placeholder="Reason"></div>
+                                    <div class="col-md-2"><button class="btn btn-success btn-sm w-100">Update Stock</button></div>
+                                </form>
+                            </div>
                         </td>
                     </tr>
-                    <tr class="collapse" id="retail-product-edit-{{ $record->id }}">
-                        <td colspan="6">
-                            <form method="post" action="{{ route('products.update', $record) }}" class="row g-2">@csrf @method('PUT')
-                                @include('products.partials.fields', ['product' => $record])
-                                <div class="col-12"><button class="btn btn-warning btn-sm">Update Product</button></div>
-                            </form>
+                    <tr>
+                        <td colspan="6" class="p-0 border-0">
+                            <div class="collapse border-top p-3" id="retail-product-edit-{{ $record->id }}">
+                                <form method="post" action="{{ route('products.update', $record) }}" class="row g-2">@csrf @method('PUT')
+                                    @include('products.partials.fields', ['product' => $record])
+                                    <div class="col-12"><button class="btn btn-warning btn-sm">Update Product</button></div>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -571,23 +575,25 @@
                             Transit {{ $stockProduct?->formattedStock((float) $record->in_transit_stock) ?? number_format((float) $record->in_transit_stock, 3) }}
                             <div>Damaged {{ $stockProduct?->formattedStock((float) $record->damaged_stock) ?? number_format((float) $record->damaged_stock, 3) }}</div>
                         </td>
-                        <td class="text-end"><button class="btn btn-sm btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#retail-inventory-edit-{{ $record->id }}"><i class="bi bi-boxes me-1"></i>Stock</button></td>
+                        <td class="text-end"><button class="btn btn-sm btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#retail-inventory-edit-{{ $record->id }}" aria-expanded="false" aria-controls="retail-inventory-edit-{{ $record->id }}"><i class="bi bi-boxes me-1"></i>Stock</button></td>
                     </tr>
-                    <tr class="collapse" id="retail-inventory-edit-{{ $record->id }}">
-                        <td colspan="6">
-                            <form method="POST" action="{{ route('retail.inventory.adjust') }}" class="row g-2 align-items-end">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $record->product_id }}">
-                                <input type="hidden" name="retail_product_variant_id" value="{{ $record->retail_product_variant_id }}">
-                                <input type="hidden" name="branch_id" value="{{ $record->branch_id }}">
-                                <input type="hidden" name="retail_warehouse_id" value="{{ $record->retail_warehouse_id }}">
-                                <input type="hidden" name="retail_warehouse_bin_id" value="{{ $record->retail_warehouse_bin_id }}">
-                                <div class="col-md-2"><label class="form-label">Movement</label><select class="form-select" name="movement"><option>Set</option><option>Add</option><option>Remove</option></select></div>
-                                <div class="col-md-2"><label class="form-label">Bucket</label><select class="form-select" name="bucket"><option value="available_stock">Available</option><option value="reserved_stock">Reserved</option><option value="in_transit_stock">In Transit</option><option value="damaged_stock">Damaged</option></select></div>
-                                <div class="col-md-2"><label class="form-label">Quantity</label><input class="form-control" name="quantity" type="number" min="0" step="0.001" value="{{ (float) $record->available_stock }}" required></div>
-                                <div class="col-md-3"><label class="form-label">Reference</label><input class="form-control" name="reference" value="Balance #{{ $record->id }}"></div>
-                                <div class="col-md-3"><button class="btn btn-success btn-sm w-100">Update Stock</button></div>
-                            </form>
+                    <tr>
+                        <td colspan="6" class="p-0 border-0">
+                            <div class="collapse border-top p-3" id="retail-inventory-edit-{{ $record->id }}">
+                                <form method="POST" action="{{ route('retail.inventory.adjust') }}" class="row g-2 align-items-end">
+                                    @csrf
+                                    <input type="hidden" name="product_id" value="{{ $record->product_id }}">
+                                    <input type="hidden" name="retail_product_variant_id" value="{{ $record->retail_product_variant_id }}">
+                                    <input type="hidden" name="branch_id" value="{{ $record->branch_id }}">
+                                    <input type="hidden" name="retail_warehouse_id" value="{{ $record->retail_warehouse_id }}">
+                                    <input type="hidden" name="retail_warehouse_bin_id" value="{{ $record->retail_warehouse_bin_id }}">
+                                    <div class="col-md-2"><label class="form-label">Movement</label><select class="form-select" name="movement"><option>Set</option><option>Add</option><option>Remove</option></select></div>
+                                    <div class="col-md-2"><label class="form-label">Bucket</label><select class="form-select" name="bucket"><option value="available_stock">Available</option><option value="reserved_stock">Reserved</option><option value="in_transit_stock">In Transit</option><option value="damaged_stock">Damaged</option></select></div>
+                                    <div class="col-md-2"><label class="form-label">Quantity</label><input class="form-control" name="quantity" type="number" min="0" step="0.001" value="{{ (float) $record->available_stock }}" required></div>
+                                    <div class="col-md-3"><label class="form-label">Reference</label><input class="form-control" name="reference" value="Balance #{{ $record->id }}"></div>
+                                    <div class="col-md-3"><button class="btn btn-success btn-sm w-100">Update Stock</button></div>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty

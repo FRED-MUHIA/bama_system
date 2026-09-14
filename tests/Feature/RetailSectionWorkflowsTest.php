@@ -142,6 +142,7 @@ class RetailSectionWorkflowsTest extends TestCase
             ->assertStatus(200)
             ->assertSee('retail-product-edit-'.$product->id, false)
             ->assertSee('retail-product-stock-'.$product->id, false)
+            ->assertSee('<div class="collapse border-top p-3" id="retail-product-edit-'.$product->id.'">', false)
             ->assertSee(route('products.update', $product), false)
             ->assertSee(route('products.stock.update', $product), false);
     }
