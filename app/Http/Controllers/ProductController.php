@@ -48,7 +48,7 @@ class ProductController extends Controller
 
         $this->syncRetailProfile($product, $data);
 
-        return back()->with('status', 'Product saved.');
+        return back()->with('status', 'Product saved.')->with('open_product_form', true);
     }
 
     public function update(Request $request, Product $product)
@@ -143,11 +143,11 @@ class ProductController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        ProductCategory::create($data + [
-            'code' => $data['code'] ?? Str::upper(Str::slug($data['name'], '-')),
-            'slug' => $data['slug'] ?? Str::slug($data['name']),
-            'is_active' => $request->boolean('is_active', true),
-        ]);
+        $data['code'] = $data['code'] ?: Str::upper(Str::slug($data['name'], '-'));
+        $data['slug'] = $data['slug'] ?: Str::slug($data['name']);
+        $data['is_active'] = $request->boolean('is_active', true);
+
+        ProductCategory::create(collect($data)->reject(fn ($value) => $value === null)->all());
 
         return back()->with('status', 'Category saved.');
     }
@@ -162,10 +162,10 @@ class ProductController extends Controller
             'status' => ['required', Rule::in(['Active', 'Inactive'])],
         ]);
 
-        ProductBrand::create($data + [
-            'code' => $data['code'] ?? Str::upper(Str::slug($data['name'], '-')),
-            'slug' => Str::slug($data['name']),
-        ]);
+        $data['code'] = $data['code'] ?: Str::upper(Str::slug($data['name'], '-'));
+        $data['slug'] = Str::slug($data['name']);
+
+        ProductBrand::create(collect($data)->reject(fn ($value) => $value === null)->all());
 
         return back()->with('status', 'Brand saved.');
     }
@@ -184,13 +184,13 @@ class ProductController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        ProductAttribute::create($data + [
-            'code' => $data['code'] ?? Str::slug($data['name'], '_'),
-            'is_variant_attribute' => $request->boolean('is_variant_attribute'),
-            'is_filterable' => $request->boolean('is_filterable'),
-            'is_searchable' => $request->boolean('is_searchable'),
-            'is_active' => $request->boolean('is_active', true),
-        ]);
+        $data['code'] = $data['code'] ?: Str::slug($data['name'], '_');
+        $data['is_variant_attribute'] = $request->boolean('is_variant_attribute');
+        $data['is_filterable'] = $request->boolean('is_filterable');
+        $data['is_searchable'] = $request->boolean('is_searchable');
+        $data['is_active'] = $request->boolean('is_active', true);
+
+        ProductAttribute::create(collect($data)->reject(fn ($value) => $value === null)->all());
 
         return back()->with('status', 'Attribute saved.');
     }
@@ -207,10 +207,10 @@ class ProductController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        $attribute->values()->create($data + [
-            'code' => $data['code'] ?? Str::upper(Str::slug($data['value'], '-')),
-            'is_active' => $request->boolean('is_active', true),
-        ]);
+        $data['code'] = $data['code'] ?: Str::upper(Str::slug($data['value'], '-'));
+        $data['is_active'] = $request->boolean('is_active', true);
+
+        $attribute->values()->create(collect($data)->reject(fn ($value) => $value === null)->all());
 
         return back()->with('status', 'Attribute value saved.');
     }

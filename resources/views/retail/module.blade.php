@@ -17,7 +17,7 @@
 </div>
 
 @if($section === 'products')
-    <div class="collapse mb-3" id="retail-add-product">
+    <div class="collapse mb-3 {{ session('open_product_form') ? 'show' : '' }}" id="retail-add-product">
         <div class="card p-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h2 class="h5 mb-0">Add Product</h2>
