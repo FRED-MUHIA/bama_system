@@ -14,9 +14,7 @@ use Modules\Retail\Models\RetailProductVariant;
 
 class RetailInventoryService
 {
-    public function __construct(private StockService $stock)
-    {
-    }
+    public function __construct(private StockService $stock) {}
 
     public function receive(Product $product, float $quantity, array $context = [], ?Model $source = null): RetailInventoryBalance
     {
@@ -92,13 +90,19 @@ class RetailInventoryService
     {
         return DB::transaction(function () use ($product, $quantity, $type, $bucket, $context, $source) {
             $balance = $this->balance($product, $context, true);
+            $newBucketBalance = max((float) $balance->{$bucket} + $quantity, 0);
+            $unitCost = (float) ($context['unit_cost'] ?? $balance->unit_cost ?? $product->cost_price ?? 0);
+            $availableStock = $bucket === 'available_stock'
+                ? $newBucketBalance
+                : (float) $balance->available_stock;
+
             $balance->update([
-                $bucket => max((float) $balance->{$bucket} + $quantity, 0),
-                'unit_cost' => $context['unit_cost'] ?? $balance->unit_cost ?? $product->cost_price ?? 0,
-                'stock_value' => ((float) $balance->available_stock + max($quantity, 0)) * (float) ($context['unit_cost'] ?? $balance->unit_cost ?? $product->cost_price ?? 0),
+                $bucket => $newBucketBalance,
+                'unit_cost' => $unitCost,
+                'stock_value' => $availableStock * $unitCost,
             ]);
 
-            $this->movement($product, $quantity, $type, $balance->{$bucket}, $context, $source);
+            $this->movement($product, $quantity, $type, $newBucketBalance, $context, $source);
             app(IamService::class)->audit('retail.inventory.moved', $balance);
 
             return $balance->refresh();

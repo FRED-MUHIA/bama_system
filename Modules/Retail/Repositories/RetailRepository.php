@@ -60,7 +60,7 @@ class RetailRepository
 
     public function inventoryBalances()
     {
-        return RetailInventoryBalance::query()->with('product', 'branch', 'warehouse', 'bin');
+        return RetailInventoryBalance::query()->with('product', 'variant.product', 'branch', 'warehouse', 'bin');
     }
 
     public function warehouses()

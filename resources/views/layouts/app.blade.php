@@ -1209,6 +1209,7 @@
         $isFitnessContext = request()->routeIs('fitness.*') || in_array($activeIndustrySlug, ['fitness', 'fitness-gym', 'fitness-and-gym'], true);
         $isHospitalityContext = request()->routeIs('hospitality.*') || $activeIndustrySlug === 'hospitality';
         $isAgricultureContext = request()->routeIs('agriculture.*') || $activeIndustrySlug === 'agriculture';
+        $isRetailContext = request()->routeIs('retail.*') || $activeIndustrySlug === 'retail';
 
         if ($isFitnessContext) {
             $mobileContextLabel = 'Fitness & Gym';
@@ -1264,14 +1265,19 @@
                 ->all();
         }
 
-        $mobileItemAvailable = fn ($item) => \Illuminate\Support\Facades\Route::has($item['route']) && ($item['condition'] ?? true);
+        $mobileItemAvailable = fn ($item) => (! empty($item['url']) || \Illuminate\Support\Facades\Route::has($item['route'])) && ($item['condition'] ?? true);
         $mobileRouteMatches = fn ($item) => ! empty($item['section'])
             ? (request()->routeIs($item['route']) && request()->query('section', 'dashboard') === $item['section'])
             : (request()->routeIs($item['match']) || request()->routeIs($item['route']));
         $mobileRouteParams = fn ($item) => ! empty($item['section'])
             ? array_merge($item['params'] ?? [], ['section' => $item['section']])
             : ($item['params'] ?? []);
-        $mobileQuickActions = collect([
+        $mobileItemHref = function ($item) use ($mobileRouteParams) {
+            $href = ! empty($item['url']) ? $item['url'] : route($item['route'], $mobileRouteParams($item));
+
+            return empty($item['fragment']) ? $href : $href.'#'.ltrim($item['fragment'], '#');
+        };
+        $defaultQuickActions = [
             ['label' => 'Add Customer', 'route' => 'clients.create', 'icon' => 'bi-person-plus'],
             ['label' => 'Create Invoice', 'route' => 'invoices.create', 'icon' => 'bi-receipt'],
             ['label' => 'Create Quotation', 'route' => 'quotations.create', 'icon' => 'bi-file-earmark-plus'],
@@ -1281,7 +1287,18 @@
             ['label' => 'Create Job Card', 'route' => 'automotive.job-cards', 'icon' => 'bi-clipboard-plus', 'condition' => $currentUser->hasPermission('job_cards.create')],
             ['label' => 'Site Report', 'route' => 'construction.operations', 'icon' => 'bi-building-add', 'condition' => $currentUser->hasPermission('site_reports.create')],
             ['label' => 'Production Job', 'route' => 'printing.jobs', 'icon' => 'bi-printer', 'condition' => $currentUser->hasPermission('production_jobs.create')],
-        ])->filter($mobileItemAvailable)->values();
+        ];
+        $retailQuickActions = [
+            ['label' => 'Add Customer', 'route' => 'retail.orders.index', 'fragment' => 'retail-add-customer', 'icon' => 'bi-person-plus'],
+            ['label' => 'Place Order', 'route' => 'retail.orders.index', 'fragment' => 'retail-place-order', 'icon' => 'bi-bag-plus'],
+            ['label' => 'Add Products', 'route' => 'retail.products.index', 'fragment' => 'retail-add-product', 'icon' => 'bi-box-seam'],
+            ['label' => 'Stocks Records', 'route' => 'retail.inventory.index', 'fragment' => 'retail-stock-records', 'icon' => 'bi-stack'],
+            ['label' => 'Receipts', 'route' => 'receipts.index', 'icon' => 'bi-cash-coin'],
+            ['label' => 'Point of Sale', 'route' => 'retail.pos.index', 'icon' => 'bi-upc-scan'],
+            ['label' => 'Returns', 'route' => 'retail.returns.index', 'icon' => 'bi-arrow-counterclockwise'],
+            ['label' => 'Gift Cards', 'route' => 'retail.gift-cards.index', 'icon' => 'bi-credit-card-2-front'],
+        ];
+        $mobileQuickActions = collect($isRetailContext ? $retailQuickActions : $defaultQuickActions)->filter($mobileItemAvailable)->values();
         $mobilePrimaryItems = collect($mobileContextItems)->filter($mobileItemAvailable)->take($mobileQuickActions->isNotEmpty() ? 3 : 4)->values();
         $mobileOverflowItems = collect($mobileOverflowItems)
             ->merge($utilityOverflowItems)
@@ -1292,7 +1309,7 @@
     @endphp
     <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
         @foreach($mobilePrimaryItems as $item)
-            <a href="{{ route($item['route'], $mobileRouteParams($item)) }}" class="{{ $mobileRouteMatches($item) ? 'active' : '' }}" @if(!empty($item['aria'])) aria-label="{{ $item['aria'] }}" @endif><i class="bi {{ $item['icon'] }}"></i><span>{{ $item['label'] }}</span></a>
+            <a href="{{ $mobileItemHref($item) }}" class="{{ $mobileRouteMatches($item) ? 'active' : '' }}" @if(!empty($item['aria'])) aria-label="{{ $item['aria'] }}" @endif><i class="bi {{ $item['icon'] }}"></i><span>{{ $item['label'] }}</span></a>
         @endforeach
         @if($mobileQuickActions->isNotEmpty())
             <button type="button" id="mobile-quick-add-open" aria-controls="mobile-quick-add-menu" aria-expanded="false"><i class="bi bi-plus-circle-fill"></i><span>Add</span></button>
@@ -1305,7 +1322,7 @@
             <div class="sheet-handle"></div>
             <div class="sheet-title">Quick Add</div>
             @foreach($mobileQuickActions as $item)
-                <a href="{{ route($item['route'], $mobileRouteParams($item)) }}"><i class="bi {{ $item['icon'] }}"></i> {{ $item['label'] }}</a>
+                <a href="{{ $mobileItemHref($item) }}"><i class="bi {{ $item['icon'] }}"></i> {{ $item['label'] }}</a>
             @endforeach
         </div>
     @endif
@@ -1314,7 +1331,7 @@
         <div class="sheet-handle"></div>
         <div class="sheet-title">{{ $mobileContextLabel }}</div>
         @foreach($mobileOverflowItems as $item)
-            <a href="{{ route($item['route'], $mobileRouteParams($item)) }}" class="{{ $mobileRouteMatches($item) ? 'active' : '' }}"><i class="bi {{ $item['icon'] }}"></i> {{ $item['label'] }}</a>
+            <a href="{{ $mobileItemHref($item) }}" class="{{ $mobileRouteMatches($item) ? 'active' : '' }}"><i class="bi {{ $item['icon'] }}"></i> {{ $item['label'] }}</a>
         @endforeach
         <form method="post" action="{{ route('logout') }}">
             @csrf

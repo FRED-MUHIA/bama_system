@@ -64,4 +64,19 @@ class MobileResponsiveExperienceTest extends TestCase
         $this->assertStringNotContainsString('font-size:clamp(4.5rem,9vw,8rem)', $appLogin);
         $this->assertStringNotContainsString('min-height:62px', $appLogin);
     }
+
+    public function test_retail_mobile_quick_add_replaces_generic_actions(): void
+    {
+        $appLayout = file_get_contents(resource_path('views/layouts/app.blade.php'));
+
+        foreach (['Add Customer', 'Place Order', 'Add Products', 'Stocks Records', 'Receipts'] as $label) {
+            $this->assertStringContainsString("'label' => '{$label}'", $appLayout);
+        }
+
+        $this->assertStringContainsString("'fragment' => 'retail-add-customer'", $appLayout);
+        $this->assertStringContainsString("'fragment' => 'retail-place-order'", $appLayout);
+        $this->assertStringContainsString("'fragment' => 'retail-add-product'", $appLayout);
+        $this->assertStringContainsString("'fragment' => 'retail-stock-records'", $appLayout);
+        $this->assertStringContainsString('$isRetailContext ? $retailQuickActions : $defaultQuickActions', $appLayout);
+    }
 }

@@ -15,12 +15,13 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Modules\Retail\Models\RetailCashDrawer;
-use Modules\Retail\Models\RetailCycleCount;
 use Modules\Retail\Models\RetailCustomerOffer;
+use Modules\Retail\Models\RetailCycleCount;
 use Modules\Retail\Models\RetailEcommerceIntegration;
 use Modules\Retail\Models\RetailGiftCard;
 use Modules\Retail\Models\RetailInventoryBalance;
 use Modules\Retail\Models\RetailLoyaltyAccount;
+use Modules\Retail\Models\RetailOrder;
 use Modules\Retail\Models\RetailOrderFulfillment;
 use Modules\Retail\Models\RetailPromotion;
 use Modules\Retail\Models\RetailReplenishmentPlan;
@@ -39,6 +40,7 @@ class RetailSectionWorkflowsTest extends TestCase
     use RefreshDatabase;
 
     private Business $business;
+
     private User $user;
 
     protected function setUp(): void
@@ -134,6 +136,71 @@ class RetailSectionWorkflowsTest extends TestCase
 
         $this->assertDatabaseHas('products', ['sku' => 'CAT-ADD-1']);
         $this->assertDatabaseHas('stock_movements', ['type' => 'Add', 'reference' => 'Manual stock update']);
+
+        $product = Product::where('sku', 'CAT-ADD-1')->firstOrFail();
+        $this->get(route('retail.products.index'))
+            ->assertStatus(200)
+            ->assertSee('retail-product-edit-'.$product->id, false)
+            ->assertSee('retail-product-stock-'.$product->id, false)
+            ->assertSee(route('products.update', $product), false)
+            ->assertSee(route('products.stock.update', $product), false);
+    }
+
+    public function test_inventory_balance_rows_can_be_set_for_exact_location(): void
+    {
+        $branch = Branch::create(['name' => 'Set Stock Store', 'code' => 'SET', 'is_active' => true]);
+        $product = $this->product('SET-STOCK-1', 100, 5);
+        $warehouse = RetailWarehouse::create([
+            'branch_id' => $branch->id,
+            'code' => 'SET-WH',
+            'name' => 'Set Warehouse',
+            'warehouse_type' => 'Store Warehouse',
+            'status' => 'Active',
+        ]);
+        $bin = RetailWarehouseBin::create([
+            'retail_warehouse_id' => $warehouse->id,
+            'bin_code' => 'SET-BIN',
+            'status' => 'Active',
+        ]);
+
+        $balance = RetailInventoryBalance::create([
+            'product_id' => $product->id,
+            'branch_id' => $branch->id,
+            'retail_warehouse_id' => $warehouse->id,
+            'retail_warehouse_bin_id' => $bin->id,
+            'available_stock' => 5,
+            'unit_cost' => 40,
+            'stock_value' => 200,
+        ]);
+
+        $this->get(route('retail.inventory.index'))
+            ->assertStatus(200)
+            ->assertSee('retail-inventory-edit-'.$balance->id, false)
+            ->assertSee('Set Stock Store')
+            ->assertSee('SET-BIN');
+
+        $this->post(route('retail.inventory.adjust'), [
+            'product_id' => $product->id,
+            'branch_id' => $branch->id,
+            'retail_warehouse_id' => $warehouse->id,
+            'retail_warehouse_bin_id' => $bin->id,
+            'movement' => 'Set',
+            'quantity' => 8,
+            'bucket' => 'available_stock',
+            'reference' => 'COUNT-SET-1',
+        ])->assertSessionHas('status');
+
+        $this->assertSame('8.000', $balance->fresh()->available_stock);
+        $this->assertSame('320.00', $balance->fresh()->stock_value);
+        $this->assertSame('8.000', $product->fresh()->stock_quantity);
+        $this->assertDatabaseHas('retail_inventory_movements', [
+            'product_id' => $product->id,
+            'branch_id' => $branch->id,
+            'retail_warehouse_id' => $warehouse->id,
+            'retail_warehouse_bin_id' => $bin->id,
+            'type' => 'Adjusted',
+            'reference' => 'COUNT-SET-1',
+        ]);
     }
 
     public function test_product_catalog_imports_and_exports_csv_and_excel_compatible_files(): void
@@ -531,7 +598,7 @@ class RetailSectionWorkflowsTest extends TestCase
             ]],
         ])->assertSessionHas('status');
 
-        $order = \Modules\Retail\Models\RetailOrder::firstOrFail();
+        $order = RetailOrder::firstOrFail();
         $this->post(route('retail.orders.fulfillment.route', $order), [
             'fulfillment_type' => 'BOPIS',
             'branch_id' => $branch->id,

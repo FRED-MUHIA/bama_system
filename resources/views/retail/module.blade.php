@@ -117,21 +117,26 @@
         @endforelse
     </div>
 @elseif($section === 'inventory')
-    <div class="card p-3 mb-3">
+    <div class="card p-3 mb-3" id="retail-stock-records">
         <form method="POST" action="{{ route('retail.inventory.adjust') }}" class="row g-2">
             @csrf
-            <div class="col-md-4"><select class="form-select" name="product_id" required><option value="">Product</option>@foreach($products as $product)<option value="{{ $product->id }}">{{ $product->name }}</option>@endforeach</select></div>
-            <div class="col-md-2"><input class="form-control" name="quantity" type="number" step="0.001" placeholder="Qty" required></div>
-            <div class="col-md-3"><select class="form-select" name="bucket"><option value="available_stock">Available</option><option value="reserved_stock">Reserved</option><option value="in_transit_stock">In Transit</option><option value="damaged_stock">Damaged</option></select></div>
-            <div class="col-md-2"><input class="form-control" name="reference" placeholder="Reference"></div>
+            <div class="col-md-3"><select class="form-select" name="product_id" required><option value="">Product</option>@foreach($products as $product)<option value="{{ $product->id }}">{{ $product->name }}</option>@endforeach</select></div>
+            <div class="col-md-2"><select class="form-select" name="movement"><option>Add</option><option>Remove</option><option>Set</option></select></div>
+            <div class="col-md-2"><input class="form-control" name="quantity" type="number" min="0" step="0.001" placeholder="Qty" required></div>
+            <div class="col-md-2"><select class="form-select" name="bucket"><option value="available_stock">Available</option><option value="reserved_stock">Reserved</option><option value="in_transit_stock">In Transit</option><option value="damaged_stock">Damaged</option></select></div>
+            <div class="col-md-2"><select class="form-select" name="branch_id"><option value="">Any branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></div>
             <div class="col-md-1"><button class="btn btn-success w-100"><i class="bi bi-plus-lg"></i></button></div>
+            <div class="col-md-3"><select class="form-select" name="retail_warehouse_id"><option value="">Any warehouse</option>@foreach($warehouses as $warehouse)<option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>@endforeach</select></div>
+            <div class="col-md-3"><select class="form-select" name="retail_warehouse_bin_id"><option value="">Any bin</option>@foreach($bins as $bin)<option value="{{ $bin->id }}">{{ $bin->warehouse?->name }} / {{ $bin->bin_code }}</option>@endforeach</select></div>
+            <div class="col-md-3"><input class="form-control" name="reference" placeholder="Reference"></div>
+            <div class="col-md-3"><input class="form-control" name="notes" placeholder="Notes"></div>
         </form>
         <div class="border-top mt-3 pt-3">
             <form method="POST" action="{{ route('retail.inventory.reserve') }}" class="row g-2">
                 @csrf
                 <div class="col-md-4"><select class="form-select" name="product_id" required><option value="">Reserve product</option>@foreach($products as $product)<option value="{{ $product->id }}">{{ $product->name }}</option>@endforeach</select></div>
                 <div class="col-md-2"><input class="form-control" name="quantity" type="number" step="0.001" placeholder="Qty" required></div>
-                <div class="col-md-2"><input class="form-control" name="branch_id" placeholder="Branch ID"></div>
+                <div class="col-md-2"><select class="form-select" name="branch_id"><option value="">Any branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></div>
                 <div class="col-md-3"><input class="form-control" name="reference" placeholder="Reservation reference"></div>
                 <div class="col-md-1"><button class="btn btn-outline-dark w-100"><i class="bi bi-lock"></i></button></div>
             </form>
@@ -141,8 +146,8 @@
                 @csrf
                 <div class="col-md-4"><select class="form-select" name="product_id" required><option value="">Transfer product</option>@foreach($products as $product)<option value="{{ $product->id }}">{{ $product->name }}</option>@endforeach</select></div>
                 <div class="col-md-2"><input class="form-control" name="quantity" type="number" step="0.001" placeholder="Qty" required></div>
-                <div class="col-md-2"><input class="form-control" name="from_branch_id" placeholder="From branch ID"></div>
-                <div class="col-md-2"><input class="form-control" name="to_branch_id" placeholder="To branch ID"></div>
+                <div class="col-md-2"><select class="form-select" name="from_branch_id"><option value="">From branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></div>
+                <div class="col-md-2"><select class="form-select" name="to_branch_id"><option value="">To branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></div>
                 <div class="col-md-2"><button class="btn btn-outline-dark w-100">Transfer</button></div>
             </form>
         </div>
@@ -306,7 +311,7 @@
         </form>
     </div>
 @elseif($section === 'orders')
-    <div class="card p-3 mb-3">
+    <div class="card p-3 mb-3" id="retail-add-customer">
         <div class="d-flex justify-content-between align-items-center mb-2">
             <h2 class="h5 mb-0">Add Customer</h2>
             <a class="btn btn-sm btn-outline-dark" href="{{ route('clients.index') }}">Open CRM</a>
@@ -321,7 +326,7 @@
             <div class="col-md-1"><button class="btn btn-success w-100"><i class="bi bi-person-plus"></i></button></div>
         </form>
     </div>
-    <div class="card p-3 mb-3">
+    <div class="card p-3 mb-3" id="retail-place-order">
         <form method="POST" action="{{ route('retail.orders.store') }}" class="row g-2">
             @csrf
             <div class="col-md-3"><select class="form-select" name="client_id"><option value="">Customer</option>@foreach($clients as $client)<option value="{{ $client->id }}" @selected(session('selectedCustomerId') == $client->id)>{{ $client->name }}</option>@endforeach</select></div>
@@ -479,49 +484,165 @@
     </div>
 @endif
 
-<div class="card p-0">
-    <div class="table-responsive">
-        <table class="table mb-0 align-middle">
-            <thead><tr><th>Record</th><th>Status</th><th>Details</th><th>Updated</th><th></th></tr></thead>
-            <tbody>
-            @forelse($records as $record)
-                <tr>
-                    <td class="fw-semibold">
-                        {{ $record->name ?? $record->order_number ?? $record->card_number ?? $record->return_number ?? $record->client?->name ?? $record->product?->name ?? $record->title ?? '#'.$record->id }}
-                    </td>
-                    <td><span class="status-pill">{{ $record->status ?? $record->approval_status ?? 'Active' }}</span></td>
-                    <td class="text-muted">
-                        {{ $record->code ?? $record->sku ?? $record->promotion_type ?? $record->channel ?? $record->customer_segment ?? $record->warehouse_type ?? $record->reason ?? $record->email ?? '' }}
-                    </td>
-                    <td>{{ optional($record->updated_at)->format('d M Y') }}</td>
-                    <td class="text-end">
-                        @if($section === 'returns' && ($record->approval_status ?? null) !== 'Approved')
-                            <form method="POST" action="{{ route('retail.returns.approve', $record) }}">
-                                @csrf
-                                <button class="btn btn-sm btn-outline-success">Approve</button>
+@if($section === 'products')
+    <div class="card p-0">
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle">
+                <thead><tr><th>Product</th><th>Price</th><th>Stock</th><th>Catalog</th><th>Updated</th><th></th></tr></thead>
+                <tbody>
+                @forelse($records as $record)
+                    <tr>
+                        <td class="fw-semibold">
+                            {{ $record->name }}
+                            <div class="small text-muted">{{ $record->sku ?: 'No SKU' }} @if($record->barcode) · {{ $record->barcode }} @endif</div>
+                        </td>
+                        <td>
+                            {{ number_format((float) $record->price, 2) }}
+                            <div class="small text-muted">Cost {{ number_format((float) $record->cost_price, 2) }}</div>
+                        </td>
+                        <td>
+                            <strong>{{ $record->formattedStock() }}</strong>
+                            @if($record->isLowStock())<div class="small text-danger fw-bold">Low stock</div>@endif
+                        </td>
+                        <td class="text-muted">{{ $record->category?->name ?: 'No category' }} @if($record->brand) · {{ $record->brand->name }} @endif</td>
+                        <td>{{ optional($record->updated_at)->format('d M Y') }}</td>
+                        <td class="text-end">
+                            <div class="d-flex gap-1 justify-content-end">
+                                <button class="btn btn-sm btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#retail-product-stock-{{ $record->id }}"><i class="bi bi-boxes"></i></button>
+                                <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#retail-product-edit-{{ $record->id }}"><i class="bi bi-pencil"></i></button>
+                                <form method="post" action="{{ route('products.destroy', $record) }}" onsubmit="return confirm('Archive this product?')">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger" aria-label="Archive {{ $record->name }}"><i class="bi bi-archive"></i></button></form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="collapse" id="retail-product-stock-{{ $record->id }}">
+                        <td colspan="6">
+                            <form method="post" action="{{ route('products.stock.update', $record) }}" class="row g-2 align-items-end">@csrf
+                                <div class="col-md-3"><label class="form-label">Movement</label><select class="form-select" name="type"><option>Add</option><option>Remove</option><option>Set</option></select></div>
+                                <div class="col-md-3"><label class="form-label">Quantity ({{ $record->stock_unit ?: 'pcs' }})</label><input class="form-control" name="quantity" type="number" min="0" step="0.001" required></div>
+                                <div class="col-md-4"><label class="form-label">Notes</label><input class="form-control" name="notes" placeholder="Reason"></div>
+                                <div class="col-md-2"><button class="btn btn-success btn-sm w-100">Update Stock</button></div>
                             </form>
-                        @elseif($section === 'ecommerce')
-                            <form method="POST" action="{{ route('retail.ecommerce.sync', $record) }}">
-                                @csrf
-                                <button class="btn btn-sm btn-outline-dark">Sync</button>
+                        </td>
+                    </tr>
+                    <tr class="collapse" id="retail-product-edit-{{ $record->id }}">
+                        <td colspan="6">
+                            <form method="post" action="{{ route('products.update', $record) }}" class="row g-2">@csrf @method('PUT')
+                                @include('products.partials.fields', ['product' => $record])
+                                <div class="col-12"><button class="btn btn-warning btn-sm">Update Product</button></div>
                             </form>
-                        @elseif($section === 'gift-cards')
-                            <form method="POST" action="{{ route('retail.gift-cards.recharge', $record) }}" class="d-flex gap-1 justify-content-end">
-                                @csrf
-                                <input class="form-control form-control-sm" name="amount" type="number" step="0.01" min="0.01" placeholder="Amount" style="max-width:110px">
-                                <button class="btn btn-sm btn-outline-dark">Recharge</button>
-                            </form>
-                        @endif
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="5" class="text-muted p-4">No records yet.</td></tr>
-            @endforelse
-            </tbody>
-        </table>
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6" class="text-muted p-4">No products yet.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if(method_exists($records, 'links'))
+            <div class="p-3">{{ $records->links() }}</div>
+        @endif
     </div>
-    @if(method_exists($records, 'links'))
-        <div class="p-3">{{ $records->links() }}</div>
-    @endif
-</div>
+@elseif($section === 'inventory')
+    <div class="card p-0">
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle">
+                <thead><tr><th>Stock Item</th><th>Location</th><th>Available</th><th>Reserved</th><th>Other</th><th></th></tr></thead>
+                <tbody>
+                @forelse($records as $record)
+                    @php
+                        $stockProduct = $record->variant?->product ?: $record->product;
+                        $location = collect([$record->branch?->name, $record->warehouse?->name, $record->bin?->bin_code])->filter()->join(' / ');
+                    @endphp
+                    <tr>
+                        <td class="fw-semibold">
+                            {{ $record->product?->name ?? 'Unknown product' }}
+                            @if($record->variant)
+                                <div class="small text-muted">{{ $record->variant->displayName() }} · {{ $record->variant->sku }}</div>
+                            @elseif($record->product?->sku)
+                                <div class="small text-muted">{{ $record->product->sku }}</div>
+                            @endif
+                        </td>
+                        <td class="text-muted">{{ $location ?: 'Default stock' }}</td>
+                        <td><strong>{{ $stockProduct?->formattedStock((float) $record->available_stock) ?? number_format((float) $record->available_stock, 3) }}</strong></td>
+                        <td>{{ $stockProduct?->formattedStock((float) $record->reserved_stock) ?? number_format((float) $record->reserved_stock, 3) }}</td>
+                        <td class="text-muted">
+                            Transit {{ $stockProduct?->formattedStock((float) $record->in_transit_stock) ?? number_format((float) $record->in_transit_stock, 3) }}
+                            <div>Damaged {{ $stockProduct?->formattedStock((float) $record->damaged_stock) ?? number_format((float) $record->damaged_stock, 3) }}</div>
+                        </td>
+                        <td class="text-end"><button class="btn btn-sm btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#retail-inventory-edit-{{ $record->id }}"><i class="bi bi-boxes me-1"></i>Stock</button></td>
+                    </tr>
+                    <tr class="collapse" id="retail-inventory-edit-{{ $record->id }}">
+                        <td colspan="6">
+                            <form method="POST" action="{{ route('retail.inventory.adjust') }}" class="row g-2 align-items-end">
+                                @csrf
+                                <input type="hidden" name="product_id" value="{{ $record->product_id }}">
+                                <input type="hidden" name="retail_product_variant_id" value="{{ $record->retail_product_variant_id }}">
+                                <input type="hidden" name="branch_id" value="{{ $record->branch_id }}">
+                                <input type="hidden" name="retail_warehouse_id" value="{{ $record->retail_warehouse_id }}">
+                                <input type="hidden" name="retail_warehouse_bin_id" value="{{ $record->retail_warehouse_bin_id }}">
+                                <div class="col-md-2"><label class="form-label">Movement</label><select class="form-select" name="movement"><option>Set</option><option>Add</option><option>Remove</option></select></div>
+                                <div class="col-md-2"><label class="form-label">Bucket</label><select class="form-select" name="bucket"><option value="available_stock">Available</option><option value="reserved_stock">Reserved</option><option value="in_transit_stock">In Transit</option><option value="damaged_stock">Damaged</option></select></div>
+                                <div class="col-md-2"><label class="form-label">Quantity</label><input class="form-control" name="quantity" type="number" min="0" step="0.001" value="{{ (float) $record->available_stock }}" required></div>
+                                <div class="col-md-3"><label class="form-label">Reference</label><input class="form-control" name="reference" value="Balance #{{ $record->id }}"></div>
+                                <div class="col-md-3"><button class="btn btn-success btn-sm w-100">Update Stock</button></div>
+                            </form>
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6" class="text-muted p-4">No stock balances yet.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if(method_exists($records, 'links'))
+            <div class="p-3">{{ $records->links() }}</div>
+        @endif
+    </div>
+@else
+    <div class="card p-0">
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle">
+                <thead><tr><th>Record</th><th>Status</th><th>Details</th><th>Updated</th><th></th></tr></thead>
+                <tbody>
+                @forelse($records as $record)
+                    <tr>
+                        <td class="fw-semibold">
+                            {{ $record->name ?? $record->order_number ?? $record->card_number ?? $record->return_number ?? $record->client?->name ?? $record->product?->name ?? $record->title ?? '#'.$record->id }}
+                        </td>
+                        <td><span class="status-pill">{{ $record->status ?? $record->approval_status ?? 'Active' }}</span></td>
+                        <td class="text-muted">
+                            {{ $record->code ?? $record->sku ?? $record->promotion_type ?? $record->channel ?? $record->customer_segment ?? $record->warehouse_type ?? $record->reason ?? $record->email ?? '' }}
+                        </td>
+                        <td>{{ optional($record->updated_at)->format('d M Y') }}</td>
+                        <td class="text-end">
+                            @if($section === 'returns' && ($record->approval_status ?? null) !== 'Approved')
+                                <form method="POST" action="{{ route('retail.returns.approve', $record) }}">
+                                    @csrf
+                                    <button class="btn btn-sm btn-outline-success">Approve</button>
+                                </form>
+                            @elseif($section === 'ecommerce')
+                                <form method="POST" action="{{ route('retail.ecommerce.sync', $record) }}">
+                                    @csrf
+                                    <button class="btn btn-sm btn-outline-dark">Sync</button>
+                                </form>
+                            @elseif($section === 'gift-cards')
+                                <form method="POST" action="{{ route('retail.gift-cards.recharge', $record) }}" class="d-flex gap-1 justify-content-end">
+                                    @csrf
+                                    <input class="form-control form-control-sm" name="amount" type="number" step="0.01" min="0.01" placeholder="Amount" style="max-width:110px">
+                                    <button class="btn btn-sm btn-outline-dark">Recharge</button>
+                                </form>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="5" class="text-muted p-4">No records yet.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if(method_exists($records, 'links'))
+            <div class="p-3">{{ $records->links() }}</div>
+        @endif
+    </div>
+@endif
 @endsection

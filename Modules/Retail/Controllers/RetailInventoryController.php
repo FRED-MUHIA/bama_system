@@ -10,7 +10,10 @@ use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Modules\Retail\Models\RetailCycleCount;
+use Modules\Retail\Models\RetailInventoryBalance;
+use Modules\Retail\Models\RetailProductVariant;
 use Modules\Retail\Models\RetailReplenishmentPlan;
 use Modules\Retail\Models\RetailWarehouse;
 use Modules\Retail\Models\RetailWarehouseBin;
@@ -40,13 +43,33 @@ class RetailInventoryController extends Controller
     {
         $data = $request->validate([
             'product_id' => ['required', Rule::exists('products', 'id')->where('business_id', ActiveBusiness::id())],
+            'retail_product_variant_id' => ['nullable', Rule::exists('retail_product_variants', 'id')->where('business_id', ActiveBusiness::id())],
             'quantity' => ['required', 'numeric'],
+            'movement' => ['nullable', Rule::in(['Add', 'Remove', 'Set'])],
             'bucket' => ['required', Rule::in(['available_stock', 'reserved_stock', 'in_transit_stock', 'damaged_stock'])],
+            'branch_id' => ['nullable', Rule::exists('branches', 'id')->where('business_id', ActiveBusiness::id())],
+            'retail_warehouse_id' => ['nullable', Rule::exists('retail_warehouses', 'id')->where('business_id', ActiveBusiness::id())],
+            'retail_warehouse_bin_id' => ['nullable', Rule::exists('retail_warehouse_bins', 'id')->where('business_id', ActiveBusiness::id())],
             'reference' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
         ]);
 
-        $inventory->adjust(Product::findOrFail($data['product_id']), (float) $data['quantity'], $data['bucket'], $data);
+        $product = Product::findOrFail($data['product_id']);
+        $context = $this->inventoryContext($data);
+        $quantity = $this->movementQuantity($product, (float) $data['quantity'], $data, $context);
+
+        if (! empty($data['retail_product_variant_id'])) {
+            $variant = RetailProductVariant::findOrFail($data['retail_product_variant_id']);
+            if ((int) $variant->parent_product_id !== (int) $product->id) {
+                throw ValidationException::withMessages([
+                    'retail_product_variant_id' => 'The selected variant does not belong to the selected product.',
+                ]);
+            }
+
+            $inventory->adjustVariant($variant, $quantity, $data['bucket'], $context);
+        } else {
+            $inventory->adjust($product, $quantity, $data['bucket'], $context);
+        }
 
         return back()->with('status', 'Retail inventory adjusted.');
     }
@@ -128,5 +151,42 @@ class RetailInventoryController extends Controller
         $enterprise->recordCycleCount(Product::findOrFail($data['product_id']), $data);
 
         return back()->with('status', 'Cycle count recorded and variance posted.');
+    }
+
+    private function inventoryContext(array $data): array
+    {
+        return collect($data)
+            ->only(['retail_product_variant_id', 'branch_id', 'retail_warehouse_id', 'retail_warehouse_bin_id', 'reference', 'notes'])
+            ->map(fn ($value) => $value === '' ? null : $value)
+            ->all();
+    }
+
+    private function movementQuantity(Product $product, float $quantity, array $data, array $context): float
+    {
+        return match ($data['movement'] ?? null) {
+            'Add' => abs($quantity),
+            'Remove' => -abs($quantity),
+            'Set' => $this->setMovementQuantity($product, $quantity, $data['bucket'], $context),
+            default => $quantity,
+        };
+    }
+
+    private function setMovementQuantity(Product $product, float $quantity, string $bucket, array $context): float
+    {
+        if ($quantity < 0) {
+            throw ValidationException::withMessages(['quantity' => 'Stock cannot be set below zero.']);
+        }
+
+        $current = (float) (RetailInventoryBalance::query()
+            ->where([
+                'product_id' => $product->id,
+                'retail_product_variant_id' => $context['retail_product_variant_id'] ?? null,
+                'branch_id' => $context['branch_id'] ?? null,
+                'retail_warehouse_id' => $context['retail_warehouse_id'] ?? null,
+                'retail_warehouse_bin_id' => $context['retail_warehouse_bin_id'] ?? null,
+            ])
+            ->value($bucket) ?? 0);
+
+        return $quantity - $current;
     }
 }
