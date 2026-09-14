@@ -10,4 +10,5 @@ class RetailOrderItem extends RetailModel
 
     public function order() { return $this->belongsTo(RetailOrder::class, 'retail_order_id'); }
     public function product() { return $this->belongsTo(Product::class); }
+    public function variant() { return $this->belongsTo(RetailProductVariant::class, 'retail_product_variant_id'); }
 }

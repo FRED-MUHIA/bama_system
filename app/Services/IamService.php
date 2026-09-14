@@ -65,7 +65,13 @@ class IamService
         'retail.view', 'retail.manage', 'retail.reports',
         'retail.pos.view', 'retail.pos.manage',
         'retail.products.view', 'retail.products.manage',
+        'retail.categories.view', 'retail.categories.manage',
+        'retail.brands.view', 'retail.brands.manage',
+        'retail.attributes.view', 'retail.attributes.manage',
+        'retail.variants.view', 'retail.variants.manage',
+        'retail.pricing.manage',
         'retail.inventory.view', 'retail.inventory.manage',
+        'retail.inventory.adjust',
         'retail.warehousing.view', 'retail.warehousing.manage',
         'retail.orders.view', 'retail.orders.manage',
         'retail.customers.view', 'retail.customers.manage',
@@ -80,6 +86,7 @@ class IamService
         'retail.analytics.view', 'retail.settings.manage',
         'retail.scanning.view', 'retail.scanning.manage', 'retail.scanning.self-checkout',
         'retail.scanning.reports', 'retail.scanning.override', 'retail.scanning.compliance',
+        'retail.serials.manage', 'retail.batches.manage',
         'real-estate.view', 'real-estate.manage', 'real-estate.reports',
         'real-estate.properties.view', 'real-estate.properties.manage',
         'real-estate.units.view', 'real-estate.units.manage',
@@ -667,16 +674,31 @@ class IamService
 
     private function syncRetailRolePermissions(): void
     {
+        $catalogView = [
+            'retail.products.view', 'retail.categories.view', 'retail.brands.view',
+            'retail.attributes.view', 'retail.variants.view',
+        ];
+
+        $catalogManage = array_values(array_unique(array_merge($catalogView, [
+            'retail.products.manage', 'retail.categories.manage', 'retail.brands.manage',
+            'retail.attributes.manage', 'retail.variants.manage', 'retail.pricing.manage',
+        ])));
+
+        $inventoryManage = [
+            'retail.inventory.view', 'retail.inventory.manage', 'retail.inventory.adjust',
+            'retail.batches.manage', 'retail.serials.manage',
+        ];
+
         $map = [
-            'retail-director' => ['retail.view', 'retail.manage', 'retail.reports', 'retail.analytics.view', 'retail.pos.view', 'retail.products.view', 'retail.inventory.view', 'retail.warehousing.view', 'retail.orders.view', 'retail.customers.view', 'retail.loyalty.view', 'retail.promotions.view', 'retail.gift-cards.view', 'retail.returns.view', 'retail.procurement.view', 'retail.suppliers.view', 'retail.branches.view', 'retail.ecommerce.view', 'retail.scanning.view', 'retail.scanning.manage', 'retail.scanning.self-checkout', 'retail.scanning.reports', 'retail.scanning.override', 'retail.scanning.compliance', 'etims.view', 'etims.manage', 'etims.reports', 'etims.retry'],
-            'store-manager' => ['retail.view', 'retail.pos.manage', 'retail.products.manage', 'retail.inventory.manage', 'retail.customers.manage', 'retail.loyalty.manage', 'retail.promotions.view', 'retail.gift-cards.manage', 'retail.returns.manage', 'retail.reports', 'retail.scanning.view', 'retail.scanning.manage', 'retail.scanning.self-checkout', 'retail.scanning.override', 'retail.scanning.compliance'],
+            'retail-director' => array_values(array_unique(array_merge(['retail.view', 'retail.manage', 'retail.reports', 'retail.analytics.view', 'retail.pos.view', 'retail.warehousing.view', 'retail.orders.view', 'retail.customers.view', 'retail.loyalty.view', 'retail.promotions.view', 'retail.gift-cards.view', 'retail.returns.view', 'retail.procurement.view', 'retail.suppliers.view', 'retail.branches.view', 'retail.ecommerce.view', 'retail.scanning.view', 'retail.scanning.manage', 'retail.scanning.self-checkout', 'retail.scanning.reports', 'retail.scanning.override', 'retail.scanning.compliance', 'etims.view', 'etims.manage', 'etims.reports', 'etims.retry'], $catalogManage, $inventoryManage))),
+            'store-manager' => array_values(array_unique(array_merge(['retail.view', 'retail.pos.manage', 'retail.customers.manage', 'retail.loyalty.manage', 'retail.promotions.view', 'retail.gift-cards.manage', 'retail.returns.manage', 'retail.reports', 'retail.scanning.view', 'retail.scanning.manage', 'retail.scanning.self-checkout', 'retail.scanning.override', 'retail.scanning.compliance'], $catalogManage, $inventoryManage))),
             'branch-manager' => ['retail.view', 'retail.pos.view', 'retail.inventory.view', 'retail.orders.manage', 'retail.customers.manage', 'retail.branches.view', 'retail.reports', 'retail.scanning.view', 'retail.scanning.manage', 'retail.scanning.reports'],
-            'cashier' => ['retail.view', 'retail.pos.manage', 'retail.products.view', 'retail.customers.view', 'retail.loyalty.view', 'retail.gift-cards.view', 'retail.returns.view', 'retail.scanning.view', 'retail.scanning.manage', 'retail.scanning.self-checkout'],
-            'warehouse-manager' => ['retail.view', 'retail.inventory.manage', 'retail.warehousing.manage', 'retail.orders.view', 'retail.procurement.view', 'retail.reports', 'retail.scanning.view', 'retail.scanning.compliance', 'retail.scanning.reports'],
+            'cashier' => array_values(array_unique(array_merge(['retail.view', 'retail.pos.manage', 'retail.customers.view', 'retail.loyalty.view', 'retail.gift-cards.view', 'retail.returns.view', 'retail.scanning.view', 'retail.scanning.manage', 'retail.scanning.self-checkout'], $catalogView))),
+            'warehouse-manager' => array_values(array_unique(array_merge(['retail.view', 'retail.warehousing.manage', 'retail.orders.view', 'retail.procurement.view', 'retail.reports', 'retail.scanning.view', 'retail.scanning.compliance', 'retail.scanning.reports'], $catalogView, $inventoryManage))),
             'warehouse-staff' => ['retail.view', 'retail.inventory.view', 'retail.warehousing.view', 'retail.orders.view', 'retail.scanning.view'],
             'customer-service' => ['retail.view', 'retail.customers.manage', 'retail.loyalty.view', 'retail.returns.manage', 'retail.orders.view'],
-            'retail-accountant' => ['retail.view', 'retail.reports', 'retail.pos.view', 'retail.returns.view', 'finance.view', 'finance.gl.view', 'retail.scanning.reports', 'etims.view', 'etims.reports'],
-            'retail-auditor' => ['retail.view', 'retail.reports', 'retail.analytics.view', 'audit.view', 'retail.scanning.view', 'retail.scanning.reports', 'retail.scanning.compliance', 'etims.view', 'etims.reports'],
+            'retail-accountant' => array_values(array_unique(array_merge(['retail.view', 'retail.reports', 'retail.pos.view', 'retail.returns.view', 'finance.view', 'finance.gl.view', 'retail.scanning.reports', 'etims.view', 'etims.reports'], $catalogView))),
+            'retail-auditor' => array_values(array_unique(array_merge(['retail.view', 'retail.reports', 'retail.analytics.view', 'audit.view', 'retail.scanning.view', 'retail.scanning.reports', 'retail.scanning.compliance', 'etims.view', 'etims.reports'], $catalogView))),
         ];
 
         foreach ($map as $slug => $permissions) {

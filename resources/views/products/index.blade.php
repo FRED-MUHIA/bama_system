@@ -134,17 +134,73 @@
                 <a class="btn btn-sm btn-outline-dark flex-fill" href="{{ route('products.export', ['format' => 'csv']) }}"><i class="bi bi-download me-1"></i>CSV</a>
                 <a class="btn btn-sm btn-outline-dark flex-fill" href="{{ route('products.export', ['format' => 'xls']) }}"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Excel</a>
             </div>
-            <div class="small text-muted mt-2">Columns: name, sku, category, description, price, cost_price, stock_quantity, reorder_level, stock_unit, is_active.</div>
+            <div class="small text-muted mt-2">Columns include: name, sku, product_type, category, subcategory, brand, barcode, description, price, cost_price, stock_quantity, reorder_level, stock_unit, is_active.</div>
         </div></div>
         <div class="card"><div class="card-body">
             <h2 class="h5">Add Category</h2>
-            <form method="post" action="{{ route('product-categories.store') }}">@csrf
-                <input class="form-control mb-2" name="name" placeholder="Category name" required>
+            <form method="post" action="{{ route('product-categories.store') }}" class="row g-2">@csrf
+                <div class="col-12"><select class="form-select" name="parent_id"><option value="">Top level</option>@foreach($categories as $category)<option value="{{ $category->id }}">{{ method_exists($category, 'path') ? $category->path() : $category->name }}</option>@endforeach</select></div>
+                <div class="col-12"><input class="form-control" name="name" placeholder="Category name" required></div>
+                <div class="col-6"><input class="form-control" name="code" placeholder="Code"></div>
+                <div class="col-6"><input class="form-control" type="number" min="0" name="sort_order" placeholder="Sort"></div>
+                <div class="col-12"><input class="form-control" name="icon" placeholder="Icon"></div>
                 <textarea class="form-control mb-2" name="description" placeholder="Description"></textarea>
-                <button class="btn btn-outline-warning btn-sm">Save Category</button>
+                <div class="col-12"><button class="btn btn-outline-warning btn-sm">Save Category</button></div>
             </form>
             <hr>
-            @foreach($categories as $category)<div class="border-top py-2">{{ $category->name }}<div class="small text-muted">{{ $category->description }}</div></div>@endforeach
+            @foreach($categories as $category)
+                <div class="border-top py-2">
+                    {{ method_exists($category, 'path') ? $category->path() : $category->name }}
+                    <div class="small text-muted">{{ $category->description }}</div>
+                    @if(($attributes ?? collect())->isNotEmpty())
+                        <form method="post" action="{{ route('product-categories.attributes.store', $category) }}" class="row g-1 mt-2">@csrf
+                            <div class="col-12"><select class="form-select form-select-sm" name="product_attribute_id">@foreach($attributes as $attribute)<option value="{{ $attribute->id }}">{{ $attribute->name }}</option>@endforeach</select></div>
+                            <div class="col-4"><label class="form-check small"><input class="form-check-input" type="checkbox" name="is_required" value="1"> Required</label></div>
+                            <div class="col-4"><label class="form-check small"><input class="form-check-input" type="checkbox" name="is_variant_attribute" value="1"> Variant</label></div>
+                            <div class="col-4"><button class="btn btn-sm btn-outline-dark w-100">Attach</button></div>
+                        </form>
+                    @endif
+                </div>
+            @endforeach
+        </div></div>
+        <div class="card mt-4"><div class="card-body">
+            <h2 class="h5">Brands</h2>
+            <form method="post" action="{{ route('product-brands.store') }}" class="row g-2">@csrf
+                <div class="col-12"><input class="form-control" name="name" placeholder="Brand / manufacturer" required></div>
+                <div class="col-6"><input class="form-control" name="code" placeholder="Code"></div>
+                <div class="col-6"><select class="form-select" name="status"><option>Active</option><option>Inactive</option></select></div>
+                <div class="col-12"><input class="form-control" name="website_url" placeholder="Website"></div>
+                <div class="col-12"><button class="btn btn-outline-warning btn-sm">Save Brand</button></div>
+            </form>
+            <hr>
+            @forelse(($brands ?? []) as $brand)<div class="border-top py-2">{{ $brand->name }}<div class="small text-muted">{{ $brand->code ?: 'No code' }} · {{ $brand->status }}</div></div>@empty<div class="text-muted">No brands yet.</div>@endforelse
+        </div></div>
+        <div class="card mt-4"><div class="card-body">
+            <h2 class="h5">Attributes</h2>
+            <form method="post" action="{{ route('product-attributes.store') }}" class="row g-2">@csrf
+                <div class="col-12"><input class="form-control" name="name" placeholder="Attribute name" required></div>
+                <div class="col-6"><input class="form-control" name="code" placeholder="Code"></div>
+                <div class="col-6"><select class="form-select" name="display_type">@foreach(\App\Models\ProductAttribute::DISPLAY_TYPES as $type)<option>{{ $type }}</option>@endforeach</select></div>
+                <div class="col-6"><input class="form-control" name="unit" placeholder="Unit"></div>
+                <div class="col-6"><input class="form-control" type="number" min="0" name="sort_order" placeholder="Sort"></div>
+                <div class="col-6"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_variant_attribute" value="1"> <span class="form-check-label">Variant</span></label></div>
+                <div class="col-6"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_filterable" value="1"> <span class="form-check-label">Filter</span></label></div>
+                <div class="col-12"><button class="btn btn-outline-warning btn-sm">Save Attribute</button></div>
+            </form>
+            <hr>
+            @forelse(($attributes ?? []) as $attribute)
+                <div class="border-top py-2">
+                    <strong>{{ $attribute->name }}</strong>
+                    <div class="small text-muted">{{ $attribute->display_type }} · {{ $attribute->values->pluck('value')->take(5)->join(', ') }}</div>
+                    <form method="post" action="{{ route('product-attributes.values.store', $attribute) }}" class="row g-2 mt-1">@csrf
+                        <div class="col-7"><input class="form-control form-control-sm" name="value" placeholder="Value" required></div>
+                        <div class="col-3"><input class="form-control form-control-sm" name="code" placeholder="Code"></div>
+                        <div class="col-2"><button class="btn btn-sm btn-outline-dark w-100">+</button></div>
+                    </form>
+                </div>
+            @empty
+                <div class="text-muted">No attributes yet.</div>
+            @endforelse
         </div></div>
         <div class="card mt-4"><div class="card-body">
             <h2 class="h5">Recent Stock Movements</h2>

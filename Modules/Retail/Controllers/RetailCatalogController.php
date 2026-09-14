@@ -4,6 +4,8 @@ namespace Modules\Retail\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductAttribute;
+use App\Models\ProductBrand;
 use App\Models\ProductCategory;
 use Illuminate\Http\Request;
 use Modules\Retail\Repositories\RetailRepository;
@@ -18,10 +20,13 @@ class RetailCatalogController extends Controller
             'title' => 'Product Catalog',
             'section' => 'products',
             'records' => $retail->productSearch($request->query('q'))->paginate(20),
-            'products' => Product::with('retailProfile')->orderBy('name')->get(),
+            'products' => Product::with('retailProfile', 'brand')->orderBy('name')->get(),
             'product' => new Product(['is_active' => true, 'stock_unit' => 'pcs']),
-            'categories' => ProductCategory::orderBy('name')->get(),
+            'categories' => ProductCategory::with('parent')->orderBy('sort_order')->orderBy('name')->get(),
+            'brands' => ProductBrand::orderBy('name')->get(),
+            'attributes' => ProductAttribute::with('values')->orderBy('sort_order')->orderBy('name')->get(),
             'stockUnits' => Product::STOCK_UNITS,
+            'productTypes' => Product::PRODUCT_TYPES,
         ]);
     }
 

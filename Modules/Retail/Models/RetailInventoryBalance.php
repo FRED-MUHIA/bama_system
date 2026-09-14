@@ -18,6 +18,7 @@ class RetailInventoryBalance extends RetailModel
     ];
 
     public function product() { return $this->belongsTo(Product::class); }
+    public function variant() { return $this->belongsTo(RetailProductVariant::class, 'retail_product_variant_id'); }
     public function branch() { return $this->belongsTo(Branch::class); }
     public function warehouse() { return $this->belongsTo(RetailWarehouse::class, 'retail_warehouse_id'); }
     public function bin() { return $this->belongsTo(RetailWarehouseBin::class, 'retail_warehouse_bin_id'); }

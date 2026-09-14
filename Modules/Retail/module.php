@@ -89,6 +89,9 @@ return [
     'permissions' => [
         'retail.view', 'retail.manage', 'retail.reports', 'retail.pos.view', 'retail.pos.manage',
         'retail.products.view', 'retail.products.manage', 'retail.inventory.view', 'retail.inventory.manage',
+        'retail.categories.view', 'retail.categories.manage', 'retail.brands.view', 'retail.brands.manage',
+        'retail.attributes.view', 'retail.attributes.manage', 'retail.variants.view', 'retail.variants.manage',
+        'retail.pricing.manage', 'retail.inventory.adjust', 'retail.serials.manage', 'retail.batches.manage',
         'retail.warehousing.view', 'retail.warehousing.manage', 'retail.orders.view', 'retail.orders.manage',
         'retail.customers.view', 'retail.customers.manage', 'retail.loyalty.view', 'retail.loyalty.manage',
         'retail.promotions.view', 'retail.promotions.manage', 'retail.gift-cards.view', 'retail.gift-cards.manage',

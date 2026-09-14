@@ -25,6 +25,7 @@ class ScanEvent extends RetailModel
 
     public function device() { return $this->belongsTo(ScanDevice::class, 'scan_device_id'); }
     public function product() { return $this->belongsTo(Product::class); }
+    public function variant() { return $this->belongsTo(RetailProductVariant::class, 'retail_product_variant_id'); }
     public function order() { return $this->belongsTo(PosOrder::class, 'pos_order_id'); }
     public function branch() { return $this->belongsTo(Branch::class); }
     public function warehouse() { return $this->belongsTo(RetailWarehouse::class, 'retail_warehouse_id'); }

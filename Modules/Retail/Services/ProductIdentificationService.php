@@ -5,15 +5,23 @@ namespace Modules\Retail\Services;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Modules\Retail\Models\ProductBatch;
+use Modules\Retail\Models\RetailProductVariant;
 
 class ProductIdentificationService
 {
     public function lookup(string $identifierType, string $identifierValue): ?Product
     {
+        $variant = $this->lookupVariant($identifierValue);
+
+        if ($variant) {
+            return $variant->product?->load('category', 'brand', 'retailProfile', 'retailInventoryBalances', 'variantProfile.attributeValueLinks.value.attribute');
+        }
+
         return Product::query()
-            ->with('category', 'retailProfile', 'retailInventoryBalances')
+            ->with('category', 'brand', 'retailProfile', 'retailInventoryBalances')
             ->where(function (Builder $query) use ($identifierType, $identifierValue) {
                 $query->where('sku', $identifierValue)
+                    ->orWhere('barcode', $identifierValue)
                     ->orWhere('id', is_numeric($identifierValue) ? (int) $identifierValue : 0)
                     ->orWhereHas('retailProfile', function (Builder $profile) use ($identifierType, $identifierValue) {
                         $profile->where('barcode', $identifierValue)
@@ -24,6 +32,18 @@ class ProductIdentificationService
                             ->orWhereJsonContains('attributes->qr_product_code', $identifierValue)
                             ->orWhereJsonContains('attributes->internal_product_number', $identifierValue);
                     });
+            })
+            ->first();
+    }
+
+    public function lookupVariant(string $identifierValue): ?RetailProductVariant
+    {
+        return RetailProductVariant::query()
+            ->with('product.category', 'product.brand', 'product.retailInventoryBalances', 'attributeValueLinks.value.attribute')
+            ->where(function (Builder $query) use ($identifierValue) {
+                $query->where('sku', $identifierValue)
+                    ->orWhere('barcode', $identifierValue)
+                    ->orWhereHas('product', fn (Builder $product) => $product->where('sku', $identifierValue)->orWhere('barcode', $identifierValue));
             })
             ->first();
     }
@@ -40,6 +60,8 @@ class ProductIdentificationService
 
     public function response(Product $product, array $promotionPayload = []): array
     {
+        $variant = $product->variantProfile;
+
         return [
             'id' => $product->id,
             'name' => $product->name,
@@ -48,6 +70,13 @@ class ProductIdentificationService
             'description' => $product->description,
             'current_price' => (float) $product->price,
             'tax_category' => $product->retailProfile?->tax_class,
+            'variant' => $variant ? [
+                'id' => $variant->id,
+                'name' => $variant->displayName(),
+                'sku' => $variant->sku,
+                'barcode' => $variant->barcode,
+                'attributes' => $variant->attributes,
+            ] : null,
             'promotions' => $promotionPayload,
             'inventory_availability' => [
                 'shared_stock' => (float) $product->stock_quantity,

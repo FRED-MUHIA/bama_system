@@ -362,6 +362,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/products/export', [ProductController::class, 'export'])->name('products.export');
         Route::post('/products/{product}/stock', [ProductController::class, 'updateStock'])->name('products.stock.update');
         Route::post('/product-categories', [ProductController::class, 'storeCategory'])->name('product-categories.store');
+        Route::post('/product-brands', [ProductController::class, 'storeBrand'])->name('product-brands.store');
+        Route::post('/product-attributes', [ProductController::class, 'storeAttribute'])->name('product-attributes.store');
+        Route::post('/product-attributes/{attribute}/values', [ProductController::class, 'storeAttributeValue'])->name('product-attributes.values.store');
+        Route::post('/product-categories/{category}/attributes', [ProductController::class, 'storeCategoryAttribute'])->name('product-categories.attributes.store');
         Route::resource('pos-orders', PosOrderController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
         Route::post('/pos-orders/import', [PosOrderController::class, 'import'])->name('pos-orders.import');
         Route::post('/pos-orders/{posOrder}/approve', [PosOrderController::class, 'approve'])->name('pos-orders.approve');

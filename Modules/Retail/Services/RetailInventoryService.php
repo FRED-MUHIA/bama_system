@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Modules\Retail\Models\RetailInventoryBalance;
 use Modules\Retail\Models\RetailInventoryMovement;
+use Modules\Retail\Models\RetailProductVariant;
 
 class RetailInventoryService
 {
@@ -22,6 +23,13 @@ class RetailInventoryService
         $this->stock->receive($product, $quantity, $source, $context['reference'] ?? 'Retail receiving', $context['notes'] ?? null);
 
         return $this->move($product, $quantity, 'Received', 'available_stock', $context, $source);
+    }
+
+    public function receiveVariant(RetailProductVariant $variant, float $quantity, array $context = [], ?Model $source = null): RetailInventoryBalance
+    {
+        $this->stock->receive($variant->product, $quantity, $source, $context['reference'] ?? 'Retail variant receiving', $context['notes'] ?? null);
+
+        return $this->move($variant->parentProduct, $quantity, 'Received', 'available_stock', $this->variantContext($variant, $context), $source);
     }
 
     public function reserve(Product $product, float $quantity, array $context = [], ?Model $source = null): RetailInventoryBalance
@@ -45,6 +53,11 @@ class RetailInventoryService
         });
     }
 
+    public function reserveVariant(RetailProductVariant $variant, float $quantity, array $context = [], ?Model $source = null): RetailInventoryBalance
+    {
+        return $this->reserve($variant->parentProduct, $quantity, $this->variantContext($variant, $context), $source);
+    }
+
     public function adjust(Product $product, float $quantity, string $bucket = 'available_stock', array $context = [], ?Model $source = null): RetailInventoryBalance
     {
         $this->stock->adjust($product, abs($quantity), $quantity < 0 ? 'Remove' : 'Add', $context['notes'] ?? 'Retail inventory adjustment.');
@@ -52,11 +65,26 @@ class RetailInventoryService
         return $this->move($product, $quantity, 'Adjusted', $bucket, $context, $source);
     }
 
+    public function adjustVariant(RetailProductVariant $variant, float $quantity, string $bucket = 'available_stock', array $context = [], ?Model $source = null): RetailInventoryBalance
+    {
+        $this->stock->adjust($variant->product, abs($quantity), $quantity < 0 ? 'Remove' : 'Add', $context['notes'] ?? 'Retail variant inventory adjustment.');
+
+        return $this->move($variant->parentProduct, $quantity, 'Adjusted', $bucket, $this->variantContext($variant, $context), $source);
+    }
+
     public function transfer(Product $product, float $quantity, array $from, array $to, ?Model $source = null): void
     {
         DB::transaction(function () use ($product, $quantity, $from, $to, $source) {
             $this->move($product, -abs($quantity), 'Transfer Out', 'available_stock', $from, $source);
             $this->move($product, abs($quantity), 'Transfer In', 'available_stock', $to, $source);
+        });
+    }
+
+    public function transferVariant(RetailProductVariant $variant, float $quantity, array $from, array $to, ?Model $source = null): void
+    {
+        DB::transaction(function () use ($variant, $quantity, $from, $to, $source) {
+            $this->move($variant->parentProduct, -abs($quantity), 'Transfer Out', 'available_stock', $this->variantContext($variant, $from), $source);
+            $this->move($variant->parentProduct, abs($quantity), 'Transfer In', 'available_stock', $this->variantContext($variant, $to), $source);
         });
     }
 
@@ -81,6 +109,7 @@ class RetailInventoryService
     {
         $keys = [
             'product_id' => $product->id,
+            'retail_product_variant_id' => $context['retail_product_variant_id'] ?? null,
             'branch_id' => $context['branch_id'] ?? null,
             'retail_warehouse_id' => $context['retail_warehouse_id'] ?? null,
             'retail_warehouse_bin_id' => $context['retail_warehouse_bin_id'] ?? null,
@@ -102,6 +131,7 @@ class RetailInventoryService
     {
         return RetailInventoryMovement::create([
             'product_id' => $product->id,
+            'retail_product_variant_id' => $context['retail_product_variant_id'] ?? null,
             'branch_id' => $context['branch_id'] ?? null,
             'retail_warehouse_id' => $context['retail_warehouse_id'] ?? null,
             'retail_warehouse_bin_id' => $context['retail_warehouse_bin_id'] ?? null,
@@ -115,5 +145,13 @@ class RetailInventoryService
             'source_id' => $source?->getKey(),
             'metadata' => $context['metadata'] ?? null,
         ]);
+    }
+
+    private function variantContext(RetailProductVariant $variant, array $context): array
+    {
+        $context['retail_product_variant_id'] = $variant->id;
+        $context['unit_cost'] ??= $variant->cost_price ?? $variant->product?->cost_price;
+
+        return $context;
     }
 }

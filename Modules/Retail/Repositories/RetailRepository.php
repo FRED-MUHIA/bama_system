@@ -19,14 +19,26 @@ class RetailRepository
     public function productSearch(?string $term = null): Builder
     {
         return Product::query()
-            ->with('category')
+            ->with('category', 'brand', 'retailVariants.attributeValueLinks.value.attribute')
             ->where('is_active', true)
             ->when($term, function (Builder $query) use ($term) {
-                $query->where(function (Builder $query) use ($term) {
-                    $query->where('name', 'like', "%{$term}%")
-                        ->orWhere('sku', 'like', "%{$term}%")
-                        ->orWhereHas('retailProfile', fn (Builder $profile) => $profile->where('barcode', 'like', "%{$term}%")->orWhere('brand', 'like', "%{$term}%"));
-                });
+                collect(preg_split('/\s+/', trim($term)) ?: [])
+                    ->filter()
+                    ->take(8)
+                    ->each(function (string $part) use ($query) {
+                        $like = "%{$part}%";
+
+                        $query->where(function (Builder $query) use ($like) {
+                            $query->where('name', 'like', $like)
+                                ->orWhere('sku', 'like', $like)
+                                ->orWhere('barcode', 'like', $like)
+                                ->orWhereHas('category', fn (Builder $category) => $category->where('name', 'like', $like)->orWhere('code', 'like', $like))
+                                ->orWhereHas('brand', fn (Builder $brand) => $brand->where('name', 'like', $like)->orWhere('code', 'like', $like))
+                                ->orWhereHas('retailProfile', fn (Builder $profile) => $profile->where('barcode', 'like', $like)->orWhere('brand', 'like', $like))
+                                ->orWhereHas('retailVariants', fn (Builder $variant) => $variant->where('sku', 'like', $like)->orWhere('barcode', 'like', $like)->orWhere('variant_name', 'like', $like))
+                                ->orWhereHas('retailVariants.attributeValueLinks.value', fn (Builder $value) => $value->where('value', 'like', $like)->orWhere('code', 'like', $like));
+                        });
+                    });
             })
             ->orderBy('name');
     }

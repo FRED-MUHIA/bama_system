@@ -15,5 +15,6 @@ class ProductExpiry extends RetailModel
     ];
 
     public function product() { return $this->belongsTo(Product::class); }
+    public function variant() { return $this->belongsTo(RetailProductVariant::class, 'retail_product_variant_id'); }
     public function batch() { return $this->belongsTo(ProductBatch::class, 'product_batch_id'); }
 }

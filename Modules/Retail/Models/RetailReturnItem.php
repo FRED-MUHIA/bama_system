@@ -12,4 +12,5 @@ class RetailReturnItem extends RetailModel
     public function authorization() { return $this->belongsTo(RetailReturnAuthorization::class, 'retail_return_authorization_id'); }
     public function orderItem() { return $this->belongsTo(PosOrderItem::class, 'pos_order_item_id'); }
     public function product() { return $this->belongsTo(Product::class); }
+    public function variant() { return $this->belongsTo(RetailProductVariant::class, 'retail_product_variant_id'); }
 }
