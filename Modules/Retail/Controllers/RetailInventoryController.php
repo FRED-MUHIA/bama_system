@@ -5,6 +5,7 @@ namespace Modules\Retail\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Product;
+use App\Models\StockMovement;
 use App\Models\Supplier;
 use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
@@ -36,6 +37,9 @@ class RetailInventoryController extends Controller
             'suppliers' => Supplier::orderBy('name')->get(),
             'replenishmentPlans' => Schema::hasTable('retail_replenishment_plans') ? RetailReplenishmentPlan::with('product', 'supplier', 'purchaseOrder')->latest()->limit(8)->get() : collect(),
             'cycleCounts' => Schema::hasTable('retail_cycle_counts') ? RetailCycleCount::with('product', 'bin')->latest()->limit(8)->get() : collect(),
+            'stockMovements' => Schema::hasTable('stock_movements')
+                ? StockMovement::with('product')->latest()->limit(30)->get()
+                : collect(),
         ]);
     }
 

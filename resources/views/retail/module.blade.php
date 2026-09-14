@@ -118,6 +118,40 @@
     </div>
 @elseif($section === 'inventory')
     <div class="card p-3 mb-3" id="retail-stock-records">
+        <h2 class="h5">Stock Records</h2>
+        <div class="text-muted small mb-3">Every sale automatically deducts stock and is recorded here — showing what was sold and what remains.</div>
+        @forelse($stockMovements as $movement)
+            <div class="d-flex justify-content-between gap-2 border-bottom py-2">
+                <div class="min-w-0">
+                    <strong>{{ $movement->product?->name ?: 'Deleted product' }}</strong>
+                    @if($movement->product?->sku)<span class="small text-muted"> · {{ $movement->product->sku }}</span>@endif
+                    <div class="small text-muted">{{ $movement->created_at?->format('d M Y H:i') }} · {{ $movement->reference }}</div>
+                </div>
+                <div class="text-end flex-shrink-0">
+                    <div class="{{ $movement->quantity < 0 ? 'text-danger' : 'text-success' }} fw-bold">{{ $movement->quantity > 0 ? '+' : '' }}{{ number_format($movement->quantity, 3) }}</div>
+                    <div class="small text-muted">Remaining {{ number_format($movement->balance_after, 3) }}</div>
+                </div>
+            </div>
+        @empty
+            <div class="text-muted py-2">No stock records yet. Sales will be recorded here automatically.</div>
+        @endforelse
+    </div>
+    <div class="card p-3 mb-3">
+        <h2 class="h5">Update Stock</h2>
+        <div class="text-muted small mb-3">Add new stock, remove damaged stock, or correct a balance. Pick the product first.</div>
+        <form method="POST" class="row g-2">
+            @csrf
+            <div class="col-md-4"><select class="form-select" name="product_id" required onchange="this.form.action=this.value"><option value="">Product</option>@foreach($products as $product)<option value="{{ route('products.stock.update', $product) }}">{{ $product->name }} ({{ $product->formattedStock() }} in stock)</option>@endforeach</select></div>
+            <div class="col-md-2"><select class="form-select" name="type"><option>Add</option><option>Remove</option><option>Set</option></select></div>
+            <div class="col-md-2"><input class="form-control" name="quantity" type="number" min="0" step="0.001" placeholder="Qty" required></div>
+            <div class="col-md-3"><input class="form-control" name="notes" placeholder="Notes (optional)"></div>
+            <div class="col-md-1"><button class="btn btn-success w-100"><i class="bi bi-save"></i></button></div>
+        </form>
+    </div>
+    <div class="card p-3 mb-3">
+        <details>
+            <summary class="h5 mb-0 list-none">Advanced tools — reserve, transfer, forecasts, cycle counts</summary>
+            <div class="mt-3">
         <form method="POST" action="{{ route('retail.inventory.adjust') }}" class="row g-2">
             @csrf
             <div class="col-md-3"><select class="form-select" name="product_id" required><option value="">Product</option>@foreach($products as $product)<option value="{{ $product->id }}">{{ $product->name }}</option>@endforeach</select></div>
@@ -201,6 +235,8 @@
                 @endforelse
             </div>
         </div>
+            </div>
+        </details>
     </div>
 @elseif($section === 'warehousing')
     <div class="card p-3 mb-3">
