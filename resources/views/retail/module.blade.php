@@ -455,7 +455,9 @@
         <div class="border-top mt-3 pt-3">
             <h2 class="h5 mb-2">Catalog Feed</h2>
             @forelse($records as $integration)
-                @php($apiKey = data_get($integration->settings, 'api_key'))
+                @php
+                    $apiKey = data_get($integration->settings, 'api_key');
+                @endphp
                 <div class="border rounded p-3 mb-2">
                     <div class="d-flex justify-content-between gap-3 flex-wrap">
                         <div>
