@@ -140,9 +140,10 @@ class RetailSectionWorkflowsTest extends TestCase
         $product = Product::where('sku', 'CAT-ADD-1')->firstOrFail();
         $this->get(route('retail.products.index'))
             ->assertStatus(200)
-            ->assertSee('retail-product-edit-'.$product->id, false)
-            ->assertSee('retail-product-stock-'.$product->id, false)
-            ->assertSee('<div class="collapse border-top p-3" id="retail-product-edit-'.$product->id.'">', false)
+            ->assertSee('retail-product-edit-row-'.$product->id, false)
+            ->assertSee('retail-product-stock-row-'.$product->id, false)
+            ->assertSee('data-retail-panel-toggle="retail-product-edit-row-'.$product->id.'"', false)
+            ->assertSee('id="retail-product-edit-row-'.$product->id.'" class="d-none" hidden', false)
             ->assertSee(route('products.update', $product), false)
             ->assertSee(route('products.stock.update', $product), false);
     }

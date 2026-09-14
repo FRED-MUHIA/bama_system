@@ -510,15 +510,15 @@
                         <td>{{ optional($record->updated_at)->format('d M Y') }}</td>
                         <td class="text-end">
                             <div class="d-flex gap-1 justify-content-end">
-                                <button class="btn btn-sm btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#retail-product-stock-{{ $record->id }}" aria-expanded="false" aria-controls="retail-product-stock-{{ $record->id }}"><i class="bi bi-boxes"></i></button>
-                                <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#retail-product-edit-{{ $record->id }}" aria-expanded="false" aria-controls="retail-product-edit-{{ $record->id }}"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-outline-success" type="button" data-retail-panel-toggle="retail-product-stock-row-{{ $record->id }}" aria-expanded="false" aria-controls="retail-product-stock-row-{{ $record->id }}"><i class="bi bi-boxes"></i></button>
+                                <button class="btn btn-sm btn-outline-dark" type="button" data-retail-panel-toggle="retail-product-edit-row-{{ $record->id }}" aria-expanded="false" aria-controls="retail-product-edit-row-{{ $record->id }}"><i class="bi bi-pencil"></i></button>
                                 <form method="post" action="{{ route('products.destroy', $record) }}" onsubmit="return confirm('Archive this product?')">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger" aria-label="Archive {{ $record->name }}"><i class="bi bi-archive"></i></button></form>
                             </div>
                         </td>
                     </tr>
-                    <tr>
+                    <tr id="retail-product-stock-row-{{ $record->id }}" class="d-none" hidden>
                         <td colspan="6" class="p-0 border-0">
-                            <div class="collapse border-top p-3" id="retail-product-stock-{{ $record->id }}">
+                            <div class="border-top p-3">
                                 <form method="post" action="{{ route('products.stock.update', $record) }}" class="row g-2 align-items-end">@csrf
                                     <div class="col-md-3"><label class="form-label">Movement</label><select class="form-select" name="type"><option>Add</option><option>Remove</option><option>Set</option></select></div>
                                     <div class="col-md-3"><label class="form-label">Quantity ({{ $record->stock_unit ?: 'pcs' }})</label><input class="form-control" name="quantity" type="number" min="0" step="0.001" required></div>
@@ -528,9 +528,9 @@
                             </div>
                         </td>
                     </tr>
-                    <tr>
+                    <tr id="retail-product-edit-row-{{ $record->id }}" class="d-none" hidden>
                         <td colspan="6" class="p-0 border-0">
-                            <div class="collapse border-top p-3" id="retail-product-edit-{{ $record->id }}">
+                            <div class="border-top p-3">
                                 <form method="post" action="{{ route('products.update', $record) }}" class="row g-2">@csrf @method('PUT')
                                     @include('products.partials.fields', ['product' => $record])
                                     <div class="col-12"><button class="btn btn-warning btn-sm">Update Product</button></div>
@@ -575,11 +575,11 @@
                             Transit {{ $stockProduct?->formattedStock((float) $record->in_transit_stock) ?? number_format((float) $record->in_transit_stock, 3) }}
                             <div>Damaged {{ $stockProduct?->formattedStock((float) $record->damaged_stock) ?? number_format((float) $record->damaged_stock, 3) }}</div>
                         </td>
-                        <td class="text-end"><button class="btn btn-sm btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#retail-inventory-edit-{{ $record->id }}" aria-expanded="false" aria-controls="retail-inventory-edit-{{ $record->id }}"><i class="bi bi-boxes me-1"></i>Stock</button></td>
+                        <td class="text-end"><button class="btn btn-sm btn-outline-success" type="button" data-retail-panel-toggle="retail-inventory-edit-row-{{ $record->id }}" aria-expanded="false" aria-controls="retail-inventory-edit-row-{{ $record->id }}"><i class="bi bi-boxes me-1"></i>Stock</button></td>
                     </tr>
-                    <tr>
+                    <tr id="retail-inventory-edit-row-{{ $record->id }}" class="d-none" hidden>
                         <td colspan="6" class="p-0 border-0">
-                            <div class="collapse border-top p-3" id="retail-inventory-edit-{{ $record->id }}">
+                            <div class="border-top p-3">
                                 <form method="POST" action="{{ route('retail.inventory.adjust') }}" class="row g-2 align-items-end">
                                     @csrf
                                     <input type="hidden" name="product_id" value="{{ $record->product_id }}">
@@ -654,3 +654,24 @@
     </div>
 @endif
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-retail-panel-toggle]').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const panel = document.getElementById(button.dataset.retailPanelToggle);
+            if (! panel) return;
+
+            const shouldOpen = panel.classList.contains('d-none');
+            panel.classList.toggle('d-none', ! shouldOpen);
+            panel.toggleAttribute('hidden', ! shouldOpen);
+            button.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+        });
+    });
+});
+</script>
+@endpush
