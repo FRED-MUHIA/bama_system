@@ -36,9 +36,9 @@ class RetailOrderController extends Controller
 
     public function store(Request $request, RetailOrderService $orders)
     {
-        $orders->create($request->validate(RetailValidationRules::order()));
+        $order = $orders->create($request->validate(RetailValidationRules::order()));
 
-        return back()->with('status', 'Retail order saved.');
+        return back()->with('status', 'Retail order saved as POS order '.$order->posOrder?->order_number.'.');
     }
 
     public function storeCustomer(Request $request)

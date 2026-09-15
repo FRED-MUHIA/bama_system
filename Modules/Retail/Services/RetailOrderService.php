@@ -2,34 +2,38 @@
 
 namespace Modules\Retail\Services;
 
+use App\Models\Client;
+use App\Models\PosOrder;
+use App\Models\Product;
 use App\Services\DocumentService;
+use App\Services\StockService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Modules\Retail\Models\RetailDelivery;
 use Modules\Retail\Models\RetailOrder;
 
 class RetailOrderService
 {
-    public function __construct(private RetailNumberService $numbers, private DocumentService $documents)
-    {
+    public function __construct(
+        private RetailNumberService $numbers,
+        private DocumentService $documents,
+        private StockService $stock,
+    ) {
     }
 
     public function create(array $data): RetailOrder
     {
         return DB::transaction(function () use ($data) {
-            $items = collect($data['items'])->map(function (array $item) {
-                $item['description'] = $item['title'];
-                $item['discount'] = $item['discount'] ?? 0;
-                $item['tax_rate'] = $item['tax_rate'] ?? 0;
-                $item['line_total'] = $this->documents->lineTotal($item);
-
-                return $item;
-            });
-
+            $items = $this->prepareItems($data['items']);
             $totals = $this->documents->totals($items->all());
+            $posOrder = $this->createPosOrder($data, $items, $totals);
+
             $order = RetailOrder::create([
                 'client_id' => $data['client_id'] ?? null,
                 'branch_id' => $data['branch_id'] ?? null,
-                'order_number' => $data['order_number'] ?? $this->numbers->orderNumber(),
+                'pos_order_id' => $posOrder->id,
+                'order_number' => $posOrder->order_number ?: ($data['order_number'] ?? $this->numbers->orderNumber()),
                 'channel' => $data['channel'],
                 'order_date' => $data['order_date'] ?? now()->toDateString(),
                 'status' => $data['status'] ?? 'Draft',
@@ -38,14 +42,18 @@ class RetailOrderService
                 'discount_total' => $totals['discountTotal'],
                 'tax_total' => $totals['taxTotal'],
                 'total' => $totals['total'],
-                'metadata' => $data['metadata'] ?? null,
+                'metadata' => array_merge((array) ($data['metadata'] ?? []), [
+                    'source' => 'retail_order_form',
+                    'pos_order_id' => $posOrder->id,
+                    'pos_order_number' => $posOrder->order_number,
+                ]),
             ]);
 
             foreach ($items as $item) {
-                $order->items()->create($item);
+                $order->items()->create($this->itemForTable('retail_order_items', $item));
             }
 
-            return $order->load('items.product', 'client', 'branch');
+            return $order->load('items.product', 'client', 'branch', 'posOrder.items.product', 'posOrder.retailExtension');
         });
     }
 
@@ -55,5 +63,109 @@ class RetailOrderService
             ['retail_order_id' => $order->id],
             $data + ['status' => $data['status'] ?? 'Scheduled']
         );
+    }
+
+    private function prepareItems(array $items): Collection
+    {
+        return collect($this->documents->normalizeItems($items))
+            ->map(function (array $item) {
+                $product = ! empty($item['product_id']) ? Product::with('retailProfile')->find($item['product_id']) : null;
+                $title = $item['title'] ?? $product?->name ?? $item['description'] ?? 'Manual retail order item';
+
+                return [
+                    'product_id' => $product?->id,
+                    'retail_product_variant_id' => $item['retail_product_variant_id'] ?? null,
+                    'title' => $title,
+                    'description' => $item['description'] ?? $product?->description ?? $title,
+                    'quantity' => (float) ($item['quantity'] ?? 1),
+                    'unit_price' => (float) ($item['unit_price'] ?? $product?->price ?? 0),
+                    'discount' => (float) ($item['discount'] ?? 0),
+                    'tax_rate' => (float) ($item['tax_rate'] ?? $product?->retailProfile?->tax_class ?? 0),
+                ];
+            })
+            ->map(fn (array $item) => $item + ['line_total' => $this->documents->lineTotal($item)])
+            ->values();
+    }
+
+    private function createPosOrder(array $data, Collection $items, array $totals): PosOrder
+    {
+        $client = ! empty($data['client_id']) ? Client::find($data['client_id']) : null;
+        $status = $this->posStatusFor($data['status'] ?? 'Draft');
+
+        $order = PosOrder::create([
+            'client_id' => $client?->id,
+            'order_number' => $data['order_number'] ?? $this->documents->number('pos_order'),
+            'tracking_key' => str()->uuid()->toString(),
+            'order_date' => $data['order_date'] ?? now()->toDateString(),
+            'customer_name' => $client?->name,
+            'customer_phone' => $client?->phone,
+            'customer_email' => $client?->email,
+            'customer_type' => 'Retail Customer',
+            'status' => $status,
+            'approved_at' => $status === 'approved' ? now() : null,
+            'subtotal' => $totals['subtotal'],
+            'discount_total' => $totals['discountTotal'],
+            'tax_total' => $totals['taxTotal'],
+            'custom_amount' => 0,
+            'total' => $totals['total'],
+            'amount_paid' => 0,
+            'notes' => $this->posNotesFor($data),
+        ]);
+
+        foreach ($items as $item) {
+            $order->items()->create($this->itemForTable('pos_order_items', $item));
+        }
+
+        $this->stock->syncSaleItems(
+            collect(),
+            $status === 'cancelled' ? collect() : $items,
+            $order,
+            'Retail POS '.$order->order_number
+        );
+
+        if (Schema::hasTable('retail_sales_extensions')) {
+            $order->retailExtension()->create([
+                'branch_id' => $data['branch_id'] ?? null,
+                'cashier_id' => auth()->id(),
+                'sale_type' => 'Sale',
+                'channel' => $this->posChannelFor($data['channel'] ?? 'Store'),
+                'split_payment_summary' => [],
+                'notes' => $this->posNotesFor($data),
+            ]);
+        }
+
+        return $order;
+    }
+
+    private function itemForTable(string $table, array $item): array
+    {
+        if (! Schema::hasColumn($table, 'retail_product_variant_id')) {
+            unset($item['retail_product_variant_id']);
+        }
+
+        return $item;
+    }
+
+    private function posStatusFor(string $status): string
+    {
+        return match ($status) {
+            'Confirmed', 'Packed', 'Shipped', 'Delivered' => 'approved',
+            'Cancelled' => 'cancelled',
+            default => 'pending',
+        };
+    }
+
+    private function posChannelFor(string $channel): string
+    {
+        return match ($channel) {
+            'Mobile Commerce' => 'Mobile POS',
+            'Online Store', 'Marketplace' => 'Online Store',
+            default => 'Store',
+        };
+    }
+
+    private function posNotesFor(array $data): string
+    {
+        return trim('Retail order'.PHP_EOL.'Channel: '.($data['channel'] ?? 'Store').PHP_EOL.'Status: '.($data['status'] ?? 'Draft'));
     }
 }

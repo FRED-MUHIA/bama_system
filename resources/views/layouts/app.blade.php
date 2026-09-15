@@ -690,6 +690,27 @@
             .mobile-bottom-nav button {
                 color:#111827 !important;
             }
+            .btn-dark,
+            .btn-dark i,
+            .btn-dark span,
+            .quick-actions .btn-dark,
+            .quick-actions .btn-dark i,
+            .quick-actions .btn-dark span {
+                color:#fff !important;
+                -webkit-text-fill-color:#fff;
+            }
+            .mobile-action.bg-dark,
+            .mobile-action.bg-dark i,
+            .mobile-action.bg-dark span,
+            .mobile-action[style*="background:#000"],
+            .mobile-action[style*="background:#000"] i,
+            .mobile-action[style*="background:#000"] span,
+            .mobile-action[style*="background: #000"],
+            .mobile-action[style*="background: #000"] i,
+            .mobile-action[style*="background: #000"] span {
+                color:#fff !important;
+                -webkit-text-fill-color:#fff;
+            }
             .text-muted,
             .form-text,
             small,

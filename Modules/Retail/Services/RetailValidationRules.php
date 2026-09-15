@@ -60,9 +60,13 @@ class RetailValidationRules
             'status' => ['required', Rule::in(RetailOrder::STATUSES)],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['nullable', Rule::exists('products', 'id')->where('business_id', ActiveBusiness::id())],
+            'items.*.retail_product_variant_id' => ['nullable', Rule::exists('retail_product_variants', 'id')->where('business_id', ActiveBusiness::id())],
             'items.*.title' => ['required', 'string', 'max:255'],
+            'items.*.description' => ['nullable', 'string', 'max:500'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'items.*.discount' => ['nullable', 'numeric', 'min:0'],
+            'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ];
     }
 
