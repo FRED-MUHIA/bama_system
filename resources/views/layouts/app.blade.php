@@ -1216,6 +1216,21 @@
             ['label' => 'Reports', 'route' => 'agriculture.reports.index', 'match' => 'agriculture.reports.*', 'icon' => 'bi-bar-chart'],
         ];
 
+        $retailMobileItems = [
+            ['label' => 'Home', 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'bi-speedometer2'],
+            ['label' => 'Orders', 'route' => 'retail.orders.index', 'match' => 'retail.orders.*', 'icon' => 'bi-bag-check'],
+            ['label' => 'Finance', 'route' => 'finance.index', 'match' => 'finance.*', 'icon' => 'bi-bank', 'condition' => \App\Support\SchemaCache::hasTable('journal_entries')],
+            ['label' => 'POS Order', 'route' => 'retail.pos.index', 'match' => 'retail.pos.*', 'icon' => 'bi-shop'],
+            ['label' => 'Products', 'route' => 'retail.products.index', 'match' => 'retail.products.*', 'icon' => 'bi-box-seam'],
+            ['label' => 'Client', 'route' => 'retail.customers.index', 'match' => 'retail.customers.*', 'icon' => 'bi-person-plus'],
+            ['label' => 'Inventory', 'route' => 'retail.inventory.index', 'match' => 'retail.inventory.*', 'icon' => 'bi-stack'],
+            ['label' => 'Returns', 'route' => 'retail.returns.index', 'match' => 'retail.returns.*', 'icon' => 'bi-arrow-counterclockwise'],
+            ['label' => 'Reports', 'route' => 'retail.reports.index', 'match' => 'retail.reports.*', 'icon' => 'bi-graph-up'],
+            ['label' => 'Suppliers', 'route' => 'retail.suppliers.index', 'match' => 'retail.suppliers.*', 'icon' => 'bi-truck'],
+            ['label' => 'Gift Cards', 'route' => 'retail.gift-cards.index', 'match' => 'retail.gift-cards.*', 'icon' => 'bi-credit-card-2-front'],
+            ['label' => 'Settings', 'route' => 'retail.settings.index', 'match' => 'retail.settings.*', 'icon' => 'bi-gear'],
+        ];
+
         $utilityOverflowItems = [
             ['label' => 'Settings', 'route' => 'settings.edit', 'match' => 'settings.*', 'icon' => 'bi-gear'],
             ['label' => 'My Profile', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'bi-person'],
@@ -1284,6 +1299,12 @@
                 ->reject(fn ($item) => in_array($item['label'], collect($mobileContextItems)->take(4)->pluck('label')->all(), true))
                 ->values()
                 ->all();
+        }
+
+        if ($isRetailContext) {
+            $mobileContextLabel = 'Retail';
+            $mobileContextItems = $retailMobileItems;
+            $mobileOverflowItems = array_slice($retailMobileItems, 3);
         }
 
         $mobileItemAvailable = fn ($item) => (! empty($item['url']) || \Illuminate\Support\Facades\Route::has($item['route'])) && ($item['condition'] ?? true);

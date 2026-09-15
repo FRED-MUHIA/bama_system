@@ -219,11 +219,11 @@ class DashboardController extends Controller
                 'status' => 'STORE STATUS · ACTIVE',
                 'nodes' => ['SALES', 'STOCK', 'CLIENTS', 'PRODUCTS', 'PAYMENTS', 'REPORTS'],
                 'actions' => [
-                    ['label' => 'POS Order', 'route' => 'pos-orders.create', 'icon' => 'bi-shop', 'primary' => true],
-                    ['label' => 'Products', 'route' => 'products.index', 'icon' => 'bi-box-seam'],
-                    ['label' => 'Client', 'route' => 'clients.create', 'icon' => 'bi-person-plus'],
+                    ['label' => 'POS Order', 'route' => 'retail.pos.index', 'icon' => 'bi-shop', 'primary' => true],
+                    ['label' => 'Products', 'route' => 'retail.products.index', 'icon' => 'bi-box-seam'],
+                    ['label' => 'Client', 'route' => 'retail.customers.index', 'icon' => 'bi-person-plus'],
                     ['label' => 'Invoice', 'route' => 'invoices.create', 'icon' => 'bi-plus-circle'],
-                    ['label' => 'Reports', 'route' => 'pos-orders.report', 'icon' => 'bi-graph-up'],
+                    ['label' => 'Reports', 'route' => 'retail.reports.index', 'icon' => 'bi-graph-up'],
                 ],
             ],
             'salon' => [

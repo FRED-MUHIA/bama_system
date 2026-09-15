@@ -38,14 +38,23 @@
     $projectsEnabled = \App\Models\Client::supportsCompanyStructure();
     $mobileMoney = fn ($value) => ($settings?->currency_code ?? 'KES').' '.number_format((float) $value, 2);
     $mobileTiles = [
-        ['label' => 'To Receive', 'value' => $mobileMoney($cards['Pending Payments'] ?? $performance['outstanding']), 'tone' => 'receive', 'icon' => 'bi-arrow-down-left'],
-        ['label' => 'To Give', 'value' => $mobileMoney($cards['Supplier Due'] ?? 0), 'tone' => 'give', 'icon' => 'bi-arrow-up-right'],
-        ['label' => 'Sales', 'value' => $performance['revenueFormatted'], 'hint' => ucfirst($performance['period']), 'icon' => 'bi-chevron-right'],
-        ['label' => 'Purchases', 'value' => $mobileMoney($cards['Supplier Due'] ?? 0), 'hint' => ucfirst($performance['period']), 'icon' => 'bi-chevron-right'],
-        ['label' => 'Invoices', 'value' => $cards['Invoices'] ?? 0, 'hint' => 'Documents', 'icon' => 'bi-chevron-right'],
-        ['label' => 'Total Balance', 'value' => $mobileMoney(($cards['Collected'] ?? 0) + ($cards['POS Revenue'] ?? 0)), 'hint' => 'Cash and bank', 'icon' => 'bi-chevron-right'],
+        ['label' => 'To Receive', 'value' => $mobileMoney($cards['Pending Payments'] ?? $performance['outstanding']), 'tone' => 'receive', 'icon' => 'bi-arrow-down-left', 'route' => 'finance.index'],
+        ['label' => 'To Give', 'value' => $mobileMoney($cards['Supplier Due'] ?? 0), 'tone' => 'give', 'icon' => 'bi-arrow-up-right', 'route' => 'finance.index'],
+        ['label' => 'Sales', 'value' => $performance['revenueFormatted'], 'hint' => ucfirst($performance['period']), 'icon' => 'bi-chevron-right', 'route' => 'retail.orders.index'],
+        ['label' => 'Purchases', 'value' => $mobileMoney($cards['Supplier Due'] ?? 0), 'hint' => ucfirst($performance['period']), 'icon' => 'bi-chevron-right', 'route' => 'retail.procurement.index'],
+        ['label' => 'Invoices', 'value' => $cards['Invoices'] ?? 0, 'hint' => 'Documents', 'icon' => 'bi-chevron-right', 'route' => 'invoices.index'],
+        ['label' => 'Total Balance', 'value' => $mobileMoney(($cards['Collected'] ?? 0) + ($cards['POS Revenue'] ?? 0)), 'hint' => 'Cash and bank', 'icon' => 'bi-chevron-right', 'route' => 'finance.index'],
     ];
-    $mobileQuickActions = $heroActions->take(6)->values();
+    $mobileQuickActions = $heroActions->filter(fn ($action) => Route::has($action['route']))->take(6)->values();
+    $dashboardActionHref = function (array $action): string {
+        if (empty($action['route']) || ! Route::has($action['route'])) {
+            return '#';
+        }
+
+        $href = route($action['route'], $action['params'] ?? []);
+
+        return empty($action['fragment']) ? $href : $href.'#'.ltrim($action['fragment'], '#');
+    };
 @endphp
 <style>
     .modern-dashboard { color:#000; }
@@ -144,8 +153,9 @@
 <style>
     .mobile-app-home{display:none}
     @media(max-width:768px){
-        .modern-dashboard{margin:-.35rem -.15rem 0;color:#111827}
-        .mobile-app-home{display:block}
+        .modern-dashboard{margin:-.35rem -.15rem 0;color:#111827;max-width:100%;overflow-x:hidden}
+        .mobile-app-home{display:block!important;border:0!important;background:transparent!important;box-shadow:none!important;padding:0 0 calc(82px + env(safe-area-inset-bottom))!important;overflow:hidden}
+        .mobile-app-home *{min-width:0}
         .modern-dashboard > .industry-panel,
         .modern-dashboard > .hero-panel,
         .modern-dashboard > .stat-grid,
@@ -155,25 +165,27 @@
         .mobile-industry-banner:after{content:"";position:absolute;right:-28px;top:-34px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.12)}
         .mobile-industry-banner strong{display:block;font-size:.95rem;line-height:1.15;position:relative;z-index:1}
         .mobile-industry-banner span{display:block;color:#c9f5d8;font-size:.72rem;font-weight:700;position:relative;z-index:1}
+        .mobile-industry-banner i{position:relative;z-index:1;flex:0 0 auto;font-size:1.2rem}
         .mobile-tile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
-        .mobile-money-tile{min-height:78px;border:1px solid #edf0f4;border-radius:7px;background:#fff;padding:12px;box-shadow:0 4px 14px rgba(15,23,42,.04);display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+        .mobile-money-tile{min-height:82px;border:1px solid #edf0f4;border-radius:7px;background:#fff;padding:12px;box-shadow:0 4px 14px rgba(15,23,42,.04);display:flex;justify-content:space-between;gap:10px;align-items:flex-start;text-decoration:none;overflow:hidden}
         .mobile-money-tile.receive{background:#eafaf1;border-color:#bfead1;color:#008342}
         .mobile-money-tile.give{background:#fff0f4;border-color:#f6c7d5;color:#d61f4c}
-        .mobile-money-tile strong{display:block;font-size:.96rem;font-weight:800;color:inherit}
-        .mobile-money-tile span{display:block;margin-top:8px;font-size:.68rem;color:#667085}
-        .mobile-money-tile i{color:inherit;font-size:.9rem}
+        .mobile-money-tile strong{display:block;font-size:clamp(.9rem,4vw,1.06rem);font-weight:800;color:inherit;line-height:1.12;overflow-wrap:anywhere;text-decoration:underline;text-underline-offset:3px}
+        .mobile-money-tile span{display:block;margin-top:8px;font-size:.68rem;line-height:1.35;color:#667085;overflow-wrap:anywhere;text-decoration:underline;text-underline-offset:3px}
+        .mobile-money-tile i{color:inherit;font-size:.95rem;flex:0 0 auto}
         .mobile-section-title{font-size:.92rem;font-weight:900;margin:10px 0}
         .mobile-action-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
-        .mobile-action{min-height:92px;border:1px solid #edf0f4;border-radius:7px;background:#fff;text-decoration:none;color:#111827;display:grid;place-items:center;text-align:center;padding:12px 8px;box-shadow:0 4px 14px rgba(15,23,42,.04)}
+        .mobile-action{min-height:92px;border:1px solid #edf0f4;border-radius:7px;background:#fff;text-decoration:none;color:#111827;display:grid;place-items:center;text-align:center;padding:12px 8px;box-shadow:0 4px 14px rgba(15,23,42,.04);overflow:hidden}
+        .mobile-action:active,.mobile-action:focus-visible{border-color:var(--tenant-primary,#00A651);outline:0;box-shadow:0 0 0 3px rgba(0,166,81,.14)}
         .mobile-action i{color:var(--tenant-primary,#00A651);font-size:1.15rem;margin-bottom:8px}
-        .mobile-action span{display:block;font-size:.76rem;font-weight:750;line-height:1.25}
+        .mobile-action span{display:block;font-size:.76rem;font-weight:750;line-height:1.25;overflow-wrap:anywhere}
         .mobile-feed{border:1px solid #edf0f4;border-radius:8px;background:#fff;overflow:hidden}
-        .mobile-feed-row{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid #f1f3f7;text-decoration:none;color:#111827}
+        .mobile-feed-row{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid #f1f3f7;text-decoration:none;color:#111827;overflow:hidden}
         .mobile-feed-row:last-child{border-bottom:0}
         .mobile-feed-icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:#eefbf3;color:var(--tenant-primary,#00A651);flex:0 0 34px}
-        .mobile-feed-row strong{display:block;font-size:.8rem}
-        .mobile-feed-row span{display:block;font-size:.68rem;color:#667085;margin-top:2px}
-        .mobile-feed-row .bi-chevron-right{margin-left:auto;color:#98a2b3}
+        .mobile-feed-row strong{display:block;font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .mobile-feed-row span{display:block;font-size:.68rem;color:#667085;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .mobile-feed-row .bi-chevron-right{margin-left:auto;color:#98a2b3;flex:0 0 auto}
     }
 </style>
 <style>
@@ -214,7 +226,8 @@
 
         <div class="mobile-tile-grid">
             @foreach($mobileTiles as $tile)
-                <a class="mobile-money-tile {{ $tile['tone'] ?? '' }}" href="{{ Route::has('finance.index') ? route('finance.index') : '#' }}">
+                @php($tileRoute = $tile['route'] ?? 'finance.index')
+                <a class="mobile-money-tile {{ $tile['tone'] ?? '' }}" href="{{ Route::has($tileRoute) ? route($tileRoute, $tile['params'] ?? []) : '#' }}">
                     <div>
                         <strong>{{ $tile['value'] }}</strong>
                         <span>{{ $tile['label'] }} @if(!empty($tile['hint']))({{ $tile['hint'] }})@endif</span>
@@ -227,7 +240,7 @@
         <div class="mobile-section-title">Explore App</div>
         <div class="mobile-action-grid">
             @foreach($mobileQuickActions as $action)
-                <a class="mobile-action" href="{{ route($action['route'], $action['params'] ?? []) }}">
+                <a class="mobile-action" href="{{ $dashboardActionHref($action) }}">
                     <div>
                         <i class="bi {{ $action['icon'] }}"></i>
                         <span>{{ $action['label'] }}</span>
