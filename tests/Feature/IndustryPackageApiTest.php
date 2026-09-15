@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Services\IndustrySetupService;
 use Tests\TestCase;
 
 class IndustryPackageApiTest extends TestCase
@@ -71,24 +72,19 @@ class IndustryPackageApiTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_registration_dropdown_only_shows_implemented_industries(): void
+    public function test_registration_dropdown_shows_all_configured_industries(): void
     {
-        $this->get('/register/company')
-            ->assertOk()
-            ->assertSeeText('Printing & Branding')
-            ->assertSeeText('Automotive')
-            ->assertSeeText('Chama Management')
-            ->assertSeeText('Table Banking')
-            ->assertSeeText('Savings Group')
-            ->assertSeeText('Retail')
-            ->assertSeeText('Book Store')
-            ->assertSeeText('Clothing Store')
-            ->assertSeeText('Furniture Store')
-            ->assertSeeText('Grocery Store')
-            ->assertSeeText('Hardware Store')
-            ->assertSeeText('Toy Store')
-            ->assertSeeText('Construction')
-            ->assertDontSeeText('Healthcare');
+        $response = $this->get('/register/company')->assertOk();
+
+        app(IndustrySetupService::class)->registrationIndustries()->each(
+            fn (array $industry) => $response->assertSeeText($industry['name'])
+        );
+
+        $response
+            ->assertSeeText('Healthcare')
+            ->assertSeeText('Banking & SACCO')
+            ->assertSeeText('Government')
+            ->assertSeeText('Event Management');
     }
 
     public function test_invalid_sub_industry_is_rejected(): void

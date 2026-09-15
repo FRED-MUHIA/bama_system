@@ -17,7 +17,7 @@ class OnboardingController extends Controller
 
         return view('onboarding.tenant', [
             'plans' => Schema::hasTable('plans') ? Plan::where('is_active', true)->orderBy('monthly_price')->get() : collect(),
-            'industries' => $industries->implementedIndustries(),
+            'industries' => $industries->registrationIndustries(),
         ]);
     }
 
@@ -28,7 +28,7 @@ class OnboardingController extends Controller
         $data = $request->validate([
             'tenant_name' => ['required', 'string', 'max:255'],
             'business_name' => ['nullable', 'string', 'max:255'],
-            'industry' => ['required', Rule::in($industries->implementedSlugs())],
+            'industry' => ['required', Rule::in($industries->registrationSlugs())],
             'sub_industry' => ['nullable', 'string', 'max:80'],
             'plan' => ['nullable', Rule::exists('plans', 'slug')],
         ]);

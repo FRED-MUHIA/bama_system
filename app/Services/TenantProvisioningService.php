@@ -9,9 +9,11 @@ use App\Models\TenantTheme;
 use App\Models\User;
 use App\Support\ActiveBusiness;
 use App\Support\ActiveTenant;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class TenantProvisioningService
 {
@@ -73,12 +75,13 @@ class TenantProvisioningService
             $account = $payload['account'];
             $company = $payload['company'];
             $plan = $payload['plan'] ?? 'starter';
+            $email = strtolower(trim($account['email']));
 
-            app(AccountEmailReuseService::class)->releaseEmailForRegistration($account['email']);
+            app(AccountEmailReuseService::class)->releaseEmailForRegistration($email);
 
             $userAttributes = [
                 'name' => $account['name'],
-                'email' => strtolower($account['email']),
+                'email' => $email,
                 'username' => $this->uniqueUsername($account['name']),
                 'password' => $account['password'],
                 'role' => 'admin',
@@ -93,9 +96,7 @@ class TenantProvisioningService
                 'password_changed_at' => now(),
             ];
 
-            $user = User::create(collect($userAttributes)
-                ->filter(fn ($value, $column) => Schema::hasColumn('users', $column))
-                ->all());
+            $user = $this->createRegistrationUser($userAttributes);
 
             $tenant = $this->provision([
                 'tenant_name' => $company['company_name'],
@@ -144,6 +145,41 @@ class TenantProvisioningService
 
             return ['tenant' => $tenant->refresh(), 'user' => $user->refresh()];
         });
+    }
+
+    private function createRegistrationUser(array $attributes): User
+    {
+        try {
+            return User::create(collect($attributes)
+                ->filter(fn ($value, $column) => Schema::hasColumn('users', $column))
+                ->all());
+        } catch (QueryException $e) {
+            if ($this->isUserEmailUniqueViolation($e)) {
+                throw ValidationException::withMessages([
+                    'email' => 'That email is already registered. Sign in or use a different email to create a new workspace.',
+                ]);
+            }
+
+            throw $e;
+        }
+    }
+
+    private function isUserEmailUniqueViolation(QueryException $exception): bool
+    {
+        $sqlState = (string) ($exception->errorInfo[0] ?? $exception->getCode());
+        $driverCode = (string) ($exception->errorInfo[1] ?? '');
+        $message = strtolower($exception->getMessage());
+
+        $isUniqueViolation = in_array($sqlState, ['23505', '23000'], true)
+            || $driverCode === '1062'
+            || str_contains($message, 'unique constraint failed');
+
+        return $isUniqueViolation && (
+            str_contains($message, 'users_email_unique')
+            || str_contains($message, 'users.email')
+            || str_contains($message, 'key (email)')
+            || str_contains($message, 'email_unique')
+        );
     }
 
     private function uniqueUsername(string $name): string

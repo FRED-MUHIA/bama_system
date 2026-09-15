@@ -33,6 +33,7 @@ class RegistrationController extends Controller
             'phone' => ['nullable', 'string', 'max:40'],
             'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
         ]);
+        $data['email'] = strtolower(trim($data['email']));
 
         $emailReuse->assertEmailCanRegister($data['email']);
 
@@ -45,7 +46,7 @@ class RegistrationController extends Controller
     {
         return view('registration.company', [
             'company' => session('registration.company', []),
-            'industries' => $industries->implementedIndustries(),
+            'industries' => $industries->registrationIndustries(),
             'step' => 2,
         ]);
     }
@@ -53,7 +54,7 @@ class RegistrationController extends Controller
     public function industryDashboard(Request $request, IndustrySetupService $industries)
     {
         $data = $request->validate([
-            'industry' => ['required', Rule::in($industries->implementedSlugs())],
+            'industry' => ['required', Rule::in($industries->registrationSlugs())],
             'sub_industry' => ['nullable', 'string', 'max:80'],
         ]);
 
@@ -70,7 +71,7 @@ class RegistrationController extends Controller
     {
         $data = $request->validate([
             'company_name' => ['required', 'string', 'max:160'],
-            'industry' => ['required', Rule::in($industries->implementedSlugs())],
+            'industry' => ['required', Rule::in($industries->registrationSlugs())],
             'sub_industry' => ['required', 'string', 'max:80'],
             'country' => ['required', 'string', 'max:80'],
             'currency' => ['required', 'string', 'size:3'],

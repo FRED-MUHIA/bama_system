@@ -36,6 +36,11 @@ class IndustrySetupService
             ->values();
     }
 
+    public function registrationIndustries(): Collection
+    {
+        return $this->industries()->values();
+    }
+
     public function slugs(): array
     {
         return $this->industries()->pluck('slug')->all();
@@ -44,6 +49,11 @@ class IndustrySetupService
     public function implementedSlugs(): array
     {
         return $this->implementedIndustries()->pluck('slug')->all();
+    }
+
+    public function registrationSlugs(): array
+    {
+        return $this->registrationIndustries()->pluck('slug')->all();
     }
 
     public function isImplemented(string $slug): bool

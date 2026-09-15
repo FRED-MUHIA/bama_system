@@ -6,12 +6,14 @@ use App\Models\Business;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\IamService;
+use App\Services\IndustrySetupService;
 use App\Services\ModuleRegistry;
 use App\Services\NavigationManager;
 use App\Services\TenantProvisioningService;
 use App\Support\ActiveBusiness;
 use App\Support\ActiveTenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class TenantProvisioningServiceTest extends TestCase
@@ -131,6 +133,77 @@ class TenantProvisioningServiceTest extends TestCase
         $this->assertSame('grocery-store', $tenant->sub_industry);
         $this->assertSame('grocery-store', $tenant->settings['sub_industry']);
         $this->assertSame('Grocery Store', $dashboard['sub_industry']);
+    }
+
+    public function test_registration_provisioning_rejects_existing_account_email_without_database_error(): void
+    {
+        $tenant = Tenant::where('slug', 'bama')->firstOrFail();
+
+        User::factory()->create([
+            'email' => 'govohkenya@gmail.com',
+            'current_tenant_id' => $tenant->id,
+            'role' => 'admin',
+            'is_active' => true,
+            'status' => 'Active',
+        ]);
+
+        try {
+            app(TenantProvisioningService::class)->provisionRegistration([
+                'account' => [
+                    'name' => 'Govoh Kenya',
+                    'email' => 'govohkenya@gmail.com',
+                    'phone' => '+254729929118',
+                    'password' => 'Password1',
+                ],
+                'company' => [
+                    'company_name' => 'Govoh Kenya',
+                    'industry' => 'government',
+                    'sub_industry' => 'standard',
+                    'country' => 'Kenya',
+                    'currency' => 'KES',
+                    'timezone' => 'Africa/Nairobi',
+                ],
+                'plan' => 'professional',
+            ]);
+
+            $this->fail('Expected duplicate registration email to be rejected.');
+        } catch (ValidationException $e) {
+            $this->assertSame('That email is already registered.', $e->errors()['email'][0]);
+        }
+
+        $this->assertSame(1, User::where('email', 'govohkenya@gmail.com')->count());
+    }
+
+    public function test_registration_provisioning_supports_every_configured_industry(): void
+    {
+        $industries = app(IndustrySetupService::class);
+
+        foreach ($industries->registrationIndustries() as $industry) {
+            $subIndustry = $industries->registrationSubIndustrySlugs($industry['slug'])[0] ?? 'standard';
+            $companyName = 'Signup '.$industry['slug'];
+
+            $result = app(TenantProvisioningService::class)->provisionRegistration([
+                'account' => [
+                    'name' => $companyName.' Owner',
+                    'email' => 'signup.'.$industry['slug'].'@example.com',
+                    'phone' => null,
+                    'password' => 'Password1',
+                ],
+                'company' => [
+                    'company_name' => $companyName,
+                    'industry' => $industry['slug'],
+                    'sub_industry' => $subIndustry,
+                    'country' => 'Kenya',
+                    'currency' => 'KES',
+                    'timezone' => 'Africa/Nairobi',
+                ],
+                'plan' => 'professional',
+            ]);
+
+            $this->assertSame($industry['slug'], $result['tenant']->industry);
+            $this->assertSame($subIndustry, $result['tenant']->sub_industry);
+            $this->assertSame($result['tenant']->id, $result['user']->current_tenant_id);
+        }
     }
 
     public function test_hospitality_sidebar_includes_shared_messaging_and_tax_etims(): void
