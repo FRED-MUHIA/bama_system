@@ -27,7 +27,22 @@
     $retailMoreActive = collect($retailMoreNav)->contains(fn ($item) => request()->routeIs($item[2]));
 @endphp
 
-<nav class="nav nav-pills gap-2 mb-3 flex-wrap">
+@once
+    <style>
+        .retail-nav .nav-link.active,
+        .retail-nav .nav-link.active i {
+            color:#fff !important;
+            -webkit-text-fill-color:#fff;
+        }
+
+        .retail-nav .nav-link.active {
+            background:var(--bama-ink,#111827) !important;
+            border-color:var(--bama-ink,#111827) !important;
+        }
+    </style>
+@endonce
+
+<nav class="nav nav-pills gap-2 mb-3 flex-wrap retail-nav">
     @foreach($retailNav as [$label, $route, $match, $icon])
         <a class="nav-link {{ request()->routeIs($match) ? 'active' : '' }}" href="{{ route($route) }}">
             <i class="bi {{ $icon }} me-1"></i>{{ $label }}

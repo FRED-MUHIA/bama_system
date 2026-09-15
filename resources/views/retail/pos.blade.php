@@ -29,13 +29,19 @@
     .pos-summary-tile span{display:block;color:#667085;font-size:.68rem;font-weight:800;text-transform:uppercase}
     .pos-summary-tile strong{display:block;color:#0f766e;font-size:1.05rem}
     .pos-search-box{position:relative}
-    .pos-suggestions{position:absolute;z-index:20;top:calc(100% + 4px);left:0;right:0;display:none;max-height:280px;overflow:auto;border:1px solid #d9dee8;border-radius:8px;background:#fff;box-shadow:0 12px 28px rgba(15,23,42,.12)}
-    .pos-suggestion{width:100%;border:0;border-bottom:1px solid #edf0f5;background:#fff;padding:10px 12px;text-align:left;display:flex;justify-content:space-between;gap:12px;align-items:center}
+    .pos-suggestions{position:absolute;z-index:20;top:calc(100% + 4px);left:0;right:0;display:none;max-height:360px;overflow:auto;border:1px solid #d9dee8;border-radius:8px;background:#fff;box-shadow:0 12px 28px rgba(15,23,42,.12)}
+    .pos-suggestion{width:100%;border:0;border-bottom:1px solid #edf0f5;background:#fff;padding:10px 12px;text-align:left;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
     .pos-suggestion:hover,.pos-suggestion:focus{background:#eef8f4;outline:0}
     .pos-suggestion strong{display:block;color:#111827}
-    .pos-suggestion span{display:block;color:#667085;font-size:.78rem}
-    .pos-suggestion .price{font-weight:800;color:#0f766e;white-space:nowrap}
+    .pos-suggestion-main{min-width:0}
+    .pos-suggestion-meta{display:flex;flex-wrap:wrap;gap:2px 10px;color:#667085;font-size:.76rem;margin-top:2px}
+    .pos-suggestion-summary{color:#344054;font-size:.75rem;line-height:1.35;margin-top:5px}
+    .pos-suggestion-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+    .pos-suggestion-tag{border:1px solid #cfeee0;border-radius:999px;background:#f3fbf7;color:#0f5132;font-size:.68rem;font-weight:750;line-height:1.2;padding:2px 7px;white-space:nowrap}
+    .pos-suggestion .price{font-weight:800;color:#0f766e;white-space:nowrap;text-align:right}
+    .pos-suggestion .price small{display:block;color:#667085;font-size:.68rem;font-weight:650}
     @media(max-width:1100px){.pos-shell{grid-template-columns:1fr}.pos-kpis,.pos-grid,.pos-scan-grid,.pos-sell-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pos-line,.pos-pay,.pos-line-more,.pos-pay-more{grid-template-columns:1fr 1fr}}
+    @media(max-width:720px){.pos-suggestion{flex-direction:column}.pos-suggestion .price{text-align:left}}
     @media(max-width:640px){.pos-kpis,.pos-grid,.pos-scan-grid,.pos-sell-grid,.pos-line,.pos-pay,.pos-line-more,.pos-pay-more,.pos-summary{grid-template-columns:1fr}.pos-line-total{justify-content:flex-start}.pos-icon-btn{width:100%}}
 </style>
 
@@ -287,14 +293,82 @@
     </aside>
 </div>
 @php
+    $posAttributePairs = function (?array $attributes) {
+        return collect($attributes ?? [])
+            ->reject(fn ($value) => $value === null || $value === '' || (is_array($value) && empty($value)))
+            ->map(function ($value, $key) {
+                $label = str((string) $key)->replace(['_', '-'], ' ')->headline()->toString();
+
+                if (is_bool($value)) {
+                    $value = $value ? 'Yes' : 'No';
+                } elseif (is_array($value)) {
+                    $value = collect($value)->flatten()->filter(fn ($item) => filled($item))->implode(', ');
+                }
+
+                return ['label' => $label, 'value' => (string) $value];
+            })
+            ->filter(fn ($attribute) => filled($attribute['value']))
+            ->values();
+    };
+
+    $posAssignmentValue = function ($assignment) {
+        $metadata = (array) ($assignment->metadata ?? []);
+
+        return data_get($metadata, 'value')
+            ?? data_get($metadata, 'selected_value')
+            ?? data_get($metadata, 'selected')
+            ?? data_get($metadata, 'option')
+            ?? data_get($metadata, 'label')
+            ?? data_get($metadata, 'values');
+    };
+
     $posSearchProducts = $products->map(fn ($product) => [
         'id' => $product->id,
         'name' => $product->name,
         'sku' => $product->sku,
-        'barcode' => $product->retailProfile?->barcode,
+        'barcode' => $product->retailProfile?->barcode ?: $product->barcode,
+        'brand' => $product->brand?->name ?: $product->retailProfile?->brand,
+        'category' => $product->category?->name,
+        'type' => $product->retailProfile?->product_type ?: $product->productTypeLabel(),
+        'description' => $product->description,
         'price' => (float) $product->price,
         'stock' => (float) $product->stock_quantity,
+        'stock_label' => $product->formattedStock(),
         'tax_rate' => is_numeric($product->retailProfile?->tax_class) ? (float) $product->retailProfile?->tax_class : '',
+        'attributes' => $posAttributePairs($product->retailProfile?->attributes)
+            ->merge($product->attributeAssignments->map(function ($assignment) use ($posAssignmentValue) {
+                $value = $posAssignmentValue($assignment);
+
+                if (is_bool($value)) {
+                    $value = $value ? 'Yes' : 'No';
+                } elseif (is_array($value)) {
+                    $value = collect($value)->flatten()->filter(fn ($item) => filled($item))->implode(', ');
+                }
+
+                return [
+                    'label' => $assignment->attribute?->name,
+                    'value' => filled($value) ? (string) $value : null,
+                ];
+            })->filter(fn ($attribute) => filled($attribute['label'])))
+            ->unique(fn ($attribute) => $attribute['label'].'|'.$attribute['value'])
+            ->values()
+            ->all(),
+        'variants' => $product->retailVariants
+            ->filter(fn ($variant) => $variant->is_active ?? true)
+            ->take(4)
+            ->map(fn ($variant) => [
+                'name' => $variant->displayName(),
+                'sku' => $variant->sku,
+                'barcode' => $variant->barcode,
+                'attributes' => $posAttributePairs($variant->attributes)
+                    ->merge($variant->attributeValueLinks->map(fn ($link) => [
+                        'label' => $link->attribute?->name ?: $link->value?->attribute?->name,
+                        'value' => $link->value?->value,
+                    ])->filter(fn ($attribute) => filled($attribute['label']) && filled($attribute['value'])))
+                    ->unique(fn ($attribute) => $attribute['label'].'|'.$attribute['value'])
+                    ->values()
+                    ->all(),
+            ])->values()->all(),
     ])->values();
 @endphp
 <script>
@@ -373,13 +447,55 @@ document.addEventListener('DOMContentLoaded', () => {
             const details = document.createElement('span');
             const name = document.createElement('strong');
             const meta = document.createElement('span');
+            const summary = document.createElement('span');
+            const tags = document.createElement('span');
             const price = document.createElement('span');
+            const attributes = (product.attributes || []).filter((attribute) => attribute.label || attribute.value);
+            const variants = (product.variants || []).filter((variant) => variant.name || variant.sku || variant.barcode);
+            const visibleAttributes = attributes.slice(0, 5);
+            const hiddenAttributeCount = Math.max(attributes.length - visibleAttributes.length, 0);
+            const variantText = variants.slice(0, 2).map((variant) => variant.name || variant.sku || variant.barcode).filter(Boolean).join(' / ');
 
+            details.className = 'pos-suggestion-main';
             name.textContent = product.name;
-            meta.textContent = `${product.sku || 'No SKU'}${product.barcode ? ` · ${product.barcode}` : ''} · Stock ${product.stock}`;
+            meta.className = 'pos-suggestion-meta';
+            meta.textContent = [
+                product.brand ? `Brand: ${product.brand}` : null,
+                product.sku ? `SKU: ${product.sku}` : 'No SKU',
+                product.barcode ? `Barcode: ${product.barcode}` : null,
+                product.category ? `Category: ${product.category}` : null,
+                product.type,
+            ].filter(Boolean).join(' · ');
+
+            summary.className = 'pos-suggestion-summary';
+            summary.textContent = [
+                product.description,
+                variantText ? `Variants: ${variantText}` : null,
+            ].filter(Boolean).join(' · ');
+
+            tags.className = 'pos-suggestion-tags';
+            visibleAttributes.forEach((attribute) => {
+                const tag = document.createElement('span');
+                tag.className = 'pos-suggestion-tag';
+                tag.textContent = attribute.value ? `${attribute.label}: ${attribute.value}` : attribute.label;
+                tags.appendChild(tag);
+            });
+
+            if (hiddenAttributeCount > 0) {
+                const tag = document.createElement('span');
+                tag.className = 'pos-suggestion-tag';
+                tag.textContent = `+${hiddenAttributeCount} more`;
+                tags.appendChild(tag);
+            }
+
             price.className = 'price';
             price.textContent = money.format(product.price);
+            const stock = document.createElement('small');
+            stock.textContent = product.stock_label || `Stock ${product.stock}`;
+            price.appendChild(stock);
             details.append(name, meta);
+            if (summary.textContent) details.appendChild(summary);
+            if (tags.children.length) details.appendChild(tags);
             button.append(details, price);
             button.addEventListener('mousedown', (event) => {
                 event.preventDefault();
@@ -402,7 +518,18 @@ document.addEventListener('DOMContentLoaded', () => {
             product.name,
             product.sku,
             product.barcode,
+            product.brand,
+            product.category,
+            product.type,
+            product.description,
             String(product.price),
+            ...(product.attributes || []).flatMap((attribute) => [attribute.label, attribute.value]),
+            ...(product.variants || []).flatMap((variant) => [
+                variant.name,
+                variant.sku,
+                variant.barcode,
+                ...(variant.attributes || []).flatMap((attribute) => [attribute.label, attribute.value]),
+            ]),
         ].some((value) => String(value || '').toLowerCase().includes(term))).slice(0, 8);
 
         renderSuggestions(matches);

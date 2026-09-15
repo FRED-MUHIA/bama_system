@@ -8,6 +8,8 @@ use App\Models\Client;
 use App\Models\PaymentMethod;
 use App\Models\PosOrder;
 use App\Models\Product;
+use App\Models\ProductAttribute;
+use App\Models\ProductBrand;
 use App\Models\ProductCategory;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
@@ -361,8 +363,24 @@ class RetailSectionWorkflowsTest extends TestCase
 
     public function test_retail_pos_exposes_full_cashier_workflow(): void
     {
+        $brand = ProductBrand::create(['name' => 'FreshCo', 'code' => 'FRESHCO', 'status' => 'Active']);
+        $attribute = ProductAttribute::create(['name' => 'Storage', 'code' => 'storage', 'display_type' => 'Text', 'is_active' => true]);
         $product = $this->product('POS-SCAN-1', 100, 5);
-        $product->retailProfile()->create(['barcode' => 'BAR-POS-1', 'product_type' => 'Physical Product', 'status' => 'Active']);
+        $product->update([
+            'product_brand_id' => $brand->id,
+            'description' => 'Fresh shelf product',
+        ]);
+        $product->retailProfile()->create([
+            'barcode' => 'BAR-POS-1',
+            'brand' => 'FreshCo Retail',
+            'product_type' => 'Physical Product',
+            'status' => 'Active',
+            'attributes' => ['size' => '500 ml', 'flavor' => 'Mango'],
+        ]);
+        $product->attributeAssignments()->create([
+            'product_attribute_id' => $attribute->id,
+            'metadata' => ['value' => 'Chilled'],
+        ]);
 
         $this->get(route('retail.pos.index', ['identifier' => 'BAR-POS-1']))
             ->assertStatus(200)
@@ -375,7 +393,10 @@ class RetailSectionWorkflowsTest extends TestCase
             ->assertSee('Return / Exchange')
             ->assertSee('Gift Card')
             ->assertSee('Store Credit')
-            ->assertSee('POS-SCAN-1');
+            ->assertSee('POS-SCAN-1')
+            ->assertSee('FreshCo')
+            ->assertSee('Storage')
+            ->assertSee('500 ml');
     }
 
     public function test_retail_pos_sale_posts_split_payments_and_updates_shared_services(): void
