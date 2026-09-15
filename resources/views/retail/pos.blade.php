@@ -12,12 +12,13 @@
     .pos-kpi span{display:block;color:#667085;font-size:.72rem;font-weight:800;text-transform:uppercase}
     .pos-kpi strong{display:block;font-size:1.2rem;color:#0f766e}
     .pos-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-    .pos-scan-grid{display:grid;grid-template-columns:minmax(220px,1.35fr) minmax(160px,.85fr) auto auto;gap:10px;align-items:center}
+    .pos-scan-grid{display:grid;grid-template-columns:minmax(220px,1.35fr) minmax(160px,.85fr) auto auto auto;gap:10px;align-items:center}
     .pos-sell-grid{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(150px,.9fr) minmax(150px,.9fr);gap:10px}
     .pos-line-item{border:1px solid #edf0f5;border-radius:8px;padding:10px;background:#fbfcfd}
     .pos-line{display:grid;grid-template-columns:minmax(220px,2fr) 88px 120px 120px;gap:8px;align-items:center}
     .pos-line-total{min-height:38px;display:flex;align-items:center;justify-content:flex-end;border:1px solid #e1e5ee;border-radius:6px;padding:0 .75rem;background:#fff;color:#0f766e;font-weight:800}
     .pos-pay{display:grid;grid-template-columns:minmax(150px,.7fr) minmax(160px,1fr);gap:8px;align-items:center}
+    .pos-expander[hidden]{display:none!important}
     .pos-actions{display:flex;flex-wrap:wrap;gap:8px}
     .pos-list-row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #edf0f5;padding:9px 0}
     .pos-list-row:last-child{border-bottom:0}
@@ -64,9 +65,11 @@
                 </div>
                 <input type="hidden" name="identifier_type" id="posIdentifierType" value="{{ request('identifier_type', 'barcode') }}">
                 <input class="form-control" name="identifier" id="posIdentifier" placeholder="Scan barcode or SKU" value="{{ request('identifier') }}">
-                <button class="btn btn-success"><i class="bi bi-upc-scan me-1"></i>Scan Product</button>
+                <button class="btn btn-success" type="button" id="posAddSaleButton"><i class="bi bi-cart-plus me-1"></i>Sale</button>
+                <button class="btn btn-success" type="submit"><i class="bi bi-upc-scan me-1"></i>Scan Product</button>
                 <a class="btn btn-outline-dark" href="{{ route('retail.scanning.index') }}" title="Camera scan" aria-label="Camera scan"><i class="bi bi-camera"></i></a>
             </form>
+            <div class="small mt-2" id="posSaleFeedback" aria-live="polite"></div>
             @if(request()->filled('identifier'))
                 <div class="mt-3 p-3 border rounded-2">
                     @if($scanProduct)
@@ -105,7 +108,7 @@
                 <input type="hidden" name="sale_type" value="Sale">
                 <input type="hidden" name="channel" value="Store">
                 <input type="hidden" name="customer_type" value="Retail Customer">
-                <div class="collapse mt-3" id="saleOptions">
+                <div class="pos-expander mt-3" id="saleOptions" hidden>
                     <div class="pos-grid">
                         <input class="form-control" name="customer_phone" placeholder="Customer phone">
                         <select class="form-select" name="retail_cash_drawer_id">
@@ -125,7 +128,7 @@
                         <input class="form-control" name="notes" placeholder="Sale notes">
                     </div>
                 </div>
-                <button class="btn btn-sm btn-outline-dark mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#saleOptions" aria-expanded="false" aria-controls="saleOptions">
+                <button class="btn btn-sm btn-outline-dark mt-3" type="button" data-pos-toggle="saleOptions" aria-expanded="false" aria-controls="saleOptions">
                     <i class="bi bi-sliders me-1"></i>More sale options
                 </button>
             </div>
@@ -133,13 +136,13 @@
             <div class="pos-band">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h2 class="h5 mb-0">Cart</h2>
-                    <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#extraCartLines" aria-expanded="false" aria-controls="extraCartLines">
+                    <button class="btn btn-sm btn-outline-dark" type="button" data-pos-toggle="extraCartLines" aria-expanded="false" aria-controls="extraCartLines">
                         <i class="bi bi-plus-lg me-1"></i>Add Item
                     </button>
                 </div>
                 @for($i = 0; $i < 3; $i++)
                     @if($i === 1)
-                        <div class="collapse" id="extraCartLines">
+                        <div class="pos-expander" id="extraCartLines" hidden>
                     @endif
                     @php
                         $selectedProduct = $i === 0 ? $scanProduct : null;
@@ -170,7 +173,7 @@
             <div class="pos-band">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h2 class="h5 mb-0">Payment</h2>
-                    <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#paymentOptions" aria-expanded="false" aria-controls="paymentOptions">
+                    <button class="btn btn-sm btn-outline-dark" type="button" data-pos-toggle="paymentOptions" aria-expanded="false" aria-controls="paymentOptions">
                         <i class="bi bi-sliders me-1"></i>More
                     </button>
                 </div>
@@ -182,7 +185,7 @@
                     </select>
                     <input class="form-control" name="payments[0][amount]" type="number" step="0.01" min="0" placeholder="Amount">
                 </div>
-                <div class="collapse" id="paymentOptions">
+                <div class="pos-expander" id="paymentOptions" hidden>
                     <div class="small text-muted fw-bold text-uppercase mb-2">Split Payments</div>
                     @for($i = 1; $i < 3; $i++)
                         <div class="pos-pay mb-2">
@@ -210,12 +213,12 @@
                         </select>
                     </div>
                     <div class="pos-actions mt-3">
-                        <button class="btn btn-outline-dark" name="sale_type" value="Layaway"><i class="bi bi-clock-history me-1"></i>Save Layaway</button>
+                        <button class="btn btn-outline-dark" type="submit" name="sale_type" value="Layaway"><i class="bi bi-clock-history me-1"></i>Save Layaway</button>
                         <a class="btn btn-outline-dark" href="{{ route('retail.returns.index') }}"><i class="bi bi-arrow-left-right me-1"></i>Return / Exchange</a>
                     </div>
                 </div>
                 <div class="pos-actions mt-3">
-                    <button class="btn btn-success"><i class="bi bi-cart-check me-1"></i>Complete Sale</button>
+                    <button class="btn btn-success" type="submit"><i class="bi bi-cart-check me-1"></i>Complete Sale</button>
                 </div>
             </div>
         </form>
@@ -388,13 +391,119 @@ document.addEventListener('DOMContentLoaded', () => {
     const suggestions = document.getElementById('posProductSuggestions');
     const identifier = document.getElementById('posIdentifier');
     const identifierType = document.getElementById('posIdentifierType');
+    const saleButton = document.getElementById('posAddSaleButton');
+    const saleFeedback = document.getElementById('posSaleFeedback');
+    const extraCartLines = document.getElementById('extraCartLines');
 
     if (!search || !suggestions || !identifier || !identifierType) return;
 
     const money = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    let selectedSearchProduct = null;
+
+    function normalize(value) {
+        return String(value || '').trim().toLowerCase();
+    }
+
+    function productSearchValues(product) {
+        return [
+            product.name,
+            product.sku,
+            product.barcode,
+            product.brand,
+            product.category,
+            product.type,
+            product.description,
+            String(product.price),
+            ...(product.attributes || []).flatMap((attribute) => [attribute.label, attribute.value]),
+            ...(product.variants || []).flatMap((variant) => [
+                variant.name,
+                variant.sku,
+                variant.barcode,
+                ...(variant.attributes || []).flatMap((attribute) => [attribute.label, attribute.value]),
+            ]),
+        ].filter(Boolean);
+    }
+
+    function productMatchesTerm(product, term) {
+        const normalizedTerm = normalize(term);
+        if (!normalizedTerm) return false;
+
+        const haystack = productSearchValues(product).map(normalize).join(' ');
+        const cleanTokens = normalizedTerm
+            .replace(/[()]/g, ' ')
+            .split(/\s+/)
+            .filter(Boolean);
+
+        return haystack.includes(normalizedTerm) || cleanTokens.every((token) => haystack.includes(token));
+    }
+
+    function exactProductMatch(product, term) {
+        const normalizedTerm = normalize(term);
+        if (!normalizedTerm) return false;
+
+        return [
+            product.name,
+            product.sku,
+            product.barcode,
+            `${product.name} (${product.sku || productCode(product)})`,
+            ...(product.variants || []).flatMap((variant) => [variant.name, variant.sku, variant.barcode]),
+        ].some((value) => normalize(value) === normalizedTerm);
+    }
+
+    function setSaleFeedback(message, tone = 'text-success') {
+        if (!saleFeedback) return;
+
+        saleFeedback.className = `small mt-2 ${tone}`;
+        saleFeedback.textContent = message;
+    }
 
     function productCode(product) {
         return product.barcode || product.sku || String(product.id);
+    }
+
+    function setPanelOpen(panel, open) {
+        if (!panel) return;
+
+        panel.hidden = !open;
+        document.querySelectorAll(`[data-pos-toggle="${panel.id}"]`).forEach((button) => {
+            button.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+    }
+
+    function showPanel(panel) {
+        setPanelOpen(panel, true);
+    }
+
+    document.querySelectorAll('[data-pos-toggle]').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const panel = document.getElementById(button.dataset.posToggle);
+            setPanelOpen(panel, panel?.hidden ?? true);
+        });
+    });
+
+    function cartRows() {
+        return Array.from(document.querySelectorAll('[data-cart-product]')).map((select) => select.dataset.cartProduct);
+    }
+
+    function revealCartRow(row) {
+        if (Number(row) <= 0 || !extraCartLines) return;
+
+        showPanel(extraCartLines);
+    }
+
+    function cartRowHasProduct(row, product) {
+        return document.querySelector(`[data-cart-product="${row}"]`)?.value === String(product.id);
+    }
+
+    function cartRowIsEmpty(row) {
+        const productSelect = document.querySelector(`[data-cart-product="${row}"]`);
+        const price = document.querySelector(`[data-cart-price="${row}"]`);
+        const description = document.querySelector(`[data-cart-description="${row}"]`);
+
+        return !productSelect?.value && !price?.value && !description?.value;
     }
 
     function updateLineTotal(row) {
@@ -431,12 +540,56 @@ document.addEventListener('DOMContentLoaded', () => {
         updateLineTotal(row);
     }
 
+    function addProductToCart(product) {
+        const rows = cartRows();
+        const existingRow = rows.find((row) => cartRowHasProduct(row, product));
+
+        if (existingRow !== undefined) {
+            const quantity = document.querySelector(`[data-cart-quantity="${existingRow}"]`);
+            quantity.value = String((Number.parseFloat(quantity.value || '0') || 0) + 1);
+            updateLineTotal(existingRow);
+            revealCartRow(existingRow);
+            setSaleFeedback(`Added another ${product.name}.`);
+            return true;
+        }
+
+        const emptyRow = rows.find((row) => cartRowIsEmpty(row));
+
+        if (emptyRow === undefined) {
+            setSaleFeedback('All cart rows are full.', 'text-danger');
+            return false;
+        }
+
+        revealCartRow(emptyRow);
+        applyProductToRow(product, emptyRow);
+        setSaleFeedback(`${product.name} added to cart.`);
+        return true;
+    }
+
+    function productFromSearch() {
+        const searchTerm = search.value.trim();
+        const identifierTerm = identifier.value.trim();
+
+        if (selectedSearchProduct && (
+            exactProductMatch(selectedSearchProduct, searchTerm)
+            || exactProductMatch(selectedSearchProduct, identifierTerm)
+        )) {
+            return selectedSearchProduct;
+        }
+
+        return products.find((product) => exactProductMatch(product, identifierTerm))
+            || products.find((product) => exactProductMatch(product, searchTerm))
+            || products.find((product) => productMatchesTerm(product, searchTerm))
+            || products.find((product) => productMatchesTerm(product, identifierTerm));
+    }
+
     function selectProduct(product) {
+        selectedSearchProduct = product;
         search.value = `${product.name} (${product.sku || productCode(product)})`;
         identifier.value = productCode(product);
         identifierType.value = product.barcode ? 'barcode' : 'sku';
         suggestions.style.display = 'none';
-        applyProductToRow(product);
+        addProductToCart(product);
     }
 
     function renderSuggestions(matches) {
@@ -517,31 +670,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     search.addEventListener('input', () => {
+        selectedSearchProduct = null;
         const term = search.value.trim().toLowerCase();
         if (term.length < 1) {
             suggestions.style.display = 'none';
             return;
         }
 
-        const matches = products.filter((product) => [
-            product.name,
-            product.sku,
-            product.barcode,
-            product.brand,
-            product.category,
-            product.type,
-            product.description,
-            String(product.price),
-            ...(product.attributes || []).flatMap((attribute) => [attribute.label, attribute.value]),
-            ...(product.variants || []).flatMap((variant) => [
-                variant.name,
-                variant.sku,
-                variant.barcode,
-                ...(variant.attributes || []).flatMap((attribute) => [attribute.label, attribute.value]),
-            ]),
-        ].some((value) => String(value || '').toLowerCase().includes(term))).slice(0, 8);
+        const matches = products.filter((product) => productMatchesTerm(product, term)).slice(0, 8);
 
         renderSuggestions(matches);
+    });
+
+    search.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            saleButton?.click();
+        }
+    });
+
+    saleButton?.addEventListener('click', () => {
+        const product = productFromSearch();
+
+        if (!product) {
+            setSaleFeedback('No matching product found.', 'text-danger');
+            search.dispatchEvent(new Event('input'));
+            return;
+        }
+
+        selectedSearchProduct = product;
+        search.value = `${product.name} (${product.sku || productCode(product)})`;
+        identifier.value = productCode(product);
+        identifierType.value = product.barcode ? 'barcode' : 'sku';
+        suggestions.style.display = 'none';
+        addProductToCart(product);
     });
 
     search.addEventListener('focus', () => {
