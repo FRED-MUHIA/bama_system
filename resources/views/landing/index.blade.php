@@ -582,9 +582,9 @@
     </section>
 
     <section class="bg-[#F7F8F5] px-5 py-7">
-        <div class="mx-auto grid max-w-6xl overflow-hidden rounded-[22px] border border-zinc-200 bg-[#071B12] shadow-2xl shadow-zinc-200/70 lg:grid-cols-[.95fr_1fr]">
-            <div class="relative h-[220px] sm:h-[270px] lg:h-[330px]">
-                <picture class="absolute inset-0 block h-full w-full">
+        <div class="mx-auto grid max-w-6xl overflow-hidden rounded-[22px] border border-zinc-200 bg-[#071B12] lg:grid-cols-[.95fr_1fr]">
+            <div class="relative flex h-[240px] items-center justify-center bg-[#071B12] p-3 sm:h-[300px] sm:p-4 lg:h-[370px] lg:p-5">
+                <picture class="block h-full w-full">
                     @if($insightImageSrcset)
                         <source type="image/webp" srcset="{{ $insightImageSrcset }}" sizes="(min-width: 1024px) 50vw, 100vw">
                     @endif
@@ -593,12 +593,11 @@
                         alt="{{ data_get($media, 'insight_image_alt', 'Diverse teams across industries using one business platform') }}"
                         width="1254"
                         height="1254"
-                        class="h-full w-full object-cover"
+                        class="h-full w-full object-contain object-center"
                         loading="lazy"
                         decoding="async"
                     >
                 </picture>
-                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-[#071B12]/15 to-[#071B12]"></div>
             </div>
             <div class="relative flex flex-col justify-center gap-5 bg-[#071B12] p-7 text-white sm:p-9 lg:p-10">
                 <div>
