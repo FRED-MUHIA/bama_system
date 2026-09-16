@@ -59,6 +59,7 @@ class RetailSectionWorkflowsTest extends TestCase
         foreach ([
             'retail.dashboard',
             'retail.pos.index',
+            'retail.transactions.index',
             'retail.products.index',
             'retail.inventory.index',
             'retail.warehousing.index',
@@ -661,6 +662,43 @@ class RetailSectionWorkflowsTest extends TestCase
         $this->assertTrue(RetailCustomerOffer::exists());
         $this->assertTrue(RetailSupplierContract::exists());
         $this->assertTrue(RetailTaxJurisdiction::exists());
+    }
+
+    public function test_inventory_search_filters_records_by_sku(): void
+    {
+        $match = $this->product('SEARCH-MATCH', 120, 5);
+        $other = $this->product('SEARCH-OTHER', 120, 5);
+        foreach ([$match, $other] as $product) {
+            RetailInventoryBalance::create(['product_id' => $product->id, 'available_stock' => 5]);
+        }
+
+        $this->get(route('retail.inventory.index', ['q' => 'SEARCH-MATCH']))
+            ->assertOk()
+            ->assertViewHas('records', fn ($records) => $records->total() === 1 && $records->first()->product_id === $match->id);
+        $this->get(route('retail.inventory.index', ['q' => 'NONEXISTENT-SKU']))
+            ->assertOk()->assertSee('No stock balances found.');
+    }
+
+    public function test_transaction_search_finds_payment_references_and_paginates_history(): void
+    {
+        for ($index = 0; $index < 21; $index++) {
+            $order = PosOrder::create([
+                'order_number' => 'SEARCH-TXN-'.$index,
+                'order_date' => now(),
+                'status' => 'paid',
+                'total' => 120,
+                'amount_paid' => 120,
+            ]);
+        }
+        $order->payments()->create(['amount' => 120, 'payment_date' => now(), 'reference' => 'TRACE-UNIQUE-123']);
+
+        $this->get(route('retail.transactions.index', ['q' => 'TRACE-UNIQUE-123']))
+            ->assertOk()->assertViewHas('orders', fn ($orders) => $orders->total() === 1 && $orders->first()->id === $order->id);
+        $this->get(route('retail.transactions.index', ['q' => 'SEARCH-TXN-', 'page' => 2]))
+            ->assertOk()->assertViewHas('orders', fn ($orders) => $orders->total() === 21 && $orders->count() === 1)
+            ->assertSee('q=SEARCH-TXN-');
+        $this->get(route('retail.transactions.index', ['q' => 'NO-SUCH-TRANSACTION']))
+            ->assertOk()->assertSee('No transactions found.');
     }
 
     private function product(string $sku, float $price, float $stock): Product

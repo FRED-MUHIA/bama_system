@@ -76,7 +76,7 @@ $industries = [
     'retail' => [
         $retailPackage['name'] ?? 'Retail',
         $retailPackage['description'] ?? 'Unify POS, inventory, warehousing, catalog, loyalty, promotions, gift cards, customer accounts, returns, branches, and ecommerce.',
-        $retailPackage['features'] ?? ['Point of Sale', 'Inventory', 'Warehousing', 'Product Catalog', 'Loyalty Programs', 'Promotions', 'Gift Cards', 'Customer Accounts', 'Returns Management', 'Branch Management', 'Ecommerce Integration'],
+        $retailPackage['features'] ?? ['Make a Sale', 'Inventory', 'Warehousing', 'Product Catalog', 'Loyalty Programs', 'Promotions', 'Gift Cards', 'Customer Accounts', 'Returns Management', 'Branch Management', 'Ecommerce Integration'],
         [
             'sub_industries' => $retailPackage['sub_industries'] ?? [],
             'registration_sub_industries' => $retailPackage['registration_sub_industries'] ?? [],

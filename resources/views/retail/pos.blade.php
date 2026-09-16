@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Retail POS')
+@section('title', 'Make a Sale')
 
 @section('content')
 @include('retail.partials.nav')
@@ -45,7 +45,7 @@
 
 <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
     <div>
-        <h1 class="h3 mb-1">Point of Sale</h1>
+        <h1 class="h3 mb-1">Make a Sale</h1>
         <div class="text-muted">A simple counter screen for small retail sales.</div>
     </div>
     <div class="pos-actions">
@@ -270,6 +270,8 @@
 
         <div class="pos-band">
             <h2 class="h5 mb-2">Recent Transactions</h2>
+            <a class="btn btn-sm btn-outline-dark mb-2" href="{{ route('retail.transactions.index') }}">More · All transactions</a>
+            @include('retail.partials.transaction-search')
             @forelse($recentOrders as $order)
                 <div class="pos-list-row">
                     <div>

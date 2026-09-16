@@ -20,6 +20,26 @@ use Modules\Retail\Services\RetailPosService;
 
 class RetailPosController extends Controller
 {
+    public function transactions(Request $request)
+    {
+        $request->validate(['q' => ['nullable', 'string', 'max:255']]);
+        $search = trim($request->input('q', ''));
+        $orders = PosOrder::with('client', 'payments.paymentMethod')
+            ->when($search !== '', function ($query) use ($search) {
+                $like = "%{$search}%";
+                $query->where(function ($query) use ($like) {
+                    $query->where('order_number', 'like', $like)
+                        ->orWhere('customer_name', 'like', $like)
+                        ->orWhere('customer_phone', 'like', $like)
+                        ->orWhere('customer_email', 'like', $like)
+                        ->orWhereHas('client', fn ($client) => $client->where('name', 'like', $like)->orWhere('phone', 'like', $like)->orWhere('email', 'like', $like))
+                        ->orWhereHas('payments', fn ($payment) => $payment->where('reference', 'like', $like));
+                });
+            })->latest()->orderByDesc('id')->paginate(20)->withQueryString();
+
+        return view('retail.transactions', compact('orders'));
+    }
+
     public function index(Request $request, RetailDashboardService $dashboard, ProductIdentificationService $identifier)
     {
         $scanProduct = null;

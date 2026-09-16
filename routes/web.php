@@ -376,6 +376,7 @@ Route::middleware('auth')->group(function () {
         Route::prefix('retail')->name('retail.')->middleware('module.enabled:retail')->group(function () {
             Route::get('/', RetailDashboardController::class)->middleware('permission:retail.view')->name('dashboard');
             Route::get('/pos', [RetailPosController::class, 'index'])->middleware('permission:retail.pos.view')->name('pos.index');
+            Route::get('/transactions', [RetailPosController::class, 'transactions'])->middleware('permission:retail.pos.view')->name('transactions.index');
             Route::post('/pos/sales', [RetailPosController::class, 'store'])->middleware('permission:retail.pos.manage')->name('pos.sales.store');
             Route::post('/pos/drawers', [RetailPosController::class, 'openDrawer'])->middleware('permission:retail.pos.manage')->name('pos.drawers.open');
             Route::post('/pos/drawers/{drawer}/close', [RetailPosController::class, 'closeDrawer'])->middleware('permission:retail.pos.manage')->name('pos.drawers.close');

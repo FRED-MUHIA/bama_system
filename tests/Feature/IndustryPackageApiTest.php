@@ -57,7 +57,7 @@ class IndustryPackageApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('industry', 'Retail')
             ->assertJsonPath('sub_industry', 'Book Store')
-            ->assertJsonFragment(['Point of Sale'])
+            ->assertJsonFragment(['Make a Sale'])
             ->assertJsonStructure(['industry', 'sub_industry', 'summary', 'modules', 'features', 'dashboard_features']);
     }
 

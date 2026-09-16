@@ -1082,7 +1082,7 @@
                     </div>
                 </header>
             @endif
-            <section class="p-4">
+            <section class="p-4 {{ request()->routeIs('retail.*') ? 'retail-page' : '' }}">
                 @if(session('status')) <div class="alert alert-success">{{ session('status') }}</div> @endif
                 @if(session('warning')) <div class="alert alert-warning">{{ session('warning') }}</div> @endif
                 @if($errors->any()) <div class="alert alert-danger"><strong>Check the form:</strong><ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div> @endif
@@ -1407,7 +1407,7 @@
             ['label' => 'Add Products', 'route' => 'retail.products.index', 'fragment' => 'retail-add-product', 'icon' => 'bi-box-seam'],
             ['label' => 'Stocks Records', 'route' => 'retail.inventory.index', 'fragment' => 'retail-stock-records', 'icon' => 'bi-stack'],
             ['label' => 'Receipts', 'route' => 'receipts.index', 'icon' => 'bi-cash-coin'],
-            ['label' => 'Point of Sale', 'route' => 'retail.pos.index', 'icon' => 'bi-upc-scan'],
+            ['label' => 'Make a Sale', 'route' => 'retail.pos.index', 'icon' => 'bi-upc-scan'],
             ['label' => 'Returns', 'route' => 'retail.returns.index', 'icon' => 'bi-arrow-counterclockwise'],
             ['label' => 'Gift Cards', 'route' => 'retail.gift-cards.index', 'icon' => 'bi-credit-card-2-front'],
         ];

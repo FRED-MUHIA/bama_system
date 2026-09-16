@@ -26,8 +26,10 @@
     <div class="card p-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
             <h2 class="h5 mb-0">Recent Transactions</h2>
-            <a class="btn btn-sm btn-success" href="{{ route('retail.pos.index') }}">Open POS</a>
+            <a class="btn btn-sm btn-success" href="{{ route('retail.pos.index') }}">Make a Sale</a>
         </div>
+        <a class="btn btn-sm btn-outline-dark mb-2" href="{{ route('retail.transactions.index') }}">More · All transactions</a>
+        @include('retail.partials.transaction-search')
         @forelse($recentOrders as $order)
             <div class="d-flex justify-content-between gap-3 border-bottom py-2">
                 <div>

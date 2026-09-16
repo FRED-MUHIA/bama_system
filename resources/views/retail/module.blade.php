@@ -3,6 +3,18 @@
 
 @section('content')
 @include('retail.partials.nav')
+@if($section === 'inventory')
+    <form method="GET" action="{{ route('retail.inventory.index') }}" class="card p-3 mb-3" role="search">
+        <label class="form-label" for="inventory-search">Search inventory</label>
+        <div class="d-flex flex-column flex-sm-row gap-2">
+            <input class="form-control" id="inventory-search" type="search" name="q" value="{{ request('q') }}" maxlength="255" placeholder="Product, SKU, barcode, branch, warehouse or bin">
+            <button class="btn btn-success" type="submit">Search</button>
+            @if(request()->filled('q'))
+                <a class="btn btn-outline-secondary" href="{{ route('retail.inventory.index') }}">Clear</a>
+            @endif
+        </div>
+    </form>
+@endif
 
 <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
     <div>
@@ -407,7 +419,7 @@
     <div class="card p-3 mb-3" id="retail-place-order">
         <div class="d-flex justify-content-between align-items-center mb-2">
             <h2 class="h5 mb-0">Create Retail Order</h2>
-            <a class="btn btn-sm btn-outline-dark" href="{{ route('retail.pos.index') }}"><i class="bi bi-upc-scan me-1"></i>Open POS</a>
+            <a class="btn btn-sm btn-outline-dark" href="{{ route('retail.pos.index') }}"><i class="bi bi-upc-scan me-1"></i>Make a Sale</a>
         </div>
         <form method="POST" action="{{ route('retail.orders.store') }}" class="row g-2" data-retail-order-form>
             @csrf
@@ -431,7 +443,7 @@
         <div class="border-top mt-3 pt-3" id="retail-pos-order">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h3 class="h6 mb-0">Create POS Order</h3>
-                <a class="btn btn-sm btn-outline-dark" href="{{ route('pos-orders.create') }}"><i class="bi bi-cart-plus me-1"></i>Full POS Form</a>
+                <a class="btn btn-sm btn-outline-dark" href="{{ route('pos-orders.create') }}"><i class="bi bi-cart-plus me-1"></i>Full Sale Form</a>
             </div>
             <form method="POST" action="{{ route('retail.orders.pos.store') }}" class="row g-2" data-retail-pos-order-form>
                 @csrf
@@ -723,7 +735,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="text-muted p-4">No stock balances yet.</td></tr>
+                    <tr><td colspan="6" class="text-muted p-4">No stock balances found.</td></tr>
                 @endforelse
                 </tbody>
             </table>

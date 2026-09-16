@@ -24,12 +24,24 @@ use Modules\Retail\Services\RetailInventoryService;
 
 class RetailInventoryController extends Controller
 {
-    public function index(RetailRepository $retail)
+    public function index(Request $request, RetailRepository $retail)
     {
+        $request->validate(['q' => ['nullable', 'string', 'max:255']]);
+        $search = trim($request->input('q', ''));
+
         return view('retail.module', [
             'title' => 'Inventory Management',
             'section' => 'inventory',
-            'records' => $retail->inventoryBalances()->paginate(20),
+            'records' => $retail->inventoryBalances()->when($search !== '', function ($query) use ($search) {
+                $like = "%{$search}%";
+                $query->where(function ($query) use ($like) {
+                    $query->whereHas('product', fn ($product) => $product->where('name', 'like', $like)->orWhere('sku', 'like', $like)->orWhere('barcode', 'like', $like))
+                        ->orWhereHas('variant', fn ($variant) => $variant->where('variant_name', 'like', $like)->orWhere('sku', 'like', $like)->orWhere('barcode', 'like', $like))
+                        ->orWhereHas('branch', fn ($branch) => $branch->where('name', 'like', $like))
+                        ->orWhereHas('warehouse', fn ($warehouse) => $warehouse->where('name', 'like', $like))
+                        ->orWhereHas('bin', fn ($bin) => $bin->where('bin_code', 'like', $like));
+                });
+            })->orderBy('id')->paginate(20)->withQueryString(),
             'products' => Product::orderBy('name')->get(),
             'branches' => Branch::orderBy('name')->get(),
             'warehouses' => RetailWarehouse::orderBy('name')->get(),

@@ -12,12 +12,12 @@
     $menus = collect($industry['dashboard']['menu_structure'] ?? $industry['menus'] ?? [])->map(fn ($menu) => is_array($menu) ? ($menu['label'] ?? $menu['module'] ?? 'Module') : $menu);
 
     if ($isRetail) {
-        $modules = collect(['Point of Sale', 'Products & Pricing', 'Stock Control', 'Customers', 'Returns', 'Daily Reports']);
+        $modules = collect(['Make a Sale', 'Products & Pricing', 'Stock Control', 'Customers', 'Returns', 'Daily Reports']);
         $features = collect(['Fast counter sales', 'Low-stock alerts', 'Simple customer records', 'Mobile money and cash']);
         $workflows = collect(['Add products', 'Sell at the counter', 'Receive payment', 'Update stock', 'Handle returns', 'Reorder low-stock items']);
         $reports = collect(['Daily Sales', 'Product Sales', 'Stock Levels', 'Returns']);
         $roles = collect(['Owner', 'Shop Manager', 'Cashier', 'Stock Clerk']);
-        $menus = collect(['Dashboard', 'Point of Sale', 'Products', 'Inventory', 'Customers', 'Reports']);
+        $menus = collect(['Dashboard', 'Make a Sale', 'Products', 'Inventory', 'Customers', 'Reports']);
     }
 
     $brandLogoUrl = \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png');

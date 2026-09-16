@@ -6,12 +6,12 @@ return [
     'type' => 'industry',
     'description' => 'Simple retail tools for small shops: sell at the counter, manage products and stock, receive payments, handle customers, returns, and daily reports.',
     'sub_industries' => [
-        ['slug' => 'book-store', 'name' => 'Book Store', 'description' => 'Sell books and stationery, scan ISBN or barcode, watch stock, and reorder popular titles.', 'dashboard_features' => ['Point of Sale', 'Low stock titles', 'Daily book sales', 'Customer orders']],
-        ['slug' => 'clothing-store', 'name' => 'Clothing Store', 'description' => 'Sell apparel by size or color, manage simple variants, returns, promotions, and store stock.', 'dashboard_features' => ['Point of Sale', 'Size and color stock', 'Returns tracking', 'Daily sales']],
-        ['slug' => 'furniture-store', 'name' => 'Furniture Store', 'description' => 'Track showroom items, customer deposits, supplier orders, deliveries, and balances.', 'dashboard_features' => ['Point of Sale', 'Customer deposits', 'Delivery list', 'Stock on hand']],
-        ['slug' => 'grocery-store', 'name' => 'Grocery Store', 'description' => 'Run fast checkout, track daily stock movement, watch expiry dates, and restock quickly.', 'dashboard_features' => ['Point of Sale', 'Daily grocery sales', 'Low stock items', 'Expiry alerts']],
-        ['slug' => 'hardware-store', 'name' => 'Hardware Store', 'description' => 'Sell hardware items, handle units of measure, manage contractor customers, and count stock.', 'dashboard_features' => ['Point of Sale', 'Stock counts', 'Supplier restock', 'Customer balances']],
-        ['slug' => 'toy-store', 'name' => 'Toy Store', 'description' => 'Sell toys and gifts, track seasonal demand, returns, customer purchases, and stock alerts.', 'dashboard_features' => ['Point of Sale', 'Seasonal items', 'Gift purchases', 'Low stock alerts']],
+        ['slug' => 'book-store', 'name' => 'Book Store', 'description' => 'Sell books and stationery, scan ISBN or barcode, watch stock, and reorder popular titles.', 'dashboard_features' => ['Make a Sale', 'Low stock titles', 'Daily book sales', 'Customer orders']],
+        ['slug' => 'clothing-store', 'name' => 'Clothing Store', 'description' => 'Sell apparel by size or color, manage simple variants, returns, promotions, and store stock.', 'dashboard_features' => ['Make a Sale', 'Size and color stock', 'Returns tracking', 'Daily sales']],
+        ['slug' => 'furniture-store', 'name' => 'Furniture Store', 'description' => 'Track showroom items, customer deposits, supplier orders, deliveries, and balances.', 'dashboard_features' => ['Make a Sale', 'Customer deposits', 'Delivery list', 'Stock on hand']],
+        ['slug' => 'grocery-store', 'name' => 'Grocery Store', 'description' => 'Run fast checkout, track daily stock movement, watch expiry dates, and restock quickly.', 'dashboard_features' => ['Make a Sale', 'Daily grocery sales', 'Low stock items', 'Expiry alerts']],
+        ['slug' => 'hardware-store', 'name' => 'Hardware Store', 'description' => 'Sell hardware items, handle units of measure, manage contractor customers, and count stock.', 'dashboard_features' => ['Make a Sale', 'Stock counts', 'Supplier restock', 'Customer balances']],
+        ['slug' => 'toy-store', 'name' => 'Toy Store', 'description' => 'Sell toys and gifts, track seasonal demand, returns, customer purchases, and stock alerts.', 'dashboard_features' => ['Make a Sale', 'Seasonal items', 'Gift purchases', 'Low stock alerts']],
     ],
     'registration_sub_industries' => [
         'book-store',
@@ -22,7 +22,7 @@ return [
         'toy-store',
     ],
     'features' => [
-        'Point of Sale', 'Products & Pricing', 'Stock Control', 'Customer Records',
+        'Make a Sale', 'Products & Pricing', 'Stock Control', 'Customer Records',
         'Mobile Money', 'Returns & Refunds', 'Simple Reports', 'Supplier Restock',
         'Website Catalog',
     ],
@@ -99,7 +99,7 @@ return [
     ],
     'menus' => [
         ['label' => 'Dashboard', 'route' => 'retail.dashboard', 'icon' => 'bi-speedometer2', 'permission' => 'retail.view', 'tables' => ['retail_product_profiles']],
-        ['label' => 'Point of Sale', 'route' => 'retail.pos.index', 'icon' => 'bi-upc-scan', 'permission' => 'retail.pos.view'],
+        ['label' => 'Make a Sale', 'route' => 'retail.pos.index', 'icon' => 'bi-upc-scan', 'permission' => 'retail.pos.view'],
         ['label' => 'Products', 'route' => 'retail.products.index', 'icon' => 'bi-box-seam', 'permission' => 'retail.products.view', 'tables' => ['retail_product_profiles']],
         ['label' => 'Inventory', 'route' => 'retail.inventory.index', 'icon' => 'bi-stack', 'permission' => 'retail.inventory.view', 'tables' => ['retail_inventory_balances']],
         ['label' => 'Orders', 'route' => 'retail.orders.index', 'icon' => 'bi-bag-check', 'permission' => 'retail.orders.view', 'tables' => ['retail_orders']],
@@ -111,7 +111,7 @@ return [
         ['label' => 'Settings', 'route' => 'retail.settings.index', 'icon' => 'bi-gear', 'permission' => 'retail.settings.manage'],
     ],
     'menu_structure' => [
-        'Dashboard', 'Point of Sale', 'Products', 'Inventory', 'Orders',
+        'Dashboard', 'Make a Sale', 'Products', 'Inventory', 'Orders',
         'Customers', 'Returns', 'Suppliers', 'Website', 'Reports',
     ],
     'integrations' => [

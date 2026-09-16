@@ -1,9 +1,10 @@
 @php
     $retailNav = [
         ['Dashboard', 'retail.dashboard', 'retail.dashboard', 'bi-speedometer2'],
-        ['Point of Sale', 'retail.pos.index', 'retail.pos.*', 'bi-upc-scan'],
+        ['Make a Sale', 'retail.pos.index', 'retail.pos.*', 'bi-upc-scan'],
         ['Products', 'retail.products.index', 'retail.products.*', 'bi-box-seam'],
         ['Inventory', 'retail.inventory.index', 'retail.inventory.*', 'bi-stack'],
+        ['Transactions', 'retail.transactions.index', 'retail.transactions.*', 'bi-receipt'],
         ['Orders', 'retail.orders.index', 'retail.orders.*', 'bi-bag-check'],
         ['Customers', 'retail.customers.index', 'retail.customers.*', 'bi-people'],
         ['Reports', 'retail.reports.index', 'retail.reports.*', 'bi-bar-chart'],
@@ -39,7 +40,41 @@
             background:var(--bama-ink,#111827) !important;
             border-color:var(--bama-ink,#111827) !important;
         }
+        .retail-page, .retail-page .card, .retail-page .pos-band {min-width:0;overflow-wrap:anywhere}
+        .retail-page .form-control, .retail-page .form-select {min-width:0;max-width:100%}
+        @media(max-width:767px){
+            .retail-page .retail-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+            .retail-page .retail-nav .nav-link{white-space:normal;width:100%;height:100%}
+            .retail-page .retail-nav .dropdown-menu{max-width:calc(100vw - 2rem);min-width:0}
+            .retail-page .d-flex:not(.retail-nav){flex-wrap:wrap}
+            .retail-page .pos-list-row{flex-direction:column}
+            .retail-page .pos-list-row .text-end{text-align:left!important}
+            .retail-page .table-responsive{overflow:visible}
+            .retail-page table.table, .retail-page table.table tbody{display:block;width:100%;min-width:0!important}
+            .retail-page table.table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+            .retail-page table.table tr{display:block;border-bottom:1px solid #d9dee8;padding:.5rem}
+            .retail-page table.table tr[hidden]{display:none!important}
+            .retail-page table.table td{display:block;width:100%!important;min-width:0!important;white-space:normal!important;text-align:left!important;border:0;overflow-wrap:anywhere}
+            .retail-page table.table td[data-label]::before{content:attr(data-label);display:block;font-size:.75rem;font-weight:700;color:#667085;margin-bottom:.25rem}
+            .retail-page .pagination{flex-wrap:wrap}
+        }
     </style>
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const page = document.querySelector('.retail-nav')?.closest('section');
+            if (!page) return;
+            page.querySelectorAll('table.table').forEach(table => {
+                const headings = Array.from(table.querySelectorAll('thead th'), th => th.textContent.trim());
+                table.querySelectorAll('tbody tr').forEach(row => {
+                    Array.from(row.cells).forEach((cell, index) => {
+                        if (cell.colSpan === 1 && headings[index]) cell.dataset.label = headings[index];
+                    });
+                });
+            });
+        });
+    </script>
+    @endpush
 @endonce
 
 <nav class="nav nav-pills gap-2 mb-3 flex-wrap retail-nav">
