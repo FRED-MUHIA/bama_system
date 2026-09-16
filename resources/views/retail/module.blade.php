@@ -658,6 +658,7 @@
                             <div class="border-top p-3">
                                 <form method="post" action="{{ route('products.update', $record) }}" class="row g-2">@csrf @method('PUT')
                                     @include('products.partials.fields', ['product' => $record])
+                                    @include('products.partials.variant-generator', ['product' => $record])
                                     <div class="col-12"><button class="btn btn-warning btn-sm">Update Product</button></div>
                                 </form>
                             </div>

@@ -63,6 +63,7 @@
                         <div class="collapse mt-3" id="mobile-edit-product-{{ $item->id }}">
                             <form method="post" action="{{ route('products.update',$item) }}" class="row g-2">@csrf @method('PUT')
                                 @include('products.partials.fields', ['product' => $item])
+                                @include('products.partials.variant-generator', ['product' => $item])
                                 <div class="col-12"><button class="btn btn-warning btn-sm w-100">Update Product</button></div>
                             </form>
                         </div>
@@ -105,6 +106,7 @@
                     <tr class="collapse" id="edit-product-{{ $item->id }}"><td colspan="9">
                         <form method="post" action="{{ route('products.update',$item) }}" class="row g-2">@csrf @method('PUT')
                             @include('products.partials.fields', ['product' => $item])
+                            @include('products.partials.variant-generator', ['product' => $item])
                             <div class="col-12"><button class="btn btn-warning btn-sm">Update Product</button></div>
                         </form>
                     </td></tr>

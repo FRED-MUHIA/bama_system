@@ -11,9 +11,11 @@ use App\Services\IamService;
 use App\Services\StockService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Modules\Retail\Models\RetailCashDrawer;
 use Modules\Retail\Models\RetailGiftCard;
+use Modules\Retail\Models\RetailProductVariant;
 use Shared\Compliance\Etims\Contracts\EtimsComplianceServiceContract;
 
 class RetailPosService
@@ -60,7 +62,7 @@ class RetailPosService
             ]);
 
             foreach ($items as $item) {
-                $order->items()->create($item + ['line_total' => $this->documents->lineTotal($item)]);
+                $order->items()->create($this->itemForTable('pos_order_items', $item + ['line_total' => $this->documents->lineTotal($item)]));
             }
 
             $this->stock->syncSaleItems(collect(), collect($items), $order, 'Retail POS '.$order->order_number);
@@ -172,7 +174,7 @@ class RetailPosService
         }
 
         return $this->documents->normalizeItems(array_map(function (array $item) use ($client, $saleData) {
-            $product = ! empty($item['product_id']) ? Product::with('retailProfile')->find($item['product_id']) : null;
+            [$product, $variant] = $this->resolveProductAndVariant($item);
             $quantity = (float) ($item['quantity'] ?? 1);
             $unitPrice = (float) ($item['unit_price'] ?? $product?->price ?? 0);
             $manualDiscount = (float) ($item['discount'] ?? 0);
@@ -182,8 +184,12 @@ class RetailPosService
 
             return [
                 'product_id' => $product?->id,
+                'retail_product_variant_id' => $variant?->id,
                 'title' => $item['title'] ?? $product?->name ?? $item['description'] ?? 'Quick sale item',
                 'description' => $item['description'] ?? $product?->description ?? $product?->name ?? 'Quick sale item',
+                'variant_description' => $variant?->displayName(),
+                'sku_snapshot' => $variant?->sku ?: $product?->sku,
+                'barcode_snapshot' => $variant?->barcode ?: $product?->barcode,
                 'quantity' => $quantity,
                 'unit_price' => $unitPrice,
                 'discount' => max($manualDiscount, $promotionDiscount),
@@ -214,6 +220,40 @@ class RetailPosService
             })
             ->filter()
             ->values();
+    }
+
+    private function resolveProductAndVariant(array $item): array
+    {
+        $product = ! empty($item['product_id']) ? Product::with('retailProfile')->find($item['product_id']) : null;
+        $variant = null;
+
+        if (! empty($item['retail_product_variant_id'])) {
+            $variant = RetailProductVariant::with('product.retailProfile', 'parentProduct.retailProfile')
+                ->find($item['retail_product_variant_id']);
+
+            if ($variant) {
+                if ($product && ! in_array((int) $product->id, [(int) $variant->product_id, (int) $variant->parent_product_id], true)) {
+                    throw ValidationException::withMessages([
+                        'items' => 'One selected variant does not belong to its product.',
+                    ]);
+                }
+
+                $product = $variant->product ?: $product;
+            }
+        }
+
+        return [$product, $variant];
+    }
+
+    private function itemForTable(string $table, array $item): array
+    {
+        if (! Schema::hasTable($table)) {
+            return $item;
+        }
+
+        return collect($item)
+            ->only(Schema::getColumnListing($table))
+            ->all();
     }
 
     private function recordPayments(PosOrder $order, Collection $payments): void

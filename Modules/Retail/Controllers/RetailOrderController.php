@@ -69,6 +69,7 @@ class RetailOrderController extends Controller
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['nullable', Rule::exists('products', 'id')->where('business_id', ActiveBusiness::id())],
+            'items.*.retail_product_variant_id' => ['nullable', Rule::exists('retail_product_variants', 'id')->where('business_id', ActiveBusiness::id())],
             'items.*.title' => ['nullable', 'string', 'max:255'],
             'items.*.description' => ['nullable', 'string', 'max:500'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.001'],

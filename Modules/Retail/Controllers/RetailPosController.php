@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\PaymentMethod;
 use App\Models\PosOrder;
 use App\Models\Product;
+use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Modules\Retail\Models\RetailCashDrawer;
@@ -37,6 +38,10 @@ class RetailPosController extends Controller
                 'attributeAssignments.attribute',
                 'retailVariants.attributeValueLinks.attribute',
                 'retailVariants.attributeValueLinks.value.attribute',
+                'retailVariants.product.retailProfile',
+                'variantProfile.parentProduct',
+                'variantProfile.attributeValueLinks.attribute',
+                'variantProfile.attributeValueLinks.value.attribute',
             ])->where('is_active', true)->orderBy('name')->limit(200)->get(),
             'clients' => Client::orderBy('name')->limit(200)->get(),
             'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
@@ -80,7 +85,8 @@ class RetailPosController extends Controller
             'layaway_due_at' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['nullable', 'exists:products,id'],
+            'items.*.product_id' => ['nullable', Rule::exists('products', 'id')->where('business_id', ActiveBusiness::id())],
+            'items.*.retail_product_variant_id' => ['nullable', Rule::exists('retail_product_variants', 'id')->where('business_id', ActiveBusiness::id())],
             'items.*.title' => ['nullable', 'string', 'max:255'],
             'items.*.description' => ['nullable', 'string', 'max:500'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.001'],

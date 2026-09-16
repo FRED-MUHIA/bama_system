@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Modules\Retail\Models\RetailDelivery;
 use Modules\Retail\Models\RetailOrder;
+use Modules\Retail\Models\RetailProductVariant;
 
 class RetailOrderService
 {
@@ -69,14 +70,17 @@ class RetailOrderService
     {
         return collect($this->documents->normalizeItems($items))
             ->map(function (array $item) {
-                $product = ! empty($item['product_id']) ? Product::with('retailProfile')->find($item['product_id']) : null;
+                [$product, $variant] = $this->resolveProductAndVariant($item);
                 $title = $item['title'] ?? $product?->name ?? $item['description'] ?? 'Manual retail order item';
 
                 return [
                     'product_id' => $product?->id,
-                    'retail_product_variant_id' => $item['retail_product_variant_id'] ?? null,
+                    'retail_product_variant_id' => $variant?->id,
                     'title' => $title,
                     'description' => $item['description'] ?? $product?->description ?? $title,
+                    'variant_description' => $variant?->displayName(),
+                    'sku_snapshot' => $variant?->sku ?: $product?->sku,
+                    'barcode_snapshot' => $variant?->barcode ?: $product?->barcode,
                     'quantity' => (float) ($item['quantity'] ?? 1),
                     'unit_price' => (float) ($item['unit_price'] ?? $product?->price ?? 0),
                     'discount' => (float) ($item['discount'] ?? 0),
@@ -139,11 +143,30 @@ class RetailOrderService
 
     private function itemForTable(string $table, array $item): array
     {
-        if (! Schema::hasColumn($table, 'retail_product_variant_id')) {
-            unset($item['retail_product_variant_id']);
+        if (! Schema::hasTable($table)) {
+            return $item;
         }
 
-        return $item;
+        return collect($item)
+            ->only(Schema::getColumnListing($table))
+            ->all();
+    }
+
+    private function resolveProductAndVariant(array $item): array
+    {
+        $product = ! empty($item['product_id']) ? Product::with('retailProfile')->find($item['product_id']) : null;
+        $variant = null;
+
+        if (! empty($item['retail_product_variant_id'])) {
+            $variant = RetailProductVariant::with('product.retailProfile', 'parentProduct.retailProfile')
+                ->find($item['retail_product_variant_id']);
+
+            if ($variant) {
+                $product = $variant->product ?: $product;
+            }
+        }
+
+        return [$product, $variant];
     }
 
     private function posStatusFor(string $status): string

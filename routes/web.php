@@ -361,6 +361,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
         Route::get('/products/export', [ProductController::class, 'export'])->name('products.export');
         Route::post('/products/{product}/stock', [ProductController::class, 'updateStock'])->name('products.stock.update');
+        Route::post('/products/{product}/variants/generate', [ProductController::class, 'generateVariants'])->name('products.variants.generate');
         Route::post('/product-categories', [ProductController::class, 'storeCategory'])->name('product-categories.store');
         Route::post('/product-brands', [ProductController::class, 'storeBrand'])->name('product-brands.store');
         Route::post('/product-attributes', [ProductController::class, 'storeAttribute'])->name('product-attributes.store');

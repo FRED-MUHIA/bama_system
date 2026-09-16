@@ -73,7 +73,7 @@ class RetailCatalogService
             'product_id' => $variant->id,
             'variant_name' => $attributes['variant_name'] ?? null,
             'sku' => $variant->sku,
-            'barcode' => $attributes['barcode'] ?? null,
+            'barcode' => $attributes['barcode'] ?? $variant->barcode,
             'combination_key' => $attributes['combination_key'] ?? null,
             'attributes' => $attributes['attributes'] ?? $attributes,
             'cost_price' => $attributes['cost_price'] ?? $variant->cost_price,

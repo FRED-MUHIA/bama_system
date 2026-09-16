@@ -17,13 +17,19 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Modules\Retail\Models\RetailProductProfile;
+use Modules\Retail\Services\RetailCatalogService;
 
 class ProductController extends Controller
 {
     public function index()
     {
         return view('products.index', [
-            'products' => Product::with('category.parent', 'brand', 'retailVariants')->latest()->paginate(12),
+            'products' => Product::with(
+                'category.parent',
+                'brand',
+                'retailVariants.product',
+                'retailVariants.attributeValueLinks.value.attribute'
+            )->latest()->paginate(12),
             'categories' => ProductCategory::with('parent')->orderBy('sort_order')->orderBy('name')->get(),
             'brands' => ProductBrand::orderBy('name')->get(),
             'attributes' => ProductAttribute::with('values')->orderBy('sort_order')->orderBy('name')->get(),
@@ -79,6 +85,49 @@ class ProductController extends Controller
         $stock->adjust($product, (float) $data['quantity'], $data['type'], $data['notes'] ?? null);
 
         return back()->with('status', 'Stock updated for '.$product->name.'.');
+    }
+
+    public function generateVariants(Request $request, Product $product, RetailCatalogService $catalog)
+    {
+        $data = $request->validate([
+            'variant_values' => ['required', 'array', 'min:1'],
+            'variant_values.*' => ['nullable', 'array'],
+            'variant_values.*.*' => [
+                'integer',
+                Rule::exists('product_attribute_values', 'id')->where('business_id', ActiveBusiness::id()),
+            ],
+            'sku_pattern' => ['nullable', 'string', 'max:120'],
+            'max_variants' => ['nullable', 'integer', 'min:1', 'max:1000'],
+        ]);
+
+        $sets = collect($data['variant_values'])
+            ->mapWithKeys(fn ($valueIds, $attributeId) => [
+                (int) $attributeId => collect((array) $valueIds)
+                    ->filter(fn ($valueId) => filled($valueId))
+                    ->map(fn ($valueId) => (int) $valueId)
+                    ->unique()
+                    ->values()
+                    ->all(),
+            ])
+            ->filter()
+            ->all();
+
+        if ($sets === []) {
+            throw ValidationException::withMessages([
+                'variant_values' => 'Select at least one value for one variant attribute.',
+            ]);
+        }
+
+        $variants = $catalog->generateVariants($product, $sets, [
+            'sku_pattern' => $data['sku_pattern'] ?? 'PRODUCT-SEQUENCE',
+            'max_variants' => $data['max_variants'] ?? RetailCatalogService::DEFAULT_MAX_VARIANTS,
+        ]);
+
+        $product->attributeAssignments()
+            ->whereIn('product_attribute_id', array_keys($sets))
+            ->update(['is_variant_attribute' => true]);
+
+        return back()->with('status', $variants->count().' variants are ready for '.$product->name.'.');
     }
 
     public function import(Request $request, ProductCatalogImportService $importer)

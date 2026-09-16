@@ -146,6 +146,7 @@
                     @endif
                     @php
                         $selectedProduct = $i === 0 ? $scanProduct : null;
+                        $selectedVariant = $selectedProduct?->variantProfile;
                         $selectedTaxRate = is_numeric($selectedProduct?->retailProfile?->tax_class) ? $selectedProduct?->retailProfile?->tax_class : '';
                     @endphp
                     <div class="pos-line-item mb-2">
@@ -160,6 +161,7 @@
                             <input class="form-control" name="items[{{ $i }}][unit_price]" data-cart-price="{{ $i }}" type="number" step="0.01" min="0" value="{{ $selectedProduct ? (float) $selectedProduct->price : '' }}" placeholder="Price">
                             <div class="pos-line-total" data-cart-line-total="{{ $i }}">0.00</div>
                         </div>
+                        <input type="hidden" name="items[{{ $i }}][retail_product_variant_id]" data-cart-variant="{{ $i }}" value="{{ $selectedVariant?->id }}">
                         <input type="hidden" name="items[{{ $i }}][description]" data-cart-description="{{ $i }}" value="{{ $selectedProduct?->name }}">
                         <input type="hidden" name="items[{{ $i }}][discount]" data-cart-discount="{{ $i }}">
                         <input type="hidden" name="items[{{ $i }}][tax_rate]" data-cart-tax="{{ $i }}" value="{{ $selectedTaxRate }}">
@@ -334,20 +336,8 @@
             ?? data_get($metadata, 'values');
     };
 
-    $posSearchProducts = $products->map(fn ($product) => [
-        'id' => $product->id,
-        'name' => $product->name,
-        'sku' => $product->sku,
-        'barcode' => $product->retailProfile?->barcode ?: $product->barcode,
-        'brand' => $product->brand?->name ?: $product->retailProfile?->brand,
-        'category' => $product->category?->name,
-        'type' => $product->retailProfile?->product_type ?: $product->productTypeLabel(),
-        'description' => $product->description,
-        'price' => (float) $product->price,
-        'stock' => (float) $product->stock_quantity,
-        'stock_label' => $product->formattedStock(),
-        'tax_rate' => is_numeric($product->retailProfile?->tax_class) ? (float) $product->retailProfile?->tax_class : '',
-        'attributes' => $posAttributePairs($product->retailProfile?->attributes)
+    $posProductAttributes = function ($product) use ($posAttributePairs, $posAssignmentValue) {
+        return $posAttributePairs($product->retailProfile?->attributes)
             ->merge($product->attributeAssignments->map(function ($assignment) use ($posAssignmentValue) {
                 $value = $posAssignmentValue($assignment);
 
@@ -363,25 +353,90 @@
                 ];
             })->filter(fn ($attribute) => filled($attribute['label'])))
             ->unique(fn ($attribute) => $attribute['label'].'|'.$attribute['value'])
-            ->values()
-            ->all(),
-        'variants' => $product->retailVariants
-            ->filter(fn ($variant) => $variant->is_active ?? true)
-            ->take(4)
-            ->map(fn ($variant) => [
-                'name' => $variant->displayName(),
-                'sku' => $variant->sku,
-                'barcode' => $variant->barcode,
-                'attributes' => $posAttributePairs($variant->attributes)
-                    ->merge($variant->attributeValueLinks->map(fn ($link) => [
-                        'label' => $link->attribute?->name ?: $link->value?->attribute?->name,
-                        'value' => $link->value?->value,
-                    ])->filter(fn ($attribute) => filled($attribute['label']) && filled($attribute['value'])))
-                    ->unique(fn ($attribute) => $attribute['label'].'|'.$attribute['value'])
-                    ->values()
-                    ->all(),
-            ])->values()->all(),
-    ])->values();
+            ->values();
+    };
+
+    $posVariantAttributes = function ($variant) use ($posAttributePairs) {
+        return $posAttributePairs($variant->attributes)
+            ->merge($variant->attributeValueLinks->map(fn ($link) => [
+                'label' => $link->attribute?->name ?: $link->value?->attribute?->name,
+                'value' => $link->value?->value,
+            ])->filter(fn ($attribute) => filled($attribute['label']) && filled($attribute['value'])))
+            ->unique(fn ($attribute) => $attribute['label'].'|'.$attribute['value'])
+            ->values();
+    };
+
+    $posSearchProducts = $products
+        ->reject(fn ($product) => $product->variantProfile)
+        ->flatMap(function ($product) use ($posProductAttributes, $posVariantAttributes) {
+            $baseAttributes = $posProductAttributes($product);
+            $variantSummaries = $product->retailVariants
+                ->filter(fn ($variant) => $variant->is_active ?? true)
+                ->take(4)
+                ->map(fn ($variant) => [
+                    'name' => $variant->displayName(),
+                    'sku' => $variant->sku,
+                    'barcode' => $variant->barcode,
+                    'attributes' => $posVariantAttributes($variant)->all(),
+                ])
+                ->values()
+                ->all();
+
+            $baseProduct = [
+                'id' => $product->id,
+                'variant_id' => null,
+                'variant_name' => null,
+                'name' => $product->name,
+                'sku' => $product->sku,
+                'barcode' => $product->retailProfile?->barcode ?: $product->barcode,
+                'brand' => $product->brand?->name ?: $product->retailProfile?->brand,
+                'category' => $product->category?->name,
+                'type' => $product->retailProfile?->product_type ?: $product->productTypeLabel(),
+                'description' => $product->description,
+                'price' => (float) $product->price,
+                'stock' => (float) $product->stock_quantity,
+                'stock_label' => $product->formattedStock(),
+                'tax_rate' => is_numeric($product->retailProfile?->tax_class) ? (float) $product->retailProfile?->tax_class : '',
+                'attributes' => $baseAttributes->all(),
+                'variants' => $variantSummaries,
+            ];
+
+            $variantProducts = $product->retailVariants
+                ->filter(fn ($variant) => $variant->is_active ?? true)
+                ->map(function ($variant) use ($product, $baseAttributes, $posVariantAttributes) {
+                    $variantProduct = $variant->product;
+                    $variantName = $variant->displayName();
+                    $variantAttributes = $posVariantAttributes($variant);
+                    $taxClass = $variant->tax_class ?: $variantProduct?->retailProfile?->tax_class ?: $product->retailProfile?->tax_class;
+
+                    return [
+                        'id' => $variantProduct?->id ?: $variant->product_id,
+                        'parent_id' => $product->id,
+                        'variant_id' => $variant->id,
+                        'variant_name' => $variantName,
+                        'name' => trim($product->name.' - '.$variantName, ' -'),
+                        'sku' => $variant->sku ?: $variantProduct?->sku,
+                        'barcode' => $variant->barcode ?: $variantProduct?->barcode,
+                        'brand' => $product->brand?->name ?: $product->retailProfile?->brand,
+                        'category' => $product->category?->name,
+                        'type' => 'Variant',
+                        'description' => $variantProduct?->description ?: $product->description,
+                        'price' => (float) ($variant->retail_price ?? $variantProduct?->price ?? $product->price),
+                        'stock' => (float) ($variantProduct?->stock_quantity ?? 0),
+                        'stock_label' => $variantProduct?->formattedStock() ?: number_format((float) ($variantProduct?->stock_quantity ?? 0), 3),
+                        'tax_rate' => is_numeric($taxClass) ? (float) $taxClass : '',
+                        'attributes' => $baseAttributes->merge($variantAttributes)
+                            ->unique(fn ($attribute) => $attribute['label'].'|'.$attribute['value'])
+                            ->values()
+                            ->all(),
+                        'variants' => [],
+                    ];
+                })
+                ->values();
+
+            return $variantProducts->prepend($baseProduct);
+        })
+        ->values();
 @endphp
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -446,7 +501,6 @@ document.addEventListener('DOMContentLoaded', () => {
             product.sku,
             product.barcode,
             `${product.name} (${product.sku || productCode(product)})`,
-            ...(product.variants || []).flatMap((variant) => [variant.name, variant.sku, variant.barcode]),
         ].some((value) => normalize(value) === normalizedTerm);
     }
 
@@ -495,7 +549,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function cartRowHasProduct(row, product) {
-        return document.querySelector(`[data-cart-product="${row}"]`)?.value === String(product.id);
+        const productSelect = document.querySelector(`[data-cart-product="${row}"]`);
+        const variant = document.querySelector(`[data-cart-variant="${row}"]`);
+
+        return productSelect?.value === String(product.id)
+            && (variant?.value || '') === String(product.variant_id || '');
     }
 
     function cartRowIsEmpty(row) {
@@ -530,12 +588,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const quantity = document.querySelector(`[data-cart-quantity="${row}"]`);
         const price = document.querySelector(`[data-cart-price="${row}"]`);
         const tax = document.querySelector(`[data-cart-tax="${row}"]`);
+        const variant = document.querySelector(`[data-cart-variant="${row}"]`);
         const description = document.querySelector(`[data-cart-description="${row}"]`);
 
         if (productSelect) productSelect.value = product.id;
         if (quantity && !quantity.value) quantity.value = 1;
         if (price) price.value = product.price;
         if (tax) tax.value = product.tax_rate;
+        if (variant) variant.value = product.variant_id || '';
         if (description) description.value = product.name;
         updateLineTotal(row);
     }

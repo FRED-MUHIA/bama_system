@@ -34,6 +34,12 @@ class RetailReturnService
             ]);
 
             foreach ($items as $item) {
+                if (empty($item['retail_product_variant_id']) && ! empty($item['pos_order_item_id'])) {
+                    $orderItem = $order->items->firstWhere('id', (int) $item['pos_order_item_id']);
+                    $item['retail_product_variant_id'] = $orderItem?->retail_product_variant_id;
+                    $item['product_id'] ??= $orderItem?->product_id;
+                }
+
                 $return->items()->create($item);
             }
 
@@ -46,10 +52,12 @@ class RetailReturnService
     public function approve(RetailReturnAuthorization $return): RetailReturnAuthorization
     {
         return DB::transaction(function () use ($return) {
-            $return->load('items.product');
+            $return->load('items.product', 'items.variant.product');
             foreach ($return->items as $item) {
-                if ($item->product && $item->condition !== 'Damaged') {
-                    $this->stock->receive($item->product, (float) $item->quantity, $return, 'Return '.$return->return_number, $return->reason);
+                $product = $item->variant?->product ?: $item->product;
+
+                if ($product && $item->condition !== 'Damaged') {
+                    $this->stock->receive($product, (float) $item->quantity, $return, 'Return '.$return->return_number, $return->reason);
                 }
             }
 

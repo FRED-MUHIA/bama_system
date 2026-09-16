@@ -4,7 +4,9 @@ namespace Modules\Retail\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\PosOrder;
+use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Modules\Retail\Models\RetailReturnAuthorization;
 use Modules\Retail\Repositories\RetailRepository;
 use Modules\Retail\Services\RetailReturnService;
@@ -31,6 +33,7 @@ class RetailReturnController extends Controller
             'items' => ['required', 'array', 'min:1'],
             'items.*.pos_order_item_id' => ['nullable', 'exists:pos_order_items,id'],
             'items.*.product_id' => ['nullable', 'exists:products,id'],
+            'items.*.retail_product_variant_id' => ['nullable', Rule::exists('retail_product_variants', 'id')->where('business_id', ActiveBusiness::id())],
             'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
             'items.*.condition' => ['required', 'in:Resellable,Damaged,Defective,Opened'],
             'items.*.refund_amount' => ['required', 'numeric', 'min:0'],

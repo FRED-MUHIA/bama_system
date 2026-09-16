@@ -20,7 +20,12 @@ class RetailCatalogController extends Controller
             'title' => 'Product Catalog',
             'section' => 'products',
             'records' => $retail->productSearch($request->query('q'))->paginate(20),
-            'products' => Product::with('retailProfile', 'brand')->orderBy('name')->get(),
+            'products' => Product::with(
+                'retailProfile',
+                'brand',
+                'retailVariants.product',
+                'retailVariants.attributeValueLinks.value.attribute'
+            )->orderBy('name')->get(),
             'product' => new Product(['is_active' => true, 'stock_unit' => 'pcs']),
             'categories' => ProductCategory::with('parent')->orderBy('sort_order')->orderBy('name')->get(),
             'brands' => ProductBrand::orderBy('name')->get(),
