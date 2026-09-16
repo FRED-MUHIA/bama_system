@@ -50,7 +50,11 @@ class RetailRepository
 
     public function customers()
     {
-        return Client::query()->with('retailProfile', 'posOrders');
+        return Client::query()
+            ->with('retailProfile')
+            ->withCount(['posOrders', 'retailOrders'])
+            ->withSum('posOrders as pos_order_total', 'total')
+            ->withSum('retailOrders as retail_order_total', 'total');
     }
 
     public function suppliers()

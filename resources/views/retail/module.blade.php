@@ -11,7 +11,47 @@
     </div>
     </div>
 
-@if($section === 'products')
+@if($section === 'customers')
+    <div class="card p-0">
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle">
+                <thead><tr><th>Customer</th><th>Status</th><th>Orders</th><th>Details</th><th>Updated</th><th></th></tr></thead>
+                <tbody>
+                @forelse($records as $record)
+                    @php
+                        $posOrdersCount = (int) ($record->pos_orders_count ?? 0);
+                        $retailOrdersCount = (int) ($record->retail_orders_count ?? 0);
+                        $orderCount = $posOrdersCount + $retailOrdersCount;
+                        $totalSpend = (float) ($record->pos_order_total ?? 0) + (float) ($record->retail_order_total ?? 0);
+                    @endphp
+                    <tr>
+                        <td class="fw-semibold">
+                            <a class="text-decoration-none fw-bold text-black" href="{{ route('retail.customers.show', $record) }}">{{ $record->name }}</a>
+                            <div class="small text-muted">{{ $record->company_name ?: ($record->email ?: 'No email recorded') }}</div>
+                        </td>
+                        <td><span class="status-pill">{{ $record->retailProfile?->customer_segment ?? 'Active' }}</span></td>
+                        <td>
+                            <strong>{{ number_format($orderCount) }}</strong>
+                            <div class="small text-muted">{{ $posOrdersCount }} POS / {{ $retailOrdersCount }} retail</div>
+                        </td>
+                        <td class="text-muted">
+                            {{ $record->phone ?: 'No phone' }}
+                            <div>Total spend {{ number_format($totalSpend, 2) }}</div>
+                        </td>
+                        <td>{{ optional($record->updated_at)->format('d M Y') }}</td>
+                        <td class="text-end"><a class="btn btn-sm btn-outline-dark" href="{{ route('retail.customers.show', $record) }}"><i class="bi bi-eye me-1"></i>View</a></td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6" class="text-muted p-4">No customers yet.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if(method_exists($records, 'links'))
+            <div class="p-3">{{ $records->links() }}</div>
+        @endif
+    </div>
+@elseif($section === 'products')
     <div class="mb-3" id="retail-add-product">
         <div class="card p-3">
             <div class="d-flex justify-content-between align-items-center mb-2">

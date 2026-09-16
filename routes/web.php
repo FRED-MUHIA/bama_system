@@ -399,6 +399,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/deliveries', [RetailDeliveryController::class, 'index'])->middleware('permission:retail.orders.view')->name('deliveries.index');
             Route::post('/deliveries', [RetailDeliveryController::class, 'store'])->middleware('permission:retail.orders.manage')->name('deliveries.store');
             Route::get('/customers', [RetailCustomerController::class, 'index'])->middleware('permission:retail.customers.view')->name('customers.index');
+            Route::get('/customers/{client}', [RetailCustomerController::class, 'show'])->middleware('permission:retail.customers.view')->name('customers.show');
             Route::post('/customers/profile', [RetailCustomerController::class, 'storeProfile'])->middleware('permission:retail.customers.manage')->name('customers.profile');
             Route::post('/customers/offers', [RetailCustomerController::class, 'storeOffer'])->middleware('permission:retail.promotions.manage')->name('customers.offers.store');
             Route::get('/loyalty-programs', [RetailLoyaltyController::class, 'index'])->middleware('permission:retail.loyalty.view')->name('loyalty.index');

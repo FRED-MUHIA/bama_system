@@ -36,6 +36,7 @@ class Client extends Model
     public function letters() { return $this->hasMany(Letter::class); }
     public function retailProfile() { return $this->hasOne(\Modules\Retail\Models\RetailCustomerProfile::class); }
     public function retailLoyaltyAccount() { return $this->hasOne(\Modules\Retail\Models\RetailLoyaltyAccount::class); }
+    public function retailOrders() { return $this->hasMany(\Modules\Retail\Models\RetailOrder::class); }
 
     public static function supportsCompanyStructure(): bool
     {

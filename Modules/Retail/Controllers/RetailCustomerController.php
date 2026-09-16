@@ -26,6 +26,43 @@ class RetailCustomerController extends Controller
         ]);
     }
 
+    public function show(Client $client)
+    {
+        $client->load(['retailProfile', 'retailLoyaltyAccount']);
+
+        $posOrders = $client->posOrders()
+            ->with(['items.product', 'paymentMethod', 'payments', 'retailReturns'])
+            ->orderByDesc('order_date')
+            ->orderByDesc('id')
+            ->paginate(10, ['*'], 'pos_page');
+
+        $retailOrders = $client->retailOrders()
+            ->with(['items.product', 'branch', 'fulfillment', 'delivery'])
+            ->orderByDesc('order_date')
+            ->orderByDesc('id')
+            ->paginate(10, ['*'], 'retail_page');
+
+        $offers = Schema::hasTable('retail_customer_offers')
+            ? RetailCustomerOffer::with('promotion')->where('client_id', $client->id)->latest()->limit(8)->get()
+            : collect();
+
+        $summary = [
+            'pos_orders' => $client->posOrders()->count(),
+            'retail_orders' => $client->retailOrders()->count(),
+            'pos_total' => (float) $client->posOrders()->sum('total'),
+            'pos_paid' => (float) $client->posOrders()->sum('amount_paid'),
+            'retail_total' => (float) $client->retailOrders()->sum('total'),
+        ];
+
+        return view('retail.customer-show', [
+            'client' => $client,
+            'posOrders' => $posOrders,
+            'retailOrders' => $retailOrders,
+            'offers' => $offers,
+            'summary' => $summary,
+        ]);
+    }
+
     public function storeProfile(Request $request)
     {
         RetailCustomerProfile::updateOrCreate(
