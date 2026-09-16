@@ -9,9 +9,39 @@
         <h1 class="h3 mb-1">{{ $title }}</h1>
         <div class="text-muted">Simple records for the active shop.</div>
     </div>
+    @if($section === 'customers')
+        <div class="d-flex flex-wrap gap-2 justify-content-end">
+            <a class="btn btn-success" href="#retail-add-customer"><i class="bi bi-person-plus me-1"></i>Add Customer</a>
+            <a class="btn btn-outline-dark" href="{{ route('clients.index') }}"><i class="bi bi-people me-1"></i>Open CRM</a>
+        </div>
+    @endif
     </div>
 
 @if($section === 'customers')
+    <div class="card p-3 mb-3" id="retail-add-customer">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h2 class="h5 mb-0">Add Customer</h2>
+            <a class="btn btn-sm btn-outline-dark" href="{{ route('clients.index') }}">Open CRM</a>
+        </div>
+        <form method="POST" action="{{ route('retail.customers.store') }}" class="row g-2">
+            @csrf
+            <div class="col-md-2">
+                <select class="form-select" name="type">
+                    <option value="individual">Individual</option>
+                    <option value="company">Company</option>
+                </select>
+            </div>
+            <div class="col-md-3"><input class="form-control" name="name" value="{{ old('name') }}" placeholder="Customer name" required></div>
+            <div class="col-md-2"><input class="form-control" name="phone" value="{{ old('phone') }}" placeholder="Phone"></div>
+            <div class="col-md-2"><input class="form-control" name="email" type="email" value="{{ old('email') }}" placeholder="Email"></div>
+            <div class="col-md-3"><input class="form-control" name="company_name" value="{{ old('company_name') }}" placeholder="Company"></div>
+            <div class="col-md-3"><select class="form-select" name="customer_segment"><option>Retail Customer</option><option>VIP Customer</option><option>Wholesale Customer</option><option>Corporate Customer</option></select></div>
+            <div class="col-md-4"><input class="form-control" name="address" value="{{ old('address') }}" placeholder="Address"></div>
+            <div class="col-md-4"><input class="form-control" name="notes" value="{{ old('notes') }}" placeholder="Notes"></div>
+            <div class="col-md-1"><button class="btn btn-success w-100"><i class="bi bi-person-plus me-1"></i>Add</button></div>
+        </form>
+    </div>
+
     <div class="card p-0">
         <div class="table-responsive">
             <table class="table mb-0 align-middle">
@@ -312,34 +342,6 @@
                 <div class="col-md-1"><button class="btn btn-outline-dark w-100"><i class="bi bi-save"></i></button></div>
             </form>
         </div>
-    </div>
-@elseif($section === 'customers')
-    <div class="card p-3 mb-3">
-        <form method="POST" action="{{ route('retail.customers.profile') }}" class="row g-2">
-            @csrf
-            <div class="col-md-4"><select class="form-select" name="client_id" required><option value="">Customer</option>@foreach($clients as $client)<option value="{{ $client->id }}">{{ $client->name }}</option>@endforeach</select></div>
-            <div class="col-md-3"><select class="form-select" name="customer_segment"><option>Retail Customer</option><option>VIP Customer</option><option>Wholesale Customer</option><option>Corporate Customer</option></select></div>
-            <div class="col-md-4"><input class="form-control" name="customer_notes" placeholder="Shopping preferences and notes"></div>
-            <div class="col-md-1"><button class="btn btn-success w-100"><i class="bi bi-save"></i></button></div>
-        </form>
-        <div class="border-top mt-3 pt-3">
-            <form method="POST" action="{{ route('retail.customers.offers.store') }}" class="row g-2">
-                @csrf
-                <div class="col-md-4"><select class="form-select" name="client_id" required><option value="">Offer customer</option>@foreach($clients as $client)<option value="{{ $client->id }}">{{ $client->name }}</option>@endforeach</select></div>
-                <div class="col-md-3"><input class="form-control" name="offer_name" placeholder="Personalized offer"></div>
-                <div class="col-md-2"><select class="form-select" name="status"><option>Active</option><option>Draft</option><option>Paused</option><option>Expired</option></select></div>
-                <div class="col-md-2"><input class="form-control" name="valid_until" type="date"></div>
-                <div class="col-md-1"><button class="btn btn-outline-dark w-100"><i class="bi bi-bullseye"></i></button></div>
-            </form>
-        </div>
-        @if($offers->isNotEmpty())
-            <div class="border-top mt-3 pt-3">
-                <h3 class="h6">Targeted Marketing Offers</h3>
-                @foreach($offers as $offer)
-                    <div class="d-flex justify-content-between gap-2 border-bottom py-2"><span>{{ $offer->client?->name }} · {{ $offer->offer_name }}</span><span class="status-pill">{{ $offer->status }}</span></div>
-                @endforeach
-            </div>
-        @endif
     </div>
 @elseif($section === 'loyalty')
     <div class="card p-3 mb-3">
@@ -682,7 +684,7 @@
             <div class="p-3">{{ $records->links() }}</div>
         @endif
     </div>
-@else
+@elseif($section !== 'customers')
     <div class="card p-0">
         <div class="table-responsive">
             <table class="table mb-0 align-middle">

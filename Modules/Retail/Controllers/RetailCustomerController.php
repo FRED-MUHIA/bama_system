@@ -63,6 +63,31 @@ class RetailCustomerController extends Controller
         ]);
     }
 
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'type' => ['nullable', 'in:company,individual'],
+            'name' => ['required', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:100'],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('clients', 'email')->where('business_id', ActiveBusiness::id())],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'address' => ['nullable', 'string'],
+            'notes' => ['nullable', 'string'],
+            'customer_segment' => ['nullable', Rule::in(['Retail Customer', 'VIP Customer', 'Wholesale Customer', 'Corporate Customer'])],
+        ]);
+
+        $segment = $data['customer_segment'] ?? 'Retail Customer';
+        unset($data['customer_segment']);
+
+        $client = Client::create($data + ['type' => $data['type'] ?? 'individual']);
+        $client->retailProfile()->create([
+            'customer_segment' => $segment,
+            'customer_notes' => $data['notes'] ?? null,
+        ]);
+
+        return redirect()->route('retail.customers.show', $client)->with('status', 'Customer added.');
+    }
+
     public function storeProfile(Request $request)
     {
         RetailCustomerProfile::updateOrCreate(
