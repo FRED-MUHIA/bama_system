@@ -409,15 +409,23 @@
             <h2 class="h5 mb-0">Create Retail Order</h2>
             <a class="btn btn-sm btn-outline-dark" href="{{ route('retail.pos.index') }}"><i class="bi bi-upc-scan me-1"></i>Open POS</a>
         </div>
-        <form method="POST" action="{{ route('retail.orders.store') }}" class="row g-2">
+        <form method="POST" action="{{ route('retail.orders.store') }}" class="row g-2" data-retail-order-form>
             @csrf
             <div class="col-md-3"><select class="form-select" name="client_id"><option value="">Customer</option>@foreach($clients as $client)<option value="{{ $client->id }}" @selected(session('selectedCustomerId') == $client->id)>{{ $client->name }}</option>@endforeach</select></div>
             <div class="col-md-2"><select class="form-select" name="channel"><option>Store</option><option>Online Store</option><option>Mobile Commerce</option><option>Marketplace</option><option>Special Order</option></select></div>
             <div class="col-md-2"><select class="form-select" name="status"><option>Draft</option><option>Pending</option><option>Confirmed</option><option>Packed</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select></div>
-            <div class="col-md-3"><select class="form-select" name="items[0][product_id]"><option value="">Product</option>@foreach($products as $product)<option value="{{ $product->id }}">{{ $product->name }}</option>@endforeach</select></div>
-            <input type="hidden" name="items[0][title]" value="Manual retail order item">
-            <div class="col-md-1"><input class="form-control" name="items[0][quantity]" type="number" step="0.001" value="1"></div>
-            <div class="col-md-1"><input class="form-control" name="items[0][unit_price]" type="number" step="0.01" value="0"></div>
+            <div class="col-md-5 text-md-end"><button class="btn btn-sm btn-outline-dark" type="button" data-add-retail-order-item><i class="bi bi-plus-lg me-1"></i>Add Product</button></div>
+            <div class="col-12 d-grid gap-2" data-retail-order-items>
+                <div class="row g-2 align-items-center" data-retail-order-item>
+                    <div class="col-md-3"><select class="form-select" name="items[0][product_id]" data-order-product><option value="">Product</option>@foreach($products as $product)<option value="{{ $product->id }}" data-price="{{ $product->price }}" data-name="{{ $product->name }}" data-description="{{ $product->description ?: $product->name }}">{{ $product->name }} - {{ number_format((float) $product->price, 2) }}</option>@endforeach</select></div>
+                    <div class="col-md-3"><input class="form-control" name="items[0][title]" data-order-title placeholder="Item title" required></div>
+                    <input type="hidden" name="items[0][description]" data-order-description>
+                    <input type="hidden" name="items[0][discount]" value="0">
+                    <div class="col-md-2"><input class="form-control" name="items[0][quantity]" data-order-quantity type="number" min="0.001" step="0.001" value="1" placeholder="Qty" required></div>
+                    <div class="col-md-2"><input class="form-control" name="items[0][unit_price]" data-order-price type="number" min="0" step="0.01" placeholder="Unit price" required></div>
+                    <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-retail-item><i class="bi bi-trash"></i></button></div>
+                </div>
+            </div>
             <div class="col-md-12"><button class="btn btn-success">Save Order</button></div>
         </form>
         <div class="border-top mt-3 pt-3" id="retail-pos-order">
@@ -425,7 +433,7 @@
                 <h3 class="h6 mb-0">Create POS Order</h3>
                 <a class="btn btn-sm btn-outline-dark" href="{{ route('pos-orders.create') }}"><i class="bi bi-cart-plus me-1"></i>Full POS Form</a>
             </div>
-            <form method="POST" action="{{ route('retail.orders.pos.store') }}" class="row g-2">
+            <form method="POST" action="{{ route('retail.orders.pos.store') }}" class="row g-2" data-retail-pos-order-form>
                 @csrf
                 <input type="hidden" name="sale_type" value="Sale">
                 <input type="hidden" name="channel" value="Store">
@@ -434,12 +442,19 @@
                 <div class="col-md-2"><input class="form-control" name="customer_name" placeholder="Customer name"></div>
                 <div class="col-md-2"><input class="form-control" name="customer_phone" placeholder="Phone"></div>
                 <div class="col-md-2"><select class="form-select" name="branch_id"><option value="">Store / Branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></div>
-                <div class="col-md-3"><select class="form-select" name="items[0][product_id]" data-retail-pos-product><option value="">Product</option>@foreach($products as $product)<option value="{{ $product->id }}" data-price="{{ $product->price }}" data-name="{{ $product->name }}">{{ $product->name }} - {{ number_format((float) $product->price, 2) }}</option>@endforeach</select></div>
-                <input type="hidden" name="items[0][title]" data-retail-pos-title>
-                <input type="hidden" name="items[0][description]" data-retail-pos-description>
-                <input type="hidden" name="items[0][discount]" value="0">
-                <div class="col-md-1"><input class="form-control" name="items[0][quantity]" data-retail-pos-quantity type="number" min="0.001" step="0.001" value="1" placeholder="Qty"></div>
-                <div class="col-md-2"><input class="form-control" name="items[0][unit_price]" data-retail-pos-price type="number" min="0" step="0.01" placeholder="Unit price"></div>
+                <div class="col-md-3 text-md-end"><button class="btn btn-sm btn-outline-dark" type="button" data-add-retail-pos-item><i class="bi bi-plus-lg me-1"></i>Add Product</button></div>
+                <div class="col-12 d-grid gap-2" data-retail-pos-items>
+                    <div class="row g-2 align-items-center" data-retail-pos-item>
+                        <div class="col-md-3"><select class="form-select" name="items[0][product_id]" data-retail-pos-product><option value="">Product</option>@foreach($products as $product)<option value="{{ $product->id }}" data-price="{{ $product->price }}" data-name="{{ $product->name }}" data-description="{{ $product->description ?: $product->name }}">{{ $product->name }} - {{ number_format((float) $product->price, 2) }}</option>@endforeach</select></div>
+                        <input type="hidden" name="items[0][title]" data-retail-pos-title>
+                        <input type="hidden" name="items[0][description]" data-retail-pos-description>
+                        <input type="hidden" name="items[0][discount]" value="0">
+                        <div class="col-md-2"><input class="form-control" name="items[0][quantity]" data-retail-pos-quantity type="number" min="0.001" step="0.001" value="1" placeholder="Qty"></div>
+                        <div class="col-md-2"><input class="form-control" name="items[0][unit_price]" data-retail-pos-price type="number" min="0" step="0.01" placeholder="Unit price"></div>
+                        <div class="col-md-2"><div class="form-control bg-light" data-retail-pos-line-total>0.00</div></div>
+                        <div class="col-md-1"><button class="btn btn-outline-danger w-100" type="button" data-remove-retail-item><i class="bi bi-trash"></i></button></div>
+                    </div>
+                </div>
                 <div class="col-md-2"><select class="form-select" name="payments[0][payment_method_id]"><option value="">Payment method</option>@foreach($paymentMethods as $method)<option value="{{ $method->id }}">{{ $method->name }}</option>@endforeach</select></div>
                 <div class="col-md-2"><input class="form-control" name="payments[0][method_type]" value="Cash" placeholder="Payment type"></div>
                 <div class="col-md-2"><input class="form-control" name="payments[0][amount]" data-retail-pos-payment type="number" min="0" step="0.01" placeholder="Amount paid"></div>
@@ -783,36 +798,138 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    const posProduct = document.querySelector('[data-retail-pos-product]');
-    const posTitle = document.querySelector('[data-retail-pos-title]');
-    const posDescription = document.querySelector('[data-retail-pos-description]');
-    const posQuantity = document.querySelector('[data-retail-pos-quantity]');
-    const posPrice = document.querySelector('[data-retail-pos-price]');
-    const posPayment = document.querySelector('[data-retail-pos-payment]');
+    const retailOrderItems = document.querySelector('[data-retail-order-items]');
+    const retailPosItems = document.querySelector('[data-retail-pos-items]');
+    const retailPosPayment = document.querySelector('[data-retail-pos-payment]');
 
-    const updatePosPayment = () => {
-        if (! posQuantity || ! posPrice || ! posPayment) return;
+    const renumberItemRows = (container, rowSelector) => {
+        if (! container) return;
 
-        const quantity = Number.parseFloat(posQuantity.value || '0');
-        const price = Number.parseFloat(posPrice.value || '0');
-        const total = Math.max(quantity * price, 0);
-        posPayment.value = total ? total.toFixed(2) : '';
+        const rows = container.querySelectorAll(rowSelector);
+        rows.forEach((row, index) => {
+            row.querySelectorAll('[name]').forEach((field) => {
+                field.name = field.name.replace(/items\[\d+\]/, `items[${index}]`);
+            });
+        });
     };
 
-    if (posProduct) {
-        posProduct.addEventListener('change', () => {
-            const option = posProduct.selectedOptions[0];
-            const name = option?.dataset.name || '';
-            const price = option?.dataset.price || '';
-
-            if (posTitle) posTitle.value = name;
-            if (posDescription) posDescription.value = name;
-            if (posPrice) posPrice.value = price;
-            updatePosPayment();
+    const resetItemRow = (row) => {
+        row.querySelectorAll('select').forEach((select) => select.selectedIndex = 0);
+        row.querySelectorAll('input').forEach((input) => {
+            if (input.matches('[data-order-quantity], [data-retail-pos-quantity]')) {
+                input.value = '1';
+            } else if (input.name.endsWith('[discount]')) {
+                input.value = '0';
+            } else {
+                input.value = '';
+            }
         });
-    }
+        row.querySelectorAll('[data-retail-pos-line-total]').forEach((lineTotal) => lineTotal.textContent = '0.00');
+    };
 
-    [posQuantity, posPrice].forEach((input) => input?.addEventListener('input', updatePosPayment));
+    const cloneItemRow = (container, rowSelector) => {
+        if (! container) return;
+
+        const source = container.querySelector(rowSelector);
+        if (! source) return;
+
+        const row = source.cloneNode(true);
+        resetItemRow(row);
+        container.appendChild(row);
+        renumberItemRows(container, rowSelector);
+    };
+
+    const selectedProduct = (select) => {
+        const option = select?.selectedOptions?.[0];
+
+        return {
+            name: option?.dataset.name || '',
+            description: option?.dataset.description || option?.dataset.name || '',
+            price: option?.dataset.price || '',
+        };
+    };
+
+    const fillRetailOrderRow = (row) => {
+        const product = selectedProduct(row.querySelector('[data-order-product]'));
+        const title = row.querySelector('[data-order-title]');
+        const description = row.querySelector('[data-order-description]');
+        const price = row.querySelector('[data-order-price]');
+
+        if (title && product.name) title.value = product.name;
+        if (description) description.value = product.description;
+        if (price && product.price) price.value = product.price;
+    };
+
+    const fillRetailPosRow = (row) => {
+        const product = selectedProduct(row.querySelector('[data-retail-pos-product]'));
+        const title = row.querySelector('[data-retail-pos-title]');
+        const description = row.querySelector('[data-retail-pos-description]');
+        const price = row.querySelector('[data-retail-pos-price]');
+
+        if (title) title.value = product.name;
+        if (description) description.value = product.description;
+        if (price && product.price) price.value = product.price;
+    };
+
+    const updateRetailPosTotals = () => {
+        if (! retailPosItems || ! retailPosPayment) return;
+
+        let total = 0;
+        retailPosItems.querySelectorAll('[data-retail-pos-item]').forEach((row) => {
+            const quantity = Number.parseFloat(row.querySelector('[data-retail-pos-quantity]')?.value || '0');
+            const price = Number.parseFloat(row.querySelector('[data-retail-pos-price]')?.value || '0');
+            const lineTotal = Math.max(quantity * price, 0);
+            total += lineTotal;
+
+            const display = row.querySelector('[data-retail-pos-line-total]');
+            if (display) display.textContent = lineTotal.toFixed(2);
+        });
+
+        retailPosPayment.value = total ? total.toFixed(2) : '';
+    };
+
+    document.querySelector('[data-add-retail-order-item]')?.addEventListener('click', () => {
+        cloneItemRow(retailOrderItems, '[data-retail-order-item]');
+    });
+
+    document.querySelector('[data-add-retail-pos-item]')?.addEventListener('click', () => {
+        cloneItemRow(retailPosItems, '[data-retail-pos-item]');
+        updateRetailPosTotals();
+    });
+
+    document.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-remove-retail-item]');
+        if (! button) return;
+
+        const orderRow = button.closest('[data-retail-order-item]');
+        const posRow = button.closest('[data-retail-pos-item]');
+        const container = orderRow ? retailOrderItems : retailPosItems;
+        const selector = orderRow ? '[data-retail-order-item]' : '[data-retail-pos-item]';
+        const rows = container?.querySelectorAll(selector);
+
+        if (! rows || rows.length <= 1) return;
+
+        (orderRow || posRow).remove();
+        renumberItemRows(container, selector);
+        updateRetailPosTotals();
+    });
+
+    document.addEventListener('change', (event) => {
+        if (event.target.matches('[data-order-product]')) {
+            fillRetailOrderRow(event.target.closest('[data-retail-order-item]'));
+        }
+
+        if (event.target.matches('[data-retail-pos-product]')) {
+            fillRetailPosRow(event.target.closest('[data-retail-pos-item]'));
+            updateRetailPosTotals();
+        }
+    });
+
+    document.addEventListener('input', (event) => {
+        if (event.target.matches('[data-retail-pos-quantity], [data-retail-pos-price]')) {
+            updateRetailPosTotals();
+        }
+    });
 });
 </script>
 @endpush
