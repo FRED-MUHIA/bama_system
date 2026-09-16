@@ -137,8 +137,19 @@ class MarketingPageController extends Controller
             'badges_json' => ['nullable', 'string'],
             'header_nav_json' => ['nullable', 'string'],
             'footer_columns_json' => ['nullable', 'string'],
+            'core_modules_json' => ['nullable', 'string'],
+            'benefits_json' => ['nullable', 'string'],
+            'steps_json' => ['nullable', 'string'],
+            'showcase_json' => ['nullable', 'string'],
+            'testimonials_json' => ['nullable', 'string'],
+            'faqs_json' => ['nullable', 'string'],
             'brand_logo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'brand_favicon' => ['nullable', 'file', 'mimes:ico,jpg,jpeg,png,webp,svg', 'max:1024'],
+            'hero_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
+            'insight_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
+            'features_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
+            'trust_logo_files' => ['nullable', 'array'],
+            'trust_logo_files.*' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
         ]);
 
         $slug = Str::slug($data['slug']);
@@ -153,6 +164,19 @@ class MarketingPageController extends Controller
             $sections['header']['nav_links'] = $this->decodeJsonArray($request, 'header_nav_json');
             $sections['footer']['columns'] = $this->decodeJsonArray($request, 'footer_columns_json');
 
+            foreach ([
+                'core_modules_json' => ['features', 'modules'],
+                'benefits_json' => ['benefits', 'items'],
+                'steps_json' => ['steps', 'items'],
+                'showcase_json' => ['showcase', 'tabs'],
+                'testimonials_json' => ['testimonials', 'items'],
+                'faqs_json' => ['faq', 'items'],
+            ] as $field => $path) {
+                if ($request->has($field)) {
+                    data_set($sections, implode('.', $path), $this->decodeJsonArray($request, $field));
+                }
+            }
+
             if ($request->hasFile('brand_logo')) {
                 $this->deletePublicFile(data_get($sections, 'brand.logo_path'));
                 $sections['brand']['logo_path'] = $request->file('brand_logo')->store('marketing/branding', 'public');
@@ -162,6 +186,19 @@ class MarketingPageController extends Controller
                 $this->deletePublicFile(data_get($sections, 'brand.favicon_path'));
                 $sections['brand']['favicon_path'] = $request->file('brand_favicon')->store('marketing/branding', 'public');
             }
+
+            foreach ([
+                'hero_image' => 'media.hero_image_path',
+                'insight_image' => 'media.insight_image_path',
+                'features_image' => 'media.features_image_path',
+            ] as $field => $path) {
+                if ($request->hasFile($field)) {
+                    $this->deletePublicFile(data_get($sections, $path));
+                    data_set($sections, $path, $request->file($field)->store('marketing/home', 'public'));
+                }
+            }
+
+            $sections['trust']['logos'] = $this->applyTrustLogoUploads($request, $sections['trust']['logos']);
         }
 
         $isPublished = $slug === 'home' || (bool) ($data['is_published'] ?? false);
@@ -207,6 +244,33 @@ class MarketingPageController extends Controller
             : ltrim($path, '/');
 
         Storage::disk('public')->delete($diskPath);
+    }
+
+    private function applyTrustLogoUploads(Request $request, array $logos): array
+    {
+        $files = $request->file('trust_logo_files', []);
+
+        $files = is_array($files) ? $files : [];
+
+        return collect($logos)
+            ->map(function ($logo) use ($files) {
+                if (! is_array($logo)) {
+                    return $logo;
+                }
+
+                $uploadKey = (string) ($logo['upload_key'] ?? '');
+                $file = $uploadKey !== '' ? ($files[$uploadKey] ?? null) : null;
+
+                if ($file) {
+                    $this->deletePublicFile($logo['src'] ?? null);
+                    $logo['src'] = $file->store('marketing/trust', 'public');
+                }
+
+                unset($logo['upload_key'], $logo['file_selected']);
+
+                return $logo;
+            })
+            ->all();
     }
 
     private function marketingPagesTableExists(): bool

@@ -7,33 +7,36 @@
     $content = $marketingContent ?? \App\Models\MarketingPage::defaultSections('home');
     $defaults = \App\Models\MarketingPage::defaultSections('home');
     $brand = array_replace_recursive($defaults['brand'], (array) data_get($content, 'brand', []));
-    $headerContent = array_replace_recursive($defaults['header'], (array) data_get($content, 'header', []));
-    $hero = data_get($content, 'hero', []);
+    $headerContent = array_replace($defaults['header'], (array) data_get($content, 'header', []));
+    $hero = array_replace($defaults['hero'], (array) data_get($content, 'hero', []));
+    $media = array_replace($defaults['media'], (array) data_get($content, 'media', []));
     $stats = data_get($content, 'stats', []);
-    $insight = data_get($content, 'insight', []);
-    $trust = data_get($content, 'trust', []);
-    $finalCta = data_get($content, 'final_cta', []);
-    $footerContent = array_replace_recursive($defaults['footer'], (array) data_get($content, 'footer', []));
+    $insight = array_replace($defaults['insight'], (array) data_get($content, 'insight', []));
+    $trust = array_replace($defaults['trust'], (array) data_get($content, 'trust', []));
+    $featuresContent = array_replace($defaults['features'], (array) data_get($content, 'features', []));
+    $industriesSection = array_replace($defaults['industries_section'], (array) data_get($content, 'industries_section', []));
+    $benefitsContent = array_replace($defaults['benefits'], (array) data_get($content, 'benefits', []));
+    $stepsContent = array_replace($defaults['steps'], (array) data_get($content, 'steps', []));
+    $showcaseContent = array_replace($defaults['showcase'], (array) data_get($content, 'showcase', []));
+    $pricingContent = array_replace($defaults['pricing'], (array) data_get($content, 'pricing', []));
+    $testimonialsContent = array_replace($defaults['testimonials'], (array) data_get($content, 'testimonials', []));
+    $faqContent = array_replace($defaults['faq'], (array) data_get($content, 'faq', []));
+    $finalCta = array_replace($defaults['final_cta'], (array) data_get($content, 'final_cta', []));
+    $footerContent = array_replace($defaults['footer'], (array) data_get($content, 'footer', []));
     $extraBlocks = data_get($content, 'blocks', []);
     $brandLogoUrl = \App\Support\PublicUpload::url(data_get($brand, 'logo_path')) ?: \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png');
     $brandAlt = data_get($brand, 'logo_alt', 'Bama Solutions');
     $headerLinks = data_get($headerContent, 'nav_links', $defaults['header']['nav_links']);
     $footerColumns = data_get($footerContent, 'columns', $defaults['footer']['columns']);
-    $trustLogos = data_get($trust, 'logos', $defaults['trust']['logos']) ?: $defaults['trust']['logos'];
-    $trustBadges = data_get($trust, 'badges', $defaults['trust']['badges']) ?: $defaults['trust']['badges'];
+    $trustLogos = data_get($trust, 'logos', $defaults['trust']['logos']);
+    $trustBadges = data_get($trust, 'badges', $defaults['trust']['badges']);
+    $headerLinks = is_array($headerLinks) ? $headerLinks : [];
+    $footerColumns = is_array($footerColumns) ? $footerColumns : [];
+    $trustLogos = is_array($trustLogos) ? $trustLogos : [];
+    $trustBadges = is_array($trustBadges) ? $trustBadges : [];
 
-    $coreModules = [
-        ['CRM', 'Manage customers, deals, activities, and sales pipeline.', 'C'],
-        ['Finance', 'Invoicing, receipts, expenses, cash flow, and collections.', 'F'],
-        ['Accounting', 'Journals, ledgers, periods, reconciliation, and reports.', 'A'],
-        ['Projects', 'Tasks, milestones, budgets, delivery progress, and teams.', 'P'],
-        ['Inventory', 'Stock levels, products, movements, transfers, and alerts.', 'I'],
-        ['Procurement', 'Suppliers, purchase requests, approvals, and orders.', 'Pr'],
-        ['HR', 'People, departments, teams, roles, and staff records.', 'H'],
-        ['Documents', 'Digital records, approvals, letters, signatures, and files.', 'D'],
-        ['Reporting', 'Real-time dashboards, KPIs, analytics, and exports.', 'R'],
-        ['Client Portal', 'Secure customer self-service for documents and updates.', 'CP'],
-    ];
+    $coreModules = data_get($featuresContent, 'modules', $defaults['features']['modules']);
+    $coreModules = is_array($coreModules) ? $coreModules : [];
 
     $moduleColors = [
         ['#00A651', '#EAF8F0'],
@@ -48,24 +51,20 @@
         ['#4F46E5', '#EEF2FF'],
     ];
 
-    $benefits = [
-        ['Multi-Tenant Cloud Platform', 'Every customer organization runs in its own isolated workspace.'],
-        ['Role-Based Access Control', 'Give every user the correct module and data access.'],
-        ['Advanced Security', 'Audit-ready controls for authentication, permissions, and activity.'],
-        ['Scalable Architecture', 'Designed for tenants, businesses, branches, departments, and teams.'],
-        ['Custom Branding', 'Tenant logos, colors, favicon, and workspace identity.'],
-        ['API Integrations', 'Prepared for mobile apps, vendor portals, and third-party systems.'],
-        ['Automation Workflows', 'Approvals, notifications, and repeatable business processes.'],
-        ['Real-Time Reporting', 'Live visibility across sales, finance, projects, and operations.'],
-    ];
-
-    $showcase = [
-        'CRM' => ['Lead pipeline', 'Deal stages', 'Follow-up tasks', 'Customer activity'],
-        'Finance' => ['Cash position', 'Receivables aging', 'Payment history', 'Expense controls'],
-        'Projects' => ['Milestones', 'Budget variance', 'Task status', 'Delivery risks'],
-        'Inventory' => ['Stock alerts', 'Product movement', 'Supplier lead time', 'Branch levels'],
-        'Reports' => ['Executive KPIs', 'Industry dashboards', 'Trend analysis', 'Export-ready reports'],
-    ];
+    $benefitItems = data_get($benefitsContent, 'items', $defaults['benefits']['items']);
+    $stepItems = data_get($stepsContent, 'items', $defaults['steps']['items']);
+    $testimonialItems = data_get($testimonialsContent, 'items', $defaults['testimonials']['items']);
+    $faqItems = data_get($faqContent, 'items', $defaults['faq']['items']);
+    $benefitItems = is_array($benefitItems) ? $benefitItems : [];
+    $stepItems = is_array($stepItems) ? $stepItems : [];
+    $testimonialItems = is_array($testimonialItems) ? $testimonialItems : [];
+    $faqItems = is_array($faqItems) ? $faqItems : [];
+    $showcase = collect(data_get($showcaseContent, 'tabs', $defaults['showcase']['tabs']))
+        ->mapWithKeys(fn ($tab) => [
+            (string) (is_array($tab) ? ($tab['name'] ?? 'Dashboard') : $tab) => array_values(is_array($tab) ? ($tab['items'] ?? []) : []),
+        ])
+        ->filter(fn ($items, $name) => $name !== '' && count($items) > 0)
+        ->all();
 
     $industryCards = collect($industries ?? [])->values();
     $industryPreview = $industryCards->mapWithKeys(fn ($industry) => [
@@ -85,16 +84,27 @@
             'core_modules_count' => count($industry['core_modules'] ?? []),
         ],
     ]);
-    $heroImageSrcset = implode(', ', [
+    $heroImagePath = data_get($media, 'hero_image_path', $defaults['media']['hero_image_path']);
+    $insightImagePath = data_get($media, 'insight_image_path', $defaults['media']['insight_image_path']);
+    $featuresImagePath = data_get($media, 'features_image_path', $defaults['media']['features_image_path']);
+    $heroImageUrl = \App\Support\PublicUpload::url($heroImagePath) ?: asset('images/hero-green-team.png');
+    $insightImageUrl = \App\Support\PublicUpload::url($insightImagePath) ?: asset('images/people-industry-mosaic.png');
+    $featuresImageUrl = \App\Support\PublicUpload::url($featuresImagePath) ?: asset('images/people-industry-mosaic.png');
+    $heroImageSrcset = $heroImagePath === $defaults['media']['hero_image_path'] ? implode(', ', [
         asset('images/optimized/hero-green-team-960.webp').' 960w',
         asset('images/optimized/hero-green-team-1280.webp').' 1280w',
         asset('images/optimized/hero-green-team-1672.webp').' 1672w',
-    ]);
-    $mosaicImageSrcset = implode(', ', [
+    ]) : null;
+    $insightImageSrcset = $insightImagePath === $defaults['media']['insight_image_path'] ? implode(', ', [
         asset('images/optimized/people-industry-mosaic-640.webp').' 640w',
         asset('images/optimized/people-industry-mosaic-960.webp').' 960w',
         asset('images/optimized/people-industry-mosaic-1254.webp').' 1254w',
-    ]);
+    ]) : null;
+    $featuresImageSrcset = $featuresImagePath === $defaults['media']['features_image_path'] ? implode(', ', [
+        asset('images/optimized/people-industry-mosaic-640.webp').' 640w',
+        asset('images/optimized/people-industry-mosaic-960.webp').' 960w',
+        asset('images/optimized/people-industry-mosaic-1254.webp').' 1254w',
+    ]) : null;
 @endphp
 
 @section('body')
@@ -461,7 +471,11 @@
                                 <a href="{{ $link['url'] }}" class="hover:text-[#00A651]">{{ $link['label'] }}</a>
                                 <div class="invisible absolute left-1/2 top-full w-[640px] -translate-x-1/2 rounded-lg border border-zinc-200 bg-white p-4 opacity-0 shadow-2xl transition group-hover:visible group-hover:opacity-100">
                                     <div class="grid grid-cols-2 gap-2">
-                                        @foreach (array_slice($coreModules, 0, 8) as [$name, $copy, $icon])
+                                        @foreach (array_slice($coreModules, 0, 8) as $module)
+                                            @php
+                                                $name = is_array($module) ? ($module['name'] ?? $module[0] ?? '') : (string) $module;
+                                                $copy = is_array($module) ? ($module['copy'] ?? $module[1] ?? '') : '';
+                                            @endphp
                                             <a href="{{ $link['url'] }}" class="rounded-lg p-3 hover:bg-[#EAF8F0]">
                                                 <span class="block font-black">{{ $name }}</span>
                                                 <span class="mt-1 block text-xs font-medium leading-5 text-zinc-500">{{ $copy }}</span>
@@ -509,10 +523,12 @@
     </header>
     <section class="hero-field relative isolate overflow-hidden bg-black px-5 py-12 text-white sm:py-14 lg:min-h-[590px] lg:py-0">
         <picture class="absolute inset-y-0 right-0 z-[-1] hidden h-full lg:block" style="width: auto; max-width: none;">
-            <source type="image/webp" srcset="{{ $heroImageSrcset }}" sizes="58vw">
+            @if($heroImageSrcset)
+                <source type="image/webp" srcset="{{ $heroImageSrcset }}" sizes="58vw">
+            @endif
             <img
-                src="{{ asset('images/hero-green-team.png') }}"
-                alt="Business leaders using Bama cloud ERP"
+                src="{{ $heroImageUrl }}"
+                alt="{{ data_get($media, 'hero_image_alt', 'Business leaders using Bama cloud ERP') }}"
                 width="1672"
                 height="941"
                 class="hero-image-clear h-full w-auto max-w-none object-contain object-right-center"
@@ -547,10 +563,12 @@
                 </div>
                 <div class="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-[#062515] lg:hidden" style="aspect-ratio: 1672 / 941;">
                     <picture class="block h-full w-full">
-                        <source type="image/webp" srcset="{{ $heroImageSrcset }}" sizes="100vw">
+                        @if($heroImageSrcset)
+                            <source type="image/webp" srcset="{{ $heroImageSrcset }}" sizes="100vw">
+                        @endif
                         <img
-                            src="{{ asset('images/hero-green-team.png') }}"
-                            alt="Business leaders using Bama cloud ERP"
+                            src="{{ $heroImageUrl }}"
+                            alt="{{ data_get($media, 'hero_image_alt', 'Business leaders using Bama cloud ERP') }}"
                             width="1672"
                             height="941"
                             class="hero-image-clear h-full w-full object-cover object-center"
@@ -567,10 +585,12 @@
         <div class="mx-auto grid max-w-6xl overflow-hidden rounded-[22px] border border-zinc-200 bg-[#071B12] shadow-2xl shadow-zinc-200/70 lg:grid-cols-[.95fr_1fr]">
             <div class="relative h-[220px] sm:h-[270px] lg:h-[330px]">
                 <picture class="absolute inset-0 block h-full w-full">
-                    <source type="image/webp" srcset="{{ $mosaicImageSrcset }}" sizes="(min-width: 1024px) 50vw, 100vw">
+                    @if($insightImageSrcset)
+                        <source type="image/webp" srcset="{{ $insightImageSrcset }}" sizes="(min-width: 1024px) 50vw, 100vw">
+                    @endif
                     <img
-                        src="{{ asset('images/people-industry-mosaic.png') }}"
-                        alt="Diverse teams across industries using one business platform"
+                        src="{{ $insightImageUrl }}"
+                        alt="{{ data_get($media, 'insight_image_alt', 'Diverse teams across industries using one business platform') }}"
                         width="1254"
                         height="1254"
                         class="h-full w-full object-cover"
@@ -647,17 +667,19 @@
         <div class="mx-auto max-w-6xl">
             <div class="grid gap-5 lg:grid-cols-[.32fr_1fr]">
                 <div>
-                    <p class="eyebrow">Core platform</p>
-                    <h2 class="mt-2 text-2xl font-black leading-tight lg:text-3xl">Everything Your Business Needs</h2>
+                    <p class="eyebrow">{{ data_get($featuresContent, 'eyebrow', 'Core platform') }}</p>
+                    <h2 class="mt-2 text-2xl font-black leading-tight lg:text-3xl">{{ data_get($featuresContent, 'title', 'Everything Your Business Needs') }}</h2>
                     <p class="mt-3 text-sm leading-6 text-zinc-600">
-                        A complete operating suite for CRM, finance, accounting, projects, inventory, procurement, HR, documents, reporting, and portal workflows.
+                        {{ data_get($featuresContent, 'body', 'A complete operating suite for CRM, finance, accounting, projects, inventory, procurement, HR, documents, reporting, and portal workflows.') }}
                     </p>
                     <div class="mt-4 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
                         <picture class="block">
-                            <source type="image/webp" srcset="{{ $mosaicImageSrcset }}" sizes="(min-width: 1024px) 28vw, 100vw">
+                            @if($featuresImageSrcset)
+                                <source type="image/webp" srcset="{{ $featuresImageSrcset }}" sizes="(min-width: 1024px) 28vw, 100vw">
+                            @endif
                             <img
-                                src="{{ asset('images/people-industry-mosaic.png') }}"
-                                alt="Diverse teams using the platform"
+                                src="{{ $featuresImageUrl }}"
+                                alt="{{ data_get($media, 'features_image_alt', 'Diverse teams using the platform') }}"
                                 width="1254"
                                 height="1254"
                                 class="h-32 w-full object-cover sm:h-36 lg:h-40"
@@ -668,10 +690,14 @@
                     </div>
                 </div>
                 <div class="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-                    @foreach ($coreModules as [$name, $copy, $icon])
+                    @foreach ($coreModules as $module)
                         @php
+                            $name = is_array($module) ? ($module['name'] ?? $module[0] ?? '') : (string) $module;
+                            $copy = is_array($module) ? ($module['copy'] ?? $module[1] ?? '') : '';
+                            $icon = is_array($module) ? ($module['icon'] ?? $module[2] ?? substr($name, 0, 1)) : substr($name, 0, 1);
                             [$moduleColor, $moduleSoftColor] = $moduleColors[$loop->index % count($moduleColors)];
                         @endphp
+                        @continue($name === '')
                         <article class="soft-panel p-3 transition hover:-translate-y-1 hover:shadow-lg" style="border-color: {{ $loop->first ? $moduleColor : 'rgba(0, 0, 0, .08)' }};">
                             <span class="grid h-8 w-8 place-items-center rounded-md text-xs font-black text-white" style="background-color: {{ $moduleColor }};">{{ $icon }}</span>
                             <h3 class="mt-3 text-sm font-black">{{ $name }}</h3>
@@ -694,10 +720,10 @@
     <section id="industries" class="section-pad bg-[#FBFCFA] px-5">
         <div class="mx-auto max-w-7xl">
             <div class="mx-auto max-w-3xl text-center">
-                <p class="eyebrow">Industry solutions</p>
-                <h2 class="section-title mt-3 font-black">Built for the way your industry operates</h2>
+                <p class="eyebrow">{{ data_get($industriesSection, 'eyebrow', 'Industry solutions') }}</p>
+                <h2 class="section-title mt-3 font-black">{{ data_get($industriesSection, 'title', 'Built for the way your industry operates') }}</h2>
                 <p class="mt-4 text-base leading-7 text-zinc-600">
-                    Choose an industry to preview the modules, sub-industries, and dashboard features available during workspace setup.
+                    {{ data_get($industriesSection, 'body', 'Choose an industry to preview the modules, sub-industries, and dashboard features available during workspace setup.') }}
                 </p>
             </div>
 
@@ -781,12 +807,17 @@
         <div class="mx-auto max-w-7xl">
             <div class="grid gap-6 lg:grid-cols-[.38fr_1fr]">
                 <div>
-                    <p class="eyebrow">Platform benefits</p>
-                    <h2 class="section-title mt-3 font-black">Enterprise foundations for secure growth</h2>
-                    <p class="mt-4 leading-7 text-zinc-300">Designed for teams that need operational breadth without losing tenant isolation, permissions, reporting, or control.</p>
+                    <p class="eyebrow">{{ data_get($benefitsContent, 'eyebrow', 'Platform benefits') }}</p>
+                    <h2 class="section-title mt-3 font-black">{{ data_get($benefitsContent, 'title', 'Enterprise foundations for secure growth') }}</h2>
+                    <p class="mt-4 leading-7 text-zinc-300">{{ data_get($benefitsContent, 'body', 'Designed for teams that need operational breadth without losing tenant isolation, permissions, reporting, or control.') }}</p>
                 </div>
                 <div class="grid gap-3 sm:grid-cols-2">
-                    @foreach ($benefits as [$title, $copy])
+                    @foreach ($benefitItems as $benefit)
+                        @php
+                            $title = is_array($benefit) ? ($benefit['title'] ?? $benefit[0] ?? '') : (string) $benefit;
+                            $copy = is_array($benefit) ? ($benefit['copy'] ?? $benefit[1] ?? '') : '';
+                        @endphp
+                        @continue($title === '')
                         <article class="rounded-lg border border-white/10 bg-white/[.06] p-4">
                             <h3 class="font-black">{{ $title }}</h3>
                             <p class="mt-2 text-sm leading-6 text-zinc-300">{{ $copy }}</p>
@@ -800,15 +831,20 @@
     <section class="section-pad bg-[#F7F8F5] px-5">
         <div class="mx-auto max-w-7xl">
             <div class="mx-auto max-w-3xl text-center">
-                <p class="eyebrow">How it works</p>
-                <h2 class="section-title mt-3 font-black">From signup to operations in five steps</h2>
+                <p class="eyebrow">{{ data_get($stepsContent, 'eyebrow', 'How it works') }}</p>
+                <h2 class="section-title mt-3 font-black">{{ data_get($stepsContent, 'title', 'From signup to operations in five steps') }}</h2>
             </div>
             <div class="mt-8 grid gap-3 lg:grid-cols-5">
-                @foreach (['Choose Your Industry', 'Create Your Workspace', 'Configure Your Business', 'Invite Your Team', 'Start Managing Operations'] as $step)
+                @foreach ($stepItems as $step)
+                    @php
+                        $stepTitle = is_array($step) ? ($step['title'] ?? $step[0] ?? '') : (string) $step;
+                        $stepCopy = is_array($step) ? ($step['copy'] ?? $step[1] ?? 'A guided setup keeps the workspace practical from the first login.') : 'A guided setup keeps the workspace practical from the first login.';
+                    @endphp
+                    @continue($stepTitle === '')
                     <article class="relative rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
                         <span class="grid h-10 w-10 place-items-center rounded-lg bg-[#00A651] text-base font-black text-white">{{ $loop->iteration }}</span>
-                        <h3 class="mt-4 text-base font-black">{{ $step }}</h3>
-                        <p class="mt-2 text-sm leading-6 text-zinc-600">A guided setup keeps the workspace practical from the first login.</p>
+                        <h3 class="mt-4 text-base font-black">{{ $stepTitle }}</h3>
+                        <p class="mt-2 text-sm leading-6 text-zinc-600">{{ $stepCopy }}</p>
                     </article>
                 @endforeach
             </div>
@@ -819,8 +855,8 @@
         <div class="mx-auto max-w-7xl">
             <div class="grid gap-6 lg:grid-cols-[.34fr_1fr]">
                 <div>
-                    <p class="eyebrow">Product showcase</p>
-                    <h2 class="section-title mt-3 font-black">Switch between real operating views</h2>
+                    <p class="eyebrow">{{ data_get($showcaseContent, 'eyebrow', 'Product showcase') }}</p>
+                    <h2 class="section-title mt-3 font-black">{{ data_get($showcaseContent, 'title', 'Switch between real operating views') }}</h2>
                     <div class="mt-6 grid gap-2">
                         @foreach ($showcase as $name => $items)
                             <button type="button" data-product-tab="{{ $name }}" class="product-tab rounded-lg border border-zinc-200 bg-white px-4 py-3 text-left font-black transition hover:border-[#00A651]">{{ $name }}</button>
@@ -830,17 +866,17 @@
                 <div class="dark-panel rounded-lg p-5">
                     <div class="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
                         <div>
-                            <p class="text-xs font-black uppercase text-[#8BE7B6]">Enterprise dashboard</p>
-                            <h3 id="productTitle" class="mt-2 text-2xl font-black">CRM</h3>
+                            <p class="text-xs font-black uppercase text-[#8BE7B6]">{{ data_get($showcaseContent, 'panel_eyebrow', 'Enterprise dashboard') }}</p>
+                            <h3 id="productTitle" class="mt-2 text-2xl font-black">{{ array_key_first($showcase) ?: 'Dashboard' }}</h3>
                         </div>
-                        <span class="rounded-lg bg-[#00A651] px-4 py-2 text-sm font-black">Live preview</span>
+                        <span class="rounded-lg bg-[#00A651] px-4 py-2 text-sm font-black">{{ data_get($showcaseContent, 'panel_badge', 'Live preview') }}</span>
                     </div>
                     <div class="mt-4 grid gap-3 md:grid-cols-[.9fr_1.1fr]">
                         <div id="productPanel" class="grid gap-3 sm:grid-cols-2 md:grid-cols-1"></div>
                         <div class="rounded-lg bg-white p-4 text-black">
                             <div class="flex items-center justify-between">
-                                <p class="font-black">Performance trend</p>
-                                <span class="text-sm font-black text-[#00A651]">+24%</span>
+                                <p class="font-black">{{ data_get($showcaseContent, 'trend_label', 'Performance trend') }}</p>
+                                <span class="text-sm font-black text-[#00A651]">{{ data_get($showcaseContent, 'trend_value', '+24%') }}</span>
                             </div>
                             <div class="mt-4 flex h-44 items-end gap-2">
                                 @foreach ([42, 64, 56, 78, 72, 90, 84] as $height)
@@ -857,8 +893,8 @@
     <section id="pricing" class="section-pad bg-[#F7F8F5] px-5">
         <div class="mx-auto max-w-7xl">
             <div class="mx-auto max-w-3xl text-center">
-                <p class="eyebrow">Pricing</p>
-                <h2 class="section-title mt-3 font-black">Choose the plan that fits your operating stage</h2>
+                <p class="eyebrow">{{ data_get($pricingContent, 'eyebrow', 'Pricing') }}</p>
+                <h2 class="section-title mt-3 font-black">{{ data_get($pricingContent, 'title', 'Choose the plan that fits your operating stage') }}</h2>
             </div>
             <div class="mt-8 grid gap-4 lg:grid-cols-4">
                 @foreach ($plans as $plan)
@@ -878,7 +914,7 @@
                             <li>Storage: {{ $plan['limits']['storage'] ?? 'Custom' }}</li>
                             <li>Support: {{ $plan['slug'] === 'enterprise' ? 'Dedicated' : 'Standard' }}</li>
                         </ul>
-                        <a href="{{ $plan['slug'] === 'enterprise' ? 'mailto:sales@bama.co.ke?subject=Enterprise%20Plan' : route('register.account') }}" class="mt-6 block rounded-lg {{ ! empty($plan['highlight']) ? 'bg-[#00A651] text-white' : 'bg-black text-white' }} px-5 py-3 text-center font-black">{{ $plan['slug'] === 'enterprise' ? 'Contact Sales' : 'Start Free Trial' }}</a>
+                        <a href="{{ $plan['slug'] === 'enterprise' ? 'mailto:sales@bama.co.ke?subject=Enterprise%20Plan' : route('register.account') }}" class="mt-6 block rounded-lg {{ ! empty($plan['highlight']) ? 'bg-[#00A651] text-white' : 'bg-black text-white' }} px-5 py-3 text-center font-black">{{ $plan['slug'] === 'enterprise' ? data_get($pricingContent, 'enterprise_button', 'Contact Sales') : data_get($pricingContent, 'standard_button', 'Start Free Trial') }}</a>
                     </article>
                 @endforeach
             </div>
@@ -889,11 +925,17 @@
         <div class="mx-auto max-w-7xl">
             <div class="grid gap-6 lg:grid-cols-[.38fr_1fr]">
                 <div>
-                    <p class="eyebrow">Customer success</p>
-                    <h2 class="section-title mt-3 font-black">Teams growing with connected operations</h2>
+                    <p class="eyebrow">{{ data_get($testimonialsContent, 'eyebrow', 'Customer success') }}</p>
+                    <h2 class="section-title mt-3 font-black">{{ data_get($testimonialsContent, 'title', 'Teams growing with connected operations') }}</h2>
                 </div>
                 <div class="grid gap-4 lg:grid-cols-3">
-                    @foreach ([['Apex Build Co.', 'Construction teams finally see BOQ, procurement, and site progress in the same operating view.', '28% faster project reporting'], ['MediCare Group', 'Appointments, pharmacy stock, and finance reports now move through one controlled workspace.', '41% fewer manual reconciliations'], ['Urban Retail', 'We joined POS, inventory, loyalty, and branch reporting without losing speed at checkout.', '3x better branch visibility']] as [$company, $quote, $metric])
+                    @foreach ($testimonialItems as $testimonial)
+                        @php
+                            $company = is_array($testimonial) ? ($testimonial['company'] ?? $testimonial[0] ?? '') : (string) $testimonial;
+                            $quote = is_array($testimonial) ? ($testimonial['quote'] ?? $testimonial[1] ?? '') : '';
+                            $metric = is_array($testimonial) ? ($testimonial['metric'] ?? $testimonial[2] ?? '') : '';
+                        @endphp
+                        @continue($company === '')
                         <article class="soft-panel p-5">
                             <p class="text-sm font-black uppercase text-[#00A651]">{{ $metric }}</p>
                             <p class="mt-4 leading-7 text-zinc-700">"{{ $quote }}"</p>
@@ -914,18 +956,16 @@
     <section id="faq" class="section-pad bg-[#F7F8F5] px-5">
         <div class="mx-auto max-w-4xl">
             <div class="text-center">
-                <p class="eyebrow">FAQ</p>
-                <h2 class="section-title mt-3 font-black">Common questions</h2>
+                <p class="eyebrow">{{ data_get($faqContent, 'eyebrow', 'FAQ') }}</p>
+                <h2 class="section-title mt-3 font-black">{{ data_get($faqContent, 'title', 'Common questions') }}</h2>
             </div>
             <div class="mt-8 divide-y divide-zinc-200 rounded-[22px] border border-zinc-200 bg-white shadow-sm">
-                @foreach ([
-                    'How does multi-tenancy work?' => 'Each organization runs in an isolated tenant context with its own users, modules, theme, subscription, and access rules.',
-                    'Can I change plans?' => 'Yes. Tenants can move between Starter, Growth, Professional, and Enterprise as their needs grow.',
-                    'Can I customize modules?' => 'Yes. Modules can be enabled by industry and extended with tenant-specific workflows and permissions.',
-                    'Do you offer onboarding?' => 'Yes. The platform includes a setup checklist and can support assisted onboarding for larger teams.',
-                    'Is my data secure?' => 'Security is designed around tenant isolation, role-based access, audit readiness, and controlled authentication.',
-                    'Can I migrate existing data?' => 'Yes. Data can be migrated through imports, APIs, or a guided migration plan.',
-                ] as $question => $answer)
+                @foreach ($faqItems as $faq)
+                    @php
+                        $question = is_array($faq) ? ($faq['question'] ?? $faq[0] ?? '') : (string) $faq;
+                        $answer = is_array($faq) ? ($faq['answer'] ?? $faq[1] ?? '') : '';
+                    @endphp
+                    @continue($question === '')
                     <details class="group p-5">
                         <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-black">
                             {{ $question }}
@@ -1100,6 +1140,10 @@
     }
 
     function selectProductTab(name) {
+        if (! name || ! productTabs[name]) {
+            return;
+        }
+
         productTitle.textContent = name;
         productPanel.innerHTML = productTabs[name].map((item) => `<div class="bama-tile rounded-lg border border-white/10 bg-white/[.07] p-3"><p class="font-black text-white">${item}</p><p class="mt-2 text-xs font-bold uppercase text-zinc-500">Dashboard widget</p></div>`).join('');
         productButtons.forEach((button) => {
