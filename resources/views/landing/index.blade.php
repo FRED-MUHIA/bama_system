@@ -141,6 +141,7 @@
         --page: #F7F8F5;
         --font-brand: 'Inter', 'Inter Tight', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         --font-heading: 'Inter Tight', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --font-display: var(--bama-font-display, 'Montserrat', 'Inter Tight', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
         font-family: var(--font-brand) !important;
         font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
         font-optical-sizing: auto;
@@ -264,8 +265,11 @@
     }
 
     .home-page .hero-title {
+        font-family: var(--font-display) !important;
         font-size: clamp(2.15rem, 3.8vw, 3.75rem);
-        line-height: 1;
+        font-weight: 900 !important;
+        line-height: .98;
+        letter-spacing: 0;
     }
 
     .home-page .bama-animate {

@@ -97,6 +97,14 @@ class RetailSectionWorkflowsTest extends TestCase
             'rating' => 4.5,
         ])->assertSessionHas('status');
 
+        $this->post(route('retail.suppliers.store'), [
+            'name' => 'Blank Profile Supplier',
+            'email' => 'blank-supplier@example.test',
+            'lead_time_days' => '',
+            'delivery_accuracy' => '',
+            'rating' => '',
+        ])->assertSessionHas('status');
+
         $this->post(route('retail.ecommerce.store'), [
             'channel' => 'Online Store',
             'external_store_id' => 'SHOP-1',
@@ -112,6 +120,10 @@ class RetailSectionWorkflowsTest extends TestCase
 
         $this->assertDatabaseHas('branches', ['code' => 'DWN']);
         $this->assertDatabaseHas('suppliers', ['name' => 'Retail Supplier']);
+        $blankSupplier = Supplier::where('name', 'Blank Profile Supplier')->firstOrFail();
+        $this->assertSame(0, $blankSupplier->retailProfile->lead_time_days);
+        $this->assertSame(0.0, (float) $blankSupplier->retailProfile->delivery_accuracy);
+        $this->assertSame(0.0, (float) $blankSupplier->retailProfile->rating);
         $this->assertNotNull($integration->fresh()->last_product_sync_at);
     }
 

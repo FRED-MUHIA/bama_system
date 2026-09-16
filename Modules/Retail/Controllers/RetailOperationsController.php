@@ -9,6 +9,7 @@ use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -67,8 +68,15 @@ class RetailOperationsController extends Controller
             'rating' => ['nullable', 'numeric', 'min:0', 'max:5'],
         ]);
 
-        $supplier = Supplier::create(collect($data)->only(['name', 'email', 'phone', 'kra_pin', 'address'])->all());
-        RetailSupplierProfile::create(collect($data)->except(['name', 'email', 'phone', 'kra_pin', 'address'])->all() + ['supplier_id' => $supplier->id]);
+        DB::transaction(function () use ($data) {
+            $supplier = Supplier::create(collect($data)->only(['name', 'email', 'phone', 'kra_pin', 'address'])->all());
+            $profileData = collect($data)->except(['name', 'email', 'phone', 'kra_pin', 'address'])->all();
+            $profileData['lead_time_days'] = (int) ($profileData['lead_time_days'] ?? 0);
+            $profileData['delivery_accuracy'] = (float) ($profileData['delivery_accuracy'] ?? 0);
+            $profileData['rating'] = (float) ($profileData['rating'] ?? 0);
+
+            RetailSupplierProfile::create($profileData + ['supplier_id' => $supplier->id]);
+        });
 
         return back()->with('status', 'Retail supplier saved.');
     }
