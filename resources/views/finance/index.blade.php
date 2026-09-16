@@ -181,7 +181,10 @@
                     @forelse($financeCockpit['invoice_pipeline'] as $row)
                         <div class="finance-row">
                             <span>{{ $row['status'] }} <span class="finance-pill">{{ $row['count'] }}</span></span>
-                            <strong>{{ $money($row['balance']) }}</strong>
+                            <span class="text-end">
+                                <strong>{{ $money($row['balance']) }}</strong>
+                                <small class="d-block text-muted">Paid {{ $money($row['paid'] ?? 0) }} / Total {{ $money($row['total'] ?? 0) }}</small>
+                            </span>
                         </div>
                     @empty
                         <div class="text-muted">No invoices yet.</div>
@@ -192,7 +195,10 @@
                 <div class="finance-card">
                     <h3 class="h6">Top customers</h3>
                     @forelse($financeCockpit['top_clients'] as $client)
-                        <div class="finance-row"><span>{{ $client['name'] }}</span><strong>{{ $money($client['revenue']) }}</strong></div>
+                        <div class="finance-row">
+                            <span>{{ $client['name'] }}<small class="d-block text-muted">Paid {{ $money($client['paid'] ?? 0) }} · Pending {{ $money($client['outstanding'] ?? 0) }}</small></span>
+                            <strong>{{ $money($client['revenue']) }}</strong>
+                        </div>
                     @empty
                         <div class="text-muted">No customer revenue yet.</div>
                     @endforelse
@@ -202,7 +208,10 @@
                 <div class="finance-card">
                     <h3 class="h6">Top suppliers</h3>
                     @forelse($financeCockpit['top_suppliers'] as $supplier)
-                        <div class="finance-row"><span>{{ $supplier['name'] }}</span><strong>{{ $money($supplier['spend']) }}</strong></div>
+                        <div class="finance-row">
+                            <span>{{ $supplier['name'] }}<small class="d-block text-muted">Paid {{ $money($supplier['paid'] ?? 0) }} · Pending {{ $money($supplier['outstanding'] ?? 0) }}</small></span>
+                            <strong>{{ $money($supplier['spend']) }}</strong>
+                        </div>
                     @empty
                         <div class="text-muted">No supplier spend yet.</div>
                     @endforelse
@@ -324,9 +333,9 @@
         <div class="row g-3">
             <div class="col-lg-6">
                 <div class="finance-card">
-                    <h3 class="h6">Customer statements / outstanding invoices</h3>
+                    <h3 class="h6">Customer statements / pending payments</h3>
                     <div class="table-responsive"><table class="table align-middle">
-                        <thead><tr><th>Customer</th><th>Invoice</th><th>Industry</th><th>Due</th><th>Balance</th></tr></thead>
+                        <thead><tr><th>Customer</th><th>Invoice</th><th>Industry</th><th>Due</th><th>Total</th><th>Paid</th><th>Pending</th><th>Status</th></tr></thead>
                         <tbody>
                             @forelse($ar as $invoice)
                                 <tr>
@@ -334,10 +343,13 @@
                                     <td><a href="{{ route('invoices.show', $invoice) }}">{{ $invoice->invoice_number }}</a><small class="d-block text-muted">{{ $invoice->industry_reference }}</small></td>
                                     <td>{{ $invoice->industry_module ? \Illuminate\Support\Str::headline($invoice->industry_module) : 'Shared' }}</td>
                                     <td>{{ $invoice->due_date?->format('d M Y') }}</td>
+                                    <td>{{ $money($invoice->total) }}</td>
+                                    <td>{{ $money($invoice->amount_paid) }}</td>
                                     <td>{{ $money($invoice->balance) }}</td>
+                                    <td><span class="finance-pill">{{ \Illuminate\Support\Str::headline($invoice->payment_status) }}</span></td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="text-muted">No outstanding receivables.</td></tr>
+                                <tr><td colspan="8" class="text-muted">No outstanding receivables.</td></tr>
                             @endforelse
                         </tbody>
                     </table></div>
@@ -347,12 +359,12 @@
                 <div class="finance-card">
                     <h3 class="h6">Supplier statements / outstanding bills</h3>
                     <div class="table-responsive"><table class="table align-middle">
-                        <thead><tr><th>Supplier</th><th>Bill</th><th>Due</th><th>Balance</th></tr></thead>
+                        <thead><tr><th>Supplier</th><th>Bill</th><th>Due</th><th>Total</th><th>Paid</th><th>Pending</th><th>Status</th></tr></thead>
                         <tbody>
                             @forelse($ap as $bill)
-                                <tr><td>{{ $bill->supplier?->name }}</td><td>{{ $bill->invoice_number }}</td><td>{{ $bill->due_date?->format('d M Y') }}</td><td>{{ $money($bill->total - $bill->amount_paid) }}</td></tr>
+                                <tr><td>{{ $bill->supplier?->name }}</td><td>{{ $bill->invoice_number }}</td><td>{{ $bill->due_date?->format('d M Y') }}</td><td>{{ $money($bill->total) }}</td><td>{{ $money($bill->amount_paid) }}</td><td>{{ $money($bill->outstanding_balance ?? max((float) $bill->total - (float) $bill->amount_paid, 0)) }}</td><td><span class="finance-pill">{{ $bill->status }}</span></td></tr>
                             @empty
-                                <tr><td colspan="4" class="text-muted">No outstanding payables.</td></tr>
+                                <tr><td colspan="7" class="text-muted">No outstanding payables.</td></tr>
                             @endforelse
                         </tbody>
                     </table></div>

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\BankAccount;
 use App\Models\BankTransaction;
-use App\Models\Invoice;
 use App\Models\JournalEntry;
 use App\Models\Payment;
 use App\Models\SupplierInvoice;
@@ -17,52 +16,54 @@ use Illuminate\Support\Str;
 
 class FinanceDepartmentService
 {
-    public function cockpit(array $ledger, Collection $receivables, Collection $payables, Collection $banks): array
+    public function __construct(private FinanceRecordSyncService $records) {}
+
+    public function cockpit(array $ledger, Collection $receivables, Collection $payables, Collection $banks, ?Collection $invoices = null, ?Collection $supplierBills = null): array
     {
+        $invoices ??= $this->records->invoices();
+        $supplierBills ??= $this->records->supplierInvoices();
+
         return [
             'industry' => $this->industryLabel(),
             'period' => [
                 'month_start' => now()->startOfMonth(),
                 'month_end' => now()->endOfMonth(),
             ],
-            'scorecards' => $this->scorecards($ledger, $receivables, $payables, $banks),
-            'industry_rows' => $this->industryRows(),
-            'invoice_pipeline' => $this->invoicePipeline(),
+            'scorecards' => $this->scorecards($ledger, $receivables, $payables, $banks, $invoices),
+            'industry_rows' => $this->industryRows($invoices),
+            'invoice_pipeline' => $this->invoicePipeline($invoices),
             'cash_movement' => $this->cashMovement(),
             'bank_summary' => $this->bankSummary($banks),
             'tax_position' => $this->taxPosition($ledger),
             'risk_flags' => $this->riskFlags($receivables, $payables, $banks),
-            'top_clients' => $this->topClients(),
-            'top_suppliers' => $this->topSuppliers(),
+            'top_clients' => $this->topClients($invoices),
+            'top_suppliers' => $this->topSuppliers($supplierBills),
         ];
     }
 
-    private function scorecards(array $ledger, Collection $receivables, Collection $payables, Collection $banks): array
+    private function scorecards(array $ledger, Collection $receivables, Collection $payables, Collection $banks, Collection $invoices): array
     {
         $income = (float) ($ledger['income'] ?? 0);
         $expenses = (float) ($ledger['expenses'] ?? 0);
         $profit = $income - $expenses;
         $cash = $banks->sum(fn ($bank) => $this->bankBalance($bank));
+        $pendingPayments = (float) $receivables->sum('balance');
+        $payablesDue = (float) $payables->sum(fn ($bill) => $this->payableBalance($bill));
 
         return [
             'Gross Margin' => $income > 0 ? round(($profit / $income) * 100, 2) : 0,
             'Cash Position' => $cash,
-            'Receivables Due' => (float) $receivables->sum('balance'),
-            'Payables Due' => (float) $payables->sum(fn ($bill) => max((float) $bill->total - (float) $bill->amount_paid, 0)),
-            'Working Capital' => $cash + (float) $receivables->sum('balance') - (float) $payables->sum(fn ($bill) => max((float) $bill->total - (float) $bill->amount_paid, 0)),
+            'Collected Revenue' => (float) $invoices->sum('amount_paid'),
+            'Pending Payments' => $pendingPayments,
+            'Payables Due' => $payablesDue,
+            'Working Capital' => $cash + $pendingPayments - $payablesDue,
             'Ledger Profit' => $profit,
         ];
     }
 
-    private function industryRows(): Collection
+    private function industryRows(Collection $invoices): Collection
     {
-        if (! Schema::hasTable('invoices')) {
-            return collect();
-        }
-
-        return Invoice::source()
-            ->with('client')
-            ->get()
+        return $invoices
             ->groupBy(fn ($invoice) => $invoice->industry_module ?: 'shared')
             ->map(function (Collection $invoices, string $module) {
                 return [
@@ -79,19 +80,15 @@ class FinanceDepartmentService
             ->values();
     }
 
-    private function invoicePipeline(): Collection
+    private function invoicePipeline(Collection $invoices): Collection
     {
-        if (! Schema::hasTable('invoices')) {
-            return collect();
-        }
-
-        return Invoice::source()
-            ->get()
+        return $invoices
             ->groupBy(fn ($invoice) => Str::title(str_replace('_', ' ', $invoice->payment_status ?: 'unpaid')))
             ->map(fn (Collection $invoices, string $status) => [
                 'status' => $status,
                 'count' => $invoices->count(),
                 'total' => (float) $invoices->sum('total'),
+                'paid' => (float) $invoices->sum('amount_paid'),
                 'balance' => (float) $invoices->sum('balance'),
             ])
             ->sortBy('status')
@@ -161,32 +158,39 @@ class FinanceDepartmentService
 
         return [
             ['label' => 'Overdue receivables', 'count' => $overdueReceivables->count(), 'amount' => (float) $overdueReceivables->sum('balance')],
-            ['label' => 'Overdue payables', 'count' => $overduePayables->count(), 'amount' => (float) $overduePayables->sum(fn ($bill) => max((float) $bill->total - (float) $bill->amount_paid, 0))],
+            ['label' => 'Overdue payables', 'count' => $overduePayables->count(), 'amount' => (float) $overduePayables->sum(fn ($bill) => $this->payableBalance($bill))],
             ['label' => 'Unreconciled bank lines', 'count' => $unreconciled, 'amount' => null],
             ['label' => 'Draft journals', 'count' => $draftJournals, 'amount' => null],
         ];
     }
 
-    private function topClients(): Collection
+    private function topClients(Collection $invoices): Collection
     {
-        return Schema::hasTable('invoices')
-            ? Invoice::source()->with('client')->get()->groupBy('client_id')->map(fn ($invoices) => [
+        return $invoices
+            ->groupBy('client_id')
+            ->map(fn ($invoices) => [
                 'name' => $invoices->first()->client?->name ?: 'Unknown',
                 'revenue' => (float) $invoices->sum('total'),
+                'paid' => (float) $invoices->sum('amount_paid'),
                 'outstanding' => (float) $invoices->sum('balance'),
-            ])->sortByDesc('revenue')->take(8)->values()
-            : collect();
+            ])->sortByDesc('revenue')->take(8)->values();
     }
 
-    private function topSuppliers(): Collection
+    private function topSuppliers(Collection $supplierBills): Collection
     {
-        return Schema::hasTable('supplier_invoices')
-            ? SupplierInvoice::with('supplier')->get()->groupBy('supplier_id')->map(fn ($bills) => [
+        return $supplierBills
+            ->groupBy('supplier_id')
+            ->map(fn ($bills) => [
                 'name' => $bills->first()->supplier?->name ?: 'Unknown',
                 'spend' => (float) $bills->sum('total'),
-                'outstanding' => (float) $bills->sum(fn ($bill) => max((float) $bill->total - (float) $bill->amount_paid, 0)),
-            ])->sortByDesc('spend')->take(8)->values()
-            : collect();
+                'paid' => (float) $bills->sum('amount_paid'),
+                'outstanding' => (float) $bills->sum(fn ($bill) => $this->payableBalance($bill)),
+            ])->sortByDesc('spend')->take(8)->values();
+    }
+
+    private function payableBalance(SupplierInvoice $bill): float
+    {
+        return (float) ($bill->outstanding_balance ?? max((float) $bill->total - (float) $bill->amount_paid, 0));
     }
 
     private function bankBalance(BankAccount $bank): float

@@ -12,7 +12,25 @@ class SupplierPayment extends Model
 
     protected static function booted(): void
     {
-        static::created(fn (SupplierPayment $payment) => app(\App\Services\FinanceService::class)->postSupplierPayment($payment->load('supplierInvoice')));
+        static::created(function (SupplierPayment $payment) {
+            app(\App\Services\FinanceService::class)->postSupplierPayment($payment->load('supplierInvoice'));
+            app(\App\Services\FinanceRecordSyncService::class)->syncSupplierInvoiceId($payment->supplier_invoice_id, $payment->business_id);
+        });
+
+        static::updated(function (SupplierPayment $payment) {
+            app(\App\Services\FinanceService::class)->postSupplierPayment($payment->load('supplierInvoice'));
+
+            $sync = app(\App\Services\FinanceRecordSyncService::class);
+            $oldInvoiceId = $payment->getOriginal('supplier_invoice_id');
+            if ($oldInvoiceId && (int) $oldInvoiceId !== (int) $payment->supplier_invoice_id) {
+                $sync->syncSupplierInvoiceId((int) $oldInvoiceId, $payment->getOriginal('business_id'));
+            }
+            $sync->syncSupplierInvoiceId($payment->supplier_invoice_id, $payment->business_id);
+        });
+
+        static::deleted(function (SupplierPayment $payment) {
+            app(\App\Services\FinanceRecordSyncService::class)->syncSupplierInvoiceId($payment->supplier_invoice_id, $payment->business_id);
+        });
     }
 
     protected $fillable = ['business_id', 'supplier_invoice_id', 'department_id', 'cost_center_id', 'amount', 'payment_date', 'reference', 'notes'];

@@ -12,7 +12,25 @@ class Payment extends Model
 
     protected static function booted(): void
     {
-        static::created(fn (Payment $payment) => app(\App\Services\FinanceService::class)->postPayment($payment->load('invoice')));
+        static::created(function (Payment $payment) {
+            app(\App\Services\FinanceService::class)->postPayment($payment->load('invoice'));
+            app(\App\Services\FinanceRecordSyncService::class)->syncInvoiceId($payment->invoice_id, $payment->business_id);
+        });
+
+        static::updated(function (Payment $payment) {
+            app(\App\Services\FinanceService::class)->postPayment($payment->load('invoice'));
+
+            $sync = app(\App\Services\FinanceRecordSyncService::class);
+            $oldInvoiceId = $payment->getOriginal('invoice_id');
+            if ($oldInvoiceId && (int) $oldInvoiceId !== (int) $payment->invoice_id) {
+                $sync->syncInvoiceId((int) $oldInvoiceId, $payment->getOriginal('business_id'));
+            }
+            $sync->syncInvoiceId($payment->invoice_id, $payment->business_id);
+        });
+
+        static::deleted(function (Payment $payment) {
+            app(\App\Services\FinanceRecordSyncService::class)->syncInvoiceId($payment->invoice_id, $payment->business_id);
+        });
     }
 
     protected $fillable = ['business_id', 'invoice_id', 'payable_type', 'payable_id', 'department_id', 'cost_center_id', 'payment_method_id', 'amount', 'payment_date', 'reference', 'notes'];

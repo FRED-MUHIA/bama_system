@@ -6,12 +6,11 @@ use App\Models\BankAccount;
 use App\Models\BankTransaction;
 use App\Models\FinanceAccount;
 use App\Models\FixedAsset;
-use App\Models\Invoice;
 use App\Models\JournalEntry;
 use App\Models\Project;
-use App\Models\SupplierInvoice;
 use App\Services\CostAccountingService;
 use App\Services\FinanceDepartmentService;
+use App\Services\FinanceRecordSyncService;
 use App\Services\FinanceService;
 use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
@@ -23,6 +22,7 @@ class FinanceController extends Controller
     public function __construct(
         private FinanceService $finance,
         private FinanceDepartmentService $department,
+        private FinanceRecordSyncService $records,
     ) {}
 
     public function index()
@@ -34,8 +34,10 @@ class FinanceController extends Controller
         $this->finance->seedAccounts();
 
         $reports = $this->finance->reports();
-        $ar = Invoice::source()->where('balance', '>', 0)->with('client')->get();
-        $ap = SupplierInvoice::whereRaw('total > amount_paid')->with('supplier')->get();
+        $invoiceRecords = $this->records->invoices();
+        $supplierRecords = $this->records->supplierInvoices();
+        $ar = $invoiceRecords->filter(fn ($invoice) => (float) $invoice->balance > 0)->values();
+        $ap = $supplierRecords->filter(fn ($bill) => (float) $bill->outstanding_balance > 0)->values();
         $banks = BankAccount::with('ledgerAccount', 'transactions')->get();
 
         return view('finance.index', $reports + [
@@ -51,7 +53,7 @@ class FinanceController extends Controller
             'costReport' => app(CostAccountingService::class)->report(now()->year),
             'periods' => DB::table('finance_periods')->where('business_id', ActiveBusiness::id())->latest('starts_at')->get(),
             'taxes' => DB::table('tax_records')->where('business_id', ActiveBusiness::id())->latest('period_end')->get(),
-            'financeCockpit' => $this->department->cockpit($reports, $ar, $ap, $banks),
+            'financeCockpit' => $this->department->cockpit($reports, $ar, $ap, $banks, $invoiceRecords, $supplierRecords),
         ]);
     }
 
