@@ -827,6 +827,77 @@
         @media (prefers-reduced-motion:reduce) {
             *,*::before,*::after { scroll-behavior:auto !important;transition-duration:.01ms !important;animation-duration:.01ms !important;animation-iteration-count:1 !important; }
         }
+        main {
+            --dashboard-accent-green:var(--tenant-primary,var(--bama-orange));
+            --dashboard-accent-green-soft:#EAF8F0;
+            --dashboard-accent-green-border:#BDE8CF;
+            --dashboard-accent-blue:#2563eb;
+            --dashboard-accent-blue-soft:#EFF6FF;
+            --dashboard-accent-blue-border:#BFDBFE;
+        }
+        main :is(.agri-card,.auto-grid .auto-card,.chama-card,.compliance-card,.con-card,.fitness-metric,.hospitality-card,.print-grid .print-card,.retail-metric,.salon-card,.stat-card,.report-card) {
+            position:relative;
+            overflow:hidden;
+        }
+        main :is(.agri-card,.auto-grid .auto-card,.chama-card,.compliance-card,.con-card,.fitness-metric,.hospitality-card,.print-grid .print-card,.retail-metric,.salon-card,.stat-card,.report-card)::before {
+            content:"";
+            position:absolute;
+            left:0;
+            right:0;
+            top:0;
+            height:3px;
+            background:var(--dashboard-accent-green);
+            opacity:.9;
+        }
+        main :is(.agri-card,.auto-grid .auto-card,.chama-card,.compliance-card,.con-card,.fitness-metric,.hospitality-card,.print-grid .print-card,.retail-metric,.salon-card,.stat-card,.report-card)::after {
+            content:"";
+            position:absolute;
+            inset:0;
+            pointer-events:none;
+            background:linear-gradient(180deg,var(--dashboard-accent-green-soft),transparent 46%);
+            opacity:.34;
+        }
+        main :is(.agri-card,.auto-grid .auto-card,.chama-card,.compliance-card,.con-card,.fitness-metric,.hospitality-card,.print-grid .print-card,.retail-metric,.salon-card,.stat-card,.report-card) > * {
+            position:relative;
+            z-index:1;
+        }
+        main :is(.agri-kpis > *:nth-child(even) .agri-card,.auto-grid > .auto-card:nth-child(even),.chama-kpis > .chama-card:nth-child(even),.compliance-grid > .compliance-card:nth-child(even),.con-grid > .con-card:nth-child(even),.fitness-grid > .fitness-metric:nth-child(even),.hospitality-grid > .hospitality-card:nth-child(even),.print-grid > .print-card:nth-child(even),.retail-grid > .retail-metric:nth-child(even),.salon-metrics > .salon-card:nth-child(even),.stat-grid > .stat-card:nth-child(even),.report-grid > .report-card:nth-child(even))::before {
+            background:var(--dashboard-accent-blue);
+        }
+        main :is(.agri-kpis > *:nth-child(even) .agri-card,.auto-grid > .auto-card:nth-child(even),.chama-kpis > .chama-card:nth-child(even),.compliance-grid > .compliance-card:nth-child(even),.con-grid > .con-card:nth-child(even),.fitness-grid > .fitness-metric:nth-child(even),.hospitality-grid > .hospitality-card:nth-child(even),.print-grid > .print-card:nth-child(even),.retail-grid > .retail-metric:nth-child(even),.salon-metrics > .salon-card:nth-child(even),.stat-grid > .stat-card:nth-child(even),.report-grid > .report-card:nth-child(even))::after {
+            background:linear-gradient(180deg,var(--dashboard-accent-blue-soft),transparent 46%);
+        }
+        main :is(a.btn,a.status-pill,.auto-mods a,.chama-actions a,.hospitality-badge,.salon-actions a)[href*="report"] {
+            border-color:var(--dashboard-accent-blue-border) !important;
+            background:var(--dashboard-accent-blue-soft) !important;
+            color:#1d4ed8 !important;
+            box-shadow:none;
+        }
+        main :is(a.btn,a.status-pill,.auto-mods a,.chama-actions a,.hospitality-badge,.salon-actions a)[href*="report"]:nth-of-type(odd) {
+            border-color:var(--dashboard-accent-green-border) !important;
+            background:var(--dashboard-accent-green-soft) !important;
+            color:#007A3B !important;
+        }
+        main :is(.row,.d-flex) > *:nth-child(even) > :is(a.btn,a.status-pill)[href*="report"] {
+            border-color:var(--dashboard-accent-blue-border) !important;
+            background:var(--dashboard-accent-blue-soft) !important;
+            color:#1d4ed8 !important;
+        }
+        main .card:has(a[href*="reports.csv"]),
+        main .card:has(a[href*="/reports"]) {
+            position:relative;
+            overflow:hidden;
+        }
+        main .card:has(a[href*="reports.csv"])::before,
+        main .card:has(a[href*="/reports"])::before {
+            content:"";
+            position:absolute;
+            left:0;
+            right:0;
+            top:0;
+            height:3px;
+            background:linear-gradient(90deg,var(--dashboard-accent-green),var(--dashboard-accent-blue));
+        }
         body.workspace-density-compact .card.p-4{padding:1rem!important}body.workspace-density-compact .panel-body{padding:1rem!important}body.workspace-density-compact .table td,body.workspace-density-compact .table th{padding:.48rem .6rem}body.workspace-density-compact .form-control,body.workspace-density-compact .form-select,body.workspace-density-compact .btn{padding-top:.42rem;padding-bottom:.42rem}body.workspace-density-compact .stat-card{min-height:88px;padding:12px}
     </style>
     <style>:root { {!! $tenantCssVariables ?? '--tenant-primary:#00A651; --tenant-secondary:#000000; --tenant-accent:#00A651;' !!} }</style>

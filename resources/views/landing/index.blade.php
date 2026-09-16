@@ -664,7 +664,7 @@
 
     <section id="features" class="bg-[#F7F8F5] px-5 py-8">
         <div class="mx-auto max-w-6xl">
-            <div class="grid gap-5 lg:grid-cols-[.32fr_1fr]">
+            <div class="grid gap-6 lg:grid-cols-[.42fr_1fr]">
                 <div>
                     <p class="eyebrow">{{ data_get($featuresContent, 'eyebrow', 'Core platform') }}</p>
                     <h2 class="mt-2 text-2xl font-black leading-tight lg:text-3xl">{{ data_get($featuresContent, 'title', 'Everything Your Business Needs') }}</h2>
@@ -674,14 +674,14 @@
                     <div class="mt-4 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
                         <picture class="block">
                             @if($featuresImageSrcset)
-                                <source type="image/webp" srcset="{{ $featuresImageSrcset }}" sizes="(min-width: 1024px) 28vw, 100vw">
+                                <source type="image/webp" srcset="{{ $featuresImageSrcset }}" sizes="(min-width: 1024px) 34vw, 100vw">
                             @endif
                             <img
                                 src="{{ $featuresImageUrl }}"
                                 alt="{{ data_get($media, 'features_image_alt', 'Diverse teams using the platform') }}"
                                 width="1254"
                                 height="1254"
-                                class="h-32 w-full object-cover sm:h-36 lg:h-40"
+                                class="h-44 w-full object-cover sm:h-52 lg:h-56"
                                 loading="lazy"
                                 decoding="async"
                             >
