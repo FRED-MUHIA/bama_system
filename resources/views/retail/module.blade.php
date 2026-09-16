@@ -405,6 +405,10 @@
         </form>
     </div>
     <div class="card p-3 mb-3" id="retail-place-order">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h5 mb-0">Create Retail Order</h2>
+            <a class="btn btn-sm btn-outline-dark" href="{{ route('retail.pos.index') }}"><i class="bi bi-upc-scan me-1"></i>Open POS</a>
+        </div>
         <form method="POST" action="{{ route('retail.orders.store') }}" class="row g-2">
             @csrf
             <div class="col-md-3"><select class="form-select" name="client_id"><option value="">Customer</option>@foreach($clients as $client)<option value="{{ $client->id }}" @selected(session('selectedCustomerId') == $client->id)>{{ $client->name }}</option>@endforeach</select></div>
@@ -416,6 +420,34 @@
             <div class="col-md-1"><input class="form-control" name="items[0][unit_price]" type="number" step="0.01" value="0"></div>
             <div class="col-md-12"><button class="btn btn-success">Save Order</button></div>
         </form>
+        <div class="border-top mt-3 pt-3" id="retail-pos-order">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h3 class="h6 mb-0">Create POS Order</h3>
+                <a class="btn btn-sm btn-outline-dark" href="{{ route('pos-orders.create') }}"><i class="bi bi-cart-plus me-1"></i>Full POS Form</a>
+            </div>
+            <form method="POST" action="{{ route('retail.orders.pos.store') }}" class="row g-2">
+                @csrf
+                <input type="hidden" name="sale_type" value="Sale">
+                <input type="hidden" name="channel" value="Store">
+                <input type="hidden" name="customer_type" value="Retail Customer">
+                <div class="col-md-3"><select class="form-select" name="client_id"><option value="">Walk-in customer</option>@foreach($clients as $client)<option value="{{ $client->id }}" @selected(session('selectedCustomerId') == $client->id)>{{ $client->name }}</option>@endforeach</select></div>
+                <div class="col-md-2"><input class="form-control" name="customer_name" placeholder="Customer name"></div>
+                <div class="col-md-2"><input class="form-control" name="customer_phone" placeholder="Phone"></div>
+                <div class="col-md-2"><select class="form-select" name="branch_id"><option value="">Store / Branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></div>
+                <div class="col-md-3"><select class="form-select" name="items[0][product_id]" data-retail-pos-product><option value="">Product</option>@foreach($products as $product)<option value="{{ $product->id }}" data-price="{{ $product->price }}" data-name="{{ $product->name }}">{{ $product->name }} - {{ number_format((float) $product->price, 2) }}</option>@endforeach</select></div>
+                <input type="hidden" name="items[0][title]" data-retail-pos-title>
+                <input type="hidden" name="items[0][description]" data-retail-pos-description>
+                <input type="hidden" name="items[0][discount]" value="0">
+                <div class="col-md-1"><input class="form-control" name="items[0][quantity]" data-retail-pos-quantity type="number" min="0.001" step="0.001" value="1" placeholder="Qty"></div>
+                <div class="col-md-2"><input class="form-control" name="items[0][unit_price]" data-retail-pos-price type="number" min="0" step="0.01" placeholder="Unit price"></div>
+                <div class="col-md-2"><select class="form-select" name="payments[0][payment_method_id]"><option value="">Payment method</option>@foreach($paymentMethods as $method)<option value="{{ $method->id }}">{{ $method->name }}</option>@endforeach</select></div>
+                <div class="col-md-2"><input class="form-control" name="payments[0][method_type]" value="Cash" placeholder="Payment type"></div>
+                <div class="col-md-2"><input class="form-control" name="payments[0][amount]" data-retail-pos-payment type="number" min="0" step="0.01" placeholder="Amount paid"></div>
+                <div class="col-md-2"><input class="form-control" name="payments[0][reference]" placeholder="Reference"></div>
+                <div class="col-md-2"><input class="form-control" name="notes" placeholder="POS note"></div>
+                <div class="col-md-1"><button class="btn btn-success w-100"><i class="bi bi-cart-check"></i></button></div>
+            </form>
+        </div>
         <div class="border-top mt-3 pt-3">
             <form method="POST" action="{{ $records->count() ? route('retail.orders.fulfillment.route', $records->first()) : '#' }}" class="row g-2">
                 @csrf
@@ -750,6 +782,37 @@ document.addEventListener('DOMContentLoaded', () => {
             button.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
         });
     });
+
+    const posProduct = document.querySelector('[data-retail-pos-product]');
+    const posTitle = document.querySelector('[data-retail-pos-title]');
+    const posDescription = document.querySelector('[data-retail-pos-description]');
+    const posQuantity = document.querySelector('[data-retail-pos-quantity]');
+    const posPrice = document.querySelector('[data-retail-pos-price]');
+    const posPayment = document.querySelector('[data-retail-pos-payment]');
+
+    const updatePosPayment = () => {
+        if (! posQuantity || ! posPrice || ! posPayment) return;
+
+        const quantity = Number.parseFloat(posQuantity.value || '0');
+        const price = Number.parseFloat(posPrice.value || '0');
+        const total = Math.max(quantity * price, 0);
+        posPayment.value = total ? total.toFixed(2) : '';
+    };
+
+    if (posProduct) {
+        posProduct.addEventListener('change', () => {
+            const option = posProduct.selectedOptions[0];
+            const name = option?.dataset.name || '';
+            const price = option?.dataset.price || '';
+
+            if (posTitle) posTitle.value = name;
+            if (posDescription) posDescription.value = name;
+            if (posPrice) posPrice.value = price;
+            updatePosPayment();
+        });
+    }
+
+    [posQuantity, posPrice].forEach((input) => input?.addEventListener('input', updatePosPayment));
 });
 </script>
 @endpush

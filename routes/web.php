@@ -394,6 +394,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/warehousing/bins', [RetailWarehouseController::class, 'storeBin'])->middleware('permission:retail.warehousing.manage')->name('warehousing.bins.store');
             Route::get('/orders', [RetailOrderController::class, 'index'])->middleware('permission:retail.orders.view')->name('orders.index');
             Route::post('/orders', [RetailOrderController::class, 'store'])->middleware('permission:retail.orders.manage')->name('orders.store');
+            Route::post('/orders/pos', [RetailOrderController::class, 'storePosSale'])->middleware('permission:retail.orders.manage')->name('orders.pos.store');
             Route::post('/orders/customers', [RetailOrderController::class, 'storeCustomer'])->middleware('permission:retail.customers.manage')->name('orders.customers.store');
             Route::post('/orders/{order}/fulfillment', [RetailOrderController::class, 'routeFulfillment'])->middleware('permission:retail.orders.manage')->name('orders.fulfillment.route');
             Route::get('/deliveries', [RetailDeliveryController::class, 'index'])->middleware('permission:retail.orders.view')->name('deliveries.index');
