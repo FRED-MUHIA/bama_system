@@ -191,13 +191,16 @@ class RetailOperationsController extends Controller
             $selectedReport = 'daily-sales';
         }
 
+        $enterprise = app(RetailEnterpriseOperationsService::class);
+
         return view('retail.reports', [
             'records' => Supplier::with('retailProfile')->latest()->limit(10)->get(),
             'primaryReports' => $catalog['primary'],
             'advancedReports' => $catalog['advanced'],
             'selectedReport' => $selectedReport,
             'selectedReportMeta' => $reportOptions->firstWhere('slug', $selectedReport),
-            'report' => $this->retailReportData($selectedReport, app(RetailEnterpriseOperationsService::class)),
+            'report' => $this->retailReportData($selectedReport, $enterprise),
+            'enterprise' => $enterprise,
             'taxJurisdictions' => Schema::hasTable('retail_tax_jurisdictions') ? RetailTaxJurisdiction::latest()->limit(10)->get() : collect(),
         ]);
     }

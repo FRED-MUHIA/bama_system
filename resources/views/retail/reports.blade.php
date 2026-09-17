@@ -4,7 +4,8 @@
 @section('content')
 @include('retail.partials.nav')
 @php
-    $profitability = $enterprise->skuProfitability();
+    $enterprise = $enterprise ?? null;
+    $profitability = method_exists($enterprise, 'skuProfitability') ? $enterprise->skuProfitability() : collect();
     $primaryReports = ['Daily Sales', 'Product Sales', 'Stock Levels', 'Returns'];
     $advancedReports = [
         'Monthly Sales', 'Cashier Sales', 'Reorder Reports', 'Safety Stock Forecast',
