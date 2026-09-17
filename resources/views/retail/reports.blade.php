@@ -38,11 +38,11 @@
         @endforeach
     </div>
 
-    <button id="retail-more-reports-toggle" class="btn btn-sm btn-outline-dark mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#advancedRetailReports" aria-expanded="false" aria-controls="advancedRetailReports">
+    <button id="retail-more-reports-toggle" class="btn btn-sm btn-outline-dark mt-3" type="button" aria-expanded="false" aria-controls="advancedRetailReports">
         <i class="bi bi-three-dots me-1"></i>More reports
     </button>
 
-    <div class="collapse border-top mt-3 pt-3" id="advancedRetailReports">
+    <div class="d-none border-top mt-3 pt-3" id="advancedRetailReports">
         <div class="row g-2">
             @foreach($advancedReports as $reportItem)
                 @php $reportSlug = is_array($reportItem) ? ($reportItem['slug'] ?? '') : Str::slug($reportItem); $reportLabel = is_array($reportItem) ? ($reportItem['label'] ?? ucfirst(str_replace('-', ' ', $reportSlug))) : $reportItem; $reportIcon = is_array($reportItem) ? ($reportItem['icon'] ?? 'bi-file-earmark-bar-graph') : 'bi-file-earmark-bar-graph'; @endphp
@@ -117,10 +117,9 @@
             event.preventDefault();
             event.stopPropagation();
 
-            const shouldOpen = !panel.classList.contains('show');
-            panel.classList.toggle('show', shouldOpen);
-            panel.classList.toggle('d-none', !shouldOpen);
-            toggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+            const isHidden = panel.classList.contains('d-none');
+            panel.classList.toggle('d-none', !isHidden);
+            toggle.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
         });
     });
 </script>
