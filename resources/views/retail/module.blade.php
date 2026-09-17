@@ -713,9 +713,9 @@
                             Transit {{ $stockProduct?->formattedStock((float) $record->in_transit_stock) ?? number_format((float) $record->in_transit_stock, 3) }}
                             <div>Damaged {{ $stockProduct?->formattedStock((float) $record->damaged_stock) ?? number_format((float) $record->damaged_stock, 3) }}</div>
                         </td>
-                        <td class="text-end"><button class="btn btn-sm btn-outline-success" type="button" data-retail-panel-toggle="retail-inventory-edit-row-{{ $record->id }}" aria-expanded="false" aria-controls="retail-inventory-edit-row-{{ $record->id }}"><i class="bi bi-boxes me-1"></i>Stock</button></td>
+                        <td class="text-end"><button class="btn btn-sm btn-outline-success" type="button" data-retail-panel-toggle="retail-inventory-edit-{{ $record->id }}" aria-expanded="false" aria-controls="retail-inventory-edit-{{ $record->id }}"><i class="bi bi-boxes me-1"></i>Stock</button></td>
                     </tr>
-                    <tr id="retail-inventory-edit-row-{{ $record->id }}" class="d-none" hidden>
+                    <tr id="retail-inventory-edit-{{ $record->id }}" class="d-none" hidden>
                         <td colspan="6" class="p-0 border-0">
                             <div class="border-top p-3">
                                 <form method="POST" action="{{ route('retail.inventory.adjust') }}" class="row g-2 align-items-end">
