@@ -31,6 +31,14 @@
     </div>
 </div></div>
 @include('documents.document-sheet', ['type' => 'Invoice', 'document' => $invoice])
+@if($invoice->industry_module === 'printing_branding' && !empty($invoice->industry_context))
+<div class="card mt-3"><div class="card-body">
+    <h2 class="h5">Production Context</h2>
+    @if(!empty($invoice->industry_context['production_job_id']))<p class="mb-1">Printing Job: {{ $invoice->industry_context['production_job_id'] }}</p>@endif
+    @if(!empty($invoice->industry_context['product_name']))<p class="mb-1">Product: {{ $invoice->industry_context['product_name'] }}</p>@endif
+    @if(!empty($invoice->industry_reference))<p class="mb-1">Job reference: {{ $invoice->industry_reference }}</p>@endif
+</div></div>
+@endif
 @if(\Illuminate\Support\Facades\Schema::hasTable('letters'))
 <div class="card mt-3"><div class="card-body"><h2 class="h5">Letters</h2>@forelse($invoice->letters as $letter)<div class="border-top py-2"><a href="{{ route('letters.show',$letter) }}">{{ $letter->letter_number }}</a><span class="float-end">{{ $letter->type }} · {{ $letter->status }}</span><div class="small text-muted">{{ $letter->subject }}</div></div>@empty<div class="text-muted">No letters linked to this invoice.</div>@endforelse</div></div>
 @endif

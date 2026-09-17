@@ -248,7 +248,10 @@ class RealEstateIndustryTest extends TestCase
         $this->assertContains('Documents', $labels);
         $this->assertContains('Finance', $labels);
         $this->assertContains('Messaging', $labels);
-        $this->assertContains('Tax & ETIMS', $labels);
+
+        $finance = app(NavigationManager::class)->sidebar()->firstWhere('label', 'Finance');
+        $this->assertNotNull($finance);
+        $this->assertContains('Tax & ETIMS', collect($finance['children'] ?? [])->pluck('label')->all());
     }
 
     public function test_real_estate_operational_records_documents_and_exports_are_functional(): void
@@ -796,12 +799,6 @@ class RealEstateIndustryTest extends TestCase
         $this->assertSame('Inactive', UtilityMeter::firstOrFail()->status);
         $this->assertSame('Closed', \Modules\RealEstate\Models\MaintenanceRequest::firstOrFail()->status);
         $this->assertDatabaseHas('admin_audit_logs', ['event' => 'real-estate.tenant.archived']);
-
-        $super = User::factory()->create(['role' => 'super_admin', 'is_active' => true, 'status' => 'Active']);
-        $this->actingAs($super)->withSession([
-            ActiveTenant::SESSION_KEY => $this->tenant->id,
-            ActiveBusiness::SESSION_KEY => $this->business->id,
-        ]);
 
         $this->delete(route('real-estate.tenants.destroy', $tenant), ['confirm_delete' => 1])
             ->assertStatus(422)

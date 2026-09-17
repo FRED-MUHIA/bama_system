@@ -139,6 +139,9 @@
             <div class="doc-meta">
                 <div class="doc-type">{{ $type }}</div>
                 <div class="doc-number">{{ $number }}</div>
+                @if($type === 'Invoice' && ! empty($document->industry_reference))
+                    <p>Ref: {{ $document->industry_reference }}</p>
+                @endif
                 <p>Date: {{ $date?->format('M d, Y') ?: '-' }}</p>
                 <p>{{ $secondaryDateLabel }}: {{ $secondaryDate }}</p>
             </div>
@@ -152,10 +155,13 @@
                 @if($recipientProfile['phone'] ?? $client?->phone)<p>{{ $recipientProfile['phone'] ?? $client?->phone }}</p>@endif
                 @if($recipientProfile['email'] ?? $client?->email)<p>{{ $recipientProfile['email'] ?? $client?->email }}</p>@endif
                 @if($recipientProfile['address'] ?? $client?->address)<p>{{ $recipientProfile['address'] ?? $client?->address }}</p>@endif
+                @if(! empty($recipientProfile['tenant_number']))<p>Tenant: {{ $recipientProfile['tenant_number'] }}</p>@endif
+                @if(! empty($recipientProfile['id_number']))<p>ID: {{ $recipientProfile['id_number'] }}</p>@endif
                 @if(! $isReceipt && $document->relationLoaded('project') && $document->project)<p>Project: {{ $document->project->project_name }}</p>@endif
                 @if(! $isReceipt && $document->relationLoaded('site') && $document->site)<p>Site: {{ $document->site->site_name }}</p>@endif
                 @if(!empty($industryContext['job_number']))<p>Job: {{ $industryContext['job_number'] }}</p>@endif
                 @if(!empty($industryContext['property_name']))<p>Property: {{ $industryContext['property_name'] }}</p>@endif
+                @if(!empty($industryContext['unit_number']))<p>Unit: {{ $industryContext['unit_number'] }}</p>@endif
             </div>
             <div class="doc-box">
                 <div class="doc-summary-row"><span>Status</span><strong>{{ $status ?: '-' }}</strong></div>

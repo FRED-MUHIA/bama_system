@@ -1402,7 +1402,7 @@
             ['label' => 'Production Job', 'route' => 'printing.jobs', 'icon' => 'bi-printer', 'condition' => $currentUser->hasPermission('production_jobs.create')],
         ];
         $retailQuickActions = [
-            ['label' => 'Add Customer', 'route' => 'retail.orders.index', 'fragment' => 'retail-add-customer', 'icon' => 'bi-person-plus'],
+            ['label' => 'Add Customer', 'route' => 'retail.orders.index', 'fragment' => 'retail-orders-add-customer', 'icon' => 'bi-person-plus'],
             ['label' => 'Place Order', 'route' => 'retail.orders.index', 'fragment' => 'retail-place-order', 'icon' => 'bi-bag-plus'],
             ['label' => 'Add Products', 'route' => 'retail.products.index', 'fragment' => 'retail-add-product', 'icon' => 'bi-box-seam'],
             ['label' => 'Stocks Records', 'route' => 'retail.inventory.index', 'fragment' => 'retail-stock-records', 'icon' => 'bi-stack'],

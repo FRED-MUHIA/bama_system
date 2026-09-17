@@ -16,7 +16,6 @@
     $initialStep = ($errors->any() || $otpSent) ? 2 : 0;
     $brandLogoPath = 'images/bama-solutions-02.png';
     $brandLogoUrl = asset($brandLogoPath).'?v='.(file_exists(public_path($brandLogoPath)) ? filemtime(public_path($brandLogoPath)) : time());
-    $registerUrl = \Illuminate\Support\Facades\Route::has('register.account') ? route('register.account') : null;
 @endphp
 
 <style>
@@ -776,11 +775,6 @@
                         <button class="app-link-button" type="button" data-app-go="2">
                             <i class="bi bi-box-arrow-in-right"></i> Workspace Login
                         </button>
-                        @if ($registerUrl)
-                            <a class="app-link-button app-link-button--register" href="{{ $registerUrl }}">
-                                <i class="bi bi-person-plus"></i> Create Account
-                            </a>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -802,11 +796,6 @@
                     <p>This console is for existing workspace users. New user access is issued by the workspace administrator.</p>
                     <div class="app-choice-actions">
                         <button class="app-primary mt-0" type="button" data-app-go="2">Continue to Sign In</button>
-                        @if ($registerUrl)
-                            <a class="app-secondary" href="{{ $registerUrl }}">
-                                <i class="bi bi-person-plus"></i> Create Account
-                            </a>
-                        @endif
                     </div>
                     <div class="app-stat-grid" aria-label="System status">
                         <span><strong>{{ $system['workspaces'] }}</strong><small>Workspaces</small></span>
@@ -935,12 +924,6 @@
                         <i class="bi bi-shield-check"></i>
                         <span>Accounts are checked against the workspace database before the dashboard opens.</span>
                     </div>
-                    @if ($registerUrl)
-                        <div class="app-auth-register">
-                            <span>Do not have an account?</span>
-                            <a href="{{ $registerUrl }}"><i class="bi bi-person-plus"></i> Create Account</a>
-                        </div>
-                    @endif
                 </div>
 
                 <div class="app-legal">

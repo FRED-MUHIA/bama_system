@@ -365,7 +365,7 @@ class IamService
 
     public function bootstrap(): void
     {
-        if (! $this->ready()) {
+        if (! $this->ready() || ! ActiveBusiness::id()) {
             return;
         }
 

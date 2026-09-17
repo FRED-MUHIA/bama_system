@@ -496,8 +496,6 @@ class RealEstateOperationsController extends Controller
 
     public function destroyTenant(Request $request, Tenant $tenant, TenantOffboardingService $offboarding)
     {
-        abort_unless($request->user()?->role === 'super_admin', 403, 'Super Admin permission required.');
-
         $request->validate(['confirm_delete' => ['accepted']]);
         $offboarding->deleteIfAllowed($tenant);
 

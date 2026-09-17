@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -31,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [IdentifyTenant::class, RecordMajorActivity::class]);
         $middleware->alias([
             'admin' => EnsureAdminAccess::class,
+            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
             'permission' => RequirePermission::class,
             'super_admin' => EnsureSuperAdmin::class,
             'tenant.context' => IdentifyTenant::class,
@@ -47,7 +49,11 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (TokenMismatchException $e, Request $request) {
+        $exceptions->render(function (HttpException $e, Request $request) {
+            if (! $e->getPrevious() instanceof TokenMismatchException) {
+                return null;
+            }
+
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Your session expired. Please refresh and try again.'], 419);
             }

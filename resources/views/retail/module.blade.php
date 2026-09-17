@@ -401,7 +401,7 @@
         </form>
     </div>
 @elseif($section === 'orders')
-    <div class="card p-3 mb-3" id="retail-add-customer">
+    <div class="card p-3 mb-3" id="retail-orders-add-customer">
         <div class="d-flex justify-content-between align-items-center mb-2">
             <h2 class="h5 mb-0">Add Customer</h2>
             <a class="btn btn-sm btn-outline-dark" href="{{ route('clients.index') }}">Open CRM</a>

@@ -245,8 +245,11 @@ class TenantProvisioningServiceTest extends TestCase
 
         $this->assertContains('Dashboard', $labels);
         $this->assertContains('Messaging', $labels);
-        $this->assertContains('Tax & ETIMS', $labels);
         $this->assertContains('Finance', $labels);
+
+        $finance = app(NavigationManager::class)->sidebar()->firstWhere('label', 'Finance');
+        $this->assertNotNull($finance);
+        $this->assertContains('Tax & ETIMS', collect($finance['children'] ?? [])->pluck('label')->all());
 
         $this->get(route('etims.dashboard'))
             ->assertOk()

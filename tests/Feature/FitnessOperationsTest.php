@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Business;
+use App\Models\MailSetting;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -206,6 +207,15 @@ class FitnessOperationsTest extends TestCase
     public function test_record_payment_generates_and_emails_invoice(): void
     {
         Mail::fake();
+        MailSetting::create([
+            'business_id' => $this->business->id,
+            'enabled' => true,
+            'host' => 'mail.bama.co.ke',
+            'port' => 587,
+            'scheme' => 'smtp',
+            'from_address' => 'info@bama.co.ke',
+            'from_name' => 'Bama Fitness',
+        ]);
         $member = $this->activeMember('Recorded Payment Member', 5)->load('activeMembership', 'client');
         $member->client()->update(['email' => 'recorded-payment@example.test']);
         $membership = $member->activeMembership;

@@ -73,7 +73,7 @@ class MobileResponsiveExperienceTest extends TestCase
             $this->assertStringContainsString("'label' => '{$label}'", $appLayout);
         }
 
-        $this->assertStringContainsString("'fragment' => 'retail-add-customer'", $appLayout);
+        $this->assertStringContainsString("'fragment' => 'retail-orders-add-customer'", $appLayout);
         $this->assertStringContainsString("'fragment' => 'retail-place-order'", $appLayout);
         $this->assertStringContainsString("'fragment' => 'retail-add-product'", $appLayout);
         $this->assertStringContainsString("'fragment' => 'retail-stock-records'", $appLayout);

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Business;
 use App\Models\CompanySetting;
 use App\Models\DocumentMedia;
 use App\Models\Letter;
@@ -10,8 +11,10 @@ use App\Models\Signatory;
 use App\Models\User;
 use App\Services\LetterService;
 use App\Support\ActiveBusiness;
+use App\Support\ActiveTenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -91,22 +94,27 @@ class LetterTemplateCatalogTest extends TestCase
 
         Storage::fake('public');
 
-        $user = User::create([
+        $user = User::factory()->create([
             'name' => 'Admin',
             'email' => 'admin@example.com',
             'role' => 'admin',
             'is_active' => true,
-            'password' => 'password',
+            'status' => 'Active',
         ]);
+        $this->assignToDefaultWorkspace($user);
 
-        $response = $this->actingAs($user)->postJson(route('letters.images.store'), [
+        $response = $this->actingAs($user)->withSession([
+            ActiveTenant::SESSION_KEY => $user->current_tenant_id,
+            ActiveBusiness::SESSION_KEY => ActiveBusiness::current()?->id,
+        ])->postJson(route('letters.images.store'), [
             'file' => UploadedFile::fake()->image('site-photo.jpg', 900, 600),
         ]);
 
-        $response->assertOk()
-            ->assertJsonPath('location', '/storage/'.DocumentMedia::firstOrFail()->file_path);
-
         $media = DocumentMedia::firstOrFail();
+
+        $response->assertOk()
+            ->assertJsonPath('location', \App\Support\PublicUpload::url($media->file_path));
+
         Storage::disk('public')->assertExists($media->file_path);
         $this->assertSame(ActiveBusiness::id(), $media->business_id);
         $this->assertSame(Letter::class, $media->model_type);
@@ -115,15 +123,19 @@ class LetterTemplateCatalogTest extends TestCase
 
     public function test_letter_form_loads_professional_rich_editor_controls(): void
     {
-        $user = User::create([
+        $user = User::factory()->create([
             'name' => 'Admin',
             'email' => 'editor@example.com',
             'role' => 'admin',
             'is_active' => true,
-            'password' => 'password',
+            'status' => 'Active',
         ]);
+        $this->assignToDefaultWorkspace($user);
 
-        $response = $this->actingAs($user)->get(route('letters.create'));
+        $response = $this->actingAs($user)->withSession([
+            ActiveTenant::SESSION_KEY => $user->current_tenant_id,
+            ActiveBusiness::SESSION_KEY => ActiveBusiness::current()?->id,
+        ])->get(route('letters.create'));
 
         $response->assertOk()
             ->assertSee('Add Media')
@@ -134,5 +146,22 @@ class LetterTemplateCatalogTest extends TestCase
             ->assertSee('data-editor-command="insertUnorderedList"', false)
             ->assertSee('data-editor-command="insertTable"', false)
             ->assertSee('letterLineHeight');
+    }
+
+    private function assignToDefaultWorkspace(User $user): void
+    {
+        $business = Business::where('slug', 'bama')->firstOrFail();
+
+        $user->forceFill(['current_tenant_id' => $business->tenant_id])->save();
+
+        DB::table('tenant_user')->updateOrInsert(
+            ['tenant_id' => $business->tenant_id, 'user_id' => $user->id],
+            ['role' => 'owner', 'status' => 'active', 'joined_at' => now(), 'created_at' => now(), 'updated_at' => now()],
+        );
+
+        DB::table('business_user')->updateOrInsert(
+            ['business_id' => $business->id, 'user_id' => $user->id],
+            ['status' => 'Active', 'created_at' => now(), 'updated_at' => now()],
+        );
     }
 }

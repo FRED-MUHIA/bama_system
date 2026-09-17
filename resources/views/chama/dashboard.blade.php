@@ -298,7 +298,7 @@
                 </form>
             </div>
             <div class="chama-panel">
-                <div class="chama-panel-head"><h2>Banking Sessions</h2></div>
+                <div class="chama-panel-head"><h2>Current Records</h2></div>
                 <div class="table-responsive"><table class="table"><thead><tr><th>Session</th><th>Date</th><th>Contributions</th><th>Closing</th><th>Balanced</th><th>Status</th></tr></thead><tbody>
                     @forelse($tableSessions as $session)
                         <tr>

@@ -10,6 +10,7 @@ use App\Console\Commands\PurgeNonSuperAdminUsersCommand;
 use App\Console\Commands\SubscriptionBillingSweepCommand;
 use App\Models\Business;
 use App\Services\NavigationManager;
+use App\Services\IamService;
 use App\Services\SubscriptionManager;
 use App\Services\ThemeManager;
 use App\Support\ActiveBusiness;
@@ -102,6 +103,10 @@ class AppServiceProvider extends ServiceProvider
 
             if ($showAdminShell && $activeTenant) {
                 $subscriptionBillingState = app(SubscriptionManager::class)->billingState($activeTenant);
+            }
+
+            if ($showAdminShell && $activeBusiness) {
+                app(IamService::class)->bootstrap();
             }
 
             $view->with([
