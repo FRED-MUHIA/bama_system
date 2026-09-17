@@ -427,6 +427,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/ecommerce/{integration}/sync', [RetailOperationsController::class, 'syncEcommerce'])->middleware('permission:retail.ecommerce.manage')->name('ecommerce.sync');
             Route::get('/analytics', [RetailOperationsController::class, 'analytics'])->middleware('permission:retail.analytics.view')->name('analytics.index');
             Route::get('/reports', [RetailOperationsController::class, 'reports'])->middleware('permission:retail.reports')->name('reports.index');
+            Route::get('/reports/export/{type}/{format?}', [RetailOperationsController::class, 'exportReport'])->middleware('permission:retail.reports')->name('reports.export');
             Route::get('/smart-scanning', [SmartScanningController::class, 'index'])->middleware('permission:retail.scanning.view')->name('scanning.index');
             Route::post('/smart-scanning/scan', [SmartScanningController::class, 'scan'])->middleware('permission:retail.scanning.manage')->name('scanning.scan');
             Route::get('/smart-scanning/devices', [SmartScanningController::class, 'devices'])->middleware('permission:retail.scanning.view')->name('scanning.devices');

@@ -5,6 +5,7 @@ namespace Modules\Retail\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\AdminAuditLog;
 use App\Models\Branch;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Client;
 use App\Models\PosOrder;
 use App\Models\PosOrderItem;
@@ -203,6 +204,50 @@ class RetailOperationsController extends Controller
             'enterprise' => $enterprise,
             'taxJurisdictions' => Schema::hasTable('retail_tax_jurisdictions') ? RetailTaxJurisdiction::latest()->limit(10)->get() : collect(),
         ]);
+    }
+
+    public function exportReport(Request $request, string $type, ?string $format = null)
+    {
+        $catalog = $this->retailReportCatalog();
+        $reportOptions = collect($catalog['primary'])->merge($catalog['advanced']);
+        $selectedReport = $reportOptions->contains('slug', $type) ? $type : 'daily-sales';
+        $downloadFormat = strtolower((string) ($format ?? $request->query('format', 'pdf')));
+        $downloadFormat = in_array($downloadFormat, ['excel', 'xls', 'xlsx'], true) ? 'xls' : 'pdf';
+
+        $report = $this->retailReportData($selectedReport, app(RetailEnterpriseOperationsService::class));
+        $rows = collect($report['rows'] ?? []);
+        $columns = $report['columns'] ?? [];
+        $filename = Str::slug($report['title'] ?? 'retail-report').'-'.now()->format('YmdHis').'.'.$downloadFormat;
+
+        if ($downloadFormat === 'pdf') {
+            $html = view('retail.reports.export', [
+                'title' => $report['title'] ?? 'Retail Report',
+                'subtitle' => $report['subtitle'] ?? 'Retail report exported from the active account.',
+                'columns' => $columns,
+                'rows' => $rows,
+            ])->render();
+
+            return Pdf::loadHTML($html)
+                ->setPaper('a4', 'landscape')
+                ->download($filename);
+        }
+
+        $columnNames = array_values($columns);
+
+        return response()->streamDownload(function () use ($columnNames, $rows, $columns) {
+            $out = fopen('php://output', 'wb');
+            fputcsv($out, $columnNames, "\t");
+
+            foreach ($rows as $row) {
+                $line = [];
+                foreach (array_keys($columns) as $key) {
+                    $line[] = $row[$key] ?? '';
+                }
+                fputcsv($out, $line, "\t");
+            }
+
+            fclose($out);
+        }, $filename, ['Content-Type' => 'application/vnd.ms-excel']);
     }
 
     private function retailReportCatalog(): array

@@ -61,7 +61,15 @@
                 <h2 class="h5 mb-1">{{ $reportData['title'] ?? 'Retail Performance' }}</h2>
                 <div class="text-muted small">{{ $reportData['subtitle'] ?? 'Live retail performance driven by current account activity.' }}</div>
             </div>
-            <span class="badge bg-dark-subtle text-dark border">{{ $selectedReportMeta['label'] ?? 'Retail Report' }}</span>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-dark-subtle text-dark border">{{ $selectedReportMeta['label'] ?? 'Retail Report' }}</span>
+                <a class="btn btn-sm btn-outline-dark" href="{{ route('retail.reports.export', ['type' => $selectedReport ?? 'daily-sales', 'format' => 'pdf']) }}">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+                </a>
+                <a class="btn btn-sm btn-outline-success" href="{{ route('retail.reports.export', ['type' => $selectedReport ?? 'daily-sales', 'format' => 'xls']) }}">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Excel
+                </a>
+            </div>
         </div>
 
         @if(!empty($reportData['metrics']))
