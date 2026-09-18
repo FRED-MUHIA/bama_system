@@ -111,6 +111,7 @@ return [
     'templates' => ['Business Card 300gsm', 'A5 Flyer', 'A4 Brochure', 'Pull-Up Banner', 'PVC Banner', 'Corporate T-Shirt', 'DTF T-Shirt', 'Embroidered Polo', 'Vehicle Branding', 'A5 Notebook', 'Mug Branding'],
     'permissions' => [
         'printing.view', 'printing.dashboard',
+        'printing_services.view', 'printing_services.create', 'printing_services.update', 'printing_services.delete',
         'estimates.view', 'estimates.create', 'estimates.approve',
         'production_jobs.view', 'production_jobs.create', 'production_jobs.update', 'production_jobs.approve',
         'artwork.view', 'artwork.manage', 'artwork.approve',
@@ -123,6 +124,7 @@ return [
     'menus' => [
         ['label' => 'Dashboard', 'route' => 'printing-branding.dashboard', 'icon' => 'bi-speedometer2', 'permission' => 'printing.dashboard', 'tables' => ['printing_jobs']],
         ['label' => 'CRM', 'route' => 'clients.index', 'icon' => 'bi-people', 'permission' => 'clients.view'],
+        ['label' => 'Services', 'route' => 'printing-branding.services', 'icon' => 'bi-tags', 'permission' => 'printing_services.view', 'tables' => ['printing_services']],
         ['label' => 'Estimating', 'route' => 'printing-branding.estimates', 'icon' => 'bi-calculator', 'permission' => 'estimates.view', 'tables' => ['printing_estimates']],
         ['label' => 'Quotations', 'route' => 'quotations.index', 'icon' => 'bi-file-earmark-text'],
         ['label' => 'Jobs', 'route' => 'printing-branding.jobs', 'icon' => 'bi-kanban', 'permission' => 'production_jobs.view', 'tables' => ['printing_jobs']],
@@ -143,7 +145,7 @@ return [
         ['label' => 'Reports', 'route' => 'printing-branding.reports', 'icon' => 'bi-bar-chart', 'permission' => 'printing_reports.view'],
         ['label' => 'Settings', 'route' => 'printing-branding.settings', 'icon' => 'bi-gear', 'permission' => 'printing_settings.manage'],
     ],
-    'menu_structure' => ['Dashboard', 'CRM', 'Estimating', 'Quotations', 'Jobs', 'All Jobs', 'Production Board', 'Job Tickets', 'Production Schedule', 'Artwork Files', 'Proofs', 'Client Approvals', 'Production Stages', 'Machines', 'Finishing', 'Quality Control', 'Reprints', 'Materials', 'Consumables', 'Stock', 'Material Usage', 'Purchase', 'Outsourcing', 'Dispatch', 'Invoices', 'Job Costing', 'Reports', 'Settings'],
+    'menu_structure' => ['Dashboard', 'CRM', 'Services', 'Estimating', 'Quotations', 'Jobs', 'All Jobs', 'Production Board', 'Job Tickets', 'Production Schedule', 'Artwork Files', 'Proofs', 'Client Approvals', 'Production Stages', 'Machines', 'Finishing', 'Quality Control', 'Reprints', 'Materials', 'Consumables', 'Stock', 'Material Usage', 'Purchase', 'Outsourcing', 'Dispatch', 'Invoices', 'Job Costing', 'Reports', 'Settings'],
     'dashboard_features' => $kpis,
     'charts' => $charts,
     'sub_industries' => array_map(fn ($sub) => $sub + [

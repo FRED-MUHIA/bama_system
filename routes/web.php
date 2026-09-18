@@ -677,6 +677,10 @@ Route::middleware('auth')->group(function () {
 
         Route::prefix('printing-branding')->name('printing-branding.')->middleware('module.enabled:printing-branding')->group(function () {
             Route::get('/', PrintingDashboardController::class)->middleware('permission:printing.dashboard')->name('dashboard');
+            Route::get('/services', [PrintingOperationsController::class, 'services'])->middleware('permission:printing_services.view')->name('services');
+            Route::post('/services', [PrintingOperationsController::class, 'storeService'])->middleware('permission:printing_services.create')->name('services.store');
+            Route::put('/services/{service}', [PrintingOperationsController::class, 'updateService'])->middleware('permission:printing_services.update')->name('services.update');
+            Route::delete('/services/{service}', [PrintingOperationsController::class, 'destroyService'])->middleware('permission:printing_services.delete')->name('services.destroy');
             Route::get('/estimating', [PrintingOperationsController::class, 'estimates'])->middleware('permission:estimates.view')->name('estimates');
             Route::post('/estimating', [PrintingOperationsController::class, 'storeEstimate'])->middleware('permission:estimates.create')->name('estimates.store');
             Route::post('/estimating/{estimate}/convert', [PrintingOperationsController::class, 'convertEstimate'])->middleware('permission:estimates.approve')->name('estimates.convert');

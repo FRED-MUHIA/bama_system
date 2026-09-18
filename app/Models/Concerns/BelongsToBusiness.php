@@ -6,8 +6,8 @@ use App\Models\Business;
 use App\Models\Tenant;
 use App\Support\ActiveBusiness;
 use App\Support\ActiveTenant;
+use App\Support\SchemaCache;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Schema;
 
 trait BelongsToBusiness
 {
@@ -60,12 +60,12 @@ trait BelongsToBusiness
 
     private static function scopeHasColumn(string $table, string $column): bool
     {
-        if (! (self::$businessScopeTableExists[$table] ??= Schema::hasTable($table))) {
+        if (! (self::$businessScopeTableExists[$table] ??= SchemaCache::hasTable($table))) {
             return false;
         }
 
         $key = $table.'.'.$column;
 
-        return self::$businessScopeColumnExists[$key] ??= Schema::hasColumn($table, $column);
+        return self::$businessScopeColumnExists[$key] ??= SchemaCache::hasColumn($table, $column);
     }
 }

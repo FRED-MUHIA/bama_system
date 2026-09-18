@@ -122,6 +122,7 @@ class IamService
         'quality.manage', 'safety.manage', 'defects.manage', 'handover.manage',
         'construction.finance', 'construction.reports', 'construction.settings',
         'printing.view', 'printing.dashboard',
+        'printing_services.view', 'printing_services.create', 'printing_services.update', 'printing_services.delete',
         'estimates.view', 'estimates.create', 'estimates.approve',
         'production_jobs.view', 'production_jobs.create', 'production_jobs.update', 'production_jobs.approve',
         'artwork.view', 'artwork.manage', 'artwork.approve',
@@ -312,20 +313,23 @@ class IamService
         self::$permissionCache = [];
         $businessId = ActiveBusiness::id();
 
-        foreach (self::PERMISSIONS as $name) {
-            IamPermission::firstOrCreate(['name' => $name], ['module' => Str::before($name, '.')]);
+        $this->roleMap = null;
+        $this->permissionIdMap = null;
+        $this->rolePivotIds = [];
+        $this->rolePivotLoaded = false;
+
+        $this->seedPermissions();
+        $this->seedRoles();
+
+        foreach (['system-administrator', 'business-administrator'] as $slug) {
+            if ($role = $this->roleFor($slug)) {
+                $this->syncRolePermissions($role, self::PERMISSIONS);
+            }
         }
 
-        foreach (self::ROLES as $slug => $name) {
-            $role = IamRole::firstOrCreate(
-                ['business_id' => ActiveBusiness::id(), 'slug' => $slug],
-                ['name' => $name, 'is_system' => true]
-            );
-
-            if (in_array($slug, ['system-administrator', 'business-administrator'], true)) {
-                $role->permissions()->sync(IamPermission::pluck('id'));
-            } elseif (in_array($slug, ['finance-manager', 'director'], true)) {
-                $role->permissions()->syncWithoutDetaching(IamPermission::where('name', 'finance.gl.unreverse')->pluck('id'));
+        foreach (['finance-manager', 'director'] as $slug) {
+            if ($role = $this->roleFor($slug)) {
+                $this->attachRolePermissions($role, ['finance.gl.unreverse']);
             }
         }
 
@@ -363,8 +367,167 @@ class IamService
         }
     }
 
+    private ?array $roleMap = null;
+
+    private ?array $permissionIdMap = null;
+
+    private array $rolePivotIds = [];
+
+    private bool $rolePivotLoaded = false;
+
+    private function existingPivotIds(int $roleId): array
+    {
+        if (! $this->rolePivotLoaded) {
+            $this->rolePivotLoaded = true;
+
+            $roleIds = IamRole::where('business_id', ActiveBusiness::id())->pluck('id')->all();
+
+            if ($roleIds !== []) {
+                foreach (DB::table('iam_permission_role')->whereIn('iam_role_id', $roleIds)->get() as $row) {
+                    $this->rolePivotIds[$row->iam_role_id][$row->iam_permission_id] = true;
+                }
+            }
+        }
+
+        return array_keys($this->rolePivotIds[$roleId] ?? []);
+    }
+
+    private function seedPermissions(): void
+    {
+        $existing = IamPermission::whereIn('name', self::PERMISSIONS)->pluck('name')->all();
+        $missing = array_values(array_diff(self::PERMISSIONS, $existing));
+
+        if ($missing === []) {
+            return;
+        }
+
+        $now = now();
+        $rows = array_map(fn ($name) => [
+            'name' => $name,
+            'module' => Str::before($name, '.'),
+            'created_at' => $now,
+            'updated_at' => $now,
+        ], $missing);
+
+        foreach (array_chunk($rows, 500) as $chunk) {
+            IamPermission::insertOrIgnore($chunk);
+        }
+    }
+
+    private function seedRoles(): void
+    {
+        $businessId = ActiveBusiness::id();
+        $existing = IamRole::where('business_id', $businessId)->pluck('slug')->all();
+
+        $now = now();
+        $rows = [];
+        foreach (self::ROLES as $slug => $name) {
+            if (! in_array($slug, $existing, true)) {
+                $rows[] = [
+                    'business_id' => $businessId,
+                    'slug' => $slug,
+                    'name' => $name,
+                    'is_system' => true,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+
+        foreach (array_chunk($rows, 500) as $chunk) {
+            IamRole::insertOrIgnore($chunk);
+        }
+    }
+
+    private function roleFor(string $slug): ?IamRole
+    {
+        $this->roleMap ??= IamRole::where('business_id', ActiveBusiness::id())->get()->keyBy('slug')->all();
+
+        return $this->roleMap[$slug] ?? null;
+    }
+
+    private function permissionIdMap(): array
+    {
+        return $this->permissionIdMap ??= IamPermission::pluck('id', 'name')->all();
+    }
+
+    private function permissionIdsFor(array $names): array
+    {
+        $map = $this->permissionIdMap();
+        $ids = [];
+
+        foreach ($names as $name) {
+            if (isset($map[$name])) {
+                $ids[] = $map[$name];
+            }
+        }
+
+        return $ids;
+    }
+
+    private function attachRolePermissions(IamRole $role, array $permissionNames): void
+    {
+        $ids = $this->permissionIdsFor($permissionNames);
+
+        if ($ids === []) {
+            return;
+        }
+
+        $existing = $this->existingPivotIds($role->id);
+        $missing = array_values(array_diff($ids, $existing));
+
+        if ($missing === []) {
+            return;
+        }
+
+        $rows = array_map(fn ($id) => ['iam_role_id' => $role->id, 'iam_permission_id' => $id], $missing);
+
+        foreach (array_chunk($rows, 500) as $chunk) {
+            DB::table('iam_permission_role')->insertOrIgnore($chunk);
+        }
+
+        foreach ($missing as $id) {
+            $this->rolePivotIds[$role->id][$id] = true;
+        }
+    }
+
+    private function syncRolePermissions(IamRole $role, array $permissionNames): void
+    {
+        $ids = $this->permissionIdsFor($permissionNames);
+
+        $existing = $this->existingPivotIds($role->id);
+
+        $removals = array_diff($existing, $ids);
+        if ($removals !== []) {
+            DB::table('iam_permission_role')->where('iam_role_id', $role->id)->whereIn('iam_permission_id', $removals)->delete();
+
+            foreach ($removals as $id) {
+                unset($this->rolePivotIds[$role->id][$id]);
+            }
+        }
+
+        $missing = array_values(array_diff($ids, $existing));
+        if ($missing === []) {
+            return;
+        }
+
+        $rows = array_map(fn ($id) => ['iam_role_id' => $role->id, 'iam_permission_id' => $id], $missing);
+
+        foreach (array_chunk($rows, 500) as $chunk) {
+            DB::table('iam_permission_role')->insertOrIgnore($chunk);
+        }
+
+        foreach ($missing as $id) {
+            $this->rolePivotIds[$role->id][$id] = true;
+        }
+    }
+
     public function bootstrap(): void
     {
+        if (app()->environment('testing')) {
+            SchemaCache::flush();
+        }
+
         if (! $this->ready() || ! ActiveBusiness::id()) {
             return;
         }
@@ -372,13 +535,14 @@ class IamService
         $businessId = ActiveBusiness::id();
         if (
             $businessId
+            && ! app()->environment('testing')
             && (self::$bootstrappedBusinesses[$businessId] ?? false)
-            && (! app()->environment('testing') || $this->businessPermissionsAreCurrent($businessId))
+            && $this->businessPermissionsAreCurrent($businessId)
         ) {
             return;
         }
 
-        if ($businessId && $this->businessPermissionsMarkedCurrent($businessId)) {
+        if ($businessId && $this->businessPermissionsMarkedCurrent($businessId) && ! app()->environment('testing')) {
             self::$bootstrappedBusinesses[$businessId] = true;
 
             return;
@@ -386,20 +550,23 @@ class IamService
 
         self::$permissionCache = [];
 
-        foreach (self::PERMISSIONS as $name) {
-            IamPermission::firstOrCreate(['name' => $name], ['module' => Str::before($name, '.')]);
+        $this->roleMap = null;
+        $this->permissionIdMap = null;
+        $this->rolePivotIds = [];
+        $this->rolePivotLoaded = false;
+
+        $this->seedPermissions();
+        $this->seedRoles();
+
+        foreach (['system-administrator', 'business-administrator'] as $slug) {
+            if ($role = $this->roleFor($slug)) {
+                $this->syncRolePermissions($role, self::PERMISSIONS);
+            }
         }
 
-        foreach (self::ROLES as $slug => $name) {
-            $role = IamRole::firstOrCreate(
-                ['business_id' => ActiveBusiness::id(), 'slug' => $slug],
-                ['name' => $name, 'is_system' => true]
-            );
-
-            if (in_array($slug, ['system-administrator', 'business-administrator'], true)) {
-                $role->permissions()->sync(IamPermission::pluck('id'));
-            } elseif (in_array($slug, ['finance-manager', 'director'], true)) {
-                $role->permissions()->syncWithoutDetaching(IamPermission::where('name', 'finance.gl.unreverse')->pluck('id'));
+        foreach (['finance-manager', 'director'] as $slug) {
+            if ($role = $this->roleFor($slug)) {
+                $this->attachRolePermissions($role, ['finance.gl.unreverse']);
             }
         }
 
@@ -459,7 +626,7 @@ class IamService
             ->value('iam_role_id');
 
         if ($user->role === 'admin' && ! $roleId) {
-            return self::PERMISSIONS;
+            return self::$permissionCache[$cacheKey] = self::PERMISSIONS;
         }
 
         $role = IamRole::find($roleId)?->permissions()->pluck('name')->all() ?? [];
@@ -535,7 +702,11 @@ class IamService
 
     private function ready(): bool
     {
-        return self::$ready ??= SchemaCache::hasTable('iam_permissions')
+        if (self::$ready === true) {
+            return true;
+        }
+
+        return self::$ready = SchemaCache::hasTable('iam_permissions')
             && SchemaCache::hasTable('iam_roles')
             && SchemaCache::hasTable('iam_permission_role')
             && SchemaCache::hasTable('business_user');
@@ -624,9 +795,9 @@ class IamService
         ];
 
         foreach ($map as $slug => $permissions) {
-            $role = IamRole::where('business_id', ActiveBusiness::id())->where('slug', $slug)->first();
+            $role = $this->roleFor($slug);
             if ($role) {
-                $role->permissions()->syncWithoutDetaching(IamPermission::whereIn('name', $permissions)->pluck('id'));
+                $this->attachRolePermissions($role, $permissions);
             }
         }
     }
@@ -647,9 +818,9 @@ class IamService
         ];
 
         foreach ($map as $slug => $permissions) {
-            $role = IamRole::where('business_id', ActiveBusiness::id())->where('slug', $slug)->first();
+            $role = $this->roleFor($slug);
             if ($role) {
-                $role->permissions()->syncWithoutDetaching(IamPermission::whereIn('name', $permissions)->pluck('id'));
+                $this->attachRolePermissions($role, $permissions);
             }
         }
     }
@@ -665,9 +836,9 @@ class IamService
         ];
 
         foreach ($map as $slug => $permissions) {
-            $role = IamRole::where('business_id', ActiveBusiness::id())->where('slug', $slug)->first();
+            $role = $this->roleFor($slug);
             if ($role) {
-                $role->permissions()->syncWithoutDetaching(IamPermission::whereIn('name', $permissions)->pluck('id'));
+                $this->attachRolePermissions($role, $permissions);
             }
         }
     }
@@ -702,9 +873,9 @@ class IamService
         ];
 
         foreach ($map as $slug => $permissions) {
-            $role = IamRole::where('business_id', ActiveBusiness::id())->where('slug', $slug)->first();
+            $role = $this->roleFor($slug);
             if ($role) {
-                $role->permissions()->syncWithoutDetaching(IamPermission::whereIn('name', $permissions)->pluck('id'));
+                $this->attachRolePermissions($role, $permissions);
             }
         }
     }
@@ -736,9 +907,9 @@ class IamService
         ];
 
         foreach ($map as $slug => $permissions) {
-            $role = IamRole::where('business_id', ActiveBusiness::id())->where('slug', $slug)->first();
+            $role = $this->roleFor($slug);
             if ($role) {
-                $role->permissions()->syncWithoutDetaching(IamPermission::whereIn('name', $permissions)->pluck('id'));
+                $this->attachRolePermissions($role, $permissions);
             }
         }
     }
@@ -787,9 +958,9 @@ class IamService
         ];
 
         foreach ($map as $slug => $permissions) {
-            $role = IamRole::where('business_id', ActiveBusiness::id())->where('slug', $slug)->first();
+            $role = $this->roleFor($slug);
             if ($role) {
-                $role->permissions()->syncWithoutDetaching(IamPermission::whereIn('name', $permissions)->pluck('id'));
+                $this->attachRolePermissions($role, $permissions);
             }
         }
     }
@@ -833,9 +1004,9 @@ class IamService
         ];
 
         foreach ($map as $slug => $permissions) {
-            $role = IamRole::where('business_id', ActiveBusiness::id())->where('slug', $slug)->first();
+            $role = $this->roleFor($slug);
             if ($role) {
-                $role->permissions()->syncWithoutDetaching(IamPermission::whereIn('name', $permissions)->pluck('id'));
+                $this->attachRolePermissions($role, $permissions);
             }
         }
     }
@@ -844,6 +1015,7 @@ class IamService
     {
         $all = [
             'printing.view', 'printing.dashboard',
+            'printing_services.view', 'printing_services.create', 'printing_services.update', 'printing_services.delete',
             'estimates.view', 'estimates.create', 'estimates.approve',
             'production_jobs.view', 'production_jobs.create', 'production_jobs.update', 'production_jobs.approve',
             'artwork.view', 'artwork.manage', 'artwork.approve',
@@ -861,8 +1033,8 @@ class IamService
         $map = [
             'printing-administrator' => $all,
             'managing-director' => array_values(array_unique(array_merge($all, ['finance.gl.view', 'audit.view']))),
-            'printing-sales-manager' => ['printing.view', 'printing.dashboard', 'estimates.view', 'estimates.create', 'estimates.approve', 'production_jobs.view', 'production_jobs.create', 'artwork.view', 'dispatch.manage', 'job_costing.view', 'printing_reports.view', 'clients.view', 'clients.create', 'clients.edit', 'finance.view'],
-            'printing-sales-executive' => ['printing.view', 'printing.dashboard', 'estimates.view', 'estimates.create', 'production_jobs.view', 'artwork.view', 'clients.view', 'clients.create'],
+            'printing-sales-manager' => ['printing.view', 'printing.dashboard', 'printing_services.view', 'printing_services.create', 'printing_services.update', 'printing_services.delete', 'estimates.view', 'estimates.create', 'estimates.approve', 'production_jobs.view', 'production_jobs.create', 'artwork.view', 'dispatch.manage', 'job_costing.view', 'printing_reports.view', 'clients.view', 'clients.create', 'clients.edit', 'finance.view'],
+            'printing-sales-executive' => ['printing.view', 'printing.dashboard', 'printing_services.view', 'printing_services.create', 'printing_services.update', 'printing_services.delete', 'estimates.view', 'estimates.create', 'production_jobs.view', 'artwork.view', 'clients.view', 'clients.create'],
             'estimator' => ['printing.view', 'printing.dashboard', 'estimates.view', 'estimates.create', 'estimates.approve', 'production_jobs.view', 'job_costing.view'],
             'graphic-designer' => ['printing.view', 'production_jobs.view', 'artwork.view', 'artwork.manage', 'production.execute'],
             'prepress-operator' => ['printing.view', 'production_jobs.view', 'artwork.view', 'production.execute'],
@@ -879,9 +1051,9 @@ class IamService
         ];
 
         foreach ($map as $slug => $permissions) {
-            $role = IamRole::where('business_id', ActiveBusiness::id())->where('slug', $slug)->first();
+            $role = $this->roleFor($slug);
             if ($role) {
-                $role->permissions()->syncWithoutDetaching(IamPermission::whereIn('name', $permissions)->pluck('id'));
+                $this->attachRolePermissions($role, $permissions);
             }
         }
     }
@@ -949,9 +1121,9 @@ class IamService
         ];
 
         foreach ($map as $slug => $permissions) {
-            $role = IamRole::where('business_id', ActiveBusiness::id())->where('slug', $slug)->first();
+            $role = $this->roleFor($slug);
             if ($role) {
-                $role->permissions()->syncWithoutDetaching(IamPermission::whereIn('name', $permissions)->pluck('id'));
+                $this->attachRolePermissions($role, $permissions);
             }
         }
     }
@@ -1001,9 +1173,9 @@ class IamService
         ];
 
         foreach ($map as $slug => $permissions) {
-            $role = IamRole::where('business_id', ActiveBusiness::id())->where('slug', $slug)->first();
+            $role = $this->roleFor($slug);
             if ($role) {
-                $role->permissions()->syncWithoutDetaching(IamPermission::whereIn('name', $permissions)->pluck('id'));
+                $this->attachRolePermissions($role, $permissions);
             }
         }
     }
@@ -1039,9 +1211,9 @@ class IamService
         ];
 
         foreach ($map as $slug => $permissions) {
-            $role = IamRole::where('business_id', ActiveBusiness::id())->where('slug', $slug)->first();
+            $role = $this->roleFor($slug);
             if ($role) {
-                $role->permissions()->syncWithoutDetaching(IamPermission::whereIn('name', $permissions)->pluck('id'));
+                $this->attachRolePermissions($role, $permissions);
             }
         }
     }
@@ -1089,7 +1261,7 @@ class IamService
         ];
 
         foreach (self::ROLES as $slug => $label) {
-            $role = IamRole::where('business_id', ActiveBusiness::id())->where('slug', $slug)->first();
+            $role = $this->roleFor($slug);
 
             if (! $role) {
                 continue;
@@ -1101,7 +1273,7 @@ class IamService
                     ? $administrator
                     : (in_array($slug, $managerRoles, true) ? $manager : $employee));
 
-            $role->permissions()->syncWithoutDetaching(IamPermission::whereIn('name', $permissions)->pluck('id'));
+            $this->attachRolePermissions($role, $permissions);
         }
     }
 

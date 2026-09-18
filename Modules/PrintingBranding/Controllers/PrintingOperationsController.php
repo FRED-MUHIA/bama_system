@@ -36,6 +36,7 @@ use Modules\PrintingBranding\Models\ProductionSchedule;
 use Modules\PrintingBranding\Models\ProductTemplate;
 use Modules\PrintingBranding\Models\ProofApproval;
 use Modules\PrintingBranding\Models\QualityCheck;
+use Modules\PrintingBranding\Models\PrintingService;
 use Modules\PrintingBranding\Models\Waste;
 use Modules\PrintingBranding\Services\ArtworkService;
 use Modules\PrintingBranding\Services\DispatchService;
@@ -66,6 +67,70 @@ class PrintingOperationsController extends Controller
             'templates' => ProductTemplate::where('is_active', true)->orderBy('name')->get(),
             'methods' => PrintMethod::where('is_active', true)->orderBy('name')->get(),
         ]);
+    }
+
+    public function services(Request $request, PrintingFeatureGate $gate)
+    {
+        $gate->authorize('printing_services.view');
+        $search = $request->validate(['q' => ['nullable', 'string', 'max:120']])['q'] ?? null;
+
+        $services = PrintingService::query()
+            ->when($search, fn ($query) => $query->where(function ($query) use ($search) {
+                $query->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('category', 'like', '%'.$search.'%')
+                    ->orWhere('description', 'like', '%'.$search.'%');
+            }))
+            ->orderBy('name')
+            ->paginate(20)
+            ->withQueryString();
+
+        return $this->view('Services Catalogue', 'Maintain the printing and branding services you offer and their standard selling prices.', [
+            'section' => 'services',
+            'services' => $services,
+            'search' => $search,
+        ]);
+    }
+
+    public function storeService(Request $request, PrintingFeatureGate $gate)
+    {
+        $gate->authorize('printing_services.create');
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'category' => ['nullable', 'string', 'max:120'],
+            'description' => ['nullable', 'string'],
+            'unit' => ['required', 'string', 'max:80'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        PrintingService::create($this->withoutNullValues($data) + ['is_active' => $request->boolean('is_active', true)]);
+
+        return back()->with('success', 'Service added to the catalogue.');
+    }
+
+    public function updateService(Request $request, PrintingService $service, PrintingFeatureGate $gate)
+    {
+        $gate->authorize('printing_services.update');
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'category' => ['nullable', 'string', 'max:120'],
+            'description' => ['nullable', 'string'],
+            'unit' => ['required', 'string', 'max:80'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $service->update($this->withoutNullValues($data) + ['is_active' => $request->boolean('is_active')]);
+
+        return back()->with('success', 'Service updated.');
+    }
+
+    public function destroyService(PrintingService $service, PrintingFeatureGate $gate)
+    {
+        $gate->authorize('printing_services.delete');
+        $service->delete();
+
+        return back()->with('success', 'Service removed from the catalogue.');
     }
 
     public function storeEstimate(Request $request, EstimateService $service, PrintingFeatureGate $gate)

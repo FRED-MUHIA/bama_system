@@ -39,6 +39,7 @@ use Modules\PrintingBranding\Models\ProductionSchedule;
 use Modules\PrintingBranding\Models\ProofApproval;
 use Modules\PrintingBranding\Models\QualityCheck;
 use Modules\PrintingBranding\Models\Waste;
+use Modules\PrintingBranding\Models\PrintingService;
 use Modules\PrintingBranding\Services\ArtworkService;
 use Modules\PrintingBranding\Services\DispatchService;
 use Modules\PrintingBranding\Services\EstimateService;
@@ -92,7 +93,7 @@ class PrintingBrandingIndustryTest extends TestCase
             ActiveTenant::SESSION_KEY => $this->tenant->id,
             ActiveBusiness::SESSION_KEY => $this->business->id,
         ]);
-        app(IamService::class)->bootstrap();
+        app(IamService::class)->bootstrapBusinessDefaults($this->admin);
     }
 
     protected function tearDown(): void
@@ -153,6 +154,51 @@ class PrintingBrandingIndustryTest extends TestCase
             ->assertSee('Add client')
             ->assertSee('Creates a shared CRM client')
             ->assertSee('Dimensions');
+    }
+
+    public function test_service_catalogue_supports_search_edit_and_delete(): void
+    {
+        $this->get(route('printing-branding.services'))
+            ->assertOk()
+            ->assertSee('Services Catalogue')
+            ->assertSee('Search services');
+
+        $response = $this->postWithCsrf(route('printing-branding.services.store'), [
+            'name' => 'Vehicle Branding',
+            'category' => 'Branding',
+            'description' => 'Full vehicle wrap and installation.',
+            'unit' => 'per vehicle',
+            'price' => '45000.00',
+        ]);
+        $response->assertRedirect()->assertSessionHasNoErrors();
+
+        $service = PrintingService::query()->where('name', 'Vehicle Branding')->firstOrFail();
+
+        $this->get(route('printing-branding.services', ['q' => 'Vehicle']))
+            ->assertOk()
+            ->assertSee('Vehicle Branding')
+            ->assertSee('45000.00');
+
+        $this->put(route('printing-branding.services.update', $service), [
+            '_token' => csrf_token(),
+            'name' => 'Vehicle Wrap Branding',
+            'category' => 'Branding',
+            'description' => 'Updated description.',
+            'unit' => 'per vehicle',
+            'price' => '50000.00',
+            'is_active' => '1',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('printing_services', [
+            'id' => $service->id,
+            'name' => 'Vehicle Wrap Branding',
+            'price' => '50000.00',
+        ]);
+
+        $this->delete(route('printing-branding.services.destroy', $service), ['_token' => csrf_token()])
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('printing_services', ['id' => $service->id]);
     }
 
     public function test_printing_workflow_from_estimate_to_invoice_and_profitability_works(): void
@@ -328,7 +374,7 @@ class PrintingBrandingIndustryTest extends TestCase
             ->assertSee('Printing production job')
             ->assertSee($job->job_number);
 
-        $this->post(route('invoices.store'), [
+        $this->postWithCsrf(route('invoices.store'), [
             'client_mode' => 'existing',
             'client_id' => $client->id,
             'printing_job_id' => $job->id,
@@ -362,13 +408,13 @@ class PrintingBrandingIndustryTest extends TestCase
         $this->getJson(route('api.v1.printing-branding.dashboard'))->assertOk()->assertJsonPath('data.metrics.Jobs Open', 0);
         $this->getJson(route('api.v1.printing-branding.mobile.jobs.show', $job))->assertOk()->assertJsonFragment(['Start Job']);
 
-        $this->post(route('printing-branding.jobs.reorder', $job))->assertRedirect(route('printing-branding.jobs'));
+        $this->postWithCsrf(route('printing-branding.jobs.reorder', $job))->assertRedirect(route('printing-branding.jobs'));
         $this->assertSame(2, ProductionJob::count());
     }
 
     public function test_client_can_be_added_from_printing_jobs_screen(): void
     {
-        $this->post(route('printing-branding.clients.store'), [
+        $this->postWithCsrf(route('printing-branding.clients.store'), [
             'name' => 'Brand New Client',
             'client_type' => 'Corporate',
             'phone' => '+254700000000',
@@ -396,7 +442,7 @@ class PrintingBrandingIndustryTest extends TestCase
     {
         $client = Client::create(['name' => 'Specs Client', 'type' => 'company']);
 
-        $this->post(route('printing-branding.jobs.store'), [
+        $this->postWithCsrf(route('printing-branding.jobs.store'), [
             'client_id' => $client->id,
             'product_name' => 'Business Cards',
             'quantity' => 500,
@@ -420,14 +466,14 @@ class PrintingBrandingIndustryTest extends TestCase
     {
         $details = "Account name: GENEQO ENTERPRISES LTD\nBank: National bank of kenya\nAccount number: 7718879690\nPaybill number: 625625";
 
-        $this->post(route('printing-branding.settings.payment-methods.store'), [
+        $this->postWithCsrf(route('printing-branding.settings.payment-methods.store'), [
             'name' => 'Bank',
             'type' => 'bank',
             'details' => $details,
             'is_active' => '1',
         ])->assertRedirect();
 
-        $this->post(route('printing-branding.settings.payment-methods.store'), [
+        $this->postWithCsrf(route('printing-branding.settings.payment-methods.store'), [
             'name' => 'Hidden Till',
             'type' => 'mpesa',
             'details' => 'Do not print this method.',
@@ -498,7 +544,7 @@ class PrintingBrandingIndustryTest extends TestCase
             'status' => 'Draft',
         ]);
 
-        $this->post(route('printing-branding.machines.store'), [
+        $this->postWithCsrf(route('printing-branding.machines.store'), [
             'machine_code' => 'MCH-001',
             'name' => 'Digital Printer',
             'machine_type' => 'Digital Printer',
@@ -507,14 +553,14 @@ class PrintingBrandingIndustryTest extends TestCase
         ])->assertRedirect();
         $machine = Machine::where('machine_code', 'MCH-001')->firstOrFail();
 
-        $this->post(route('printing-branding.machines.maintenance.store', $machine), [
+        $this->postWithCsrf(route('printing-branding.machines.maintenance.store', $machine), [
             'maintenance_type' => 'Preventive Service',
             'service_date' => '2026-08-22',
             'next_service_date' => '2026-09-22',
         ])->assertRedirect();
         $this->assertInstanceOf(MachineMaintenance::class, MachineMaintenance::first());
 
-        $this->post(route('printing-branding.materials.store'), [
+        $this->postWithCsrf(route('printing-branding.materials.store'), [
             'material_code' => 'PAPER-A1',
             'name' => 'A1 Poster Paper',
             'category' => 'Paper',
@@ -528,40 +574,38 @@ class PrintingBrandingIndustryTest extends TestCase
         $job->update(['materials_required' => [['material_id' => $material->id, 'quantity' => 10]]]);
         app(ProductionJobService::class)->updateStatus($job, 'Approved');
         $reservation = MaterialReservation::firstOrFail();
-        $this->post(route('printing-branding.materials.consume', $reservation), ['quantity' => 5])->assertRedirect();
+        $this->postWithCsrf(route('printing-branding.materials.consume', $reservation), ['quantity' => 5])->assertRedirect();
         $this->assertSame(95.0, (float) $material->fresh()->stock_quantity);
 
-        $this->post(route('printing-branding.operations.store'), [
+        $operationResponse = $this->postWithCsrf(route('printing-branding.operations.store'), [
             'job_id' => $job->id,
             'machine_id' => $machine->id,
-            'operator_id' => $this->admin->id,
             'stage' => 'Printing',
             'quantity_produced' => 8,
             'quantity_rejected' => 2,
-        ])->assertRedirect();
+        ]);
+        $operationResponse->assertRedirect()->assertSessionHasNoErrors();
         $operation = ProductionOperation::firstOrFail();
-        $this->post(route('printing-branding.operations.update', $operation), ['action' => 'complete'])->assertRedirect();
+        $this->postWithCsrf(route('printing-branding.operations.update', $operation), ['action' => 'complete'])->assertRedirect();
         $this->assertSame('Completed', $operation->fresh()->status);
 
-        $this->post(route('printing-branding.schedule.store'), [
+        $this->postWithCsrf(route('printing-branding.schedule.store'), [
             'job_id' => $job->id,
             'machine_id' => $machine->id,
-            'staff_id' => $this->admin->id,
             'starts_at' => '2026-08-24 09:00:00',
             'ends_at' => '2026-08-24 10:00:00',
         ])->assertRedirect();
         $this->assertInstanceOf(ProductionSchedule::class, ProductionSchedule::first());
 
-        $this->post(route('printing-branding.quality'), [
+        $this->postWithCsrf(route('printing-branding.quality'), [
             'job_id' => $job->id,
-            'inspector_id' => $this->admin->id,
             'result' => 'Conditional Pass',
             'rejected_quantity' => 1,
             'reason' => 'Trim tolerance',
         ])->assertRedirect();
         $this->assertInstanceOf(QualityCheck::class, QualityCheck::first());
 
-        $this->post(route('printing-branding.waste'), [
+        $this->postWithCsrf(route('printing-branding.waste'), [
             'job_id' => $job->id,
             'material_id' => $material->id,
             'machine_id' => $machine->id,
@@ -572,7 +616,7 @@ class PrintingBrandingIndustryTest extends TestCase
         ])->assertRedirect();
         $this->assertInstanceOf(Waste::class, Waste::first());
 
-        $this->post(route('printing-branding.outsourcing.store'), [
+        $this->postWithCsrf(route('printing-branding.outsourcing.store'), [
             'job_id' => $job->id,
             'service' => 'Special Lamination',
             'quantity' => 10,
@@ -581,7 +625,7 @@ class PrintingBrandingIndustryTest extends TestCase
         ])->assertRedirect();
         $this->assertInstanceOf(OutsourcingOrder::class, OutsourcingOrder::first());
 
-        $this->post(route('printing-branding.dispatch.store'), [
+        $this->postWithCsrf(route('printing-branding.dispatch.store'), [
             'job_id' => $job->id,
             'status' => 'Packed',
             'delivery_address' => 'Nairobi CBD',
@@ -589,23 +633,23 @@ class PrintingBrandingIndustryTest extends TestCase
         ])->assertRedirect();
         $this->assertInstanceOf(Dispatch::class, Dispatch::first());
 
-        $this->post(route('printing-branding.settings.templates.store'), [
+        $this->postWithCsrf(route('printing-branding.settings.templates.store'), [
             'template_code' => 'BC-300',
             'name' => 'Business Card 300gsm',
             'category' => 'Business Cards',
             'specifications' => ['Dimensions' => '90 x 50 mm'],
         ])->assertRedirect();
-        $this->post(route('printing-branding.settings.print-methods.store'), [
+        $this->postWithCsrf(route('printing-branding.settings.print-methods.store'), [
             'method_code' => 'DIG',
             'name' => 'Digital Printing',
             'setup_cost' => 100,
         ])->assertRedirect();
-        $this->post(route('printing-branding.settings.finishing.store'), [
+        $this->postWithCsrf(route('printing-branding.settings.finishing.store'), [
             'option_code' => 'LAM',
             'name' => 'Gloss Lamination',
             'cost' => 50,
         ])->assertRedirect();
-        $this->post(route('printing-branding.settings.pricing-rules.store'), [
+        $this->postWithCsrf(route('printing-branding.settings.pricing-rules.store'), [
             'rule_code' => 'MARKUP',
             'name' => 'Default Markup',
             'rule_type' => 'Material Markups',
@@ -654,10 +698,15 @@ class PrintingBrandingIndustryTest extends TestCase
             ActiveBusiness::SESSION_KEY => $this->business->id,
         ]);
 
-        $this->post(route('printing-branding.estimates.store'), [
+        $this->postWithCsrf(route('printing-branding.estimates.store'), [
             'client_id' => Client::first()->id,
             'product_name' => 'Blocked Estimate',
             'quantity' => 1,
         ])->assertForbidden();
+    }
+
+    private function postWithCsrf(string $uri, array $data = [])
+    {
+        return $this->post($uri, array_merge(['_token' => csrf_token()], $data));
     }
 }

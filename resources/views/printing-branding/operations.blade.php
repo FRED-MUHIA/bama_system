@@ -48,7 +48,57 @@
         <div class="alert alert-danger">{{ $errors->first() }}</div>
     @endif
 
-    @if(($section ?? '') === 'estimates')
+    @if(($section ?? '') === 'services')
+        <div class="pb-card">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h2 class="h5 mb-0">Add service</h2>
+                    <div class="text-muted small">Set the standard price used when preparing print and branding quotes.</div>
+                </div>
+                <form method="get" action="{{ route('printing-branding.services') }}" class="d-flex gap-2">
+                    <input name="q" value="{{ $search ?? '' }}" class="form-control" placeholder="Search services" aria-label="Search services">
+                    <button class="btn btn-outline-dark">Search</button>
+                    @if($search)<a class="btn btn-outline-secondary" href="{{ route('printing-branding.services') }}">Clear</a>@endif
+                </form>
+            </div>
+            <form method="post" action="{{ route('printing-branding.services.store') }}" class="row g-2">
+                @csrf
+                <div class="col-md-3"><input name="name" class="form-control" placeholder="Service name" required></div>
+                <div class="col-md-2"><input name="category" class="form-control" placeholder="Category"></div>
+                <div class="col-md-2"><input name="unit" class="form-control" placeholder="Unit" value="per service" required></div>
+                <div class="col-md-2"><input name="price" type="number" min="0" step="0.01" class="form-control" placeholder="Price" required></div>
+                <div class="col-md-2"><input name="description" class="form-control" placeholder="Description"></div>
+                <div class="col-md-1"><button class="btn btn-dark w-100">Add</button></div>
+            </form>
+        </div>
+        <div class="pb-card pb-list">
+            @forelse($services as $service)
+                <div class="pb-row align-items-start">
+                    <form method="post" action="{{ route('printing-branding.services.update', $service) }}" class="row g-2 flex-grow-1">
+                        @csrf
+                        @method('put')
+                        <div class="col-lg-3"><input name="name" value="{{ $service->name }}" class="form-control form-control-sm" required></div>
+                        <div class="col-lg-2"><input name="category" value="{{ $service->category }}" class="form-control form-control-sm" placeholder="Category"></div>
+                        <div class="col-lg-2"><input name="unit" value="{{ $service->unit }}" class="form-control form-control-sm" required></div>
+                        <div class="col-lg-2"><input name="price" value="{{ $service->price }}" type="number" min="0" step="0.01" class="form-control form-control-sm" required></div>
+                        <div class="col-lg-3"><input name="description" value="{{ $service->description }}" class="form-control form-control-sm" placeholder="Description"></div>
+                        <div class="col-12 d-flex justify-content-between align-items-center gap-2">
+                            <label class="small text-muted"><input type="checkbox" name="is_active" value="1" @checked($service->is_active)> Active</label>
+                            <button class="btn btn-sm btn-outline-dark">Save changes</button>
+                        </div>
+                    </form>
+                    <form method="post" action="{{ route('printing-branding.services.destroy', $service) }}" onsubmit="return confirm('Remove this service from the catalogue?')">
+                        @csrf
+                        @method('delete')
+                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                </div>
+            @empty
+                <div class="text-muted">No services found.</div>
+            @endforelse
+            {{ $services->links() }}
+        </div>
+    @elseif(($section ?? '') === 'estimates')
         <div class="pb-card">
             <h2 class="h5">New estimate</h2>
             <form method="post" action="{{ route('printing-branding.estimates.store') }}" class="row g-2">
