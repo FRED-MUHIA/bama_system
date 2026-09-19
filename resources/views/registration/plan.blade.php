@@ -56,12 +56,8 @@
             </div>
 
             <div class="flex justify-center">
-                <div class="grid h-20 w-20 place-items-center rounded-full bg-[#00A651] shadow-[0_10px_25px_rgba(0,166,81,0.3)]">
-                    @if ($trialLogoUrl)
-                        <img src="{{ $trialLogoUrl }}" alt="Brand logo" class="h-10 w-10 object-contain rounded-full bg-white p-1">
-                    @else
-                        <span class="text-3xl font-black text-white">✓</span>
-                    @endif
+                <div class="grid h-14 w-14 place-items-center rounded-full bg-[#00A651] shadow-[0_10px_25px_rgba(0,166,81,0.3)]">
+                    <span class="text-2xl font-black text-white">✓</span>
                 </div>
             </div>
 
@@ -93,6 +89,46 @@
             const planOptions = [...document.querySelectorAll('[data-plan-option]')];
             const radioInputs = [...document.querySelectorAll('input[name="plan"]')];
 
+            const sparkleBurst = function (target) {
+                if (! target) {
+                    return;
+                }
+
+                const sparkleColors = ['#FBBF24', '#F97316', '#34D399', '#60A5FA', '#F472B6', '#A78BFA'];
+                const rect = target.getBoundingClientRect();
+
+                for (let i = 0; i < 18; i++) {
+                    const spark = document.createElement('span');
+                    spark.style.position = 'fixed';
+                    spark.style.left = (rect.left + rect.width / 2) + 'px';
+                    spark.style.top = (rect.top + rect.height / 2) + 'px';
+                    spark.style.width = '8px';
+                    spark.style.height = '8px';
+                    spark.style.borderRadius = '9999px';
+                    spark.style.background = sparkleColors[i % sparkleColors.length];
+                    spark.style.pointerEvents = 'none';
+                    spark.style.zIndex = '60';
+                    spark.style.boxShadow = '0 0 10px rgba(255,255,255,0.8)';
+                    spark.style.transform = 'translate(-50%, -50%)';
+                    spark.style.opacity = '1';
+                    document.body.appendChild(spark);
+
+                    const angle = (Math.PI * 2 * i) / 18;
+                    const distance = 28 + Math.random() * 42;
+                    const dx = Math.cos(angle) * distance;
+                    const dy = Math.sin(angle) * distance;
+
+                    spark.animate([
+                        { transform: 'translate(-50%, -50%) scale(0.9)', opacity: 1 },
+                        { transform: 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px)) scale(1.5)', opacity: 1 },
+                        { transform: 'translate(calc(-50% + ' + (dx * 1.55) + 'px), calc(-50% + ' + (dy * 1.55) + 'px)) scale(0.7)', opacity: 0 }
+                    ], {
+                        duration: 550,
+                        easing: 'ease-out',
+                    }).onfinish = () => spark.remove();
+                }
+            };
+
             const setSelectedPlan = function (slug) {
                 radioInputs.forEach((input) => {
                     input.checked = (input.value === slug);
@@ -106,6 +142,11 @@
                     option.classList.toggle('ring-1', isSelected);
                     option.classList.toggle('ring-[#00A651]/35', isSelected);
                 });
+
+                const activeOption = planOptions.find((option) => option.dataset.planOption === slug);
+                if (activeOption) {
+                    sparkleBurst(activeOption);
+                }
             };
 
             const hideModalOnce = function () {
