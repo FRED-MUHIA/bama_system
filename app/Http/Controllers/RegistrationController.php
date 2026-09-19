@@ -172,7 +172,7 @@ class RegistrationController extends Controller
             $request->session()->regenerate();
         }
 
-        return redirect()->route('register.welcome')->with('status', 'Email verified successfully.');
+        return redirect()->route('dashboard')->with('status', 'Email verified successfully.');
     }
 
     private function ensureRegistrationStep(string $key, string $route): void
