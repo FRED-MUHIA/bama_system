@@ -61,4 +61,26 @@ class ExampleTest extends TestCase
             ->assertSee('Create Account')
             ->assertSee(route('register.account'), false);
     }
+
+    public function test_registration_plan_page_shows_free_trial_prompt(): void
+    {
+        $this->withSession([
+            'registration.account' => [
+                'name' => 'Test Owner',
+                'email' => 'owner@example.com',
+                'password' => 'StrongPass1',
+            ],
+            'registration.company' => [
+                'company_name' => 'Test Co',
+                'industry' => 'professional-services',
+                'sub_industry' => 'standard',
+                'country' => 'Kenya',
+                'currency' => 'KES',
+                'timezone' => 'Africa/Nairobi',
+            ],
+        ])->get(route('register.plan'))
+            ->assertOk()
+            ->assertSee('14-day free trial', false)
+            ->assertSee('Choose any package to continue with the free trial', false);
+    }
 }

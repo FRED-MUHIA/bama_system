@@ -1,3 +1,11 @@
+@php
+    $brand = (array) data_get(\App\Models\MarketingPage::resolve('home')->sections ?? [], 'brand', []);
+    $configuredLogoPath = data_get($brand, 'logo_path');
+    $trialLogoUrl = $configuredLogoPath && $configuredLogoPath !== 'logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png'
+        ? \App\Support\PublicUpload::url($configuredLogoPath)
+        : null;
+@endphp
+
 @extends('layouts.marketing', ['title' => 'Choose Plan'])
 
 @section('body')
@@ -11,7 +19,7 @@
             <div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ $errors->first() }}</div>
         @endif
 
-        <form method="POST" action="{{ route('register.plan.store') }}" class="mt-5">
+        <form id="registration-plan-form" method="POST" action="{{ route('register.plan.store') }}" class="mt-5">
             @csrf
             <div class="grid gap-3 lg:grid-cols-2">
                 @foreach ($plans as $plan)
@@ -40,5 +48,112 @@
             </div>
         </form>
     </div>
+
+    <div id="trial-plan-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-[#111827]/40 px-4 backdrop-blur-[2px]">
+        <div class="w-full max-w-md rounded-[28px] border border-[#D4F3E0] bg-white p-5 shadow-[0_25px_70px_rgba(0,0,0,0.18)] sm:p-6">
+            <div class="flex items-center justify-end">
+                <button type="button" id="close-trial-modal" aria-label="Close free trial dialog" class="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 bg-white text-xl font-bold text-zinc-500 transition hover:border-[#00A651] hover:text-[#00A651]">×</button>
+            </div>
+
+            <div class="flex justify-center">
+                <div class="grid h-20 w-20 place-items-center rounded-full bg-[#00A651] shadow-[0_10px_25px_rgba(0,166,81,0.3)]">
+                    @if ($trialLogoUrl)
+                        <img src="{{ $trialLogoUrl }}" alt="Brand logo" class="h-10 w-10 object-contain rounded-full bg-white p-1">
+                    @else
+                        <span class="text-3xl font-black text-white">✓</span>
+                    @endif
+                </div>
+            </div>
+
+            <h2 class="mt-5 text-center text-2xl font-black text-black">14-day free trial</h2>
+            <p class="mt-3 text-center text-sm leading-6 text-zinc-700">Choose any package to continue with the free trial. You can upgrade or switch plans after your trial ends.</p>
+
+            <div class="mt-5 space-y-3">
+                @foreach ($plans as $plan)
+                    <button type="button" data-plan-option="{{ $plan['slug'] }}" class="trial-plan-option flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition {{ ! empty($plan['highlight']) ? 'border-[#00A651] bg-[#EAF8F0]' : 'border-zinc-200 bg-white hover:border-[#00A651] hover:bg-[#F4FBF7]' }}">
+                        <div>
+                            <div class="text-base font-black text-black">{{ $plan['name'] }}</div>
+                            <div class="text-xs text-zinc-600">{{ ($plan['monthly_price'] ?? 0) > 0 ? $plan['currency'].' '.number_format((float) $plan['monthly_price']) : 'Custom pricing' }} / month</div>
+                        </div>
+                        <span class="rounded-full bg-[#00A651] px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">Trial</span>
+                    </button>
+                @endforeach
+            </div>
+
+            <button type="button" id="trial-continue-btn" class="mt-6 w-full rounded-xl bg-[#00A651] px-5 py-3 text-base font-black text-white shadow-xl shadow-[#00A651]/25 transition hover:translate-y-[-1px]">Continue with selected plan</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('trial-plan-modal');
+            const closeButton = document.getElementById('close-trial-modal');
+            const continueButton = document.getElementById('trial-continue-btn');
+            const form = document.getElementById('registration-plan-form');
+            const planOptions = [...document.querySelectorAll('[data-plan-option]')];
+            const radioInputs = [...document.querySelectorAll('input[name="plan"]')];
+
+            const setSelectedPlan = function (slug) {
+                radioInputs.forEach((input) => {
+                    input.checked = (input.value === slug);
+                });
+
+                planOptions.forEach((option) => {
+                    const isSelected = option.dataset.planOption === slug;
+                    option.classList.toggle('border-[#00A651]', isSelected);
+                    option.classList.toggle('bg-[#EAF8F0]', isSelected);
+                    option.classList.toggle('shadow-sm', isSelected);
+                    option.classList.toggle('ring-1', isSelected);
+                    option.classList.toggle('ring-[#00A651]/35', isSelected);
+                });
+            };
+
+            const hideModalOnce = function () {
+                modal.classList.add('hidden');
+                sessionStorage.setItem('registrationTrialModalDismissed', '1');
+            };
+
+            const dismissModal = function () {
+                hideModalOnce();
+            };
+
+            const submitSelectedPlan = function () {
+                if (! form) {
+                    return;
+                }
+
+                const checkedPlan = radioInputs.find((input) => input.checked)?.value;
+                if (! checkedPlan) {
+                    return;
+                }
+
+                hideModalOnce();
+                form.requestSubmit();
+            };
+
+            const shouldShowModal = sessionStorage.getItem('registrationTrialModalDismissed') !== '1';
+            if (! shouldShowModal) {
+                modal.classList.add('hidden');
+            }
+
+            const selected = radioInputs.find((input) => input.checked)?.value || 'professional';
+            setSelectedPlan(selected);
+
+            planOptions.forEach((option) => {
+                option.addEventListener('click', function () {
+                    setSelectedPlan(option.dataset.planOption);
+                    submitSelectedPlan();
+                });
+            });
+
+            closeButton.addEventListener('click', function () {
+                dismissModal();
+            });
+
+            continueButton.addEventListener('click', function () {
+                submitSelectedPlan();
+            });
+        });
+    </script>
 </x-registration-shell>
 @endsection
