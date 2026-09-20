@@ -29,7 +29,7 @@
                 radial-gradient(circle at 50% 9%, rgba(223, 255, 69, .14), transparent 25rem),
                 linear-gradient(180deg, #0a1008, var(--page) 72%);
             color: #f7f9f2;
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-family: 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             letter-spacing: 0;
         }
 

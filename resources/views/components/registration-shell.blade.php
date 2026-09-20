@@ -14,8 +14,8 @@
 <main class="min-h-screen bg-[#F7F8F5] text-black">
     <style>
         .registration-page {
-            --font-heading: 'Inter Tight', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            --font-body: 'Inter', 'Inter Tight', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-heading: 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-body: 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             font-family: var(--font-body) !important;
             font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
             font-optical-sizing: auto;

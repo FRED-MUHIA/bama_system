@@ -139,9 +139,9 @@
         --line: #e5e7eb;
         --muted: #000000;
         --page: #F7F8F5;
-        --font-brand: 'Inter', 'Inter Tight', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        --font-heading: 'Inter Tight', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        --font-display: var(--bama-font-display, 'Montserrat', 'Inter Tight', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+        --font-brand: 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --font-heading: 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --font-display: var(--bama-font-display, 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
         font-family: var(--font-brand) !important;
         font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
         font-optical-sizing: auto;

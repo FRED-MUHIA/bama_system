@@ -16,7 +16,7 @@
     <title>Document Verification - {{ $company?->company_name ?? 'Bama' }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #F7F8F5; color: #000; display: flex; align-items: center; min-height: 100vh; font-family:'Inter Tight',system-ui,sans-serif; }
+        body { background: #F7F8F5; color: #000; display: flex; align-items: center; min-height: 100vh; font-family:'Manrope',system-ui,sans-serif; }
         .verify-card { max-width: 520px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 8px 24px rgba(15,23,42,.06); }
         .verified-badge { display: inline-flex; align-items: center; gap: 8px; background: {{ $accentColor }}; color: {{ $secondaryColor }}; padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 14px; }
         .verified-badge i { font-size: 18px; }
