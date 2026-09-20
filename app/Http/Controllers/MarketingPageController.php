@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MarketingPage;
+use App\Services\IndustrySetupService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -143,6 +144,9 @@ class MarketingPageController extends Controller
             'showcase_json' => ['nullable', 'string'],
             'testimonials_json' => ['nullable', 'string'],
             'faqs_json' => ['nullable', 'string'],
+            'industry_modules_json' => ['nullable', 'string'],
+            'industry_features_json' => ['nullable', 'string'],
+            'industry_hero_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
             'brand_logo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'brand_favicon' => ['nullable', 'file', 'mimes:ico,jpg,jpeg,png,webp,svg', 'max:1024'],
             'hero_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
@@ -155,6 +159,20 @@ class MarketingPageController extends Controller
         $slug = Str::slug($data['slug']);
         $sections = array_replace_recursive($page?->sections ?? [], (array) $request->input('sections', []));
         $sections['blocks'] = $this->decodeJsonArray($request, 'blocks_json');
+
+        if (app(IndustrySetupService::class)->isImplemented($slug)) {
+            $sections['title'] = $request->input('sections.title', data_get($sections, 'title', (string) str($slug)->headline()));
+            $sections['description'] = $request->input('sections.description', data_get($sections, 'description', 'Use the page builder to update this industry landing page.'));
+            $sections['hero'] = array_replace_recursive(data_get($sections, 'hero', []), (array) $request->input('sections.hero', []));
+            $sections['modules'] = $this->normalizeIndustryList($request, 'industry_modules_json');
+            $sections['features'] = $this->normalizeIndustryList($request, 'industry_features_json');
+            $sections['media'] = array_replace_recursive(data_get($sections, 'media', []), (array) $request->input('sections.media', []));
+
+            if ($request->hasFile('industry_hero_image')) {
+                $this->deletePublicFile(data_get($sections, 'media.hero_image_path'));
+                data_set($sections, 'media.hero_image_path', $request->file('industry_hero_image')->store('marketing/industry', 'public'));
+            }
+        }
 
         if ($slug === 'home') {
             $sections['stats'] = $this->decodeJsonArray($request, 'stats_json');
@@ -231,6 +249,26 @@ class MarketingPageController extends Controller
         }
 
         return $decoded;
+    }
+
+    private function normalizeIndustryList(Request $request, string $field): array
+    {
+        return collect($this->decodeJsonArray($request, $field))
+            ->map(function ($item) {
+                if (is_string($item)) {
+                    return $item;
+                }
+
+                if (is_array($item)) {
+                    return $item['name'] ?? $item['title'] ?? $item['label'] ?? null;
+                }
+
+                return null;
+            })
+            ->filter(fn ($value) => is_string($value) && trim($value) !== '')
+            ->map(fn ($value) => trim($value))
+            ->values()
+            ->all();
     }
 
     private function deletePublicFile(?string $path): void

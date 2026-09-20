@@ -5,6 +5,7 @@
     $sections = old('sections', $page->sections ?: \App\Models\MarketingPage::defaultSections($page->slug ?: 'page'));
     $slug = old('slug', $page->slug);
     $isHome = $slug === 'home';
+    $isIndustryPage = ! $isHome && app(\App\Services\IndustrySetupService::class)->isImplemented((string) $slug);
     $json = fn ($value) => json_encode($value ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     $homeDefaults = \App\Models\MarketingPage::defaultSections('home');
     $headerNavLinks = data_get($sections, 'header.nav_links', $homeDefaults['header']['nav_links']);
@@ -414,6 +415,36 @@
                 </div>
             @endif
 
+            @if($isIndustryPage)
+                <div class="owner-card p-3 mb-4">
+                    <h3 class="h5">Industry Landing Content</h3>
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label">Industry Title</label><input class="form-control" name="sections[title]" value="{{ data_get($sections, 'title', data_get($sections, 'hero.title')) }}"></div>
+                        <div class="col-md-6"><label class="form-label">Eyebrow</label><input class="form-control" name="sections[hero][eyebrow]" value="{{ data_get($sections, 'hero.eyebrow', 'Industry solution') }}"></div>
+                        <div class="col-12"><label class="form-label">Headline</label><input class="form-control" name="sections[hero][title]" value="{{ data_get($sections, 'hero.title', data_get($sections, 'title')) }}"></div>
+                        <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" name="sections[description]" rows="4">{{ data_get($sections, 'description', data_get($sections, 'hero.body')) }}</textarea></div>
+                        <div class="col-12"><label class="form-label">Hero Body</label><textarea class="form-control" name="sections[hero][body]" rows="3">{{ data_get($sections, 'hero.body', data_get($sections, 'description')) }}</textarea></div>
+                        <div class="col-md-6">
+                            <label class="form-label">Hero Image</label>
+                            @php $industryHeroImage = \App\Support\PublicUpload::url(data_get($sections, 'media.hero_image_path')) ?: asset('images/people-industry-mosaic.png'); @endphp
+                            <img src="{{ $industryHeroImage }}" alt="Industry hero" class="d-block w-100 mb-2" style="height:110px;object-fit:cover;border:1px solid #dfe6e2;border-radius:8px;background:#fff">
+                            <input class="form-control" type="file" name="industry_hero_image" accept=".jpg,.jpeg,.png,.webp,.svg,image/*">
+                            <input class="form-control mt-2" name="sections[media][hero_image_alt]" value="{{ data_get($sections, 'media.hero_image_alt', data_get($sections, 'title').' teams using Bama') }}" placeholder="Image alt text">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Workspace Modules</label>
+                            <input type="hidden" name="industry_modules_json" data-industry-modules-json value="{{ $json(data_get($sections, 'modules', [])) }}">
+                            <textarea class="form-control" rows="8" data-industry-modules-text>{{ implode("\n", array_map(fn($item) => is_array($item) ? ($item['name'] ?? '') : (string) $item, data_get($sections, 'modules', []))) }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Key Features</label>
+                            <input type="hidden" name="industry_features_json" data-industry-features-json value="{{ $json(data_get($sections, 'features', [])) }}">
+                            <textarea class="form-control" rows="8" data-industry-features-text>{{ implode("\n", array_map(fn($item) => is_array($item) ? ($item['name'] ?? $item['title'] ?? '') : (string) $item, data_get($sections, 'features', []))) }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="owner-card p-3">
                 <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
                     <div>
@@ -492,6 +523,18 @@
 
         const readInitial = () => {
             try { blocks = JSON.parse(hidden.value || '[]') || []; } catch (error) { blocks = []; }
+        };
+
+        const syncIndustryTextFields = () => {
+            if (industryModulesText && industryModulesHidden) {
+                const lines = industryModulesText.value.split('\n').map((line) => line.trim()).filter(Boolean);
+                industryModulesHidden.value = JSON.stringify(lines.map((line) => ({ name: line })));
+            }
+
+            if (industryFeaturesText && industryFeaturesHidden) {
+                const lines = industryFeaturesText.value.split('\n').map((line) => line.trim()).filter(Boolean);
+                industryFeaturesHidden.value = JSON.stringify(lines.map((line) => ({ name: line })));
+            }
         };
 
         const syncHidden = () => {

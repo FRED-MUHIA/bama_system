@@ -81,4 +81,53 @@ class MarketingPageFrontendTest extends TestCase
         $this->get('/')
             ->assertRedirect(route('platform.dashboard'));
     }
+
+    public function test_industry_pages_expose_editable_content_fields(): void
+    {
+        $owner = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'status' => 'Active',
+        ]);
+
+        $page = MarketingPage::create([
+            'slug' => 'construction',
+            'title' => 'Construction',
+            'meta_title' => 'Construction',
+            'meta_description' => 'Construction description.',
+            'sections' => MarketingPage::defaultSections('construction'),
+            'is_published' => true,
+        ]);
+
+        $this->actingAs($owner)
+            ->get(route('platform.pages.edit', $page))
+            ->assertOk()
+            ->assertSee('Industry Landing Content');
+
+        $this->actingAs($owner)
+            ->put(route('platform.pages.update', $page), [
+                'title' => 'Construction',
+                'slug' => 'construction',
+                'meta_title' => 'Construction',
+                'meta_description' => 'Updated construction description.',
+                'is_published' => 1,
+                'sections' => [
+                    'title' => 'Updated Construction',
+                    'description' => 'Updated construction copy.',
+                    'hero' => ['title' => 'Updated Construction Hero', 'body' => 'Updated hero body'],
+                    'media' => ['hero_image_alt' => 'Updated construction alt'],
+                ],
+                'industry_modules_json' => json_encode(['Project Costing', 'Site Scheduling']),
+                'industry_features_json' => json_encode(['Commercial tracking', 'Field visibility']),
+                'blocks_json' => json_encode([]),
+            ])
+            ->assertRedirect();
+
+        $page->refresh();
+
+        $this->assertSame('Updated Construction', $page->sections['title']);
+        $this->assertSame('Updated construction copy.', $page->sections['description']);
+        $this->assertSame(['Project Costing', 'Site Scheduling'], $page->sections['modules']);
+        $this->assertSame(['Commercial tracking', 'Field visibility'], $page->sections['features']);
+    }
 }

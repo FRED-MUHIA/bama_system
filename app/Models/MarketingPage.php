@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\IndustrySetupService;
 use App\Support\SchemaCache;
 use Illuminate\Database\Eloquent\Model;
 
@@ -56,6 +57,34 @@ class MarketingPage extends Model
     public static function defaultSections(string $slug = 'home'): array
     {
         if ($slug !== 'home') {
+            $industryService = app(IndustrySetupService::class);
+
+            if ($industryService->isImplemented($slug)) {
+                $definition = $industryService->find($slug);
+                $name = $definition['name'] ?? (string) str($slug)->headline();
+                $description = $definition['description'] ?? 'Use the page builder to update this industry landing page.';
+                $modules = $definition['modules'] ?? [];
+                $features = $definition['dashboard']['dashboard_features'] ?? $definition['dashboard']['features'] ?? $definition['features'] ?? [];
+
+                return [
+                    'eyebrow' => 'Industry solution',
+                    'title' => $name,
+                    'description' => $description,
+                    'hero' => [
+                        'eyebrow' => 'Industry solution',
+                        'title' => $name,
+                        'body' => $description,
+                    ],
+                    'media' => [
+                        'hero_image_path' => 'images/people-industry-mosaic.png',
+                        'hero_image_alt' => $name.' teams using Bama',
+                    ],
+                    'modules' => $modules,
+                    'features' => $features,
+                    'blocks' => [],
+                ];
+            }
+
             return [
                 'blocks' => [
                     [
