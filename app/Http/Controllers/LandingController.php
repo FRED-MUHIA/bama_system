@@ -12,7 +12,7 @@ class LandingController extends Controller
     {
         $user = auth()->user();
 
-        if ($user) {
+        if ($user && ! ($user->role === 'super_admin' && request()->boolean('preview'))) {
             return redirect()->route(match ($user->role) {
                 'super_admin' => 'platform.dashboard',
                 'client_portal' => 'portal.dashboard',
@@ -24,7 +24,7 @@ class LandingController extends Controller
         $marketingContent = $page->sections ?: MarketingPage::defaultSections('home');
 
         return view('landing.index', [
-            'industries' => $industries->implementedIndustries(),
+            'industries' => MarketingPage::publicIndustries(),
             'plans' => $plans->all(),
             'marketingPage' => $page,
             'marketingContent' => $marketingContent,
@@ -38,14 +38,15 @@ class LandingController extends Controller
 
         $definition = $industries->find($industry);
         $page = MarketingPage::resolve($definition['slug']);
-        $pageSections = $page->sections ?: MarketingPage::defaultSections($definition['slug']);
+        abort_unless($page->is_published, 404);
+        $pageSections = array_replace(MarketingPage::defaultSections($definition['slug']), $page->sections ?? []);
         $hero = data_get($pageSections, 'hero', []);
         $media = data_get($pageSections, 'media', []);
         $customModules = data_get($pageSections, 'modules', $definition['modules'] ?? []);
         $customFeatures = data_get($pageSections, 'features', $definition['dashboard']['dashboard_features'] ?? $definition['dashboard']['features'] ?? []);
 
         return view('landing.industry', [
-            'industry' => $definition + [
+            'industry' => array_replace($definition, [
                 'industry' => data_get($pageSections, 'title', $definition['name']),
                 'title' => data_get($pageSections, 'title', $definition['name']),
                 'description' => data_get($pageSections, 'description', data_get($hero, 'body', $definition['description'] ?? '')),
@@ -62,8 +63,10 @@ class LandingController extends Controller
                 'features' => $customFeatures,
                 'dashboard' => $industries->dashboardFeatures($definition['slug']),
                 'hero_image_path' => data_get($pageSections, 'media.hero_image_path', 'images/people-industry-mosaic.png'),
-            ],
-            'industries' => $industries->implementedIndustries(),
+            ], array_intersect_key($pageSections, array_flip(['workflows', 'reports', 'roles', 'menus', 'sub_industries']))),
+            'marketingPage' => $page,
+            'pageSections' => $pageSections,
+            'industries' => MarketingPage::publicIndustries(),
             'plans' => $plans->all(),
             'marketingSiteContent' => MarketingPage::resolve('home')->sections ?: MarketingPage::defaultSections('home'),
         ]);

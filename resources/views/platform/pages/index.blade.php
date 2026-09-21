@@ -19,7 +19,7 @@
     </div>
 @else
     <div class="alert alert-info">
-        Header, footer, logo, favicon, and homepage content are edited from the <strong>Home</strong> page record.
+        Header, footer, logo, favicon, and homepage content are edited from the <strong>Home</strong> page record. Industry pages below control their public content. Use New Page for additional pages, then add their URLs to the Home header or footer.
     </div>
 @endif
 
@@ -35,15 +35,15 @@
                         <small class="d-block text-muted">{{ $page->meta_description ?: 'No SEO description yet.' }}</small>
                     </td>
                     <td>
-                        <a href="{{ $page->slug === 'home' ? route('landing') : route('marketing.pages.show', $page->slug) }}" target="_blank">
-                            {{ $page->slug === 'home' ? '/' : '/pages/'.$page->slug }}
+                        <a href="{{ $page->publicUrl().($page->slug === 'home' ? '?preview=1' : '') }}" target="_blank">
+                            {{ parse_url($page->publicUrl(), PHP_URL_PATH) }}
                         </a>
                     </td>
                     <td><span class="badge {{ $page->is_published ? 'badge-owner' : 'text-bg-light' }}">{{ $page->is_published ? 'Published' : 'Draft' }}</span></td>
                     <td>{{ $page->updated_at?->format('d M Y, H:i') }}</td>
                     <td class="text-end">
                         <a class="btn btn-sm btn-owner" href="{{ route('platform.pages.edit', $page) }}"><i class="bi bi-pencil-square"></i> Edit</a>
-                        @if($page->slug !== 'home')
+                        @if(! $page->isBuiltIn())
                             <form method="post" action="{{ route('platform.pages.destroy', $page) }}" class="d-inline" onsubmit="return confirm('Delete this page?');">
                                 @csrf @method('DELETE')
                                 <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>

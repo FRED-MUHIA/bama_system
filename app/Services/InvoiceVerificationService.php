@@ -12,7 +12,7 @@ class InvoiceVerificationService
 {
     public function url(Invoice $invoice): string
     {
-        return route('public.invoices.show', $invoice->public_token);
+        return route('public.invoices.show', ['token' => $invoice->ensurePublicToken()]);
     }
 
     public function qrCodeDataUri(Invoice $invoice, int $size = 180): string

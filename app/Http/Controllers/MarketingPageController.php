@@ -21,6 +21,8 @@ class MarketingPageController extends Controller
             ]);
         }
 
+        MarketingPage::ensureBuiltInPages();
+
         return view('platform.pages.index', [
             'pages' => MarketingPage::query()
                 ->orderByRaw("case when slug = 'home' then 0 else 1 end")
@@ -97,7 +99,7 @@ class MarketingPageController extends Controller
         abort_unless($this->marketingPagesTableExists(), 503, 'The page builder database table is missing.');
 
         $page = MarketingPage::findOrFail($page);
-        abort_if($page->slug === 'home', 422, 'The homepage cannot be deleted.');
+        abort_if($page->isBuiltIn(), 422, 'Built-in pages cannot be deleted. Unpublish an industry page instead.');
 
         $page->delete();
 
@@ -113,6 +115,9 @@ class MarketingPageController extends Controller
         $page = MarketingPage::published()->where('slug', $slug)->firstOrFail();
 
         abort_if($page->slug === 'home', 404);
+        if (app(IndustrySetupService::class)->isImplemented($slug)) {
+            return redirect($page->publicUrl());
+        }
         $homePage = MarketingPage::resolve('home');
 
         return view('landing.page', [
@@ -126,7 +131,7 @@ class MarketingPageController extends Controller
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:80', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:marketing_pages,slug'.($page ? ','.$page->id : '')],
+            'slug' => ['required', 'string', 'max:80', 'regex:/^[a-z0-9]+(?:[-_][a-z0-9]+)*$/', 'unique:marketing_pages,slug'.($page ? ','.$page->id : '')],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'is_published' => ['nullable', 'boolean'],
@@ -156,11 +161,29 @@ class MarketingPageController extends Controller
             'trust_logo_files.*' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
         ]);
 
-        $slug = Str::slug($data['slug']);
+        $slug = app(IndustrySetupService::class)->isImplemented($data['slug'])
+            ? app(IndustrySetupService::class)->find($data['slug'])['slug']
+            : Str::slug($data['slug']);
+        if ($page?->isBuiltIn() && $slug !== $page->slug) {
+            throw ValidationException::withMessages(['slug' => 'Built-in page URLs cannot be changed.']);
+        }
+        if (MarketingPage::where('slug', $slug)->when($page, fn ($query) => $query->whereKeyNot($page->id))->exists()) {
+            throw ValidationException::withMessages(['slug' => 'This page URL is already in use.']);
+        }
         $sections = array_replace_recursive($page?->sections ?? [], (array) $request->input('sections', []));
         $sections['blocks'] = $this->decodeJsonArray($request, 'blocks_json');
 
         if (app(IndustrySetupService::class)->isImplemented($slug)) {
+            foreach (['workflows', 'reports', 'roles', 'menus'] as $field) {
+                if ($request->has('industry_'.$field)) {
+                    $request->validate(['industry_'.$field => ['nullable', 'string']]);
+                    $sections[$field] = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string) $request->input('industry_'.$field)))));
+                }
+            }
+            if ($request->has('industry_sub_industries')) {
+                $request->validate(['industry_sub_industries' => ['nullable', 'array'], 'industry_sub_industries.*.name' => ['nullable', 'string'], 'industry_sub_industries.*.description' => ['nullable', 'string']]);
+                $sections['sub_industries'] = array_values(array_filter($request->input('industry_sub_industries', []), fn ($item) => ! empty($item['name'])));
+            }
             $sections['title'] = $request->input('sections.title', data_get($sections, 'title', (string) str($slug)->headline()));
             $sections['description'] = $request->input('sections.description', data_get($sections, 'description', 'Use the page builder to update this industry landing page.'));
             $sections['hero'] = array_replace_recursive(data_get($sections, 'hero', []), (array) $request->input('sections.hero', []));

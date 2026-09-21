@@ -51,10 +51,10 @@
                 <input class="form-control" name="title" value="{{ old('title', $page->title) }}" required>
 
                 <label class="form-label mt-3">Slug</label>
-                @if($isHome)
-                    <input type="hidden" name="slug" value="home">
-                    <input class="form-control" value="home" disabled>
-                    <small class="text-muted">The homepage slug is locked.</small>
+                @if(! $isCreating && $page->isBuiltIn())
+                    <input type="hidden" name="slug" value="{{ $page->slug }}">
+                    <input class="form-control" value="{{ $page->slug }}" disabled>
+                    <small class="text-muted">Built-in page URLs are locked.</small>
                 @else
                     <input class="form-control" name="slug" value="{{ $slug }}" placeholder="about-us" required>
                     <small class="text-muted">Published URL: /pages/your-slug</small>
@@ -76,8 +76,8 @@
                 @if(! $isCreating)
                     <div class="mt-3 rounded border p-2 small">
                         <strong>Public link</strong><br>
-                        <a target="_blank" href="{{ $isHome ? route('landing') : route('marketing.pages.show', $page->slug) }}">
-                            {{ $isHome ? '/' : '/pages/'.$page->slug }}
+                        <a target="_blank" href="{{ $page->publicUrl().($isHome ? '?preview=1' : '') }}">
+                            {{ parse_url($page->publicUrl(), PHP_URL_PATH) }}
                         </a>
                     </div>
                 @endif
@@ -443,13 +443,41 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="owner-card p-3 mb-4">
+                    <h3 class="h5">Sections &amp; Buttons</h3>
+                    <div class="row g-3">
+                        @foreach(\App\Models\MarketingPage::industryCopyDefaults($slug) as $key => $default)
+                            <div class="col-md-6">
+                                <label class="form-label">{{ str($key)->replace('_', ' ')->headline() }}</label>
+                                <textarea class="form-control" name="sections[copy][{{ $key }}]" rows="2">{{ data_get($sections, 'copy.'.$key, $default) }}</textarea>
+                            </div>
+                        @endforeach
+                        @foreach(['workflows', 'reports', 'roles', 'menus'] as $field)
+                            <div class="col-md-6">
+                                <label class="form-label">{{ ucfirst($field) }} (one per line)</label>
+                                <textarea class="form-control" name="industry_{{ $field }}" rows="6">{{ old('industry_'.$field, implode("\n", data_get($sections, $field, \App\Models\MarketingPage::defaultSections($slug)[$field] ?? []))) }}</textarea>
+                            </div>
+                        @endforeach
+                        <div class="col-12">
+                            <label class="form-label">Sub-industries</label>
+                            @foreach(array_merge(data_get($sections, 'sub_industries', \App\Models\MarketingPage::defaultSections($slug)['sub_industries'] ?? []), [['name' => '', 'description' => ''], ['name' => '', 'description' => '']]) as $i => $sub)
+                                <div class="row g-2 mb-2">
+                                    <div class="col-md-4"><input aria-label="Sub-industry name" class="form-control" name="industry_sub_industries[{{ $i }}][name]" value="{{ old('industry_sub_industries.'.$i.'.name', $sub['name'] ?? '') }}" placeholder="Name"></div>
+                                    <div class="col-md-8"><input aria-label="Sub-industry description" class="form-control" name="industry_sub_industries[{{ $i }}][description]" value="{{ old('industry_sub_industries.'.$i.'.description', $sub['description'] ?? '') }}" placeholder="Description"></div>
+                                </div>
+                            @endforeach
+                            <small class="text-muted">Clear a name to remove an entry. Save to add more entries.</small>
+                        </div>
+                    </div>
+                </div>
             @endif
 
             <div class="owner-card p-3">
                 <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
                     <div>
                         <h3 class="h5 mb-1">Page Blocks</h3>
-                        <p class="text-muted mb-0 small">Use blocks for custom pages or extra homepage sections.</p>
+                        <p class="text-muted mb-0 small">Add content sections to any page.</p>
                     </div>
                     <button class="btn btn-sm btn-owner" type="button" data-add-block><i class="bi bi-plus-lg"></i> Add Block</button>
                 </div>
@@ -512,6 +540,10 @@
         const testimonialsHidden = document.querySelector('[data-testimonials-json]');
         const faqs = document.querySelector('[data-faqs]');
         const faqsHidden = document.querySelector('[data-faqs-json]');
+        const industryModulesText = document.querySelector('[data-industry-modules-text]');
+        const industryModulesHidden = document.querySelector('[data-industry-modules-json]');
+        const industryFeaturesText = document.querySelector('[data-industry-features-text]');
+        const industryFeaturesHidden = document.querySelector('[data-industry-features-json]');
         let blocks = [];
         let dynamicKey = Date.now();
 
@@ -791,6 +823,7 @@
         };
 
         const syncAll = () => {
+            syncIndustryTextFields();
             syncHidden();
             syncHeaderLinks();
             syncFooterColumns();

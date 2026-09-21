@@ -31,6 +31,53 @@ class MarketingPage extends Model
         return $query->where('is_published', true);
     }
 
+    public function isBuiltIn(): bool
+    {
+        return $this->slug === 'home' || app(IndustrySetupService::class)->isImplemented($this->slug);
+    }
+
+    public function publicUrl(): string
+    {
+        return $this->slug === 'home'
+            ? route('landing')
+            : (app(IndustrySetupService::class)->isImplemented($this->slug)
+                ? route('industries.show', $this->slug)
+                : route('marketing.pages.show', $this->slug));
+    }
+
+    public static function ensureBuiltInPages(): void
+    {
+        $slugs = array_merge(['home'], app(IndustrySetupService::class)->implementedSlugs());
+        foreach ($slugs as $slug) {
+            $defaults = static::defaultSections($slug);
+            static::firstOrCreate(['slug' => $slug], [
+                'title' => $defaults['title'] ?? 'Bama Business Cloud',
+                'meta_title' => $defaults['title'] ?? 'Bama Business Cloud',
+                'meta_description' => $defaults['description'] ?? 'Run your entire business from one unified platform.',
+                'sections' => $defaults,
+                'is_published' => true,
+                'published_at' => now(),
+            ]);
+        }
+    }
+
+    public static function publicIndustries(): \Illuminate\Support\Collection
+    {
+        $pages = SchemaCache::hasTable('marketing_pages')
+            ? static::whereIn('slug', app(IndustrySetupService::class)->implementedSlugs())->get()->keyBy('slug')
+            : collect();
+
+        return app(IndustrySetupService::class)->implementedIndustries()
+            ->filter(fn ($industry) => ! isset($pages[$industry['slug']]) || $pages[$industry['slug']]->is_published)
+            ->map(function ($industry) use ($pages) {
+                $sections = $pages->get($industry['slug'])?->sections ?? [];
+
+                return array_replace($industry, array_intersect_key($sections, array_flip(['description', 'modules', 'features', 'workflows', 'reports', 'roles', 'sub_industries'])), [
+                    'name' => $sections['title'] ?? $industry['name'],
+                ]);
+            })->values();
+    }
+
     public static function resolve(string $slug): self
     {
         if (! SchemaCache::hasTable('marketing_pages')) {
@@ -52,6 +99,29 @@ class MarketingPage extends Model
             'sections' => static::defaultSections($slug),
             'is_published' => true,
         ]);
+    }
+
+    public static function industryCopyDefaults(string $slug): array
+    {
+        $name = app(IndustrySetupService::class)->find($slug)['name'];
+
+        return [
+            'back_label' => 'Back to industries',
+            'modules_heading' => 'Workspace includes',
+            'fit_eyebrow' => 'Operating fit',
+            'fit_title' => 'What this workspace helps you control',
+            'fit_body' => $slug === 'retail' ? 'Bama keeps the counter, stock shelf, customer list, and daily reports close together for shop owners and cashiers.' : 'Bama provisions practical screens, permissions, dashboards, reports, and workflows around the way '.strtolower($name).' teams actually work.',
+            'feature_body' => $slug === 'retail' ? 'Keep daily shop work clear without adding enterprise clutter.' : 'Track activity, responsibility, status, and performance from one controlled dashboard.',
+            'sub_industries_heading' => 'Sub-industries',
+            'workflows_heading' => 'Workflows',
+            'reports_heading' => 'Reports',
+            'roles_heading' => 'Roles and menus',
+            'cta_eyebrow' => 'Ready to operate',
+            'cta_title' => 'Launch a '.$name.' workspace with Bama',
+            'cta_body' => $slug === 'retail' ? 'Start with POS, products, stock, customers, and reports, then enable optional tools only when the shop needs them.' : 'Start with guided onboarding, then add users, permissions, modules, documents, finance, and reports as your operation grows.',
+            'button_label' => 'Start Free Trial',
+            'button_url' => '/register/account',
+        ];
     }
 
     public static function defaultSections(string $slug = 'home'): array
@@ -79,8 +149,14 @@ class MarketingPage extends Model
                         'hero_image_path' => 'images/people-industry-mosaic.png',
                         'hero_image_alt' => $name.' teams using Bama',
                     ],
-                    'modules' => $modules,
-                    'features' => $features,
+                    'modules' => $slug === 'retail' ? ['Make a Sale', 'Products & Pricing', 'Stock Control', 'Customers', 'Returns', 'Daily Reports'] : $modules,
+                    'features' => $slug === 'retail' ? ['Fast counter sales', 'Low-stock alerts', 'Simple customer records', 'Mobile money and cash'] : $features,
+                    'copy' => static::industryCopyDefaults($slug),
+                    'workflows' => $slug === 'retail' ? ['Add products', 'Sell at the counter', 'Receive payment', 'Update stock', 'Handle returns', 'Reorder low-stock items'] : ($definition['workflows'] ?? []),
+                    'reports' => $slug === 'retail' ? ['Daily Sales', 'Product Sales', 'Stock Levels', 'Returns'] : ($definition['reports'] ?? []),
+                    'roles' => $slug === 'retail' ? ['Owner', 'Shop Manager', 'Cashier', 'Stock Clerk'] : ($definition['roles'] ?? []),
+                    'menus' => $slug === 'retail' ? ['Dashboard', 'Make a Sale', 'Products', 'Inventory', 'Customers', 'Reports'] : collect($definition['dashboard']['menu_structure'] ?? $definition['menus'] ?? [])->map(fn ($menu) => is_array($menu) ? ($menu['label'] ?? $menu['module'] ?? 'Module') : $menu)->all(),
+                    'sub_industries' => $definition['sub_industries'] ?? [],
                     'blocks' => [],
                 ];
             }
