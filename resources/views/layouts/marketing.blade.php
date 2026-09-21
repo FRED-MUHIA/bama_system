@@ -63,7 +63,7 @@
         }
 
         /* Uploaded media stays within its reserved space on every public page. */
-        .bama-page img { max-width: 100%; }
+        .bama-page:not(.home-page) img { max-width: 100%; }
         .bama-page .bama-media-frame {
             position: relative;
             width: 100%;

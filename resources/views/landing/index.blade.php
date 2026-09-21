@@ -676,7 +676,7 @@
         </nav>
     </header>
     <section class="hero-field relative isolate overflow-hidden bg-black px-5 py-12 text-white sm:py-14 lg:min-h-[590px] lg:py-0">
-        <picture class="absolute inset-y-0 right-0 z-[-1] hidden h-full lg:block" style="width: 50%; overflow: hidden;">
+        <picture class="absolute inset-y-0 right-0 z-[-1] hidden h-full lg:block" style="width: auto; max-width: none;">
             @if($heroImageSrcset)
                 <source type="image/webp" srcset="{{ $heroImageSrcset }}" sizes="58vw">
             @endif
@@ -685,7 +685,8 @@
                 alt="{{ data_get($media, 'hero_image_alt', 'Business leaders using Bama cloud ERP') }}"
                 width="1672"
                 height="941"
-                class="bama-upload-image h-full w-full object-contain"
+                class="hero-image-clear h-full w-auto max-w-none object-contain object-right-center"
+                style="width: auto; max-width: none;"
                 fetchpriority="high"
                 decoding="async"
             >
@@ -738,7 +739,7 @@
                             alt="{{ data_get($media, 'hero_image_alt', 'Business leaders using Bama cloud ERP') }}"
                             width="1672"
                             height="941"
-                            class="bama-upload-image h-full w-full object-contain object-center"
+                            class="hero-image-clear h-full w-full object-cover object-center"
                             fetchpriority="high"
                             decoding="async"
                         >
@@ -760,7 +761,7 @@
                         alt="{{ data_get($media, 'insight_image_alt', 'Diverse teams across industries using one business platform') }}"
                         width="1254"
                         height="1254"
-                        class="bama-upload-image h-full w-full object-contain object-center"
+                        class="h-full w-full object-contain object-center"
                         loading="lazy"
                         decoding="async"
                     >
@@ -838,7 +839,7 @@
                     <p class="mt-3 text-sm leading-6 text-zinc-600">
                         {{ data_get($featuresContent, 'body', 'A complete operating suite for CRM, finance, accounting, projects, inventory, procurement, HR, documents, reporting, and portal workflows.') }}
                     </p>
-                    <div class="bama-media-frame mt-4 border border-zinc-200 shadow-sm">
+                    <div class="mt-4 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
                         <picture class="block">
                             @if($featuresImageSrcset)
                                 <source type="image/webp" srcset="{{ $featuresImageSrcset }}" sizes="(min-width: 1024px) 34vw, 100vw">
@@ -848,7 +849,7 @@
                                 alt="{{ data_get($media, 'features_image_alt', 'Diverse teams using the platform') }}"
                                 width="1254"
                                 height="1254"
-                                class="bama-upload-image"
+                                class="h-44 w-full object-cover sm:h-52 lg:h-56"
                                 loading="lazy"
                                 decoding="async"
                             >
