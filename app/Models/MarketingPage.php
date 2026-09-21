@@ -239,9 +239,9 @@ class MarketingPage extends Model
                 'eyebrow' => 'Customer success',
                 'title' => 'Teams growing with connected operations',
                 'items' => [
+                    ['company' => 'Sarah McNeilly', 'quote' => 'As a US company hiring across the continent, we didn’t have any subsidiaries here. I wanted to be able to hire a team compliantly. Workpay was the perfect solution for us...', 'metric' => 'ATP Managing Director'],
                     ['company' => 'Apex Build Co.', 'quote' => 'Construction teams finally see BOQ, procurement, and site progress in the same operating view.', 'metric' => '28% faster project reporting'],
                     ['company' => 'MediCare Group', 'quote' => 'Appointments, pharmacy stock, and finance reports now move through one controlled workspace.', 'metric' => '41% fewer manual reconciliations'],
-                    ['company' => 'Urban Retail', 'quote' => 'We joined POS, inventory, loyalty, and branch reporting without losing speed at checkout.', 'metric' => '3x better branch visibility'],
                 ],
             ],
             'faq' => [

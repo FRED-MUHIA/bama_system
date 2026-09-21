@@ -23,11 +23,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
+    <link href="https://fonts.cdnfonts.com/css/moderat-trial" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"></noscript>
     <style>
-        :root { --owner-green:#00A651; --owner-ink:#101312; --owner-line:#dfe6e2; --owner-soft:#f6f8f7; --owner-font-body:'Manrope',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; --owner-font-heading:'Manrope',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+        :root { --owner-green:#00A651; --owner-ink:#101312; --owner-line:#dfe6e2; --owner-soft:#f6f8f7; --owner-font-body:'Moderat Trial','Moderat','Avenir Next','Segoe UI',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; --owner-font-heading:'Manrope',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
         body,button,input,optgroup,select,textarea,table { font-family:var(--owner-font-body) !important;font-feature-settings:'kern' 1,'liga' 1,'calt' 1;letter-spacing:0;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale; }
         h1,h2,h3,h4,h5,h6,.owner-brand { font-family:var(--owner-font-heading) !important;font-feature-settings:'kern' 1,'liga' 1,'calt' 1;letter-spacing:0;text-rendering:geometricPrecision;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale; }
         body { margin:0; background:var(--owner-soft); color:var(--owner-ink); font-optical-sizing:auto;font-synthesis-weight:none; }

@@ -240,6 +240,153 @@
         box-shadow: 0 10px 30px rgba(15, 23, 42, .045);
     }
 
+    .home-page .testimonial-showcase {
+        background: #f2f8f4;
+        border-radius: 28px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(15, 23, 42, .08);
+    }
+
+    .home-page .testimonial-quote-panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: clamp(2rem, 4vw, 4.5rem) clamp(1.5rem, 4vw, 4rem);
+        background: rgba(255, 255, 255, .18);
+    }
+
+    .home-page .testimonial-quote-mark {
+        color: #00A651;
+        font-size: clamp(3.2rem, 6vw, 5rem);
+        line-height: 0.7;
+        font-weight: 900;
+    }
+
+    .home-page .testimonial-quote {
+        margin-top: 1rem;
+        color: #0f172a;
+        font-size: clamp(1.7rem, 2.3vw, 3.3rem);
+        line-height: 1.12;
+        letter-spacing: -0.05em;
+        font-weight: 500;
+    }
+
+    .home-page .testimonial-author {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .home-page .testimonial-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(15, 23, 42, .08);
+    }
+
+    .home-page .testimonial-author-name {
+        color: #0f172a;
+        font-size: 1.05rem;
+        font-weight: 900;
+        margin: 0;
+    }
+
+    .home-page .testimonial-author-role {
+        margin: 0.25rem 0 0;
+        color: rgba(15, 23, 42, .72);
+        font-size: 1rem;
+    }
+
+    .home-page .testimonial-media-wrap {
+        position: relative;
+        min-height: clamp(360px, 48vw, 610px);
+        padding: 1.25rem 1.25rem 1.25rem 0;
+    }
+
+    .home-page .testimonial-media {
+        position: relative;
+        display: block;
+        width: 100%;
+        height: 100%;
+        min-height: clamp(360px, 48vw, 610px);
+        border-radius: 26px;
+        overflow: hidden;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, .14);
+        background: #dfe7df;
+    }
+
+    .home-page .testimonial-media img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(0.9) contrast(1.02);
+    }
+
+    .home-page .testimonial-accent {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 30%;
+        height: 100%;
+        background: linear-gradient(180deg, rgba(1, 128, 72, 0.12), rgba(1, 128, 72, 0));
+        pointer-events: none;
+    }
+
+    .home-page .testimonial-accent::before,
+    .home-page .testimonial-accent::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #00A651;
+        box-shadow: 0 0 0 8px rgba(0, 166, 81, 0.1);
+    }
+
+    .home-page .testimonial-accent::before {
+        top: 10%;
+        right: 18%;
+    }
+
+    .home-page .testimonial-accent::after {
+        bottom: 7%;
+        right: 16%;
+        background: #007A3B;
+        box-shadow: 0 0 0 8px rgba(0, 122, 59, 0.12);
+    }
+
+    .home-page .testimonial-badge {
+        position: absolute;
+        right: 1.2rem;
+        bottom: 1.2rem;
+        max-width: min(75%, 320px);
+        padding: 1.15rem 1.3rem 1rem;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(2px);
+        box-shadow: 0 18px 32px rgba(15, 23, 42, .15);
+    }
+
+    .home-page .testimonial-badge strong {
+        display: block;
+        font-size: clamp(1.2rem, 2vw, 2.2rem);
+        line-height: 1.1;
+        color: #0f172a;
+    }
+
+    .home-page .testimonial-badge span {
+        display: block;
+        margin-top: .25rem;
+        font-size: .8rem;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: rgba(15, 23, 42, .7);
+    }
+
     .home-page .dark-panel {
         border: 1px solid rgba(255, 255, 255, .12);
         border-radius: 18px;
@@ -922,32 +1069,40 @@
     </section>
 
     <section class="section-pad px-5">
-        <div class="mx-auto max-w-7xl">
-            <div class="grid gap-6 lg:grid-cols-[.38fr_1fr]">
-                <div>
-                    <p class="eyebrow">{{ data_get($testimonialsContent, 'eyebrow', 'Customer success') }}</p>
-                    <h2 class="section-title mt-3 font-black">{{ data_get($testimonialsContent, 'title', 'Teams growing with connected operations') }}</h2>
-                </div>
-                <div class="grid gap-4 lg:grid-cols-3">
-                    @foreach ($testimonialItems as $testimonial)
-                        @php
-                            $company = is_array($testimonial) ? ($testimonial['company'] ?? $testimonial[0] ?? '') : (string) $testimonial;
-                            $quote = is_array($testimonial) ? ($testimonial['quote'] ?? $testimonial[1] ?? '') : '';
-                            $metric = is_array($testimonial) ? ($testimonial['metric'] ?? $testimonial[2] ?? '') : '';
-                        @endphp
-                        @continue($company === '')
-                        <article class="soft-panel p-5">
-                            <p class="text-sm font-black uppercase text-[#00A651]">{{ $metric }}</p>
-                            <p class="mt-4 leading-7 text-zinc-700">"{{ $quote }}"</p>
-                            <div class="mt-5 flex items-center gap-3">
-                                <span class="grid h-11 w-11 place-items-center rounded-lg bg-black text-sm font-black text-white">{{ substr($company, 0, 2) }}</span>
-                                <div>
-                                    <p class="font-black">{{ $company }}</p>
-                                    <p class="text-sm text-zinc-500">Customer review</p>
-                                </div>
+        <div class="mx-auto max-w-[1280px]">
+            @php
+                $featuredTestimonial = $testimonialItems[0] ?? [
+                    'company' => 'Sarah McNeilly',
+                    'quote' => 'As a US company hiring across the continent, we didn’t have any subsidiaries here. I wanted to be able to hire a team compliantly. Workpay was the perfect solution for us...',
+                    'metric' => 'ATP Managing Director',
+                ];
+                $featuredCompany = is_array($featuredTestimonial) ? ($featuredTestimonial['company'] ?? $featuredTestimonial[0] ?? 'Sarah McNeilly') : (string) $featuredTestimonial;
+                $featuredQuote = is_array($featuredTestimonial) ? ($featuredTestimonial['quote'] ?? $featuredTestimonial[1] ?? 'As a US company hiring across the continent, we didn’t have any subsidiaries here. I wanted to be able to hire a team compliantly. Workpay was the perfect solution for us...') : '';
+                $featuredMetric = is_array($featuredTestimonial) ? ($featuredTestimonial['metric'] ?? $featuredTestimonial[2] ?? 'ATP Managing Director') : 'ATP Managing Director';
+            @endphp
+            <div class="testimonial-showcase">
+                <div class="grid gap-0 lg:grid-cols-[1.06fr_1fr]">
+                    <div class="testimonial-quote-panel">
+                        <div class="testimonial-quote-mark">“</div>
+                        <blockquote class="testimonial-quote">{{ $featuredQuote }}</blockquote>
+                        <div class="testimonial-author">
+                            <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80" alt="{{ $featuredCompany }}" />
+                            <div>
+                                <p class="testimonial-author-name">{{ $featuredCompany }}</p>
+                                <p class="testimonial-author-role">{{ $featuredMetric }}</p>
                             </div>
-                        </article>
-                    @endforeach
+                        </div>
+                    </div>
+                    <div class="testimonial-media-wrap">
+                        <div class="testimonial-accent" aria-hidden="true"></div>
+                        <figure class="testimonial-media">
+                            <img src="https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=1200&q=80" alt="{{ $featuredCompany }} speaking during a team meeting" />
+                        </figure>
+                        <div class="testimonial-badge">
+                            <strong>{{ $featuredCompany }}</strong>
+                            <span>{{ $featuredMetric }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

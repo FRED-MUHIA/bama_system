@@ -15,7 +15,7 @@
     <style>
         .registration-page {
             --font-heading: 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            --font-body: 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-body: 'Moderat Trial', 'Moderat', 'Avenir Next', 'Segoe UI', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             font-family: var(--font-body) !important;
             font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
             font-optical-sizing: auto;
