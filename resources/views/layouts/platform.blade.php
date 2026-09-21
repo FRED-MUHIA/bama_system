@@ -30,7 +30,7 @@
     <style>
         :root { --owner-green:#00A651; --owner-ink:#101312; --owner-line:#dfe6e2; --owner-soft:#f6f8f7; --owner-font-body:'Moderat Trial','Moderat','Avenir Next','Segoe UI',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; --owner-font-heading:'Manrope',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
         body,button,input,optgroup,select,textarea,table { font-family:var(--owner-font-body) !important;font-feature-settings:'kern' 1,'liga' 1,'calt' 1;letter-spacing:0;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale; }
-        h1,h2,h3,h4,h5,h6,.owner-brand { font-family:var(--owner-font-heading) !important;font-feature-settings:'kern' 1,'liga' 1,'calt' 1;letter-spacing:0;text-rendering:geometricPrecision;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale; }
+        h1,h2,h3,h4,h5,h6,.owner-brand { font-family:var(--owner-font-heading) !important;font-feature-settings:'kern' 1,'liga' 1,'calt' 1;letter-spacing:-0.02em;line-height:1.08;text-rendering:geometricPrecision;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale; }
         body { margin:0; background:var(--owner-soft); color:var(--owner-ink); font-optical-sizing:auto;font-synthesis-weight:none; }
         .owner-shell { min-height:100vh; display:grid; grid-template-columns:260px minmax(0, 1fr); }
         .owner-sidebar { background:#07100c; color:#fff; padding:22px 16px; }

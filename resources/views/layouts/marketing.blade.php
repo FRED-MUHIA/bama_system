@@ -95,9 +95,10 @@
         h5,
         h6 {
             font-family: var(--bama-font-heading) !important;
-            font-weight: 600 !important;
+            font-weight: 700 !important;
             font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
-            letter-spacing: 0;
+            letter-spacing: -0.02em;
+            line-height: 1.08;
             text-rendering: geometricPrecision;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;

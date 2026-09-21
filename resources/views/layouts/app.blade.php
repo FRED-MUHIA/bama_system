@@ -38,11 +38,12 @@
         :root { --font-brand:'Manrope',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; --font-body:'Moderat Trial','Moderat','Avenir Next','Segoe UI',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
         h1,h2,h3,h4,h5,h6 {
             font-family:var(--font-brand) !important;
-            font-weight:600 !important;
+            font-weight:700 !important;
             font-optical-sizing:auto;
             font-variation-settings:'opsz' 28;
             font-feature-settings:'kern' 1,'liga' 1,'calt' 1;
-            letter-spacing:0;
+            letter-spacing:-0.02em;
+            line-height:1.08;
             text-rendering:geometricPrecision;
             -webkit-font-smoothing:antialiased;
             -moz-osx-font-smoothing:grayscale;
