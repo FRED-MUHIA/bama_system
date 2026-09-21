@@ -63,23 +63,22 @@
 <main class="bama-page min-h-screen" style="--accent: {{ $accent[0] }}; --dark: {{ $accent[1] }};">
     @include('landing.partials.site-header')
 
-    <section class="relative overflow-hidden px-5 py-12 text-white md:py-16" style="background:var(--dark)">
-        <div class="absolute inset-y-0 right-0 hidden w-1/2 opacity-35 lg:block" style="overflow:hidden;pointer-events:none;">
+    <section class="industry-banner text-white" style="background:var(--dark)">
+        <div class="industry-banner-media">
             <picture class="block h-full w-full">
                 @if(data_get($industry, 'media.hero_image_path') === 'images/people-industry-mosaic.png')
-                    <source type="image/webp" srcset="{{ $mosaicImageSrcset }}" sizes="50vw">
+                    <source type="image/webp" srcset="{{ $mosaicImageSrcset }}" sizes="100vw">
                 @endif
                 <img
                     src="{{ \App\Support\PublicUpload::url(data_get($industry, 'media.hero_image_path')) ?: asset('images/people-industry-mosaic.png') }}"
                     alt="{{ data_get($industry, 'media.hero_image_alt') }}"
-                    class="bama-upload-image"
-                    style="object-position:center top;"
+                    class="industry-banner-image"
                     fetchpriority="high" decoding="async"
                 >
             </picture>
         </div>
-        <div class="relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-[.95fr_.7fr]">
-            <div class="min-w-0 max-w-3xl">
+        <div class="industry-banner-content relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-[.95fr_.7fr]">
+            <div class="industry-banner-copy min-w-0 max-w-3xl">
                 <a href="{{ route('landing') }}#industries" class="text-sm font-black uppercase text-white/70 no-underline hover:text-white">{{ data_get($pageSections, 'copy.back_label', 'Back to industries') }}</a>
                 <p class="bama-eyebrow mt-8">{{ data_get($industry, 'hero.eyebrow') }}</p>
                 <h1 class="mt-4 text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">{{ data_get($industry, 'hero.title') }}</h1>
@@ -88,9 +87,9 @@
                     <a href="{{ data_get($pageSections, 'copy.button_url', route('register.account')) }}" class="rounded-full bg-white px-8 py-4 text-center text-sm font-black uppercase text-black no-underline">{{ data_get($pageSections, 'copy.button_label', 'Start Free Trial') }}</a>
                 </div>
             </div>
-            <div class="rounded-lg border border-white/10 bg-white/[.08] p-5 shadow-2xl backdrop-blur">
-                <p class="text-xs font-black uppercase text-white/60">{{ data_get($pageSections, 'copy.modules_heading', 'Workspace includes') }}</p>
-                <div class="mt-4 grid gap-2">
+            <div class="industry-banner-panel rounded-lg border border-white/10 p-5 shadow-2xl">
+                <p id="industry-modules-heading" class="text-xs font-black uppercase text-white">{{ data_get($pageSections, 'copy.modules_heading', 'Workspace includes') }}</p>
+                <div class="industry-banner-modules mt-4 grid gap-2" role="region" aria-labelledby="industry-modules-heading" tabindex="0">
                     @foreach($modules as $module)
                         <div class="flex items-center gap-3 rounded-lg bg-white/[.08] px-3 py-2">
                             <i class="bi bi-check2-circle" style="color:var(--accent)"></i>
