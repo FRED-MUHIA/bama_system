@@ -64,6 +64,20 @@
     @include('landing.partials.site-header')
 
     <section class="relative overflow-hidden px-5 py-12 text-white md:py-16" style="background:var(--dark)">
+        <div class="absolute inset-y-0 right-0 hidden w-1/2 opacity-35 lg:block" style="overflow:hidden;pointer-events:none;">
+            <picture class="block h-full w-full">
+                @if(data_get($industry, 'media.hero_image_path') === 'images/people-industry-mosaic.png')
+                    <source type="image/webp" srcset="{{ $mosaicImageSrcset }}" sizes="50vw">
+                @endif
+                <img
+                    src="{{ \App\Support\PublicUpload::url(data_get($industry, 'media.hero_image_path')) ?: asset('images/people-industry-mosaic.png') }}"
+                    alt="{{ data_get($industry, 'media.hero_image_alt') }}"
+                    class="bama-upload-image"
+                    style="object-position:center top;"
+                    fetchpriority="high" decoding="async"
+                >
+            </picture>
+        </div>
         <div class="relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-[.95fr_.7fr]">
             <div class="min-w-0 max-w-3xl">
                 <a href="{{ route('landing') }}#industries" class="text-sm font-black uppercase text-white/70 no-underline hover:text-white">{{ data_get($pageSections, 'copy.back_label', 'Back to industries') }}</a>
@@ -72,19 +86,6 @@
                 <p class="mt-5 max-w-2xl text-lg leading-8 text-white/82">{{ data_get($industry, 'hero.body') }}</p>
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row">
                     <a href="{{ data_get($pageSections, 'copy.button_url', route('register.account')) }}" class="rounded-full bg-white px-8 py-4 text-center text-sm font-black uppercase text-black no-underline">{{ data_get($pageSections, 'copy.button_label', 'Start Free Trial') }}</a>
-                </div>
-                <div class="bama-media-frame mt-8">
-                    <picture>
-                        @if(data_get($industry, 'media.hero_image_path') === 'images/people-industry-mosaic.png')
-                            <source type="image/webp" srcset="{{ $mosaicImageSrcset }}" sizes="(min-width: 1024px) 50vw, 100vw">
-                        @endif
-                        <img
-                            src="{{ \App\Support\PublicUpload::url(data_get($industry, 'media.hero_image_path')) ?: asset('images/people-industry-mosaic.png') }}"
-                            alt="{{ data_get($industry, 'media.hero_image_alt') }}"
-                            width="1600" height="900"
-                            fetchpriority="high" decoding="async"
-                        >
-                    </picture>
                 </div>
             </div>
             <div class="rounded-lg border border-white/10 bg-white/[.08] p-5 shadow-2xl backdrop-blur">
