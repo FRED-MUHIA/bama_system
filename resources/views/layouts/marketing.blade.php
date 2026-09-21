@@ -105,7 +105,7 @@
             display: block;
             width: 100%;
             height: 100%;
-            object-fit: scale-down;
+            object-fit: cover;
             object-position: center;
         }
         .industry-banner::before {
