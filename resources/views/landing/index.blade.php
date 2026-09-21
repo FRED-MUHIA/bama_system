@@ -303,16 +303,20 @@
 
     .home-page .testimonial-media-wrap {
         position: relative;
-        min-height: clamp(360px, 48vw, 610px);
-        padding: 1.25rem 1.25rem 1.25rem 0;
+        min-height: clamp(300px, 38vw, 520px);
+        padding: 1rem 1rem 1rem 0;
+        display: flex;
+        align-items: end;
+        justify-content: center;
     }
 
     .home-page .testimonial-media {
         position: relative;
         display: block;
-        width: 100%;
+        width: min(100%, 760px);
         height: 100%;
-        min-height: clamp(360px, 48vw, 610px);
+        min-height: clamp(300px, 38vw, 520px);
+        max-height: 520px;
         border-radius: 26px;
         overflow: hidden;
         box-shadow: 0 18px 45px rgba(15, 23, 42, .14);
@@ -363,10 +367,10 @@
 
     .home-page .testimonial-badge {
         position: absolute;
-        right: 1.2rem;
-        bottom: 1.2rem;
-        max-width: min(75%, 320px);
-        padding: 1.15rem 1.3rem 1rem;
+        right: 1rem;
+        bottom: 1rem;
+        max-width: min(72%, 300px);
+        padding: 1rem 1.1rem .9rem;
         border-radius: 18px;
         background: rgba(255, 255, 255, 0.88);
         backdrop-filter: blur(2px);
