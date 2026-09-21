@@ -707,7 +707,7 @@
                         <a href="{{ data_get($hero, 'secondary_url') }}" class="rounded-full border border-white/40 px-8 py-4 text-center text-sm font-black uppercase text-white transition hover:border-white hover:bg-white/10">{{ data_get($hero, 'secondary_label') }}</a>
                     @endif
                 </div>
-                <div class="mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
+                <div class="mt-8 grid max-w-[720px] grid-cols-2 gap-3 sm:grid-cols-4">
                     @foreach ($stats ?: [['value' => '99.9%', 'label' => 'Uptime'], ['value' => '1000s', 'label' => 'Businesses'], ['value' => 'Millions', 'label' => 'Transactions'], ['value' => 'Secure', 'label' => 'Security']] as $stat)
                         @php
                             $statValue = is_array($stat) ? ($stat['value'] ?? '') : $stat;
@@ -716,16 +716,16 @@
                             $statSuffix = preg_replace('/[0-9.]+/', '', (string) $statValue);
                             $statDecimals = str_contains((string) $statNumber, '.') ? 1 : 0;
                         @endphp
-                        <div class="rounded-[18px] border border-white/10 bg-[#1b2420]/90 px-3 py-3 shadow-inner shadow-black/10 backdrop-blur-[2px] sm:px-4">
+                        <div class="rounded-[18px] border border-white/10 bg-[#1b2420]/90 px-2 py-3 shadow-inner shadow-black/10 backdrop-blur-[2px] sm:px-3">
                             <p
-                                class="stat-number text-[1.08rem] font-black leading-none sm:text-[1.22rem]"
+                                class="stat-number text-[0.95rem] font-black leading-none sm:text-[1.08rem]"
                                 @if($statNumber !== '')
                                     data-target="{{ $statNumber }}"
                                     data-suffix="{{ $statSuffix }}"
                                     data-decimals="{{ $statDecimals }}"
                                 @endif
                             >{{ $statNumber !== '' ? '0'.$statSuffix : $statValue }}</p>
-                            <p class="mt-2 text-[9px] font-bold uppercase tracking-[0.12em] text-white/60">{{ $statLabel }}</p>
+                            <p class="mt-2 text-[8px] font-bold uppercase tracking-[0.12em] text-white/60">{{ $statLabel }}</p>
                         </div>
                     @endforeach
                 </div>
