@@ -708,7 +708,7 @@
                     @endif
                 </div>
                 <div class="mt-8 grid max-w-[720px] grid-cols-2 gap-3 sm:grid-cols-4">
-                    @foreach ($stats ?: [['value' => '99.9%', 'label' => 'Uptime'], ['value' => '1000s', 'label' => 'Businesses'], ['value' => 'Millions', 'label' => 'Transactions'], ['value' => 'Secure', 'label' => 'Security']] as $stat)
+                    @foreach ($stats ?: [['value' => '90%', 'label' => 'Uptime'], ['value' => '700', 'label' => 'Businesses'], ['value' => 'Millions', 'label' => 'Transactions'], ['value' => 'Secure', 'label' => 'Security']] as $stat)
                         @php
                             $statValue = is_array($stat) ? ($stat['value'] ?? '') : $stat;
                             $statLabel = is_array($stat) ? ($stat['label'] ?? '') : '';
