@@ -62,6 +62,32 @@
             --bama-font-display: 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
+        /* Uploaded media stays within its reserved space on every public page. */
+        .bama-page img { max-width: 100%; }
+        .bama-page .bama-media-frame {
+            position: relative;
+            width: 100%;
+            min-width: 0;
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            border-radius: 12px;
+            background: #071B12;
+        }
+        .bama-page .bama-media-frame > picture {
+            position: absolute;
+            inset: 0;
+            display: block;
+        }
+        .bama-page .bama-media-frame img,
+        .bama-page img.bama-upload-image {
+            display: block;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+            object-position: center;
+        }
+
         body {
             background: var(--bama-page);
             color: var(--bama-black);
