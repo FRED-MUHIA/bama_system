@@ -724,7 +724,7 @@
                                     data-suffix="{{ $statSuffix }}"
                                     data-decimals="{{ $statDecimals }}"
                                 @endif
-                            >{{ $statNumber !== '' ? '0'.$statSuffix : $statValue }}</p>
+                            >{{ $statValue }}</p>
                             <p class="mt-2 text-[8px] font-bold uppercase tracking-[0.12em] text-white/60">{{ $statLabel }}</p>
                         </div>
                     @endforeach
@@ -1225,7 +1225,7 @@
             return;
         }
 
-        const start = 0;
+        const start = target > 0 ? Math.max(target * 0.15, 1) : 0;
         const duration = 1600;
         const startTime = performance.now();
 
@@ -1258,6 +1258,8 @@
                 observer.unobserve(entry.target);
             });
         }, { threshold: 0.45 });
+
+        statNumbers.forEach((node) => {
             statObserver.observe(node);
         });
     }
