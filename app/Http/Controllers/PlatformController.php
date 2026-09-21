@@ -25,7 +25,10 @@ class PlatformController extends Controller
         return view('platform.index', [
             'tenants' => Tenant::withoutGlobalScopes()
                 ->whereNull('deleted_at')
-                ->with(['subscription' => fn ($query) => $query->withoutGlobalScopes()->with('plan')])
+                ->with([
+                    'subscription' => fn ($query) => $query->withoutGlobalScopes()->with('plan'),
+                    'users' => fn ($query) => $query->select('users.id', 'users.email')->orderBy('users.email'),
+                ])
                 ->withCount([
                     'businesses' => fn ($query) => $query->withoutGlobalScopes(),
                     'users',
@@ -52,6 +55,7 @@ class PlatformController extends Controller
                 ->whereNull('deleted_at')
                 ->with([
                     'businesses' => fn ($query) => $query->withoutGlobalScopes(),
+                    'users' => fn ($query) => $query->select('users.id', 'users.email')->orderBy('users.email'),
                     'subscription' => fn ($query) => $query->withoutGlobalScopes()->with('plan'),
                 ])
                 ->withCount('users')

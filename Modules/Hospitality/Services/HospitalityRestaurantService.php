@@ -95,6 +95,9 @@ class HospitalityRestaurantService
             $guest = ! empty($data['guest_profile_id']) ? GuestProfile::find($data['guest_profile_id']) : null;
             $reservation = ! empty($data['reservation_id']) ? Reservation::with('guestProfile')->find($data['reservation_id']) : null;
             $guest ??= $reservation?->guestProfile;
+            if ($guest && ! $guest->client_id) {
+                $guest = app(HospitalityCrmService::class)->syncGuest($guest);
+            }
 
             $posOrder = PosOrder::create([
                 'client_id' => $guest?->client_id ?? $reservation?->client_id,
@@ -127,6 +130,15 @@ class HospitalityRestaurantService
                 $posOrder,
                 'Restaurant POS '.$posOrder->order_number
             );
+
+            // Room charges are billed at checkout; cancelled orders are not invoiced.
+            if (! in_array($data['billing_status'], ['Room Charge', 'Cancelled'], true)) {
+                $billing = app(HospitalityBillingService::class);
+                $invoice = $billing->foodInvoice($posOrder, $items);
+                if ($data['billing_status'] === 'Paid' && $totals['total'] > 0) {
+                    $billing->collectPayment($invoice, (float) $totals['total'], $posOrder->paymentMethod?->name ?? 'Cash', $posOrder->order_number);
+                }
+            }
 
             if ($data['billing_status'] === 'Paid' && ! empty($data['payment_method_id']) && class_exists(PosOrderPayment::class)) {
                 $posOrder->payments()->create([

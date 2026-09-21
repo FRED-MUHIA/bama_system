@@ -607,6 +607,18 @@
                         </td>
                         <td><span class="status-pill">{{ $record->status ?? $record->kitchen_status ?? $record->loyalty_level ?? 'Active' }}</span></td>
                         <td>
+                            @if(in_array($section, ['restaurant', 'check-ins', 'check-outs', 'events'], true))
+                                @php($billingInvoice = $section === 'restaurant' ? $record->posOrder?->invoice : $record->invoice)
+                                @if($section === 'restaurant' && $record->billing_status === 'Room Charge' && ! $billingInvoice)
+                                    @php($billingInvoice = $record->reservation?->checkOut?->invoice)
+                                @endif
+                                @if($billingInvoice)
+                                    <a class="btn btn-sm btn-outline-success mb-1" href="{{ route('invoices.show', $billingInvoice) }}">Invoice {{ $billingInvoice->invoice_number }}</a>
+                                    @foreach($billingInvoice->receipts as $billingReceipt)
+                                        <a class="btn btn-sm btn-outline-success mb-1" href="{{ route('receipts.show', $billingReceipt) }}">Receipt {{ $billingReceipt->receipt_number }}</a>
+                                    @endforeach
+                                @endif
+                            @endif
                             @if($section === 'rooms')
                                 <form method="post" action="{{ route('hospitality.rooms.status', $record) }}" class="d-flex gap-1">@csrf @method('PATCH')<select class="form-select form-select-sm" name="status">@foreach($statuses as $status)<option @selected($record->status === $status)>{{ $status }}</option>@endforeach</select><button class="btn btn-sm btn-outline-success">Save</button></form>
                             @elseif($section === 'guests' && ! $record->loyaltyMember)

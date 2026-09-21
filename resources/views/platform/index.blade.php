@@ -27,18 +27,19 @@
             </div>
             <div class="table-responsive">
                 <table class="table owner-table align-middle mb-0">
-                    <thead><tr><th>Name</th><th>Industry</th><th>Plan</th><th>Status</th><th>Businesses</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Registered Emails</th><th>Industry</th><th>Plan</th><th>Status</th><th>Businesses</th></tr></thead>
                     <tbody>
                     @forelse($tenants as $tenant)
                         <tr>
                             <td><strong>{{ $tenant->name }}</strong><small class="d-block text-muted">{{ $tenant->primary_domain ?: $tenant->slug }}</small></td>
+                            <td>@include('platform.partials.registered-emails', ['tenant' => $tenant])</td>
                             <td>{{ $tenant->industry ?: 'General' }}</td>
                             <td>{{ $tenant->subscription?->plan?->name ?? 'No plan' }}</td>
                             <td><span class="badge badge-owner">{{ $tenant->status }}</span></td>
                             <td>{{ number_format($tenant->businesses_count) }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-muted">No clients yet.</td></tr>
+                        <tr><td colspan="6" class="text-muted">No clients yet.</td></tr>
                     @endforelse
                     </tbody>
                 </table>

@@ -3,6 +3,8 @@
 namespace Modules\Hospitality\Services;
 
 use App\Models\Invoice;
+use App\Models\Client;
+use App\Models\PosOrder;
 use App\Models\Payment;
 use App\Models\Receipt;
 use App\Services\DocumentService;
@@ -14,6 +16,18 @@ use Modules\Hospitality\Models\Reservation;
 
 class HospitalityBillingService
 {
+    public function foodInvoice(PosOrder $order, array $items): Invoice
+    {
+        $clientId = $order->client_id ?? Client::firstOrCreate([
+            'name' => 'Walk-in restaurant customer',
+            'type' => 'individual',
+        ])->id;
+        $invoice = $this->createInvoice($clientId, $items, 'Hospitality restaurant '.$order->order_number);
+        $order->update(['client_id' => $clientId, 'invoice_id' => $invoice->id]);
+
+        return $invoice;
+    }
+
     public function __construct(private readonly DocumentService $documents)
     {
     }
@@ -81,6 +95,10 @@ class HospitalityBillingService
     public function collectPayment(Invoice $invoice, float $amount, string $method = 'Cash', ?string $reference = null): Receipt
     {
         return DB::transaction(function () use ($invoice, $amount, $method, $reference) {
+            $invoice = Invoice::whereKey($invoice->id)->lockForUpdate()->firstOrFail();
+            if ($amount <= 0 || round($amount, 2) > round((float) $invoice->balance, 2)) {
+                throw ValidationException::withMessages(['payment_amount' => 'Enter a positive payment no greater than the invoice balance.']);
+            }
             $payment = Payment::create([
                 'invoice_id' => $invoice->id,
                 'amount' => $amount,
@@ -89,7 +107,7 @@ class HospitalityBillingService
                 'notes' => 'Hospitality payment collection.',
             ]);
 
-            $invoice->increment('amount_paid', $amount);
+            // Payment's model hook synchronizes the invoice from its payment records.
             $invoice->refresh();
             $balance = max((float) $invoice->total - (float) $invoice->amount_paid, 0);
             $invoice->update(['balance' => $balance, 'payment_status' => $balance <= 0 ? 'paid' : 'partial']);

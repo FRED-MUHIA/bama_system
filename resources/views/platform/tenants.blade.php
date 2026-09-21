@@ -4,7 +4,7 @@
 <div class="owner-card p-3">
     <div class="table-responsive">
         <table class="table owner-table align-middle">
-            <thead><tr><th>Client</th><th>Businesses</th><th>Users</th><th>Subscription</th><th>Manage</th></tr></thead>
+            <thead><tr><th>Client</th><th>Registered Emails</th><th>Businesses</th><th>Users</th><th>Subscription</th><th>Manage</th></tr></thead>
             <tbody>
             @forelse($tenants as $tenant)
                 <tr>
@@ -12,6 +12,7 @@
                         <strong>{{ $tenant->name }}</strong>
                         <small class="d-block text-muted">{{ $tenant->industry ?: 'General' }} · {{ $tenant->primary_domain ?: $tenant->slug }}</small>
                     </td>
+                    <td>@include('platform.partials.registered-emails', ['tenant' => $tenant])</td>
                     <td>
                         @forelse($tenant->businesses as $business)
                             <span class="badge text-bg-light">{{ $business->name }}</span>
@@ -64,7 +65,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="5" class="text-muted">No clients yet.</td></tr>
+                <tr><td colspan="6" class="text-muted">No clients yet.</td></tr>
             @endforelse
             </tbody>
         </table>

@@ -41,4 +41,9 @@ class Reservation extends HospitalityModel
     {
         return $this->hasMany(ReservationGuest::class);
     }
+
+    public function checkOut(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(CheckOut::class);
+    }
 }

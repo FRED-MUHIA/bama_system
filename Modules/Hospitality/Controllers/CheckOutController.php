@@ -18,7 +18,7 @@ class CheckOutController extends Controller
         return view('hospitality.index', [
             'title' => 'Check-Out',
             'section' => 'check-outs',
-            'records' => CheckOut::with('reservation.guestProfile', 'invoice', 'receipt')->latest()->paginate(20),
+            'records' => CheckOut::with('reservation.guestProfile', 'invoice.receipts', 'receipt')->latest()->paginate(20),
             'reservations' => Reservation::with('guestProfile', 'room')->where('status', 'Checked In')->latest()->limit(100)->get(),
         ]);
     }

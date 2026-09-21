@@ -21,7 +21,7 @@ class CheckInController extends Controller
         return view('hospitality.index', [
             'title' => 'Check-In',
             'section' => 'check-ins',
-            'records' => CheckIn::with('reservation.guestProfile', 'reservation.client', 'room', 'invoice')->latest()->paginate(20),
+            'records' => CheckIn::with('reservation.guestProfile', 'reservation.client', 'room', 'invoice.receipts')->latest()->paginate(20),
             'reservations' => Reservation::with('guestProfile', 'client')->whereIn('status', ['Pending', 'Confirmed'])->latest()->limit(100)->get(),
             'clients' => Client::orderBy('name')->limit(250)->get(),
             'rooms' => Room::with('roomType')

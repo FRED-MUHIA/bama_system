@@ -32,7 +32,7 @@ class RestaurantController extends Controller
         return view('hospitality.index', [
             'title' => 'Restaurant',
             'section' => 'restaurant',
-            'records' => RestaurantOrder::with('reservation', 'posOrder.items.product', 'guestProfile', 'waiter', 'restaurantTable', 'paymentMethod')->latest()->paginate(30),
+            'records' => RestaurantOrder::with('reservation.checkOut.invoice.receipts', 'posOrder.items.product', 'posOrder.invoice.receipts', 'guestProfile', 'waiter', 'restaurantTable', 'paymentMethod')->latest()->paginate(30),
             'reservations' => Reservation::with('guestProfile')->whereIn('status', ['Confirmed', 'Checked In'])->latest()->limit(100)->get(),
             'guests' => GuestProfile::orderBy('full_name')->limit(200)->get(),
             'posOrders' => PosOrder::latest()->limit(100)->get(),
