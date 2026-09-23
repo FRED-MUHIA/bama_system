@@ -12,8 +12,8 @@
                 @endforeach
             </div>
             <div class="flex items-center gap-2">
-                @if(data_get($headerContent, 'demo_label') && data_get($headerContent, 'demo_url'))
-                    <a href="{{ $marketingUrl(data_get($headerContent, 'demo_url')) }}" class="hidden rounded-lg border border-zinc-300 px-4 py-2 text-sm font-black md:inline-flex">Download App</a>
+                @if(data_get($headerContent, 'login_label') || data_get($headerContent, 'login_url'))
+                    <a href="{{ $marketingUrl(data_get($headerContent, 'login_url', route('login')) ) }}" class="hidden rounded-lg border border-zinc-300 px-4 py-2 text-sm font-black md:inline-flex">{{ data_get($headerContent, 'login_label', 'Login') }}</a>
                 @endif
                 @if(data_get($headerContent, 'cta_label'))
                     <a href="{{ $marketingUrl(data_get($headerContent, 'cta_url'), route('register.account')) }}" class="rounded-lg bg-[#00A651] px-4 py-2 text-sm font-black text-white">{{ data_get($headerContent, 'cta_label', 'Start Free Trial') }}</a>

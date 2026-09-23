@@ -666,8 +666,8 @@
             </div>
 
             <div class="flex items-center gap-2 sm:gap-3">
-                @if(data_get($headerContent, 'demo_label') && data_get($headerContent, 'demo_url'))
-                    <a href="{{ data_get($headerContent, 'demo_url') }}" class="hidden rounded-lg border border-zinc-300 px-4 py-2 text-sm font-black text-zinc-800 hover:border-[#00A651] hover:text-[#00A651] md:inline-flex">Download App</a>
+                @if(data_get($headerContent, 'login_label') || data_get($headerContent, 'login_url'))
+                    <a href="{{ data_get($headerContent, 'login_url', route('login')) }}" class="hidden rounded-lg border border-zinc-300 px-4 py-2 text-sm font-black text-zinc-800 hover:border-[#00A651] hover:text-[#00A651] md:inline-flex">{{ data_get($headerContent, 'login_label', 'Login') }}</a>
                 @endif
                 @if(data_get($headerContent, 'cta_label'))
                     <a href="{{ data_get($headerContent, 'cta_url', route('register.account')) }}" class="rounded-lg bg-[#00A651] px-4 py-2 text-sm font-black text-white sm:px-5">{{ data_get($headerContent, 'cta_label', 'Start Free Trial') }}</a>
