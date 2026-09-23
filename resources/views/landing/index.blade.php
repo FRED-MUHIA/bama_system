@@ -704,7 +704,7 @@
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row">
                     <a href="{{ data_get($hero, 'primary_url', route('register.account')) }}" class="rounded-full bg-white px-8 py-4 text-center text-sm font-black uppercase text-black transition hover:bg-[#EAF8F0]">{{ data_get($hero, 'primary_label', 'Start Free Trial') }}</a>
                     @if(data_get($hero, 'secondary_label') && data_get($hero, 'secondary_url'))
-                        <a href="{{ data_get($hero, 'secondary_url') }}" class="rounded-full border border-white/40 px-8 py-4 text-center text-sm font-black uppercase text-white transition hover:border-white hover:bg-white/10">{{ data_get($hero, 'secondary_label') }}</a>
+                        <a href="{{ data_get($hero, 'secondary_url') }}" class="rounded-full border border-white/40 px-8 py-4 text-center text-sm font-black uppercase text-white transition hover:border-white hover:bg-white/10">Download App</a>
                     @endif
                 </div>
                 <div class="mt-8 grid max-w-[720px] grid-cols-2 gap-3 sm:grid-cols-4">
