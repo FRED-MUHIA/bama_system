@@ -5,7 +5,7 @@
     <div class="rounded-[18px] border border-zinc-200 bg-white p-5 shadow-2xl shadow-zinc-200/70 sm:p-6">
         <p class="text-xs font-bold uppercase text-[#00A651]">Step 1</p>
         <h1 class="mt-2 text-3xl font-black">Create Your Bama Account</h1>
-        <p class="mt-2 text-sm text-black">This account becomes the workspace owner for your tenant.</p>
+        <p class="mt-2 text-sm text-black">Create your account to set up and manage your business.</p>
 
         @if ($errors->any())
             <div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ $errors->first() }}</div>
@@ -43,6 +43,7 @@
                     </span>
                 </label>
             </div>
+            <p class="text-sm text-black">Use at least 8 characters with uppercase and lowercase letters and a number.</p>
             <button type="submit" class="mt-1 rounded-lg bg-[#00A651] px-6 py-3 text-base font-black text-white shadow-xl shadow-[#00A651]/20">Continue to company setup</button>
             <p class="text-center text-sm text-black">Already have an account? <a href="{{ route('login') }}" class="font-bold text-[#00A651]">Sign in</a></p>
         </form>

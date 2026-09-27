@@ -13,7 +13,7 @@
         'magic' => route($publicLoginPrefix.'login.magic.request'),
     ];
     $system = $loginSystem ?? ['workspaces' => 'Ready', 'modules' => 'Live', 'industries' => 'Many', 'security' => 'Encrypted'];
-    $initialStep = ($errors->any() || $otpSent) ? 2 : 0;
+    $initialStep = ($errors->any() || $otpSent || session('status') || request('step') === 'login') ? 2 : 0;
     $brandLogoPath = 'images/bama-solutions-02.png';
     $brandLogoUrl = asset($brandLogoPath).'?v='.(file_exists(public_path($brandLogoPath)) ? filemtime(public_path($brandLogoPath)) : time());
 @endphp
@@ -89,8 +89,7 @@
         position:relative;
         width:100%;
         max-width:100%;
-        min-height:100vh;
-        min-height:100svh;
+        min-height:0;
         height:100vh;
         height:var(--bama-visual-viewport-height,100dvh);
         overflow:hidden;
@@ -141,7 +140,7 @@
     .app-screen-center {
         width:min(100%,440px);
         max-width:100%;
-        min-height:calc(100dvh - 52px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        min-height:calc(var(--bama-visual-viewport-height, 100dvh) - 52px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         margin-inline:auto;
         display:flex;
         flex-direction:column;
@@ -765,13 +764,14 @@
                 <div>
                     <div class="app-kicker">Bama Web App</div>
                     <h1 class="app-title">Workspace<br>Console</h1>
-                    <p class="app-copy">Use your existing workspace credentials to open dashboards, operations, finance, clients, stock, projects, and reports.</p>
+                    <p class="app-copy">Create an account for your business or sign in to your workspace.</p>
                 </div>
                 <div class="app-welcome-actions">
                     <button class="app-primary" type="button" data-app-go="1">
                         Get Started <i class="bi bi-arrow-right"></i>
                     </button>
                     <div class="app-direct-actions" aria-label="Account access">
+                        <a class="app-link-button app-link-button--register" href="{{ route('register.account') }}">Create Account</a>
                         <button class="app-link-button" type="button" data-app-go="2">
                             <i class="bi bi-box-arrow-in-right"></i> Workspace Login
                         </button>
@@ -793,8 +793,9 @@
                 </div>
                 <div class="app-choice-card">
                     <h2>App access</h2>
-                    <p>This console is for existing workspace users. New user access is issued by the workspace administrator.</p>
+                    <p>Create a new business account or sign in. Employees can use the account provided by their workspace administrator.</p>
                     <div class="app-choice-actions">
+                        <a class="app-secondary" href="{{ route('register.account') }}">Create Account</a>
                         <button class="app-primary mt-0" type="button" data-app-go="2">Continue to Sign In</button>
                     </div>
                     <div class="app-stat-grid" aria-label="System status">
@@ -820,18 +821,18 @@
                 <div class="app-auth-card">
                     <div class="app-auth-heading">
                         <h2>Workspace Sign In</h2>
-                        <p>Authorized app users only</p>
+                        <p>Welcome back. Sign in to your workspace.</p>
                     </div>
                     @if ($otpAvailable)
                         <ul class="nav nav-pills app-tabs" role="tablist">
                             <li class="nav-item">
-                                <button id="password-login-tab" class="nav-link {{ $otpSent ? '' : 'active' }}" data-bs-toggle="pill" data-bs-target="#password-login" type="button" role="tab" aria-controls="password-login" aria-selected="{{ $otpSent ? 'false' : 'true' }}">Password</button>
+                                <button id="password-login-tab" class="nav-link {{ $otpSent ? '' : 'active' }}" data-bs-target="#password-login" type="button" role="tab" aria-controls="password-login" aria-selected="{{ $otpSent ? 'false' : 'true' }}">Password</button>
                             </li>
                             <li class="nav-item">
-                                <button id="otp-login-tab" class="nav-link {{ $otpSent ? 'active' : '' }}" data-bs-toggle="pill" data-bs-target="#otp-login" type="button" role="tab" aria-controls="otp-login" aria-selected="{{ $otpSent ? 'true' : 'false' }}">OTP</button>
+                                <button id="otp-login-tab" class="nav-link {{ $otpSent ? 'active' : '' }}" data-bs-target="#otp-login" type="button" role="tab" aria-controls="otp-login" aria-selected="{{ $otpSent ? 'true' : 'false' }}">OTP</button>
                             </li>
                             <li class="nav-item">
-                                <button id="magic-login-tab" class="nav-link" data-bs-toggle="pill" data-bs-target="#magic-login" type="button" role="tab" aria-controls="magic-login" aria-selected="false">Magic link</button>
+                                <button id="magic-login-tab" class="nav-link" data-bs-target="#magic-login" type="button" role="tab" aria-controls="magic-login" aria-selected="false">Magic link</button>
                             </li>
                         </ul>
                         <div class="tab-content">
@@ -844,7 +845,7 @@
                         <input type="hidden" name="login_context" value="{{ $loginContext }}">
                         <div class="mb-3">
                             <label class="form-label" for="app-login-username">Email or username</label>
-                            <input id="app-login-username" name="username" type="text" inputmode="email" value="{{ old('username') }}" class="form-control" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
+                            <input id="app-login-username" name="username" type="text" inputmode="email" value="{{ old('username') }}" class="form-control" autocomplete="username" autocapitalize="none" spellcheck="false" required>
                         </div>
                         <div class="mb-2">
                             <label class="form-label" for="app-login-password">Password</label>
@@ -920,9 +921,10 @@
                         </div>
                     @endif
 
+                    <p class="app-auth-links">New to Bama? <a href="{{ route('register.account') }}">Create Account</a></p>
                     <div class="app-security">
                         <i class="bi bi-shield-check"></i>
-                        <span>Accounts are checked against the workspace database before the dashboard opens.</span>
+                        <span>Sign in securely to access your business.</span>
                     </div>
                 </div>
 
@@ -949,6 +951,7 @@
         const dots = document.querySelectorAll('.app-dot');
         const interactiveTouchSelector = 'a, button, input, textarea, select, label, summary, [role="button"], [contenteditable="true"], .app-auth-card, .bama-install-card';
         let step = Number(flow?.dataset.initialStep || 0);
+        let focusTimer;
         let touchStartX = 0;
         let touchStartY = 0;
         let touchDeltaX = 0;
@@ -967,11 +970,13 @@
 
             const activePane = loginScreen.querySelector('.tab-pane.show.active') || loginScreen;
             const activeInput = activePane.querySelector('[autofocus], input:not([type="hidden"]), select, textarea');
-            window.setTimeout(() => activeInput?.focus({ preventScroll:true }), 360);
+            window.clearTimeout(focusTimer);
+            focusTimer = window.setTimeout(() => { if (step === 2) activeInput?.focus({ preventScroll:true }); }, 280);
         };
 
         const setStep = (next, options = {}) => {
             if (! flow) return;
+            window.clearTimeout(focusTimer);
             const previousStep = step;
             step = Math.max(0, Math.min(2, Number(next)));
             flow.style.setProperty('--step', step);
@@ -980,7 +985,7 @@
 
             screens.forEach((screen, index) => {
                 const active = index === step;
-                screen.toggleAttribute('aria-hidden', ! active);
+                screen.setAttribute('aria-hidden', active ? 'false' : 'true');
                 screen.inert = ! active;
             });
 
@@ -995,7 +1000,7 @@
                 syncHistory(step);
             }
 
-            if (step === 2 && (step !== previousStep || options.focus)) {
+            if (step === 2 && options.focus) {
                 focusLoginField();
             }
         };
@@ -1040,24 +1045,6 @@
 
         flow?.querySelectorAll('.app-tabs [data-bs-target]').forEach((tab) => {
             tab.addEventListener('shown.bs.tab', () => setAuthTab(tab));
-        });
-
-        flow?.querySelectorAll('form').forEach((form) => {
-            form.addEventListener('submit', (event) => {
-                const submittedBy = event.submitter instanceof HTMLButtonElement ? event.submitter : null;
-                const button = submittedBy || form.querySelector('button[type="submit"]');
-
-                if (! button || button.disabled) return;
-
-                button.disabled = true;
-                button.classList.add('is-loading');
-                button.setAttribute('aria-busy', 'true');
-                button.dataset.originalLabel = button.textContent.trim();
-                button.replaceChildren(
-                    Object.assign(document.createElement('span'), { className: 'app-button-spinner' }),
-                    document.createTextNode('Please wait')
-                );
-            });
         });
 
         const resetDrag = () => {
@@ -1150,7 +1137,7 @@
             }
         @endif
 
-        setStep(step, { focus: step === 2 });
+        setStep(step);
 
         if (window.history?.replaceState) {
             window.history.replaceState({ appFlow: true, step }, '', window.location.href);

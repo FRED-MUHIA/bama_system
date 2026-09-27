@@ -31,7 +31,7 @@ class ExampleTest extends TestCase
             ->assertRedirect(route('dashboard'));
     }
 
-    public function test_app_login_keeps_slide_flow_without_registration_entry(): void
+    public function test_app_login_offers_registration_in_the_slide_flow(): void
     {
         $this->get(route('app.login'))
             ->assertOk()
@@ -39,7 +39,8 @@ class ExampleTest extends TestCase
             ->assertSee('Workspace Sign In')
             ->assertSee('Get Started')
             ->assertSee('Continue to Sign In')
-            ->assertDontSee(route('register.account'), false)
+            ->assertSee(route('register.account'), false)
+            ->assertSee('Create Account')
             ->assertDontSee('Register an account')
             ->assertDontSee('Create business account')
             ->assertSee('data-app-screen', false)

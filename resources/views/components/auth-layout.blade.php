@@ -36,3 +36,6 @@
         </section>
     @endif
 </div>
+@once
+    <script src="{{ asset('auth-forms.js') }}?v=20260927" defer></script>
+@endonce

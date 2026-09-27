@@ -400,6 +400,7 @@
     }
 </style>
 
+<script src="{{ asset('auth-forms.js') }}?v=20260927" defer></script>
 <main class="website-auth">
     <div class="website-auth-shell">
         <aside class="website-auth-hero">

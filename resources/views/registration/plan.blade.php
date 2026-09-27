@@ -151,7 +151,7 @@
 
             const hideModalOnce = function () {
                 modal.classList.add('hidden');
-                sessionStorage.setItem('registrationTrialModalDismissed', '1');
+                try { sessionStorage.setItem('registrationTrialModalDismissed', '1'); } catch (_) { /* Storage may be disabled. */ }
             };
 
             const dismissModal = function () {
@@ -172,7 +172,8 @@
                 form.requestSubmit();
             };
 
-            const shouldShowModal = sessionStorage.getItem('registrationTrialModalDismissed') !== '1';
+            let shouldShowModal = true;
+            try { shouldShowModal = sessionStorage.getItem('registrationTrialModalDismissed') !== '1'; } catch (_) { /* Keep the prompt usable. */ }
             if (! shouldShowModal) {
                 modal.classList.add('hidden');
             }
@@ -183,7 +184,6 @@
             planOptions.forEach((option) => {
                 option.addEventListener('click', function () {
                     setSelectedPlan(option.dataset.planOption);
-                    submitSelectedPlan();
                 });
             });
 
