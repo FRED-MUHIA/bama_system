@@ -1303,6 +1303,7 @@
             ['label' => 'Returns', 'route' => 'retail.returns.index', 'match' => 'retail.returns.*', 'icon' => 'bi-arrow-counterclockwise'],
             ['label' => 'Reports', 'route' => 'retail.reports.index', 'match' => 'retail.reports.*', 'icon' => 'bi-graph-up'],
             ['label' => 'Suppliers', 'route' => 'retail.suppliers.index', 'match' => 'retail.suppliers.*', 'icon' => 'bi-truck'],
+            ['label' => 'Stores', 'route' => 'retail.branches.index', 'match' => 'retail.branches.*', 'icon' => 'bi-shop'],
             ['label' => 'Gift Cards', 'route' => 'retail.gift-cards.index', 'match' => 'retail.gift-cards.*', 'icon' => 'bi-credit-card-2-front'],
             ['label' => 'Settings', 'route' => 'retail.settings.index', 'match' => 'retail.settings.*', 'icon' => 'bi-gear'],
         ];

@@ -23,14 +23,24 @@ function configureInstallCards() {
     const androidHelpers = document.querySelectorAll('[data-bama-android-install]');
     const installButtons = document.querySelectorAll('[data-bama-install]');
     const dismissButtons = document.querySelectorAll('[data-bama-install-dismiss]');
-    const dismissedAt = Number(localStorage.getItem('bama-install-dismissed-at') || 0);
-    const dismissed = dismissedAt > 0 && Date.now() - dismissedAt < INSTALL_DISMISS_DAYS * 24 * 60 * 60 * 1000;
+    const popup = document.querySelector('[data-bama-install-popup]');
+    const manualHelp = document.querySelector('[data-bama-install-manual]');
+    const phoneMedia = window.matchMedia('(max-width: 767px)');
+    let installed = false;
+    let dismissedAt = 0;
+    try { dismissedAt = Number(localStorage.getItem('bama-install-dismissed-at') || 0); } catch { /* Storage is optional. */ }
+    let dismissed = dismissedAt > 0 && Date.now() - dismissedAt < INSTALL_DISMISS_DAYS * 24 * 60 * 60 * 1000;
 
     const render = () => {
-        const canInstall = Boolean(deferredInstallPrompt);
-        const showIosHelp = isIos() && ! isStandalone() && ! dismissed;
-        const showAndroidHelp = isAndroid() && ! isStandalone() && ! dismissed && canInstall;
-        const showCard = ! isStandalone() && ! dismissed && (canInstall || showIosHelp);
+        const canInstall = Boolean(deferredInstallPrompt) && !installed;
+        const showIosHelp = isIos() && ! isStandalone() && !installed && ! dismissed;
+        const showAndroidHelp = isAndroid() && ! isStandalone() && !installed && ! dismissed && canInstall;
+        const showCard = ! isStandalone() && !installed && ! dismissed && (canInstall || showIosHelp);
+
+        const showPopup = !isStandalone() && !installed && !dismissed && phoneMedia.matches && (isIos() || isAndroid() || canInstall);
+        if (manualHelp) manualHelp.hidden = !showPopup || isIos() || canInstall;
+        if (showPopup && popup && !popup.open) popup.showModal();
+        if (!showPopup && popup?.open) popup.close();
 
         cards.forEach((card) => {
             card.hidden = ! showCard;
@@ -53,19 +63,36 @@ function configureInstallCards() {
         button.addEventListener('click', async () => {
             if (! deferredInstallPrompt) return;
 
-            deferredInstallPrompt.prompt();
-            await deferredInstallPrompt.userChoice;
+            const prompt = deferredInstallPrompt;
             deferredInstallPrompt = null;
-            render();
+            button.disabled = true;
+            try {
+                await prompt.prompt();
+                const choice = await prompt.userChoice;
+                if (choice.outcome === 'accepted') installed = true;
+                dismiss();
+            } catch {
+                render();
+            } finally {
+                button.disabled = false;
+            }
         });
     });
 
-    dismissButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-            localStorage.setItem('bama-install-dismissed-at', String(Date.now()));
-            render();
-        });
-    });
+    const dismiss = () => {
+        dismissed = true;
+        try { localStorage.setItem('bama-install-dismissed-at', String(Date.now())); } catch { /* Still dismiss for this page. */ }
+        render();
+    };
+    dismissButtons.forEach((button) => button.addEventListener('click', dismiss));
+    popup?.addEventListener('cancel', (event) => { event.preventDefault(); dismiss(); });
+    popup?.addEventListener('click', (event) => { if (event.target === popup) {
+        const bounds = popup.getBoundingClientRect();
+        if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dismiss();
+    } });
+    window.addEventListener('appinstalled', () => { installed = true; dismiss(); });
+    standaloneMedia.addEventListener('change', render);
+    phoneMedia.addEventListener('change', render);
 
     render();
 
@@ -199,7 +226,7 @@ window.addEventListener('beforeinstallprompt', (event) => {
 
 window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
-    localStorage.setItem('bama-install-dismissed-at', String(Date.now()));
+    try { localStorage.setItem('bama-install-dismissed-at', String(Date.now())); } catch { /* Storage is optional. */ }
 });
 
 document.addEventListener('DOMContentLoaded', () => {

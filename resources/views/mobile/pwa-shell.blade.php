@@ -56,6 +56,18 @@
 </script>
 <noscript><style>.bama-loading-screen { display: none !important; }</style></noscript>
 
+<dialog class="bama-install-popup" data-bama-install-popup aria-labelledby="bama-install-title" aria-describedby="bama-install-description">
+    <img src="{{ asset('pwa-icons/icon-192.png') }}" width="64" height="64" alt="">
+    <h2 id="bama-install-title">Install the Bama app</h2>
+    <p id="bama-install-description">Open your business straight from your phone’s home screen.</p>
+    <p data-bama-ios-install hidden>On iPhone, open this website in Safari, tap Share, then Add to Home Screen and Add.</p>
+    <p data-bama-install-manual hidden>Open your browser menu and choose Install app or Add to Home screen, if available.</p>
+    <div class="bama-install-actions">
+        <button type="button" data-bama-install hidden>Install Bama</button>
+        <button type="button" data-bama-install-dismiss autofocus>Not now</button>
+    </div>
+</dialog>
+
 <div class="bama-offline-banner" data-bama-offline hidden>
     <strong>You're offline</strong>
     <span>Some actions need an internet connection.</span>

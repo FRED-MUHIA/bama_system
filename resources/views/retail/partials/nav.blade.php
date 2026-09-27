@@ -15,7 +15,7 @@
         ['Warehousing', 'retail.warehousing.index', 'retail.warehousing.*', 'bi-buildings'],
         ['Suppliers', 'retail.suppliers.index', 'retail.suppliers.*', 'bi-truck'],
         ['Procurement', 'retail.procurement.index', 'retail.procurement.*', 'bi-cart-check'],
-        ['Branches', 'retail.branches.index', 'retail.branches.*', 'bi-diagram-3'],
+        ['Stores', 'retail.branches.index', 'retail.branches.*', 'bi-shop'],
         ['Website', 'retail.ecommerce.index', 'retail.ecommerce.*', 'bi-globe2'],
         ['Loyalty', 'retail.loyalty.index', 'retail.loyalty.*', 'bi-gem'],
         ['Promotions', 'retail.promotions.index', 'retail.promotions.*', 'bi-percent'],

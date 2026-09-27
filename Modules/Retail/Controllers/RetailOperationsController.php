@@ -114,7 +114,7 @@ class RetailOperationsController extends Controller
 
     public function branches()
     {
-        return view('retail.module', ['title' => 'Branches', 'section' => 'branches', 'records' => Branch::latest()->paginate(20)]);
+        return view('retail.module', ['title' => 'Stores', 'section' => 'branches', 'records' => Branch::latest()->paginate(20)]);
     }
 
     public function storeBranch(Request $request)

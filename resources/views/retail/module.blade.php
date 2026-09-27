@@ -560,14 +560,15 @@
         @endif
     </div>
 @elseif($section === 'branches')
+    <p class="text-muted">Manage your stores under this business. All stores share the same product catalogue. Assign employees to a store using the Branch field in Administration.</p>
     <div class="card p-3 mb-3">
         <form method="POST" action="{{ route('retail.branches.store') }}" class="row g-2">
             @csrf
-            <div class="col-md-3"><input class="form-control" name="name" placeholder="Branch name" required></div>
+            <div class="col-md-3"><input class="form-control" name="name" placeholder="Store name" aria-label="Store name" required></div>
             <div class="col-md-2"><input class="form-control" name="code" placeholder="Code"></div>
             <div class="col-md-5"><input class="form-control" name="address" placeholder="Address"></div>
             <div class="col-md-1 form-check d-flex align-items-center ps-4"><input class="form-check-input me-2" type="checkbox" name="is_active" value="1" checked id="branchActive"><label class="form-check-label" for="branchActive">Active</label></div>
-            <div class="col-md-1"><button class="btn btn-success w-100"><i class="bi bi-save"></i></button></div>
+            <div class="col-md-1"><button class="btn btn-success w-100" aria-label="Add store"><i class="bi bi-save"></i></button></div>
         </form>
     </div>
 @elseif($section === 'ecommerce')
