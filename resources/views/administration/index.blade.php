@@ -295,7 +295,7 @@
                                         </div>
                                      </td>
                                  </tr>
-                                 <tr class="collapse" id="{{ $editId }}">
+                                 <tr class="collapse employee-editor" id="{{ $editId }}">
                                      <td colspan="5">
                                          <form method="post" action="{{ route('administration.users.update',$user) }}" class="border rounded-2 p-3">
                                              @csrf
@@ -701,6 +701,8 @@
 </div>
 
 <style>
+    /* Bootstrap controls display; override Tailwind's collapse visibility on this row. */
+    .employee-editor.collapse { visibility: visible; }
     .presence-dot{width:10px;height:10px;border-radius:50%;flex:0 0 10px}
     .presence-dot.online{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.13)}
     .presence-dot.offline{background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.1)}
