@@ -591,7 +591,7 @@ class AdministrationController extends Controller
 
     public function activateForm(string $token)
     {
-        $invitation = UserInvitation::where('token', $token)->where('status', 'Pending')->whereNull('accepted_at')->whereNull('cancelled_at')->where('expires_at', '>', now())->firstOrFail();
+        $invitation = UserInvitation::withoutGlobalScope('business')->where('token', $token)->where('status', 'Pending')->whereNull('accepted_at')->whereNull('cancelled_at')->where('expires_at', '>', now())->firstOrFail();
 
         $activationAction = route('administration.activate.store', $invitation->token);
 
@@ -600,7 +600,7 @@ class AdministrationController extends Controller
 
     public function activate(Request $request, string $token)
     {
-        $invitation = UserInvitation::where('token', $token)->where('status', 'Pending')->whereNull('accepted_at')->whereNull('cancelled_at')->where('expires_at', '>', now())->firstOrFail();
+        $invitation = UserInvitation::withoutGlobalScope('business')->where('token', $token)->where('status', 'Pending')->whereNull('accepted_at')->whereNull('cancelled_at')->where('expires_at', '>', now())->firstOrFail();
         $data = $request->validate(['password' => ['required', 'confirmed', Password::min(10)->mixedCase()->numbers()->symbols()], 'terms' => ['accepted']]);
         $business = \App\Models\Business::withoutGlobalScopes()->findOrFail($invitation->business_id);
 

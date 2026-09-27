@@ -88,6 +88,43 @@ class AdministrationTest extends TestCase
         $this->assertDatabaseMissing('user_invitations', ['user_id' => $employee->id]);
     }
 
+    public function test_guest_can_activate_invitation_outside_the_current_business(): void
+    {
+        $tenant = Tenant::create(['name' => 'Inviting shop', 'slug' => 'inviting-shop', 'industry' => 'retail', 'status' => 'active']);
+        $business = Business::withoutGlobalScopes()->create(['tenant_id' => $tenant->id, 'name' => 'Inviting shop', 'slug' => 'inviting-shop', 'industry' => 'retail']);
+        $employee = User::factory()->create(['current_tenant_id' => $tenant->id, 'status' => 'Pending Invitation', 'is_active' => false]);
+        DB::table('tenant_user')->insert(['tenant_id' => $tenant->id, 'user_id' => $employee->id, 'role' => 'staff', 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('business_user')->insert(['business_id' => $business->id, 'user_id' => $employee->id, 'status' => 'Pending Invitation', 'created_at' => now(), 'updated_at' => now()]);
+        $invitation = UserInvitation::create([
+            'business_id' => $business->id, 'user_id' => $employee->id,
+            'token' => \Illuminate\Support\Str::random(64), 'status' => 'Pending', 'expires_at' => now()->addDay(),
+        ]);
+        auth()->logout();
+        $this->withSession(['active_business_id' => $this->business->id]);
+
+        $this->get(route('administration.activate', $invitation->token))->assertOk()->assertSee('Activate account');
+        $this->assertNull($invitation->fresh()->accepted_at);
+        foreach ([['expires_at' => now()->subMinute()], ['status' => 'Cancelled', 'cancelled_at' => now()]] as $invalidState) {
+            $invitation->update($invalidState);
+            $this->get(route('administration.activate', $invitation->token))->assertNotFound();
+            $this->post(route('administration.activate.store', $invitation->token), [
+                'password' => 'Strong!Pass123', 'password_confirmation' => 'Strong!Pass123', 'terms' => 1,
+            ])->assertNotFound();
+            $invitation->update(['expires_at' => now()->addDay(), 'status' => 'Pending', 'cancelled_at' => null]);
+        }
+        $this->post(route('administration.activate.store', $invitation->token), [
+            'password' => 'Strong!Pass123', 'password_confirmation' => 'Strong!Pass123', 'terms' => 1,
+        ])->assertRedirect(route('login'))->assertSessionHasNoErrors();
+
+        $this->assertTrue(Hash::check('Strong!Pass123', $employee->fresh()->password));
+        $this->assertDatabaseHas('business_user', ['business_id' => $business->id, 'user_id' => $employee->id, 'status' => 'Active']);
+        $this->assertDatabaseMissing('business_user', ['business_id' => $this->business->id, 'user_id' => $employee->id]);
+        $this->get(route('administration.activate', $invitation->token))->assertNotFound();
+        $this->post(route('administration.activate.store', $invitation->token), [
+            'password' => 'Different!123', 'password_confirmation' => 'Different!123', 'terms' => 1,
+        ])->assertNotFound();
+    }
+
     public function test_admin_invites_user_without_knowing_password_and_user_activates(): void
     {
         $this->flushArrayMail();
