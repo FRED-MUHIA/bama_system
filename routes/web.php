@@ -204,6 +204,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/email/verification-notification', [RegistrationController::class, 'resendVerification'])->middleware('throttle:6,1')->name('verification.send');
     Route::get('/email/verify/{id}/{hash}', [RegistrationController::class, 'verifyEmail'])->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile/access-version', function (\Illuminate\Http\Request $request) {
+        return response()->json(['version' => app(\App\Services\IamService::class)->accessVersion($request->user())])
+            ->header('Cache-Control', 'no-store, private');
+    })->name('profile.access-version');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/portal', [PortalController::class, 'dashboard'])->name('portal.dashboard');
@@ -231,6 +235,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/users/create', [AdministrationController::class, 'createUser'])->name('users.create');
             Route::post('/users', [AdministrationController::class, 'storeUser'])->name('users.store');
             Route::put('/users/{user}', [AdministrationController::class, 'updateUser'])->name('users.update');
+            Route::put('/users/{user}/permissions', [AdministrationController::class, 'updateEmployeePermissions'])
+                ->middleware('permission:permissions.manage')->name('users.permissions');
             Route::post('/users/{user}/status', [AdministrationController::class, 'status'])->name('users.status');
             Route::post('/users/{user}/unlock', [AdministrationController::class, 'unlock'])->name('users.unlock');
             Route::post('/users/{user}/force-reset', [AdministrationController::class, 'forceReset'])->name('users.force-reset');

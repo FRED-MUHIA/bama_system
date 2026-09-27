@@ -33,6 +33,27 @@ class AdministrationTest extends TestCase
         app(IamService::class)->bootstrap();
     }
 
+    public function test_employee_permission_changes_refresh_existing_access_without_ending_sessions(): void
+    {
+        $employee = User::factory()->create(['role' => 'staff', 'status' => 'Active', 'is_active' => true, 'current_tenant_id' => $this->business->tenant_id]);
+        $role = IamRole::where('business_id', $this->business->id)->where('slug', 'viewer')->firstOrFail();
+        DB::table('business_user')->insert(['business_id' => $this->business->id, 'user_id' => $employee->id, 'iam_role_id' => $role->id, 'status' => 'Active']);
+        DB::table('sessions')->insert(['id' => 'employee-live-session', 'user_id' => $employee->id, 'payload' => '', 'last_activity' => now()->timestamp]);
+        $iam = app(IamService::class);
+        $before = $iam->accessVersion($employee);
+        $permission = \App\Models\IamPermission::where('name', 'clients.create')->firstOrFail();
+
+        $this->put(route('administration.users.permissions', $employee), ['permissions' => [$permission->id]])->assertSessionHasNoErrors();
+        $this->assertTrue($iam->can($employee, 'clients.create'));
+        $this->assertNotSame($before, $iam->accessVersion($employee));
+        $this->assertDatabaseHas('sessions', ['id' => 'employee-live-session']);
+        $this->assertDatabaseHas('business_user', ['user_id' => $employee->id, 'business_id' => $this->business->id, 'status' => 'Active']);
+
+        $this->put(route('administration.users.permissions', $employee), ['permissions' => []])->assertSessionHasNoErrors();
+        $this->assertFalse($iam->can($employee, 'clients.create'));
+        $this->assertDatabaseHas('sessions', ['id' => 'employee-live-session']);
+    }
+
     public function test_administration_dashboard_and_default_roles_render(): void
     {
         $this->get(route('administration.index'))

@@ -343,6 +343,34 @@
                                                  <div class="col-md-4 d-flex align-items-end"><button class="btn btn-warning w-100">Save User</button></div>
                                              </div>
                                          </form>
+                                         @if(auth()->user()->hasPermission('permissions.manage'))
+                                         <details class="border rounded-2 p-3 mt-2">
+                                             <summary class="fw-semibold">Edit employee feature permissions</summary>
+                                             <p class="text-muted small mt-2">Checked features are this employee’s role access for this business. Changes do not affect other employees or require another login.</p>
+                                             <form method="post" action="{{ route('administration.users.permissions', $user) }}">
+                                                 @csrf @method('PUT')
+                                                 @php($employeePermissionIds = $roleById->get($membership?->iam_role_id)?->permissions->pluck('id') ?? collect())
+                                                 <input class="form-control permissions-search mb-2" type="search" placeholder="Search features" aria-label="Search employee features">
+                                                 <div class="permissions-panel" data-permissions-panel>
+                                                     @foreach($permissions as $module => $items)
+                                                         <section class="permission-group" data-permission-group>
+                                                             <strong>{{ \Illuminate\Support\Str::headline($module) }}</strong>
+                                                             <div class="permission-grid">
+                                                                 @foreach($items as $permission)
+                                                                     <label class="permission-option" data-permission-option>
+                                                                         <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" @checked($employeePermissionIds->contains($permission->id))>
+                                                                         <span>{{ \Illuminate\Support\Str::headline(str_replace('.', ' ', $permission->name)) }}</span>
+                                                                     </label>
+                                                                 @endforeach
+                                                             </div>
+                                                         </section>
+                                                     @endforeach
+                                                     <div class="permissions-empty text-muted small d-none">No matching features.</div>
+                                                 </div>
+                                                 <button class="btn btn-warning mt-3">Save employee permissions</button>
+                                             </form>
+                                         </details>
+                                         @endif
                                      </td>
                                  </tr>
                              @endforeach

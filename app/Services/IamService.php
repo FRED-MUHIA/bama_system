@@ -604,6 +604,21 @@ class IamService
         }
     }
 
+    public function clearPermissionCache(): void
+    {
+        self::$permissionCache = [];
+    }
+
+    public function accessVersion(User $user): string
+    {
+        $permissions = $this->permissions($user);
+        sort($permissions);
+        $membership = DB::table('business_user')->where('business_id', ActiveBusiness::id())
+            ->where('user_id', $user->id)->first(['iam_role_id', 'branch_id', 'department_id', 'status']);
+
+        return hash('sha256', json_encode([ActiveBusiness::id(), $membership, $permissions]));
+    }
+
     public function permissions(User $user): array
     {
         if ($user->role === 'super_admin') {

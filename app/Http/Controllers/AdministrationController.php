@@ -212,6 +212,27 @@ class AdministrationController extends Controller
         return back()->with('status', 'User updated.');
     }
 
+    public function updateEmployeePermissions(Request $request, User $user)
+    {
+        abort_unless(DB::table('business_user')->where('business_id', $this->businessId())->where('user_id', $user->id)->exists(), 404);
+        $data = $request->validate(['permissions' => ['nullable', 'array'], 'permissions.*' => ['integer', 'exists:iam_permissions,id']]);
+        $permissionIds = $this->validatedProfilePermissionIds($data['permissions'] ?? []);
+
+        DB::transaction(function () use ($user, $permissionIds) {
+            $role = IamRole::updateOrCreate(
+                ['business_id' => $this->businessId(), 'slug' => 'employee-access-'.$user->id],
+                ['name' => 'Employee access - '.$user->name, 'landing_route' => 'dashboard', 'is_system' => false]
+            );
+            $role->permissions()->sync($permissionIds);
+            DB::table('business_user')->where('business_id', $this->businessId())->where('user_id', $user->id)
+                ->update(['iam_role_id' => $role->id, 'updated_at' => now()]);
+            $this->iam->clearPermissionCache();
+            $this->iam->audit('user.permissions.updated', $user);
+        });
+
+        return back()->with('status', 'Employee feature permissions saved. Their open workspace will detect the change within 15 seconds; no new login is needed.');
+    }
+
     public function status(Request $request, User $user)
     {
         $this->assertProfileUser($user);

@@ -10,6 +10,7 @@ class IdentifyTenant
 {
     public function handle(Request $request, Closure $next)
     {
+        app(\App\Services\IamService::class)->clearPermissionCache();
         $user = $request->user();
 
         if ($user && in_array($user->role, ['super_admin', 'client_portal'], true)) {

@@ -1563,5 +1563,50 @@ document.addEventListener('DOMContentLoaded', () => {
 @endauth
 @vite('resources/js/app.js')
 @stack('scripts')
+@auth
+@if(!in_array(auth()->user()->role, ['super_admin', 'client_portal'], true) && \App\Support\ActiveBusiness::id())
+<script>
+(() => {
+    const version = @json(app(\App\Services\IamService::class)->accessVersion(auth()->user()));
+    const endpoint = @json(route('profile.access-version'));
+    let dirty = false;
+    let pending = false;
+    let notified = false;
+    document.addEventListener('input', event => { if (event.target.closest('form')) dirty = true; });
+    document.addEventListener('change', event => { if (event.target.closest('form')) dirty = true; });
+    const check = async () => {
+        if (document.hidden || pending || notified) return;
+        pending = true;
+        try {
+            const response = await fetch(endpoint, {headers: {'Accept': 'application/json'}, cache: 'no-store'});
+            if (!response.ok || response.redirected) return;
+            const data = await response.json();
+            if (data.version === version) return;
+            if (!dirty) { window.location.reload(); return; }
+            notified = true;
+            const notice = document.createElement('div');
+            notice.className = 'alert alert-info position-fixed bottom-0 start-0 end-0 m-3';
+            notice.style.zIndex = '1090';
+            notice.setAttribute('role', 'status');
+            notice.textContent = 'Your access has changed. Save your work, then refresh to see the updated features. ';
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'btn btn-sm btn-primary';
+            button.textContent = 'Refresh now';
+            button.addEventListener('click', () => {
+                if (window.confirm('Refresh now? Unsaved changes will be lost.')) window.location.reload();
+            });
+            notice.append(button);
+            document.body.append(notice);
+        } catch (_) {
+            // Retry on the next interval when the connection is available.
+        } finally { pending = false; }
+    };
+    setInterval(check, 15000);
+    document.addEventListener('visibilitychange', check);
+})();
+</script>
+@endif
+@endauth
 </body>
 </html>
