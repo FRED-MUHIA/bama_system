@@ -44,6 +44,29 @@ class AdministrationTest extends TestCase
         $this->assertGreaterThanOrEqual(13, IamRole::where('business_id', $this->business->id)->count());
     }
 
+    public function test_retail_setup_displays_stores_and_saves_employee_role_and_store(): void
+    {
+        $this->business->update(['industry' => 'retail']);
+        $store = \App\Models\Branch::create(['business_id' => $this->business->id, 'name' => 'Town Store', 'code' => 'TOWN']);
+        $role = IamRole::where('business_id', $this->business->id)->where('slug', 'cashier')->firstOrFail();
+
+        $this->get(route('administration.index'))->assertOk()
+            ->assertSee('Assign employee role & store', false)
+            ->assertSee('Stores &amp; Teams', false)
+            ->assertSee('Town Store')->assertSee('Cashier');
+
+        $this->post(route('administration.access.assign'), [
+            'name' => 'Store Employee', 'email' => 'store-employee@example.test',
+            'iam_role_id' => $role->id, 'branch_id' => $store->id,
+        ])->assertSessionHasNoErrors();
+
+        $employee = User::where('email', 'store-employee@example.test')->firstOrFail();
+        $this->assertDatabaseHas('business_user', [
+            'business_id' => $this->business->id, 'user_id' => $employee->id,
+            'iam_role_id' => $role->id, 'branch_id' => $store->id,
+        ]);
+    }
+
     public function test_admin_invites_user_without_knowing_password_and_user_activates(): void
     {
         $this->flushArrayMail();

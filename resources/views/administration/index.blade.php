@@ -2,6 +2,12 @@
 @section('title','Administration')
 @section('content')
 @php
+    $industry = \Illuminate\Support\Str::slug($activeBusiness?->industry ?: \App\Support\ActiveTenant::current()?->industry ?: '');
+    $industryPackage = collect(config('industry-packages.industries', []))->firstWhere('slug', $industry);
+    $locationLabel = $industry === 'retail' ? 'Store' : 'Branch';
+    $locationPlural = $industry === 'retail' ? 'Stores' : 'Branches';
+    $recommendedRoles = $roles->filter(fn ($role) => $industry && $role->permissions->contains(fn ($permission) => str_starts_with($permission->name, $industry.'.')));
+    $roles = $recommendedRoles->concat($roles->diff($recommendedRoles));
     $profileName = $activeBusiness?->name ?? 'Active Profile';
     $roleById = $roles->keyBy('id');
     $departmentById = $departments->keyBy('id');
@@ -25,7 +31,7 @@
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
     <div>
         <h1 class="h3 mb-1">Administration</h1>
-        <p class="text-muted mb-0">{{ $profileName }} profile administration, users, departments and feature access.</p>
+        <p class="text-muted mb-0">Manage employees, roles and {{ strtolower($locationPlural) }} for {{ $profileName }}.</p>
     </div>
     <a class="btn btn-warning" href="{{ route('administration.users.create') }}">Create User</a>
 </div>
@@ -66,21 +72,15 @@
             @endif
         </div>
         <div class="col-lg-5">
-            <div class="row g-2" title="Adding more profiles is coming soon. Each profile manages one business for now.">
-                <div class="col">
-                    <label class="form-label">Add another profile</label>
-                    <input class="form-control" value="Coming soon" disabled aria-label="Add profile coming soon">
-                </div>
-                <div class="col-auto align-self-end">
-                    <button class="btn btn-outline-secondary" type="button" disabled>Coming Soon</button>
-                </div>
-            </div>
+            <small class="text-uppercase text-muted fw-semibold">Selected industry</small>
+            <h3 class="h5">{{ $industryPackage['name'] ?? $permissionScope }}</h3>
+            <p class="text-muted mb-0">Choose a role to see its enabled features, then assign the employee a {{ strtolower($locationLabel) }}.</p>
         </div>
     </div>
 </div>
 
 <ul class="nav nav-tabs mb-3">
-    @foreach(['access'=>'Profile Access','users'=>'Users','roles'=>'Roles & Permissions','structure'=>'Departments & Teams','approvals'=>'Approvals','activity'=>'Login & Devices','security'=>'Email & Security','audit'=>'Audit'] as $id=>$label)
+    @foreach(['access'=>'Employee Setup','users'=>'Employees','roles'=>'Roles & Permissions','structure'=>$locationPlural.' & Teams','approvals'=>'Approvals','activity'=>'Login & Devices','security'=>'Email & Security','audit'=>'Audit'] as $id=>$label)
         <li class="nav-item">
             <button class="nav-link {{ $loop->first ? 'active' : '' }}" data-bs-toggle="tab" data-bs-target="#a-{{ $id }}">{{ $label }}</button>
         </li>
@@ -92,40 +92,48 @@
         <div class="row g-3">
             <div class="col-xl-5">
                 <div class="card p-3">
-                    <h3 class="h5">Assign Profile Access</h3>
-                    <p class="text-muted">Add an existing account or invite a new person by email.</p>
+                    <h3 class="h5">Assign employee role & {{ strtolower($locationLabel) }}</h3>
+                    <p class="text-muted">Invite someone or update an existing employee by email. Choose their role and {{ strtolower($locationLabel) }} below.</p>
                     <form method="post" action="{{ route('administration.access.assign') }}" class="row g-2">
                         @csrf
-                        <div class="col-md-6"><input class="form-control" name="name" placeholder="Full name"></div>
-                        <div class="col-md-6"><input class="form-control" type="email" name="email" placeholder="Email" required></div>
-                        <div class="col-md-6"><input class="form-control" name="username" placeholder="Username, optional"></div>
+                        <div class="col-md-6"><label for="employee-name" class="form-label">Full name</label><input id="employee-name" class="form-control" name="name" value="{{ old('name') }}"></div>
+                        <div class="col-md-6"><label for="employee-email" class="form-label">Email</label><input id="employee-email" class="form-control" type="email" name="email" value="{{ old('email') }}" required></div>
                         <div class="col-md-6">
-                            <select class="form-select" name="iam_role_id">
-                                <option value="">Default role</option>
+                            <label for="employee-role" class="form-label">Employee role</label>
+                            <select id="employee-role" class="form-select" name="iam_role_id" required>
+                                <option value="">Choose a role</option>
                                 @foreach($roles as $role)
-                                    <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                    <option value="{{ $role->id }}" @selected(old('iam_role_id') == $role->id)>{{ $role->name }}{{ $recommendedRoles->contains($role) ? ' · Recommended' : '' }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-6">
+                            <label for="employee-store" class="form-label">{{ $locationLabel }}</label>
+                            <select id="employee-store" class="form-select" name="branch_id">
+                                <option value="">No {{ strtolower($locationLabel) }} assigned</option>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}" @selected(old('branch_id') == $branch->id)>{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                            @if($branches->isEmpty())<small class="text-muted">Add a {{ strtolower($locationLabel) }} in {{ $locationPlural }} & Teams first.</small>@endif
+                        </div>
+                        <div class="col-12" aria-live="polite">
+                            @foreach($roles as $role)
+                                <p class="small text-muted" data-role-preview="{{ $role->id }}" hidden><strong>Enabled features:</strong> {{ $role->permissions->whereIn('id', $permissions->flatten(1)->pluck('id'))->pluck('name')->map(fn ($name) => \Illuminate\Support\Str::headline(str_replace('.', ' ', $name)))->join(', ') ?: 'No enabled feature permissions.' }}</p>
+                            @endforeach
+                        </div>
+                        <div class="col-12"><details><summary class="text-muted mb-2">Optional employee details</summary>
+                            <input class="form-control mb-2" name="username" placeholder="Username, optional" value="{{ old('username') }}">
                             <select class="form-select" name="department_id">
                                 <option value="">Department</option>
                                 @foreach($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->name }}</option>
                                 @endforeach
                             </select>
-                        </div>
-                        <div class="col-md-6">
-                            <select class="form-select" name="branch_id">
-                                <option value="">Branch</option>
-                                @foreach($branches as $branch)
-                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-12"><input class="form-control" name="approval_level" placeholder="Approval level, optional"></div>
+                            <input class="form-control mt-2" name="approval_level" placeholder="Approval level, optional" value="{{ old('approval_level') }}">
+                        </details></div>
                         <div class="col-12">
-                            <button class="btn btn-warning w-100" @disabled($userSeatsFull)>Save Access & Invite</button>
+                            <button class="btn btn-warning w-100">Save employee assignment</button>
                             @if($userSeatsFull)
                                 <small class="text-muted d-block mt-2">No user seats remaining on this package.</small>
                             @endif
@@ -135,7 +143,9 @@
             </div>
             <div class="col-xl-7">
                 <div class="card p-3">
-                    <h3 class="h5">Feature Permissions</h3>
+                    <h3 class="h5">{{ $industryPackage['name'] ?? $permissionScope }} features</h3>
+                    <p class="text-muted">{{ implode(', ', $industryPackage['modules'] ?? []) }}</p>
+                    <details><summary class="fw-semibold mb-3">Customize individual feature access</summary>
                     <p class="text-muted mb-2">Create an email-specific access role for {{ $profileName }}.</p>
                     <div class="permission-scope mb-3">
                         <span>Profile</span>
@@ -158,7 +168,7 @@
                             </div>
                             <div class="col-md-4">
                                 <select class="form-select" name="branch_id">
-                                    <option value="">Branch</option>
+                                    <option value="">{{ $locationLabel }}</option>
                                     @foreach($branches as $branch)
                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                     @endforeach
@@ -193,6 +203,7 @@
                             <small class="text-muted d-block mt-2">Upgrade the package to add another employee profile.</small>
                         @endif
                     </form>
+                    </details>
                 </div>
             </div>
         </div>
@@ -221,7 +232,7 @@
                             @endforeach
                         </select>
                         <select class="form-select" name="branch_id">
-                            <option value="">Branch</option>
+                            <option value="">{{ $locationLabel }}</option>
                             @foreach($branches as $branch)
                                 <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                             @endforeach
@@ -321,7 +332,7 @@
                                                      </select>
                                                  </div>
                                                  <div class="col-md-4">
-                                                     <label class="form-label small">Branch</label>
+                                                     <label class="form-label small">{{ $locationLabel }}</label>
                                                      <select class="form-select" name="branch_id">
                                                          <option value="">No branch</option>
                                                          @foreach($branches as $branch)
@@ -407,13 +418,13 @@
             </div>
             <div class="col-lg-4">
                 <div class="card p-3">
-                    <h3 class="h6">Branches</h3>
+                    <h3 class="h6">{{ $locationPlural }}</h3>
                     <form method="post" action="{{ route('administration.branches.store') }}">
                         @csrf
-                        <input class="form-control mb-2" name="name" placeholder="Branch name" required>
+                        <input class="form-control mb-2" name="name" placeholder="{{ $locationLabel }} name" required>
                         <input class="form-control mb-2" name="code" placeholder="Code" required>
                         <textarea class="form-control mb-2" name="address" placeholder="Address"></textarea>
-                        <button class="btn btn-warning w-100">Add Branch</button>
+                        <button class="btn btn-warning w-100">Add {{ $locationLabel }}</button>
                     </form>
                 </div>
             </div>
@@ -441,7 +452,7 @@
         <div class="card p-3 mt-3">
             <div class="row g-3">
                 <div class="col-md-4"><h4 class="h6">Departments</h4>@forelse($departments as $department)<div class="border rounded p-2 mb-2">{{ $department->name }}<small class="d-block text-muted">{{ $department->code }}</small></div>@empty<p class="text-muted">No departments yet.</p>@endforelse</div>
-                <div class="col-md-4"><h4 class="h6">Branches</h4>@forelse($branches as $branch)<div class="border rounded p-2 mb-2">{{ $branch->name }}<small class="d-block text-muted">{{ $branch->code }}</small></div>@empty<p class="text-muted">No branches yet.</p>@endforelse</div>
+                <div class="col-md-4"><h4 class="h6">{{ $locationPlural }}</h4>@forelse($branches as $branch)<div class="border rounded p-2 mb-2">{{ $branch->name }}<small class="d-block text-muted">{{ $branch->code }}</small></div>@empty<p class="text-muted">No {{ strtolower($locationPlural) }} yet.</p>@endforelse</div>
                 <div class="col-md-4"><h4 class="h6">Teams</h4>@forelse($teams as $team)<div class="border rounded p-2 mb-2">{{ $team->name }}<small class="d-block text-muted">{{ $team->type }}</small></div>@empty<p class="text-muted">No teams yet.</p>@endforelse</div>
             </div>
         </div>
@@ -686,6 +697,12 @@
     }
 </style>
 <script>
+    const employeeRole = document.getElementById('employee-role');
+    const renderRoleFeatures = () => document.querySelectorAll('[data-role-preview]').forEach(panel => {
+        panel.hidden = panel.dataset.rolePreview !== employeeRole?.value;
+    });
+    employeeRole?.addEventListener('change', renderRoleFeatures);
+    renderRoleFeatures();
     document.querySelectorAll('.permissions-search').forEach((search) => {
         const wrapper = search.closest('form') || document;
         const panel = wrapper.querySelector('[data-permissions-panel]');
