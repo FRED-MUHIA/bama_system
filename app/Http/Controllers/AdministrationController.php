@@ -885,13 +885,17 @@ class AdministrationController extends Controller
 
     private function assertAttachableUser(User $user): void
     {
-        $currentTenantId = ActiveTenant::id();
+        $currentTenantId = $this->profileTenantId();
         $belongsToOtherTenant = DB::table('tenant_user')
             ->where('user_id', $user->id)
             ->where('tenant_id', '!=', $currentTenantId)
             ->exists();
 
-        abort_if($belongsToOtherTenant, 422, 'That email already belongs to another organisation profile.');
+        if ($belongsToOtherTenant) {
+            throw ValidationException::withMessages([
+                'email' => 'This email is already registered with another organisation. Use a different email address to invite this employee.',
+            ]);
+        }
     }
 
     private function assertUserSeatAvailable(): void

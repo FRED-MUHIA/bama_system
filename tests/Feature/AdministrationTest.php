@@ -67,6 +67,27 @@ class AdministrationTest extends TestCase
         ]);
     }
 
+    public function test_employee_from_another_organisation_returns_a_form_error_without_changing_access(): void
+    {
+        $otherTenant = Tenant::create(['name' => 'Other organisation', 'slug' => 'other-organisation', 'industry' => 'retail', 'status' => 'active']);
+        $employee = User::factory()->create(['name' => 'Original Name', 'current_tenant_id' => $otherTenant->id]);
+        DB::table('tenant_user')->insert([
+            'tenant_id' => $otherTenant->id, 'user_id' => $employee->id,
+            'role' => 'staff', 'status' => 'active', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $role = IamRole::where('business_id', $this->business->id)->where('slug', 'viewer')->firstOrFail();
+
+        $this->from(route('administration.index'))->post(route('administration.access.assign'), [
+            'name' => 'Changed Name', 'email' => $employee->email, 'iam_role_id' => $role->id,
+        ])->assertRedirect(route('administration.index'))->assertSessionHasErrors('email')
+            ->assertSessionHasInput('email', $employee->email)
+            ->assertSessionHasInput('iam_role_id', $role->id);
+
+        $this->assertSame('Original Name', $employee->fresh()->name);
+        $this->assertDatabaseMissing('business_user', ['business_id' => $this->business->id, 'user_id' => $employee->id]);
+        $this->assertDatabaseMissing('user_invitations', ['user_id' => $employee->id]);
+    }
+
     public function test_admin_invites_user_without_knowing_password_and_user_activates(): void
     {
         $this->flushArrayMail();
