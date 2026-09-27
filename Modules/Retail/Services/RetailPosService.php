@@ -34,6 +34,14 @@ class RetailPosService
     public function createSale(array $data): PosOrder
     {
         return DB::transaction(function () use ($data) {
+            $data = app(RetailShopContext::class)->saleContext($data);
+            if (! empty($data['retail_cash_drawer_id'])) {
+                $drawer = RetailCashDrawer::where('branch_id', $data['branch_id'])->where('cashier_id', auth()->id())
+                    ->where('status', 'Open')->find($data['retail_cash_drawer_id']);
+                if (! $drawer) {
+                    throw ValidationException::withMessages(['retail_cash_drawer_id' => 'Select your open drawer in this shop.']);
+                }
+            }
             $client = ! empty($data['client_id']) ? Client::find($data['client_id']) : null;
             $items = $this->prepareItems($data['items'] ?? [], $client, $data);
             $totals = $this->documents->totals($items);
@@ -97,6 +105,7 @@ class RetailPosService
 
     public function openDrawer(array $data): RetailCashDrawer
     {
+        $data = app(RetailShopContext::class)->saleContext($data);
         $drawer = RetailCashDrawer::create([
             'branch_id' => $data['branch_id'] ?? null,
             'cashier_id' => $data['cashier_id'] ?? auth()->id(),
@@ -114,6 +123,7 @@ class RetailPosService
 
     public function closeDrawer(RetailCashDrawer $drawer, array $data): RetailCashDrawer
     {
+        abort_unless((int) $drawer->cashier_id === (int) auth()->id(), 403);
         $counted = (float) ($data['counted_cash'] ?? 0);
         $expected = (float) $drawer->opening_float + (float) $drawer->cash_sales - (float) $drawer->cash_refunds;
 

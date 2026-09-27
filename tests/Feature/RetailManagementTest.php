@@ -49,6 +49,41 @@ class RetailManagementTest extends TestCase
         $this->assertDatabaseHas('stock_movements', ['product_id' => $product->id, 'type' => 'Received']);
     }
 
+    public function test_shop_sales_share_products_and_record_the_authenticated_employee(): void
+    {
+        $first = \App\Models\Branch::create(['name' => 'First Shop', 'code' => 'FIRST', 'is_active' => true]);
+        $second = \App\Models\Branch::create(['name' => 'Second Shop', 'code' => 'SECOND', 'is_active' => true]);
+        $other = User::factory()->create();
+        $product = $this->product('SHARED-SHOP', 100);
+        $product->update(['stock_quantity' => 10]);
+        foreach ([$first, $second] as $branch) {
+            \Illuminate\Support\Facades\DB::table('business_user')->updateOrInsert(
+                ['business_id' => $this->business->id, 'user_id' => $this->user->id],
+                ['branch_id' => $branch->id, 'status' => 'Active']
+            );
+            $sale = app(RetailPosService::class)->createSale([
+                'cashier_id' => $other->id,
+                'items' => [['product_id' => $product->id, 'quantity' => 1, 'unit_price' => 100]],
+            ]);
+            $this->assertEquals($branch->id, $sale->retailExtension->branch_id);
+            $this->assertEquals($this->user->id, $sale->retailExtension->cashier_id);
+            $this->assertEquals($product->id, $sale->items->first()->product_id);
+        }
+        $this->assertSame('8.000', $product->fresh()->stock_quantity);
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        app(RetailPosService::class)->createSale([
+            'branch_id' => $first->id,
+            'items' => [['product_id' => $product->id, 'quantity' => 1, 'unit_price' => 100]],
+        ]);
+    }
+
+    public function test_shop_context_rejects_inactive_branches(): void
+    {
+        $branch = \App\Models\Branch::create(['name' => 'Closed Shop', 'code' => 'CLOSED', 'is_active' => false]);
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        app(\Modules\Retail\Services\RetailShopContext::class)->saleContext(['branch_id' => $branch->id]);
+    }
+
     public function test_loyalty_and_gift_card_balances_are_tracked(): void
     {
         $client = Client::create(['name' => 'Retail Customer', 'email' => 'retail@example.test']);

@@ -13,6 +13,7 @@
         <article class="d-flex flex-column flex-sm-row justify-content-between gap-2 border-bottom py-3">
             <div>
                 <h2 class="h6 mb-1">{{ $order->order_number }}</h2>
+                <div class="small">Shop: {{ $order->retailExtension?->branch?->name ?? 'Not recorded' }} · Employee: {{ $order->retailExtension?->cashier?->name ?? 'Not recorded' }}</div>
                 <div>{{ $order->client?->name ?: $order->customer_name ?: 'Walk-in customer' }}</div>
                 <div class="small text-muted">{{ $order->order_date?->format('d M Y') }} · {{ $order->client?->phone ?: $order->customer_phone }}</div>
                 @foreach($order->payments as $payment)

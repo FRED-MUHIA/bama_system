@@ -24,7 +24,7 @@ class RetailPosController extends Controller
     {
         $request->validate(['q' => ['nullable', 'string', 'max:255']]);
         $search = trim($request->input('q', ''));
-        $orders = PosOrder::with('client', 'payments.paymentMethod')
+        $orders = PosOrder::with('client', 'payments.paymentMethod', 'retailExtension.branch', 'retailExtension.cashier')
             ->when($search !== '', function ($query) use ($search) {
                 $like = "%{$search}%";
                 $query->where(function ($query) use ($like) {
@@ -50,7 +50,7 @@ class RetailPosController extends Controller
         return view('retail.pos', [
             'metrics' => $dashboard->pointOfSaleMetrics(),
             'lowStockProducts' => $dashboard->lowStockProducts(),
-            'recentOrders' => PosOrder::with('client', 'retailExtension.cashier')->latest()->limit(10)->get(),
+            'recentOrders' => PosOrder::with('client', 'retailExtension.cashier', 'retailExtension.branch')->latest()->limit(10)->get(),
             'products' => Product::with([
                 'category',
                 'brand',
@@ -64,11 +64,12 @@ class RetailPosController extends Controller
                 'variantProfile.attributeValueLinks.value.attribute',
             ])->where('is_active', true)->orderBy('name')->limit(200)->get(),
             'clients' => Client::orderBy('name')->limit(200)->get(),
-            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
+            'branches' => app(\Modules\Retail\Services\RetailShopContext::class)->branches()->orderBy('name')->get(),
+            'assignedBranchId' => app(\Modules\Retail\Services\RetailShopContext::class)->assignedBranchId(),
             'paymentMethods' => PaymentMethod::where('is_active', true)->orderBy('name')->get(),
             'promotions' => RetailPromotion::where('status', 'Active')->orderBy('name')->get(),
             'giftCards' => RetailGiftCard::where('status', 'Active')->orderBy('card_number')->get(),
-            'drawers' => RetailCashDrawer::where('status', 'Open')->latest()->get(),
+            'drawers' => RetailCashDrawer::with('cashier')->where('status', 'Open')->where('cashier_id', auth()->id())->latest()->get(),
             'scanProduct' => $scanProduct,
             'paymentTypes' => ['Cash', 'Mobile Money', 'Card', 'Gift Card', 'Store Credit'],
             'saleTypes' => ['Sale', 'Layaway'],

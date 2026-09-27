@@ -99,9 +99,9 @@
                     </select>
                     <input class="form-control" name="customer_name" placeholder="Customer name">
                     <select class="form-select" name="branch_id">
-                        <option value="">Store / Branch</option>
+                        <option value="">{{ $assignedBranchId ? 'Assigned shop' : 'Select shop' }}</option>
                         @foreach($branches as $branch)
-                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                            <option value="{{ $branch->id }}" @selected(old('branch_id', $assignedBranchId ?: ($branches->count() === 1 ? $branches->first()->id : null)) == $branch->id)>{{ $branch->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -244,9 +244,9 @@
             <form method="POST" action="{{ route('retail.pos.drawers.open') }}" class="d-grid gap-2 mb-3">
                 @csrf
                 <select class="form-select" name="branch_id">
-                    <option value="">Store / Branch</option>
+                    <option value="">{{ $assignedBranchId ? 'Assigned shop' : 'Select shop' }}</option>
                     @foreach($branches as $branch)
-                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        <option value="{{ $branch->id }}" @selected(old('branch_id', $assignedBranchId ?: ($branches->count() === 1 ? $branches->first()->id : null)) == $branch->id)>{{ $branch->name }}</option>
                     @endforeach
                 </select>
                 <input class="form-control" name="drawer_number" placeholder="Register / drawer number" required>
@@ -276,6 +276,7 @@
                 <div class="pos-list-row">
                     <div>
                         <strong>{{ $order->order_number }}</strong>
+                        <div class="small">Shop: {{ $order->retailExtension?->branch?->name ?? 'Not recorded' }} · Employee: {{ $order->retailExtension?->cashier?->name ?? 'Not recorded' }}</div>
                         <div class="small text-muted">{{ $order->client?->name ?: $order->customer_name ?: 'Walk-in customer' }}</div>
                     </div>
                     <div class="text-end">
