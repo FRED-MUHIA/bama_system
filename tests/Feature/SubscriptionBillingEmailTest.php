@@ -64,6 +64,17 @@ class SubscriptionBillingEmailTest extends TestCase
         $paidInvoice = $billing->markPaid($payment);
 
         $this->assertSame('paid', $paidInvoice->status);
+        Mail::assertSent(\App\Mail\SubscriptionReceiptMail::class, function ($mail) use ($payment) {
+            $mail->build();
+
+            return $mail->hasTo('billing@bama.test')
+                && $mail->receipt['number'] === 'BAMA-RCT-'.$payment->subscription_invoice_id.'-'.$payment->id
+                && count($mail->rawAttachments) === 1
+                && str_starts_with($mail->rawAttachments[0]['data'], '%PDF-');
+        });
+        $this->assertNotEmpty($paidInvoice->fresh()->metadata['subscription_receipt']['renews_at']);
+        $this->assertSame(0, $billing->sendInvoice($paidInvoice, 'paid'));
+        Mail::assertSent(\App\Mail\SubscriptionReceiptMail::class, 1);
         $this->assertDatabaseHas('email_logs', [
             'emailable_type' => $paidInvoice->getMorphClass(),
             'emailable_id' => $paidInvoice->id,
@@ -188,6 +199,27 @@ class SubscriptionBillingEmailTest extends TestCase
         }
 
         return $cases;
+    }
+
+    public function test_legacy_unpaid_trial_stays_on_trial_expiry_after_entering_grace(): void
+    {
+        Mail::fake();
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-09-15 10:00:00'));
+        [$tenant, , $subscription] = $this->subscriptionFixture();
+        $subscription->update([
+            'status' => 'trialing', 'trial_ends_at' => now()->subDay(),
+            'renews_at' => now()->addDays(15),
+        ]);
+        $billing = app(SubscriptionBillingService::class);
+        $billing->sweep();
+        $this->assertSame('past_due', $subscription->fresh()->status);
+        $manager = app(SubscriptionManager::class);
+        $this->assertSame('grace', $manager->billingState($tenant->fresh(['subscription']))['state']);
+
+        $this->travelTo(now()->addDay());
+        $this->assertFalse($manager->active($tenant->fresh(['subscription'])));
+        $this->assertSame('suspended', $tenant->fresh()->status);
+        $this->assertSame('paused', $subscription->fresh()->status);
     }
 
     private function subscriptionFixture(): array

@@ -64,6 +64,10 @@ class SubscriptionBillingService
 
     public function sendInvoice(SubscriptionInvoice $invoice, string $kind = 'invoice'): int
     {
+        if ($kind === 'paid') {
+            return app(SubscriptionReceiptService::class)->send($invoice);
+        }
+
         $invoice->loadMissing('tenant', 'plan');
         $emails = $this->billingEmails($invoice->tenant);
 
@@ -197,7 +201,7 @@ class SubscriptionBillingService
                         ])->save();
                     }
 
-                    if ($expiresAt->isPast() && $graceEndsAt->isFuture() && ! $subscription->last_grace_notice_sent_at) {
+                    if ($expiresAt->lessThanOrEqualTo($date) && $graceEndsAt->isAfter($date) && ! $subscription->last_grace_notice_sent_at) {
                         $invoice = $this->createOrFindCycleInvoice($subscription, $expiresAt);
                         $stats['grace_notices'] += $this->sendInvoice($invoice, 'grace');
                         $subscription->forceFill([
@@ -207,7 +211,7 @@ class SubscriptionBillingService
                         ])->save();
                     }
 
-                    if ($expiresAt->isPast() && $graceEndsAt->isPast() && ! $subscription->locked_at) {
+                    if ($expiresAt->lessThanOrEqualTo($date) && $graceEndsAt->lessThanOrEqualTo($date) && ! $subscription->locked_at) {
                         $subscription->forceFill([
                             'status' => 'paused',
                             'grace_ends_at' => $graceEndsAt,
@@ -294,9 +298,7 @@ class SubscriptionBillingService
 
     private function expiresAt(Subscription $subscription): ?Carbon
     {
-        return $subscription->status === 'trialing' && $subscription->trial_ends_at
-            ? $subscription->trial_ends_at
-            : ($subscription->renews_at ?: $subscription->trial_ends_at);
+        return $subscription->accessExpiresAt();
     }
 
     private function invoiceNumber(Tenant $tenant): string

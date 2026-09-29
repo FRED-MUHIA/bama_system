@@ -40,6 +40,18 @@ class Subscription extends Model
     public function plan() { return $this->belongsTo(Plan::class); }
     public function invoices() { return $this->hasMany(SubscriptionInvoice::class); }
 
+    public function accessExpiresAt(): ?\Illuminate\Support\Carbon
+    {
+        // Legacy trials have a registration-based renewal date even without payment.
+        if ($this->trial_ends_at && ($this->status === 'trialing'
+            || ! $this->renews_at
+            || ! $this->invoices()->where('status', 'paid')->exists())) {
+            return $this->trial_ends_at;
+        }
+
+        return $this->renews_at ?: $this->trial_ends_at;
+    }
+
     public function nextMonthlyRenewalAt(\Illuminate\Support\Carbon $paidAt, int $invoiceId): \Illuminate\Support\Carbon
     {
         // Older trial records may contain a renewal date despite never being paid.

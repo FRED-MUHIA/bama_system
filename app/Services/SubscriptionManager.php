@@ -67,7 +67,7 @@ class SubscriptionManager
         $graceEndsAt = $this->graceEndsAt($subscription, $expiresAt);
         $daysUntilExpiry = (int) Carbon::now()->startOfDay()->diffInDays($expiresAt->copy()->startOfDay(), false);
 
-        if ($expiresAt->isPast()) {
+        if ($expiresAt->lessThanOrEqualTo(now())) {
             return [
                 'state' => $graceEndsAt->isFuture() ? 'grace' : 'locked',
                 'message' => $graceEndsAt->isFuture()
@@ -167,9 +167,7 @@ class SubscriptionManager
 
     private function expiresAt($subscription): ?Carbon
     {
-        return $subscription->status === 'trialing' && $subscription->trial_ends_at
-            ? $subscription->trial_ends_at
-            : ($subscription->renews_at ?: $subscription->trial_ends_at);
+        return $subscription->accessExpiresAt();
     }
 
     private function graceEndsAt($subscription, Carbon $expiresAt): Carbon

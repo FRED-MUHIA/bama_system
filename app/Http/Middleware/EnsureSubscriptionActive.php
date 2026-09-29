@@ -17,6 +17,13 @@ class EnsureSubscriptionActive
 
         $manager = app(SubscriptionManager::class);
         if (! $manager->active()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => $manager->billingState()['message'],
+                    'billing_url' => route('billing.index'),
+                ], 402);
+            }
+
             if (Route::has('billing.index')) {
                 return redirect()->route('billing.index')->with('warning', $manager->billingState()['message']);
             }

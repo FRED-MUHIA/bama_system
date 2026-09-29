@@ -33,7 +33,7 @@ Route::prefix('v1')->middleware('throttle:public-api')->group(function () {
     });
 });
 
-Route::prefix('v1')->middleware(['auth', 'tenant.context', 'throttle:api'])->group(function () {
+Route::prefix('v1')->middleware(['auth', 'tenant.context', 'subscription.active', 'throttle:api'])->group(function () {
     Route::get('/context', [PlatformController::class, 'context'])->name('api.v1.context');
     Route::get('/tenant/industry-package', [IndustryPackageController::class, 'tenant'])->name('api.v1.tenant.industry-package');
 
