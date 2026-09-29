@@ -83,7 +83,7 @@
                             <p class="small text-muted mt-2">Correct access after a transaction error. Reset starts a new period now; set an expiry to choose the exact end time. Dates use {{ config('app.timezone') }}. This adjustment does not record a payment or issue a receipt.</p>
                             <form method="post" action="{{ route('platform.tenants.subscription.update', $tenant) }}" class="row g-2">
                                 @csrf @method('PUT')
-                                <div class="col-md-6"><label class="form-label" for="adjust-action-{{ $tenant->id }}">Action</label><select id="adjust-action-{{ $tenant->id }}" name="action" class="form-select" required><option value="set_expiry">Set expiry date and restore access</option><option value="reset_monthly">Reset to 30 days from now</option><option value="reset_trial">Reset trial to 14 days from now</option></select></div>
+                                <div class="col-md-6"><label class="form-label" for="adjust-action-{{ $tenant->id }}">Action</label><select id="adjust-action-{{ $tenant->id }}" name="action" class="form-select" required><option value="set_expiry">Set expiry date and restore access</option><option value="reset_monthly">Reset to 30 days from now</option></select></div>
                                 <div class="col-md-6"><label class="form-label" for="adjust-plan-{{ $tenant->id }}">Package</label><select id="adjust-plan-{{ $tenant->id }}" name="plan_id" class="form-select" required>@foreach($plans as $plan)<option value="{{ $plan->id }}" @selected($tenant->subscription?->plan_id === $plan->id)>{{ $plan->name }}</option>@endforeach</select></div>
                                 <div class="col-12"><label class="form-label" for="adjust-expiry-{{ $tenant->id }}">Expiry date (required for set expiry only)</label><input id="adjust-expiry-{{ $tenant->id }}" type="datetime-local" name="expires_at" class="form-control"></div>
                                 <div class="col-12"><label class="form-label" for="adjust-reason-{{ $tenant->id }}">Reason / transaction reference</label><textarea id="adjust-reason-{{ $tenant->id }}" name="reason" class="form-control" maxlength="1000" rows="2" required></textarea></div>
@@ -99,6 +99,7 @@
                                 <label for="client-status-{{ $tenant->id }}">Client status</label>
                                 <select id="client-status-{{ $tenant->id }}" class="form-select form-select-sm" name="status">
                                     @foreach($statuses as $status)
+                                        @continue($status === 'trial' && $tenant->status !== 'trial')
                                         <option value="{{ $status }}" @selected($tenant->status === $status)>{{ str($status)->headline() }}</option>
                                     @endforeach
                                 </select>
@@ -115,12 +116,13 @@
                                 <label for="client-subscription-{{ $tenant->id }}">Subscription status</label>
                                 <select id="client-subscription-{{ $tenant->id }}" class="form-select form-select-sm" name="subscription_status">
                                     @foreach($subscriptionStatuses as $status)
+                                        @continue($status === 'trialing' && $tenant->subscription?->status !== 'trialing')
                                         <option value="{{ $status }}" @selected(($tenant->subscription?->status ?? 'trialing') === $status)>{{ str($status)->headline() }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div><label for="client-domain-{{ $tenant->id }}">Domain</label><input id="client-domain-{{ $tenant->id }}" class="form-control form-control-sm" name="primary_domain" value="{{ $tenant->primary_domain }}" placeholder="Domain"></div>
-                            <div><label for="client-trial-{{ $tenant->id }}">Trial ends</label><input id="client-trial-{{ $tenant->id }}" class="form-control form-control-sm" type="date" name="trial_ends_at" value="{{ $tenant->trial_ends_at?->toDateString() }}"></div>
+                            <div><label for="client-trial-{{ $tenant->id }}">Trial ends (one-time)</label><input id="client-trial-{{ $tenant->id }}" class="form-control form-control-sm" type="date" readonly aria-describedby="trial-once-{{ $tenant->id }}" value="{{ ($tenant->subscription?->trial_ends_at ?? $tenant->trial_ends_at)?->toDateString() }}"><small id="trial-once-{{ $tenant->id }}" class="text-muted">Trials cannot be restarted or extended.</small></div>
                             <div><label for="client-renews-{{ $tenant->id }}">Renews</label><input id="client-renews-{{ $tenant->id }}" class="form-control form-control-sm" type="date" name="renews_at" value="{{ $tenant->subscription?->renews_at?->toDateString() }}"></div>
                             <div class="client-edit-save"><button class="btn btn-owner btn-sm w-100"><i class="bi bi-save"></i> Save</button></div>
                         </form>

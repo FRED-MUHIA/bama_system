@@ -69,36 +69,51 @@ class PlatformController extends Controller
 
     public function updateTenant(Request $request, Tenant $tenant)
     {
-        $subscription = Subscription::withoutGlobalScopes()->where('tenant_id', $tenant->id)->first();
+        return DB::transaction(function () use ($request, $tenant) {
+            $tenant = Tenant::query()->lockForUpdate()->findOrFail($tenant->id);
+            $subscription = Subscription::withoutGlobalScopes()->where('tenant_id', $tenant->id)->lockForUpdate()->first();
 
-        $data = $request->validate([
-            'status' => ['required', Rule::in(['trial', 'active', 'suspended', 'cancelled'])],
-            'primary_domain' => ['nullable', 'string', 'max:255', Rule::unique('tenants', 'primary_domain')->ignore($tenant)],
-            'plan_id' => ['required', Rule::exists('plans', 'id')],
-            'subscription_status' => ['required', Rule::in(['trialing', 'active', 'past_due', 'paused', 'cancelled'])],
-            'trial_ends_at' => ['nullable', 'date'],
-            'renews_at' => ['nullable', 'date'],
-        ]);
+            $data = $request->validate([
+                'status' => ['required', Rule::in(['trial', 'active', 'suspended', 'cancelled'])],
+                'primary_domain' => ['nullable', 'string', 'max:255', Rule::unique('tenants', 'primary_domain')->ignore($tenant)],
+                'plan_id' => ['required', Rule::exists('plans', 'id')],
+                'subscription_status' => ['required', Rule::in(['trialing', 'active', 'past_due', 'paused', 'cancelled'])],
+                'trial_ends_at' => ['nullable', 'date'],
+                'renews_at' => ['nullable', 'date'],
+            ]);
 
-        $tenant->update([
-            'status' => $data['status'],
-            'primary_domain' => $data['primary_domain'] ?: null,
-            'trial_ends_at' => $data['trial_ends_at'] ?? null,
-        ]);
+            $trialEndsAt = $subscription?->trial_ends_at ?? $tenant->trial_ends_at;
+            if (array_key_exists('trial_ends_at', $data)
+                && ($data['trial_ends_at'] ? \Illuminate\Support\Carbon::parse($data['trial_ends_at'])->toDateString() : null) !== $trialEndsAt?->toDateString()) {
+                throw ValidationException::withMessages(['trial_ends_at' => 'The original trial end date cannot be changed. Trials are available once only.']);
+            }
+            if ($data['status'] === 'trial' && $tenant->status !== 'trial') {
+                throw ValidationException::withMessages(['status' => 'This client cannot return to trial. Trials are available once only.']);
+            }
+            if ($data['subscription_status'] === 'trialing' && $subscription?->status !== 'trialing') {
+                throw ValidationException::withMessages(['subscription_status' => 'This subscription cannot return to trial. Trials are available once only.']);
+            }
 
-        Subscription::withoutGlobalScopes()->updateOrCreate(
-            ['tenant_id' => $tenant->id],
-            [
-                'plan_id' => $data['plan_id'],
-                'status' => $data['subscription_status'],
-                'starts_at' => $subscription?->starts_at ?? now(),
-                'trial_ends_at' => $data['trial_ends_at'] ?? null,
-                'renews_at' => $data['renews_at'] ?? null,
-                'ends_at' => $data['subscription_status'] === 'cancelled' ? now() : null,
-            ]
-        );
+            $tenant->update([
+                'status' => $data['status'],
+                'primary_domain' => $data['primary_domain'] ?: null,
+                'trial_ends_at' => $trialEndsAt,
+            ]);
 
-        return back()->with('status', 'Tenant updated.');
+            Subscription::withoutGlobalScopes()->updateOrCreate(
+                ['tenant_id' => $tenant->id],
+                [
+                    'plan_id' => $data['plan_id'],
+                    'status' => $data['subscription_status'],
+                    'starts_at' => $subscription?->starts_at ?? now(),
+                    'trial_ends_at' => $trialEndsAt,
+                    'renews_at' => $data['renews_at'] ?? null,
+                    'ends_at' => $data['subscription_status'] === 'cancelled' ? now() : null,
+                ]
+            );
+
+            return back()->with('status', 'Tenant updated.');
+        });
     }
 
     public function destroyTenant(Request $request, Tenant $tenant, AccountEmailReuseService $emailReuse)

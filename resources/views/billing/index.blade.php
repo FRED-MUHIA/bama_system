@@ -4,6 +4,7 @@
 @section('content')
 @php
     $subscription = $tenant->subscription;
+    $currentDueAt = $billingState['expires_at'] ?? $subscription?->accessExpiresAt() ?? $invoice?->due_at;
     $enabled = fn (string $provider) => (bool) ($paymentSettings[$provider]->is_enabled ?? false);
     $mpesaSetting = $paymentSettings['mpesa'] ?? null;
     $mpesaConfig = $mpesaSetting?->config ?? [];
@@ -86,7 +87,8 @@
                         <div>
                             <div class="text-muted small fw-bold text-uppercase">Current invoice</div>
                             <h3 class="h5 mb-1">{{ $invoice->invoice_number }}</h3>
-                            <div class="text-muted">{{ $invoice->plan?->name ?? 'Business package' }} · Due {{ $invoice->due_at?->format('d M Y') ?? 'now' }}</div>
+                            <div class="text-muted">{{ $invoice->plan?->name ?? 'Business package' }}</div>
+                            <div class="mt-2"><span class="text-muted">Current due date:</span> <strong>{{ $currentDueAt?->format('d M Y') ?? 'Not set' }}</strong></div>
                         </div>
                         <div class="text-end">
                             <div class="display-6 fw-bold">{{ $invoice->currency }} {{ number_format((float) $invoice->total, 2) }}</div>
