@@ -152,6 +152,31 @@ class SubscriptionBillingEmailTest extends TestCase
         $this->assertSame('active', $subscription->fresh()->status);
     }
 
+    public function test_existing_subscription_repair_previews_and_applies_once(): void
+    {
+        [, $plan, $subscription] = $this->subscriptionFixture();
+        $subscription->update(['renews_at' => '2026-03-28 10:00:00']);
+        $invoice = app(SubscriptionBillingService::class)->createInvoice($subscription, $plan);
+        $payment = SubscriptionPayment::create([
+            'subscription_invoice_id' => $invoice->id,
+            'tenant_id' => $invoice->tenant_id,
+            'provider' => 'manual',
+            'status' => 'paid',
+            'amount' => $invoice->total,
+            'currency' => $invoice->currency,
+            'paid_at' => '2026-02-20 10:00:00',
+        ]);
+        $invoice->markPaid($payment);
+        $options = ['--tenant' => $subscription->tenant_id];
+
+        $this->artisan('subscriptions:repair-periods', $options)->assertSuccessful();
+        $this->assertSame('2026-03-28 10:00:00', $subscription->fresh()->renews_at->toDateTimeString());
+        $this->artisan('subscriptions:repair-periods', $options + ['--apply' => true])->assertSuccessful();
+        $this->assertSame('2026-03-22 10:00:00', $subscription->fresh()->renews_at->toDateTimeString());
+        $this->artisan('subscriptions:repair-periods', $options + ['--apply' => true])->assertSuccessful();
+        $this->assertCount(1, $subscription->fresh()->metadata['period_repairs']);
+    }
+
     public static function monthlyPaymentCases(): array
     {
         $cases = [];
