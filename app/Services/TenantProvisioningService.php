@@ -48,7 +48,7 @@ class TenantProvisioningService
                     'status' => 'trialing',
                     'starts_at' => now(),
                     'trial_ends_at' => now()->addDays(14),
-                    'renews_at' => now()->addMonth(),
+                    'renews_at' => null,
                 ]);
             }
 

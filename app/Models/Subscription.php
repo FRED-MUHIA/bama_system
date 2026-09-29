@@ -40,6 +40,18 @@ class Subscription extends Model
     public function plan() { return $this->belongsTo(Plan::class); }
     public function invoices() { return $this->hasMany(SubscriptionInvoice::class); }
 
+    public function nextMonthlyRenewalAt(\Illuminate\Support\Carbon $paidAt, int $invoiceId): \Illuminate\Support\Carbon
+    {
+        // Older trial records may contain a renewal date despite never being paid.
+        $unpaidTrial = $this->trial_ends_at && ! $this->invoices()
+            ->whereKeyNot($invoiceId)->where('status', 'paid')->exists();
+        $base = ! $unpaidTrial && $this->renews_at?->isAfter($paidAt)
+            ? $this->renews_at
+            : $paidAt;
+
+        return $base->copy()->addDays(30);
+    }
+
     public function isActive(): bool
     {
         return in_array($this->status, ['active', 'trialing'], true) && (! $this->ends_at || $this->ends_at->isFuture());

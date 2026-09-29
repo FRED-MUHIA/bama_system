@@ -85,16 +85,13 @@ class SubscriptionPaymentService
             $invoice->markPaid($lockedPayment);
 
             if ($subscription) {
-                $base = now();
-                if ($subscription->renews_at && $subscription->renews_at->isFuture()) {
-                    $base = $subscription->renews_at;
-                }
+                $renewsAt = $subscription->nextMonthlyRenewalAt($lockedPayment->paid_at ?: now(), $invoice->id);
 
                 $subscription->forceFill([
                     'plan_id' => $invoice->plan_id ?: $subscription->plan_id,
                     'status' => 'active',
                     'starts_at' => $subscription->starts_at ?: now(),
-                    'renews_at' => $base->copy()->addMonthNoOverflow(),
+                    'renews_at' => $renewsAt,
                     'grace_ends_at' => null,
                     'ends_at' => null,
                     'locked_at' => null,

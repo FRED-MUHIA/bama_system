@@ -119,6 +119,52 @@ class SubscriptionBillingEmailTest extends TestCase
         $this->assertNull($subscription->fresh()->locked_at);
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('monthlyPaymentCases')]
+    public function test_monthly_access_uses_each_customers_payment_date(string $path, string $status, ?string $trialEnd, ?string $renewal, string $expected): void
+    {
+        Mail::fake();
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-02-20 10:00:00'));
+        [, $plan, $subscription] = $this->subscriptionFixture();
+        $subscription->forceFill([
+            'status' => $status,
+            'trial_ends_at' => $trialEnd,
+            'renews_at' => $renewal,
+        ])->save();
+        $billing = app(SubscriptionBillingService::class);
+        $invoice = $billing->createInvoice($subscription, $plan);
+        $payment = SubscriptionPayment::create([
+            'subscription_invoice_id' => $invoice->id,
+            'tenant_id' => $invoice->tenant_id,
+            'provider' => 'manual',
+            'status' => $path === 'verified' ? 'successful' : 'initiated',
+            'amount' => $invoice->total,
+            'currency' => $invoice->currency,
+            'paid_at' => now(),
+        ]);
+
+        if ($path === 'verified') {
+            app(\App\Services\Payments\SubscriptionPaymentService::class)->activateAfterVerifiedPayment($payment);
+        } else {
+            $billing->markPaid($payment);
+        }
+
+        $this->assertSame($expected, $subscription->fresh()->renews_at->format('Y-m-d H:i:s'));
+        $this->assertSame('active', $subscription->fresh()->status);
+    }
+
+    public static function monthlyPaymentCases(): array
+    {
+        $cases = [];
+        foreach (['manual', 'verified'] as $path) {
+            $cases[$path.' expired trial'] = [$path, 'trialing', '2026-02-18', null, '2026-03-22 10:00:00'];
+            $cases[$path.' legacy trial'] = [$path, 'past_due', '2026-02-18', '2026-03-04', '2026-03-22 10:00:00'];
+            $cases[$path.' late renewal'] = [$path, 'paused', null, '2026-02-10', '2026-03-22 10:00:00'];
+            $cases[$path.' early renewal'] = [$path, 'active', null, '2026-02-25 10:00:00', '2026-03-27 10:00:00'];
+        }
+
+        return $cases;
+    }
+
     private function subscriptionFixture(): array
     {
         $tenant = Tenant::create([
