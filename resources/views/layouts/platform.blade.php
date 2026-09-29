@@ -54,7 +54,7 @@
         @media (max-width: 900px) {
             .owner-shell { grid-template-columns:1fr; }
             .owner-sidebar { position:static; padding:16px; }
-            .owner-nav { grid-template-columns:repeat(5, minmax(0, 1fr)); }
+            .owner-nav { grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); }
             .owner-nav a { justify-content:center; }
             .owner-header { align-items:flex-start; flex-direction:column; padding:18px; }
             .owner-content { padding:18px; }
@@ -72,6 +72,7 @@
                 </div>
             </div>
             <nav class="owner-nav">
+                <a href="{{ route('platform.subscription-payments') }}" class="{{ request()->routeIs('platform.subscription-payments') ? 'active' : '' }}"><i class="bi bi-journal-text"></i> Subscription records</a>
                 <a href="{{ route('platform.dashboard') }}" class="{{ request()->routeIs('platform.dashboard') ? 'active' : '' }}"><i class="bi bi-grid"></i> Overview</a>
                 <a href="{{ route('platform.tenants') }}" class="{{ request()->routeIs('platform.tenants') ? 'active' : '' }}"><i class="bi bi-buildings"></i> Clients</a>
                 <a href="{{ route('platform.plans') }}" class="{{ request()->routeIs('platform.plans') ? 'active' : '' }}"><i class="bi bi-tags"></i> Pricing</a>
