@@ -3,24 +3,28 @@
 @section('content')
 <style>
     .client-table { table-layout:fixed; width:100%; }
-    .client-table th:nth-child(1) { width:12%; }
-    .client-table th:nth-child(2) { width:19%; }
-    .client-table th:nth-child(3) { width:10%; }
-    .client-table th:nth-child(4) { width:5%; }
-    .client-table th:nth-child(5) { width:16%; }
-    .client-table th:nth-child(6) { width:38%; }
+    .client-table th:nth-child(1) { width:18%; }
+    .client-table th:nth-child(2) { width:27%; }
+    .client-table th:nth-child(3) { width:14%; }
+    .client-table th:nth-child(4) { width:7%; }
+    .client-table th:nth-child(5) { width:21%; }
+    .client-table th:nth-child(6) { width:13%; }
     .client-table td { vertical-align:top; overflow-wrap:anywhere; padding:.9rem .6rem; }
     .client-table .badge { max-width:100%; white-space:normal; text-align:left; }
     .client-table .form-control,.client-table .form-select { min-width:0; max-width:100%; }
     .client-table .btn { white-space:normal; }
     .client-table summary { font-size:.9rem; }
-    .client-edit-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem; }
+    .client-edit-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.65rem; }
     .client-edit-grid > div { min-width:0; }
     .client-edit-grid label { display:block; font-size:.75rem; color:#66736b; margin-bottom:.25rem; }
-    .client-edit-save { grid-column:1 / -1; }
+    .client-edit-save { grid-column:1 / -1; max-width:160px; }
+    .client-table .client-management[hidden] { display:none; }
+    .client-management { background:var(--owner-soft); }
+    .client-management > td { padding:1rem; }
+    .client-dates { display:flex; flex-wrap:wrap; gap:.5rem 2rem; margin-bottom:1rem; }
     .client-delete { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem .75rem; }
     .client-delete small { flex:1 1 180px; }
-    @media (max-width:1399.98px) {
+    @media (max-width:767.98px) {
         .client-table,.client-table tbody { display:block; }
         .client-table thead { display:none; }
         .client-table tr { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); padding:.75rem 0; border-bottom:1px solid var(--owner-line); }
@@ -30,6 +34,9 @@
         .client-table td:nth-child(2) { grid-column:span 2; }
         .client-table td:nth-child(5) { grid-column:span 3; }
         .client-table td:last-child { grid-column:1 / -1; }
+        .client-table .client-management { grid-template-columns:minmax(0,1fr); }
+        .client-table .client-management > td::before { display:none; }
+        .client-edit-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
     @media (max-width:575.98px) {
         .client-table tr { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -60,10 +67,17 @@
                     <td data-label="Subscription">
                         <strong>{{ $tenant->subscription?->plan?->name ?? 'No plan' }}</strong>
                         <small class="d-block text-muted">{{ $tenant->subscription?->status ?? 'none' }}</small>
-                        <small class="d-block text-muted">Trial ends: {{ $tenant->subscription?->trial_ends_at?->format('d M Y H:i') ?? '—' }}</small>
-                        <small class="d-block text-muted">Renewal: {{ $tenant->subscription?->renews_at?->format('d M Y H:i') ?? '—' }}</small>
                     </td>
                     <td data-label="Manage">
+                        <button type="button" class="btn btn-outline-dark btn-sm client-toggle" aria-expanded="false" aria-controls="client-manage-{{ $tenant->id }}" aria-label="Expand {{ $tenant->name }}" data-client-name="{{ $tenant->name }}">+ Expand</button>
+                    </td>
+                </tr>
+                <tr id="client-manage-{{ $tenant->id }}" class="client-management" hidden>
+                    <td colspan="6">
+                        <div class="client-dates small text-muted">
+                            <span>Trial ends: {{ $tenant->subscription?->trial_ends_at?->format('d M Y H:i') ?? '—' }}</span>
+                            <span>Renewal: {{ $tenant->subscription?->renews_at?->format('d M Y H:i') ?? '—' }}</span>
+                        </div>
                         <details class="border rounded p-3 mb-3">
                             <summary class="fw-bold">Adjust subscription / restore access</summary>
                             <p class="small text-muted mt-2">Correct access after a transaction error. Reset starts a new period now; set an expiry to choose the exact end time. Dates use {{ config('app.timezone') }}. This adjustment does not record a payment or issue a receipt.</p>
@@ -128,4 +142,16 @@
     </div>
     {{ $tenants->links() }}
 </div>
+<script>
+    document.querySelectorAll('.client-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+            const panel = document.getElementById(button.getAttribute('aria-controls'));
+            const expanded = button.getAttribute('aria-expanded') === 'true';
+            panel.hidden = expanded;
+            button.setAttribute('aria-expanded', String(!expanded));
+            button.textContent = expanded ? '+ Expand' : '− Minimize';
+            button.setAttribute('aria-label', `${expanded ? 'Expand' : 'Minimize'} ${button.dataset.clientName}`);
+        });
+    });
+</script>
 @endsection
