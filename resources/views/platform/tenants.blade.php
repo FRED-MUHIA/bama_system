@@ -24,8 +24,25 @@
                     <td>
                         <strong>{{ $tenant->subscription?->plan?->name ?? 'No plan' }}</strong>
                         <small class="d-block text-muted">{{ $tenant->subscription?->status ?? 'none' }}</small>
+                        <small class="d-block text-muted">Trial ends: {{ $tenant->subscription?->trial_ends_at?->format('d M Y H:i') ?? '—' }}</small>
+                        <small class="d-block text-muted">Renewal: {{ $tenant->subscription?->renews_at?->format('d M Y H:i') ?? '—' }}</small>
                     </td>
                     <td style="min-width:560px">
+                        <details class="border rounded p-3 mb-3">
+                            <summary class="fw-bold">Adjust subscription / restore access</summary>
+                            <p class="small text-muted mt-2">Correct access after a transaction error. Reset starts a new period now; set an expiry to choose the exact end time. Dates use {{ config('app.timezone') }}. This adjustment does not record a payment or issue a receipt.</p>
+                            <form method="post" action="{{ route('platform.tenants.subscription.update', $tenant) }}" class="row g-2">
+                                @csrf @method('PUT')
+                                <div class="col-md-6"><label class="form-label" for="adjust-action-{{ $tenant->id }}">Action</label><select id="adjust-action-{{ $tenant->id }}" name="action" class="form-select" required><option value="set_expiry">Set expiry date and restore access</option><option value="reset_monthly">Reset to 30 days from now</option><option value="reset_trial">Reset trial to 14 days from now</option></select></div>
+                                <div class="col-md-6"><label class="form-label" for="adjust-plan-{{ $tenant->id }}">Package</label><select id="adjust-plan-{{ $tenant->id }}" name="plan_id" class="form-select" required>@foreach($plans as $plan)<option value="{{ $plan->id }}" @selected($tenant->subscription?->plan_id === $plan->id)>{{ $plan->name }}</option>@endforeach</select></div>
+                                <div class="col-12"><label class="form-label" for="adjust-expiry-{{ $tenant->id }}">Expiry date (required for set expiry only)</label><input id="adjust-expiry-{{ $tenant->id }}" type="datetime-local" name="expires_at" class="form-control"></div>
+                                <div class="col-12"><label class="form-label" for="adjust-reason-{{ $tenant->id }}">Reason / transaction reference</label><textarea id="adjust-reason-{{ $tenant->id }}" name="reason" class="form-control" maxlength="1000" rows="2" required></textarea></div>
+                                <div class="col-12"><button class="btn btn-owner">Apply subscription adjustment</button></div>
+                            </form>
+                            @foreach(array_reverse(data_get($tenant->subscription?->metadata, 'admin_adjustments', [])) as $adjustment)
+                                <div class="small border-top mt-3 pt-2"><strong>{{ $adjustment['user_name'] }} (#{{ $adjustment['user_id'] }})</strong> · {{ $adjustment['at'] }}<br>{{ str($adjustment['action'])->headline() }} · Expires {{ $adjustment['expires_at'] }}<br>{{ $adjustment['reason'] }}</div>
+                            @endforeach
+                        </details>
                         <form method="post" action="{{ route('platform.tenants.update', $tenant) }}" class="row g-2">
                             @csrf @method('PUT')
                             <div class="col-md-3">

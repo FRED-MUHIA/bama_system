@@ -23,7 +23,7 @@ class RepairSubscriptionPeriodsCommand extends Command
                 foreach ($rows as $row) {
                     DB::transaction(function () use ($row, $apply) {
                         $subscription = Subscription::withoutGlobalScopes()->lockForUpdate()->findOrFail($row->id);
-                        if ($subscription->status === 'cancelled') {
+                        if ($subscription->status === 'cancelled' || $subscription->hasAdminAccessPeriod()) {
                             return;
                         }
 

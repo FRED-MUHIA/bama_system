@@ -42,6 +42,9 @@ class Subscription extends Model
 
     public function accessExpiresAt(): ?\Illuminate\Support\Carbon
     {
+        if ($this->hasAdminAccessPeriod()) {
+            return $this->renews_at;
+        }
         // Legacy trials have a registration-based renewal date even without payment.
         if ($this->trial_ends_at && ($this->status === 'trialing'
             || ! $this->renews_at
@@ -55,7 +58,7 @@ class Subscription extends Model
     public function nextMonthlyRenewalAt(\Illuminate\Support\Carbon $paidAt, int $invoiceId): \Illuminate\Support\Carbon
     {
         // Older trial records may contain a renewal date despite never being paid.
-        $unpaidTrial = $this->trial_ends_at && ! $this->invoices()
+        $unpaidTrial = ! $this->hasAdminAccessPeriod() && $this->trial_ends_at && ! $this->invoices()
             ->whereKeyNot($invoiceId)->where('status', 'paid')->exists();
         $base = ! $unpaidTrial && $this->renews_at?->isAfter($paidAt)
             ? $this->renews_at
@@ -67,5 +70,11 @@ class Subscription extends Model
     public function isActive(): bool
     {
         return in_array($this->status, ['active', 'trialing'], true) && (! $this->ends_at || $this->ends_at->isFuture());
+    }
+
+    public function hasAdminAccessPeriod(): bool
+    {
+        return $this->status !== 'trialing' && $this->renews_at
+            && data_get($this->metadata, 'admin_access_expires_at') === $this->renews_at->toDateTimeString();
     }
 }
