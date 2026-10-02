@@ -3,6 +3,7 @@
             <div>
                 <img src="{{ $brandLogoUrl }}" alt="{{ $brandAlt }}" class="bama-logo">
                 <p class="mt-4 max-w-sm leading-7">{{ data_get($footerContent, 'body', 'Enterprise SaaS for ERP, CRM, finance, projects, documents, and industry operations.') }}</p>
+                <a href="{{ route('blog.index') }}" class="hover:text-[#00A651]">Blog</a>
                 <p class="mt-3 text-sm">{{ data_get($footerContent, 'email', 'sales@bama.co.ke') }}<br>{{ data_get($footerContent, 'phone', '+254 700 000 000') }}</p>
             </div>
             <div class="grid gap-8 sm:grid-cols-4">

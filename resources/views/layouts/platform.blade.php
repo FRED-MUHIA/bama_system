@@ -79,6 +79,7 @@
                 <a href="{{ route('platform.payments') }}" class="{{ request()->routeIs('platform.payments') ? 'active' : '' }}"><i class="bi bi-credit-card"></i> Payments</a>
                 <a href="{{ route('platform.pages.index') }}" class="{{ request()->routeIs('platform.pages.*') ? 'active' : '' }}"><i class="bi bi-layout-text-window-reverse"></i> Pages</a>
             </nav>
+            <div class="owner-nav"><a href="{{ route('platform.blogs.index') }}" class="{{ request()->routeIs('platform.blogs.*') ? 'active' : '' }}"><i class="bi bi-journal-text"></i> Blogs</a></div>
         </aside>
         <main class="owner-main">
             <header class="owner-header">

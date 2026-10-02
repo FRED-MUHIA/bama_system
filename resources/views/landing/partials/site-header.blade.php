@@ -5,13 +5,14 @@
             </a>
             <div class="hidden items-center gap-5 text-sm font-bold text-black lg:flex">
                 <a href="{{ route('landing') }}" class="hover:text-[#00A651]">Home</a>
+                <a href="{{ route('blog.index') }}" class="hover:text-[#00A651]">Blog</a>
                 @foreach($headerLinks as $link)
                     @if(is_array($link) && ($link['label'] ?? '') && ($link['url'] ?? ''))
                         <a href="{{ $marketingUrl($link['url']) }}" class="hover:text-[#00A651]">{{ $link['label'] }}</a>
                     @endif
                 @endforeach
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2"><a href="{{ route('blog.index') }}" class="text-sm font-bold lg:hidden">Blog</a>
                 @if(data_get($headerContent, 'login_label') || data_get($headerContent, 'login_url'))
                     <a href="{{ $marketingUrl(data_get($headerContent, 'login_url', route('login')) ) }}" class="hidden rounded-lg border border-zinc-300 px-4 py-2 text-sm font-black md:inline-flex">{{ data_get($headerContent, 'login_label', 'Login') }}</a>
                 @endif

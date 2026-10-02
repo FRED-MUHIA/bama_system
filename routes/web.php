@@ -82,6 +82,8 @@ use Shared\Compliance\Etims\Controllers\EtimsComplianceController;
 Route::get('/uploads/{path}', PublicUploadController::class)->where('path', '.*')->name('uploads.public');
 
 Route::get('/', LandingController::class)->name('landing');
+Route::get('/blog', [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
 Route::get('/industries/{industry}', [LandingController::class, 'industry'])->name('industries.show');
 Route::get('/pages/{slug}', [MarketingPageController::class, 'show'])->name('marketing.pages.show');
 Route::get('/activate/{token}', [AdministrationController::class, 'activateForm'])->name('administration.activate');
@@ -197,6 +199,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/payment-settings/kes-usd-rate', [PlatformController::class, 'liveKesUsdRate'])->name('payment-settings.kes-usd-rate');
         Route::put('/payment-settings', [PlatformController::class, 'updatePaymentSettings'])->name('payment-settings.update');
         Route::resource('pages', MarketingPageController::class)->except(['show']);
+        Route::get('blogs', [\App\Http\Controllers\BlogController::class, 'manage'])->name('blogs.index');
+        Route::resource('blogs', \App\Http\Controllers\BlogController::class)->except(['index', 'show']);
     });
 
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout.get');
