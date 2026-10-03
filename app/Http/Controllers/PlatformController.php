@@ -48,11 +48,25 @@ class PlatformController extends Controller
         ]);
     }
 
-    public function tenants()
+    public function tenants(Request $request)
     {
+        $request->validate(['search' => ['nullable', 'string', 'max:255']]);
+        $search = trim((string) $request->input('search', ''));
+
         return view('platform.tenants', [
+            'search' => $search,
             'tenants' => Tenant::withoutGlobalScopes()
                 ->whereNull('deleted_at')
+                ->when($search !== '', function ($query) use ($search) {
+                    $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($search)).'%';
+                    $query->where(function ($query) use ($pattern) {
+                        $query->whereRaw("LOWER(name) LIKE ? ESCAPE '!'", [$pattern])
+                            ->orWhereRaw("LOWER(slug) LIKE ? ESCAPE '!'", [$pattern])
+                            ->orWhereRaw("LOWER(primary_domain) LIKE ? ESCAPE '!'", [$pattern])
+                            ->orWhereHas('users', fn ($users) => $users->whereRaw("LOWER(email) LIKE ? ESCAPE '!'", [$pattern]))
+                            ->orWhereHas('businesses', fn ($businesses) => $businesses->withoutGlobalScopes()->whereRaw("LOWER(name) LIKE ? ESCAPE '!'", [$pattern]));
+                    });
+                })
                 ->with([
                     'businesses' => fn ($query) => $query->withoutGlobalScopes(),
                     'users' => fn ($query) => $query->select('users.id', 'users.email')->orderBy('users.email'),
@@ -60,7 +74,7 @@ class PlatformController extends Controller
                 ])
                 ->withCount('users')
                 ->latest()
-                ->paginate(20),
+                ->paginate(20)->withQueryString(),
             'plans' => Plan::where('is_active', true)->orderBy('monthly_price')->get(),
             'statuses' => ['trial', 'active', 'suspended', 'cancelled'],
             'subscriptionStatuses' => ['trialing', 'active', 'past_due', 'paused', 'cancelled'],

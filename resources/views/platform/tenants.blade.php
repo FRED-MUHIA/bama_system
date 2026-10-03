@@ -45,6 +45,19 @@
     }
 </style>
 <div class="owner-card p-3">
+    <form method="get" action="{{ route('platform.tenants') }}" role="search" class="mb-3">
+        <label for="account-search" class="form-label fw-bold">Search accounts</label>
+        <div class="d-flex flex-wrap gap-2">
+            <input id="account-search" type="search" name="search" value="{{ $search }}" class="form-control" style="flex:1 1 240px; min-width:0;" placeholder="Client name, email, business or domain" maxlength="255">
+            <button type="submit" class="btn btn-owner"><i class="bi bi-search" aria-hidden="true"></i> Search</button>
+            @if($search !== '')
+                <a href="{{ route('platform.tenants') }}" class="btn btn-outline-dark">Clear</a>
+            @endif
+        </div>
+        @if($search !== '')
+            <p class="small text-muted mt-2 mb-0">{{ number_format($tenants->total()) }} {{ $tenants->total() === 1 ? 'account' : 'accounts' }} found for “{{ $search }}”.</p>
+        @endif
+    </form>
     <div class="table-responsive">
         <table class="table owner-table client-table align-middle">
             <thead><tr><th>Client</th><th>Registered Emails</th><th>Businesses</th><th>Users</th><th>Subscription</th><th>Manage</th></tr></thead>
@@ -137,7 +150,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="text-muted">No clients yet.</td></tr>
+                <tr><td colspan="6" class="text-muted">{{ $search !== '' ? 'No accounts match your search. Try another name, email, business or domain.' : 'No clients yet.' }}</td></tr>
             @endforelse
             </tbody>
         </table>
