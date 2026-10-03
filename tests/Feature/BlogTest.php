@@ -5,11 +5,21 @@ namespace Tests\Feature;
 use App\Models\BlogPost;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class BlogTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_public_blog_handles_a_missing_posts_table(): void
+    {
+        Schema::drop('blog_posts');
+
+        $this->get('/blog')->assertOk()->assertSee('Our first articles are on the way.');
+        $this->get('/blog?page=2')->assertOk()->assertSee('Our first articles are on the way.');
+        $this->get('/blog/missing-article')->assertNotFound();
+    }
 
     public function test_admin_can_create_publish_edit_and_delete_posts(): void
     {

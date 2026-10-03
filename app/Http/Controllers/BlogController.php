@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\BlogPost;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -11,11 +13,19 @@ class BlogController extends Controller
 {
     public function index()
     {
+        if (! Schema::hasTable('blog_posts')) {
+            return view('blog.index', ['posts' => new LengthAwarePaginator([], 0, 9, LengthAwarePaginator::resolveCurrentPage(), [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+            ])]);
+        }
+
         return view('blog.index', ['posts' => BlogPost::published()->orderByDesc('published_at')->orderByDesc('id')->paginate(9)]);
     }
 
     public function show(string $slug)
     {
+        abort_unless(Schema::hasTable('blog_posts'), 404);
+
         return view('blog.show', ['post' => BlogPost::published()->where('slug', $slug)->firstOrFail()]);
     }
 
