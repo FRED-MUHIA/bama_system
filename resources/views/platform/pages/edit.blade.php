@@ -20,6 +20,7 @@
     $steps = data_get($sections, 'steps.items', $homeDefaults['steps']['items']);
     $showcaseTabs = data_get($sections, 'showcase.tabs', $homeDefaults['showcase']['tabs']);
     $testimonials = data_get($sections, 'testimonials.items', $homeDefaults['testimonials']['items']);
+    $testimonials = json_decode(old('testimonials_json', json_encode($testimonials)), true) ?? $testimonials;
     $faqs = data_get($sections, 'faq.items', $homeDefaults['faq']['items']);
     $brandLogoUrl = \App\Support\PublicUpload::url(data_get($sections, 'brand.logo_path')) ?: \App\Support\PublicUpload::url('logos/llOAKRuYpeIgIZUIUYxVLE0Nj86xZeKTcalHp7ZC.png') ?: asset('images/bama-solutions-02.png');
     $faviconUrl = \App\Support\PublicUpload::url(data_get($sections, 'brand.favicon_path')) ?: $brandLogoUrl;
@@ -383,6 +384,22 @@
                                 <label class="form-label mb-0">Testimonials</label>
                                 <button class="btn btn-sm btn-outline-dark" type="button" data-add-testimonial><i class="bi bi-plus-lg"></i> Add Testimonial</button>
                             </div>
+                            <p class="text-muted small">The first testimonial appears in the homepage feature. Edit its company or name, quote, and metric below; the name and metric also appear on the photo badge.</p>
+                            <div class="row g-3 mb-3">
+                                @foreach([
+                                    'testimonial_image' => ['label' => 'Main testimonial photo', 'fallback' => 'https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=1200&q=80'],
+                                    'testimonial_avatar' => ['label' => 'Small author photo', 'fallback' => 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80'],
+                                ] as $field => $photo)
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="{{ $field }}">{{ $photo['label'] }}</label>
+                                        <img src="{{ \App\Support\PublicUpload::url(data_get($media, $field.'_path')) ?: $photo['fallback'] }}" alt="Current {{ strtolower($photo['label']) }}" class="d-block mb-2 rounded" style="height:140px;max-width:100%;object-fit:cover" data-testimonial-preview="{{ $field }}">
+                                        <input id="{{ $field }}" class="form-control" type="file" name="{{ $field }}" accept=".jpg,.jpeg,.png,.webp" data-testimonial-photo>
+                                        <small class="text-muted">JPG, PNG or WebP, up to 4 MB. Leave blank to keep the current photo.</small>
+                                        <label class="form-label mt-2" for="{{ $field }}_alt">Image description</label>
+                                        <input id="{{ $field }}_alt" class="form-control" name="sections[media][{{ $field }}_alt]" value="{{ data_get($media, $field.'_alt') }}" maxlength="255" placeholder="Describe the photo">
+                                    </div>
+                                @endforeach
+                            </div>
                             <input type="hidden" name="testimonials_json" data-testimonials-json value="{{ $json($testimonials) }}">
                             <div class="d-grid gap-2" data-testimonials>
                                 @foreach($testimonials as $testimonial)
@@ -538,6 +555,17 @@
         const showcaseHidden = document.querySelector('[data-showcase-json]');
         const testimonials = document.querySelector('[data-testimonials]');
         const testimonialsHidden = document.querySelector('[data-testimonials-json]');
+        document.querySelectorAll('[data-testimonial-photo]').forEach(input => {
+            input.addEventListener('change', () => {
+                const preview = document.querySelector(`[data-testimonial-preview="${input.name}"]`);
+                if (!preview) return;
+                preview.dataset.originalSrc ||= preview.src;
+                if (preview.dataset.objectUrl) URL.revokeObjectURL(preview.dataset.objectUrl);
+                const file = input.files[0];
+                preview.dataset.objectUrl = file ? URL.createObjectURL(file) : '';
+                preview.src = preview.dataset.objectUrl || preview.dataset.originalSrc;
+            });
+        });
         const faqs = document.querySelector('[data-faqs]');
         const faqsHidden = document.querySelector('[data-faqs-json]');
         const industryModulesText = document.querySelector('[data-industry-modules-text]');

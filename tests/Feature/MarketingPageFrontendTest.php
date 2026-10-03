@@ -13,6 +13,38 @@ class MarketingPageFrontendTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_homepage_testimonial_photos_and_content_can_be_updated(): void
+    {
+        Storage::fake('public');
+        MarketingPage::ensureBuiltInPages();
+        $owner = User::factory()->create(['role' => 'super_admin', 'is_active' => true, 'status' => 'Active']);
+        $home = MarketingPage::where('slug', 'home')->firstOrFail();
+        $payload = [
+            'title' => $home->title, 'slug' => 'home', 'meta_title' => $home->title, 'meta_description' => '',
+            'testimonials_json' => json_encode([['company' => 'Example Builders', 'quote' => 'Our projects stay on track.', 'metric' => 'Faster reporting']]),
+            'sections' => ['media' => ['testimonial_image_alt' => 'Our construction team', 'testimonial_avatar_alt' => 'Our project lead']],
+        ];
+        $this->actingAs($owner)->get(route('platform.pages.edit', $home))->assertOk()
+            ->assertSee('name="testimonial_image"', false)->assertSee('name="testimonial_avatar"', false);
+        $this->put(route('platform.pages.update', $home), $payload + [
+            'testimonial_image' => UploadedFile::fake()->image('team.jpg'),
+            'testimonial_avatar' => UploadedFile::fake()->image('author.png'),
+        ])->assertSessionHasNoErrors()->assertRedirect();
+        $media = $home->fresh()->sections['media'];
+        Storage::disk('public')->assertExists($media['testimonial_image_path']);
+        Storage::disk('public')->assertExists($media['testimonial_avatar_path']);
+        $this->get('/?preview=1')->assertOk()->assertSee('Example Builders')->assertSee('Our projects stay on track.')
+            ->assertSee('Faster reporting')->assertSee('Our construction team')->assertSee('Our project lead')
+            ->assertSee(\App\Support\PublicUpload::url($media['testimonial_image_path']), false)
+            ->assertSee(\App\Support\PublicUpload::url($media['testimonial_avatar_path']), false);
+        $this->put(route('platform.pages.update', $home), $payload)->assertSessionHasNoErrors();
+        $this->assertSame($media['testimonial_image_path'], $home->fresh()->sections['media']['testimonial_image_path']);
+        $this->assertSame($media['testimonial_avatar_path'], $home->fresh()->sections['media']['testimonial_avatar_path']);
+        $this->put(route('platform.pages.update', $home), $payload + [
+            'testimonial_image' => UploadedFile::fake()->create('invalid.pdf', 10, 'application/pdf'),
+        ])->assertSessionHasErrors('testimonial_image');
+    }
+
     public function test_page_builder_lists_all_built_in_pages_without_overwriting_content(): void
     {
         $owner = User::factory()->create(['role' => 'super_admin', 'is_active' => true, 'status' => 'Active']);

@@ -1106,7 +1106,7 @@
                         <div class="testimonial-quote-mark">“</div>
                         <blockquote class="testimonial-quote">{{ $featuredQuote }}</blockquote>
                         <div class="testimonial-author">
-                            <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80" alt="{{ $featuredCompany }}" />
+                            <img class="testimonial-avatar" src="{{ \App\Support\PublicUpload::url(data_get($content, 'media.testimonial_avatar_path')) ?: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80' }}" alt="{{ data_get($content, 'media.testimonial_avatar_alt') ?: $featuredCompany }}" />
                             <div>
                                 <p class="testimonial-author-name">{{ $featuredCompany }}</p>
                                 <p class="testimonial-author-role">{{ $featuredMetric }}</p>
@@ -1116,7 +1116,7 @@
                     <div class="testimonial-media-wrap">
                         <div class="testimonial-accent" aria-hidden="true"></div>
                         <figure class="testimonial-media">
-                            <img src="https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=1200&q=80" alt="{{ $featuredCompany }} speaking during a team meeting" />
+                            <img src="{{ \App\Support\PublicUpload::url(data_get($content, 'media.testimonial_image_path')) ?: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=1200&q=80' }}" alt="{{ data_get($content, 'media.testimonial_image_alt') ?: $featuredCompany }}" />
                         </figure>
                         <div class="testimonial-badge">
                             <strong>{{ $featuredCompany }}</strong>

@@ -157,6 +157,10 @@ class MarketingPageController extends Controller
             'hero_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
             'insight_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
             'features_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
+            'testimonial_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'testimonial_avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'sections.media.testimonial_image_alt' => ['nullable', 'string', 'max:255'],
+            'sections.media.testimonial_avatar_alt' => ['nullable', 'string', 'max:255'],
             'trust_logo_files' => ['nullable', 'array'],
             'trust_logo_files.*' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
         ]);
@@ -232,6 +236,8 @@ class MarketingPageController extends Controller
                 'hero_image' => 'media.hero_image_path',
                 'insight_image' => 'media.insight_image_path',
                 'features_image' => 'media.features_image_path',
+                'testimonial_image' => 'media.testimonial_image_path',
+                'testimonial_avatar' => 'media.testimonial_avatar_path',
             ] as $field => $path) {
                 if ($request->hasFile($field)) {
                     $this->deletePublicFile(data_get($sections, $path));
