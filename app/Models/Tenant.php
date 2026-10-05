@@ -16,7 +16,7 @@ class Tenant extends Model
     public function businesses() { return $this->hasMany(Business::class); }
     public function users() { return $this->belongsToMany(User::class)->withPivot(['role', 'status', 'joined_at'])->withTimestamps(); }
     public function modules() { return $this->belongsToMany(Module::class, 'tenant_modules')->using(TenantModule::class)->withPivot(['enabled', 'settings', 'enabled_at'])->withTimestamps(); }
-    public function subscription() { return $this->hasOne(Subscription::class)->latestOfMany(); }
+    public function subscription() { return $this->hasOne(Subscription::class)->withoutGlobalScope('tenant')->latestOfMany(); }
     public function subscriptionInvoices() { return $this->hasMany(SubscriptionInvoice::class); }
     public function subscriptionPayments() { return $this->hasMany(SubscriptionPayment::class); }
     public function theme() { return $this->hasOne(TenantTheme::class); }

@@ -34,7 +34,7 @@ class SubscriptionInvoice extends Model
     }
 
     public function tenant() { return $this->belongsTo(Tenant::class); }
-    public function subscription() { return $this->belongsTo(Subscription::class); }
+    public function subscription() { return $this->belongsTo(Subscription::class)->withoutGlobalScope('tenant'); }
     public function plan() { return $this->belongsTo(Plan::class); }
     public function payments() { return $this->hasMany(SubscriptionPayment::class); }
     public function emailLogs() { return $this->morphMany(EmailLog::class, 'emailable'); }
