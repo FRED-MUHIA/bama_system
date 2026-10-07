@@ -33,14 +33,14 @@ class SalonApiController extends Controller
     public function bookAppointment(Request $request, SalonSpaServiceContract $salon)
     {
         $data = $request->validate([
-            'salon_client_profile_id' => ['required', 'exists:salon_client_profiles,id'],
-            'salon_staff_profile_id' => ['nullable', 'exists:salon_staff_profiles,id'],
-            'salon_resource_id' => ['nullable', 'exists:salon_resources,id'],
+            'salon_client_profile_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\ClientProfile::class)],
+            'salon_staff_profile_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\StaffProfile::class)],
+            'salon_resource_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\Resource::class)],
             'starts_at' => ['required', 'date'],
             'channel' => ['nullable', 'string', 'max:80'],
             'services' => ['required', 'array', 'min:1'],
-            'services.*.service_id' => ['required', 'exists:salon_services,id'],
-            'services.*.salon_staff_profile_id' => ['nullable', 'exists:salon_staff_profiles,id'],
+            'services.*.service_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\Service::class)],
+            'services.*.salon_staff_profile_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\StaffProfile::class)],
         ]);
 
         $profile = \Modules\Salon\Models\ClientProfile::findOrFail($data['salon_client_profile_id']);
@@ -51,6 +51,6 @@ class SalonApiController extends Controller
 
     public function completeAppointment(Appointment $appointment, SalonSpaServiceContract $salon)
     {
-        return response()->json(['data' => $salon->completeAppointment($appointment, ['payment_status' => 'Paid'])]);
+        return response()->json(['data' => $salon->completeAppointment($appointment)]);
     }
 }

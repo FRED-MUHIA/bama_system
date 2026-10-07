@@ -548,6 +548,11 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::prefix('salon-spa')->name('salon.')->middleware('module.enabled:salon')->group(function () {
+            Route::get('/manage/{type}/create', [\Modules\Salon\Controllers\SalonRecordController::class, 'create'])->name('records.create');
+            Route::post('/manage/{type}', [\Modules\Salon\Controllers\SalonRecordController::class, 'store'])->name('records.store');
+            Route::get('/manage/{type}/{record}/edit', [\Modules\Salon\Controllers\SalonRecordController::class, 'edit'])->whereNumber('record')->name('records.edit');
+            Route::put('/manage/{type}/{record}', [\Modules\Salon\Controllers\SalonRecordController::class, 'update'])->whereNumber('record')->name('records.update');
+            Route::delete('/manage/{type}/{record}', [\Modules\Salon\Controllers\SalonRecordController::class, 'destroy'])->whereNumber('record')->name('records.destroy');
             Route::get('/', SalonDashboardController::class)->middleware('permission:salon.view')->name('dashboard');
             Route::get('/appointments', [SalonOperationsController::class, 'appointments'])->middleware('permission:salon.appointments.view')->name('appointments.index');
             Route::post('/appointments', [SalonOperationsController::class, 'storeAppointment'])->middleware('permission:salon.appointments.manage')->name('appointments.store');

@@ -39,6 +39,7 @@
         <section class="salon-grid">
             <div class="salon-card">
                 <h2 class="h5">Book appointment</h2>
+                @if(auth()->user()->hasPermission('salon.appointments.manage'))
                 <form class="salon-form" method="post" action="{{ route('salon.appointments.store') }}">
                     @csrf
                     <select name="salon_client_profile_id" class="form-select" required>
@@ -54,31 +55,49 @@
                         @foreach($resources as $resource)<option value="{{ $resource->id }}">{{ $resource->name }} · {{ $resource->type }}</option>@endforeach
                     </select>
                     <input type="datetime-local" name="starts_at" class="form-control" required>
-                    <select name="services[0][service_id]" class="form-select" required>
-                        <option value="">Service</option>
-                        @foreach($services as $service)<option value="{{ $service->id }}">{{ $service->name }} · {{ number_format((float) $service->price, 2) }}</option>@endforeach
-                    </select>
+                    <div data-booking-services>
+                        <div class="d-flex gap-2 mb-2" data-booking-service>
+                            <select name="services[0][service_id]" class="form-select" aria-label="Service" required>
+                                <option value="">Service</option>
+                                @foreach($services as $service)<option value="{{ $service->id }}">{{ $service->name }} · {{ number_format((float) $service->price, 2) }}</option>@endforeach
+                            </select>
+                            <button type="button" class="btn btn-outline-danger" data-remove-service hidden>Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary" data-add-service>Add another service</button>
+                    <label class="form-label">Booking channel<input name="channel" class="form-control" value="{{ old('channel', 'Walk-in') }}"></label>
+                    <label class="form-label">Notes<textarea name="notes" class="form-control">{{ old('notes') }}</textarea></label>
                     <button class="btn btn-success rounded-pill fw-bold">Book appointment</button>
                 </form>
+                @endif
             </div>
             <div class="salon-card">
-                <h2 class="h5">Upcoming appointments</h2>
+                <h2 class="h5">Appointments & history</h2>
                 <div class="salon-list">
                     @forelse($appointments as $appointment)
                         <div class="salon-item">
                             <div>
                                 <strong>{{ $appointment->profile?->client?->name ?? 'Walk-in client' }}</strong>
                                 <div class="small text-muted">{{ $appointment->appointment_number }} · {{ $appointment->starts_at?->format('d M H:i') }}</div>
+                                <div class="small text-muted">{{ $appointment->staff?->display_name ?? 'Unassigned staff' }} · {{ $appointment->resource?->name ?? 'No room / chair' }}</div>
+                                <div class="small">{{ $appointment->services->pluck('service_name')->join(', ') }}</div>
+                                <span class="salon-pill">{{ $appointment->status }} · {{ $appointment->payment_status }}</span>
                             </div>
-                            <form method="post" action="{{ route('salon.appointments.complete', $appointment) }}">
-                                @csrf
-                                <button class="btn btn-sm btn-outline-success">Complete</button>
-                            </form>
+                            <div class="salon-actions">
+                                @if(auth()->user()->hasPermission('salon.appointments.manage') && !in_array($appointment->status, ['Completed', 'Cancelled', 'No Show']))
+                                    <form method="post" action="{{ route('salon.appointments.complete', $appointment) }}" onsubmit="return confirm('Complete this appointment and calculate loyalty points and commissions?')">
+                                        @csrf
+                                        <button class="btn btn-sm btn-outline-success">Complete</button>
+                                    </form>
+                                @endif
+                                @include('salon.record-actions', ['recordType' => 'appointments', 'record' => $appointment])
+                            </div>
                         </div>
                     @empty
                         <div class="text-muted">No appointments scheduled.</div>
                     @endforelse
                 </div>
+                <div class="mt-3">{{ $appointments->links() }}</div>
             </div>
         </section>
     @endif
@@ -87,6 +106,7 @@
         <section class="salon-grid">
             <div class="salon-card">
                 <h2 class="h5">Create client profile</h2>
+                @if(auth()->user()->hasPermission('salon.loyalty.manage'))
                 <form class="salon-form" method="post" action="{{ route('salon.clients.store') }}">
                     @csrf
                     <input name="name" class="form-control" placeholder="Client name" required>
@@ -95,6 +115,7 @@
                     <input name="date_of_birth" type="date" class="form-control">
                     <button class="btn btn-success rounded-pill fw-bold">Create profile</button>
                 </form>
+                @endif
             </div>
             <div class="salon-card">
                 <h2 class="h5">Client profiles</h2>
@@ -103,6 +124,7 @@
                         <div class="salon-item">
                             <div><strong>{{ $profile->client?->name }}</strong><div class="small text-muted">{{ $profile->client_code }} · {{ $profile->loyalty_tier }}</div></div>
                             <span>{{ number_format((float) $profile->lifetime_spend, 2) }}</span>
+                            @include('salon.record-actions', ['recordType' => 'clients', 'record' => $profile])
                         </div>
                     @endforeach
                 </div>
@@ -115,6 +137,7 @@
         <section class="salon-grid">
             <div class="salon-card">
                 <h2 class="h5">Add staff</h2>
+                @if(auth()->user()->hasPermission('salon.staff.manage'))
                 <form class="salon-form" method="post" action="{{ route('salon.staff.store') }}">
                     @csrf
                     <input name="display_name" class="form-control" placeholder="Display name" required>
@@ -122,6 +145,7 @@
                     <input name="commission_rate" type="number" step="0.01" class="form-control" placeholder="Commission %">
                     <button class="btn btn-success rounded-pill fw-bold">Add staff</button>
                 </form>
+                @endif
             </div>
             <div class="salon-card">
                 <h2 class="h5">Staff profiles</h2>
@@ -130,6 +154,7 @@
                         <div class="salon-item">
                             <div><strong>{{ $member->display_name }}</strong><div class="small text-muted">{{ $member->role_title ?: 'Stylist / Therapist' }}</div></div>
                             <span class="salon-pill">{{ $member->status }}</span>
+                            @include('salon.record-actions', ['recordType' => 'staff', 'record' => $member])
                         </div>
                     @endforeach
                 </div>
@@ -142,6 +167,7 @@
         <section class="salon-grid">
             <div class="salon-card">
                 <h2 class="h5">Create service</h2>
+                @if(auth()->user()->hasPermission('salon.services.manage'))
                 <form class="salon-form" method="post" action="{{ route('salon.services.store') }}">
                     @csrf
                     <input name="name" class="form-control" placeholder="Service name" required>
@@ -158,6 +184,7 @@
                     <input name="commission_rate" type="number" step="0.01" class="form-control" placeholder="Commission %">
                     <button class="btn btn-success rounded-pill fw-bold">Create service</button>
                 </form>
+                @endif
             </div>
             <div class="salon-card">
                 <h2 class="h5">Services</h2>
@@ -171,6 +198,8 @@
                         <div class="salon-item">
                             <div><strong>{{ $service->name }}</strong><div class="small text-muted">{{ $service->category ?: 'General' }} · {{ $duration }}</div></div>
                             <strong>{{ number_format((float) $service->price, 2) }}</strong>
+                            <span class="salon-pill">{{ $service->is_active ? 'Active' : 'Inactive' }}</span>
+                            @include('salon.record-actions', ['recordType' => 'services', 'record' => $service])
                         </div>
                     @endforeach
                 </div>
@@ -183,6 +212,7 @@
         <section class="salon-grid">
             <div class="salon-card">
                 <h2 class="h5">Create membership plan</h2>
+                @if(auth()->user()->hasPermission('salon.memberships.manage'))
                 <form class="salon-form" method="post" action="{{ route('salon.membership-plans.store') }}">
                     @csrf
                     <input name="name" class="form-control" placeholder="Plan name" required>
@@ -198,10 +228,12 @@
                     <textarea name="benefits" class="form-control" rows="3" placeholder="Benefits, one per line"></textarea>
                     <button class="btn btn-success rounded-pill fw-bold">Create plan</button>
                 </form>
+                @endif
             </div>
 
             <div class="salon-card">
                 <h2 class="h5">Enroll member</h2>
+                @if(auth()->user()->hasPermission('salon.memberships.manage'))
                 <form class="salon-form" method="post" action="{{ route('salon.memberships.store') }}">
                     @csrf
                     <select name="salon_client_profile_id" class="form-select" required>
@@ -226,6 +258,7 @@
                     </div>
                     <button class="btn btn-success rounded-pill fw-bold">Enroll member</button>
                 </form>
+                @endif
             </div>
         </section>
     @endif
@@ -234,6 +267,7 @@
         <section class="salon-grid">
             <div class="salon-card">
                 <h2 class="h5">Add consultation</h2>
+                @if(auth()->user()->hasPermission('salon.consultations.manage'))
                 <form class="salon-form" method="post" action="{{ route('salon.consultations.store') }}">
                     @csrf
                     <select name="salon_client_profile_id" class="form-select" required>
@@ -265,6 +299,7 @@
                     <input name="follow_up_date" type="date" class="form-control">
                     <button class="btn btn-success rounded-pill fw-bold">Add consultation</button>
                 </form>
+                @endif
             </div>
 
             <div class="salon-card">
@@ -282,6 +317,7 @@
         <section class="salon-grid">
             <div class="salon-card">
                 <h2 class="h5">Add treatment</h2>
+                @if(auth()->user()->hasPermission('salon.treatments.manage'))
                 <form class="salon-form" method="post" action="{{ route('salon.treatments.store') }}">
                     @csrf
                     <select name="salon_client_profile_id" class="form-select" required>
@@ -323,6 +359,7 @@
                     <textarea name="aftercare" class="form-control" rows="3" placeholder="Aftercare instructions, one per line"></textarea>
                     <button class="btn btn-success rounded-pill fw-bold">Add treatment</button>
                 </form>
+                @endif
             </div>
 
             <div class="salon-card">
@@ -340,6 +377,7 @@
         <section class="salon-grid">
             <div class="salon-card">
                 <h2 class="h5">Award loyalty points</h2>
+                @if(auth()->user()->hasPermission('salon.loyalty.manage'))
                 <form class="salon-form" method="post" action="#" data-action-template="{{ route('salon.loyalty.points.store', ['profile' => '__PROFILE__']) }}" onsubmit="this.action=this.dataset.actionTemplate.replace('__PROFILE__', this.querySelector('[name=profile_id]').value)">
                     @csrf
                     <select name="profile_id" class="form-select" required>
@@ -354,10 +392,12 @@
                     </div>
                     <button class="btn btn-success rounded-pill fw-bold">Award points</button>
                 </form>
+                @endif
             </div>
 
             <div class="salon-card">
                 <h2 class="h5">Issue gift card</h2>
+                @if(auth()->user()->hasPermission('salon.loyalty.manage'))
                 <form class="salon-form" method="post" action="{{ route('salon.gift-cards.store') }}">
                     @csrf
                     <select name="client_id" class="form-select">
@@ -371,6 +411,7 @@
                     </div>
                     <button class="btn btn-success rounded-pill fw-bold">Issue gift card</button>
                 </form>
+                @endif
             </div>
         </section>
     @endif
@@ -379,6 +420,7 @@
         <section class="salon-grid">
             <div class="salon-card">
                 <h2 class="h5">Record product usage</h2>
+                @if(auth()->user()->hasPermission('salon.inventory.manage'))
                 <form class="salon-form" method="post" action="{{ route('salon.inventory.consumption.quick-store') }}">
                     @csrf
                     <select name="salon_appointment_id" class="form-select" required>
@@ -408,6 +450,7 @@
                     </div>
                     <button class="btn btn-success rounded-pill fw-bold">Record usage</button>
                 </form>
+                @endif
             </div>
 
             <div class="salon-card">
@@ -425,6 +468,7 @@
         <section class="salon-grid">
             <div class="salon-card">
                 <h2 class="h5">Record commission</h2>
+                @if(auth()->user()->hasPermission('salon.commissions.manage'))
                 <form class="salon-form" method="post" action="{{ route('salon.commissions.store') }}">
                     @csrf
                     <select name="salon_staff_profile_id" class="form-select" required>
@@ -448,6 +492,7 @@
                     </select>
                     <button class="btn btn-success rounded-pill fw-bold">Record commission</button>
                 </form>
+                @endif
             </div>
 
             <div class="salon-card">
@@ -465,6 +510,7 @@
         <section class="salon-grid">
             <div class="salon-card">
                 <h2 class="h5">Create wellness program</h2>
+                @if(auth()->user()->hasPermission('salon.wellness.manage'))
                 <form class="salon-form" method="post" action="{{ route('salon.wellness.programs.store') }}">
                     @csrf
                     <input name="name" class="form-control" placeholder="Program name" required>
@@ -477,10 +523,12 @@
                     <textarea name="milestones" class="form-control" rows="3" placeholder="Milestones, one per line"></textarea>
                     <button class="btn btn-success rounded-pill fw-bold">Create program</button>
                 </form>
+                @endif
             </div>
 
             <div class="salon-card">
                 <h2 class="h5">Enroll client</h2>
+                @if(auth()->user()->hasPermission('salon.wellness.manage'))
                 <form class="salon-form" method="post" action="{{ route('salon.wellness.enrollments.store') }}">
                     @csrf
                     <select name="salon_client_profile_id" class="form-select" required>
@@ -498,12 +546,16 @@
                     <textarea name="progress" class="form-control" rows="3" placeholder="Initial progress notes, one per line"></textarea>
                     <button class="btn btn-success rounded-pill fw-bold">Enroll client</button>
                 </form>
+                @endif
             </div>
         </section>
     @endif
 
     <section class="salon-grid">
         @foreach([
+            'managedResources' => 'Chairs & Rooms',
+            'schedules' => 'Staff Shifts',
+            'packages' => 'Service Packages',
             'plans' => 'Membership Plans',
             'memberships' => 'Memberships',
             'loyalty' => 'Loyalty Accounts',
@@ -518,13 +570,26 @@
             @if(isset($$var))
                 <div class="salon-card">
                     <h2 class="h5">{{ $label }}</h2>
+                    @php
+                        $recordType = match ($var) { 'managedResources' => 'resources', 'plans' => 'membership-plans', 'giftCards' => 'gift-cards', default => $var };
+                        $recordDefinition = \Modules\Salon\Services\SalonRecords::definition($recordType);
+                    @endphp
+                    @if(in_array($recordType, ['resources', 'schedules', 'packages']) && auth()->user()->hasPermission('salon.'.$recordDefinition['permission'].'.manage'))
+                        <a class="btn btn-sm btn-success mb-3" href="{{ route('salon.records.create', $recordType) }}">Add {{ strtolower($recordDefinition['label']) }}</a>
+                    @endif
                     <div class="salon-list">
                         @forelse($$var as $row)
                             <div class="salon-item">
                                 <div>
                                     <strong>{{ $row->name ?? $row->membership_number ?? $row->card_number ?? $row->profile?->client?->name ?? $row->staff?->display_name ?? $row->appointment?->appointment_number ?? 'Record #'.$row->id }}</strong>
                                     <div class="small text-muted">
-                                        @if($var === 'memberships')
+                                        @if($var === 'managedResources')
+                                            {{ $row->type }} · Capacity {{ $row->capacity }} · {{ $row->status }}
+                                        @elseif($var === 'schedules')
+                                            {{ $row->staff?->display_name }} · {{ $row->work_date?->format('d M Y') }} · {{ substr($row->starts_at, 0, 5) }} – {{ substr($row->ends_at, 0, 5) }} · {{ $row->status }}
+                                        @elseif($var === 'packages')
+                                            {{ count($row->service_ids ?? []) }} services · Valid {{ $row->valid_days }} days · {{ $row->is_active ? 'Active' : 'Inactive' }}
+                                        @elseif($var === 'memberships')
                                             {{ $row->profile?->client?->name }} · {{ $row->plan?->name }} · {{ $row->starts_on?->format('d M Y') }} - {{ $row->ends_on?->format('d M Y') }}
                                         @elseif($var === 'consultations')
                                             {{ $row->profile?->client?->name }} · {{ $row->consultation_type }} · Follow-up {{ $row->follow_up_date?->format('d M Y') ?? 'not set' }}
@@ -547,14 +612,14 @@
                                         @endif
                                     </div>
                                 </div>
-                                @if($var === 'memberships')
+                                @if($var === 'memberships' && auth()->user()->hasPermission('salon.loyalty.manage'))
                                     <form method="post" action="{{ route('salon.memberships.points.store', $row) }}" class="salon-actions">
                                         @csrf
                                         <input name="points" type="number" min="1" class="form-control form-control-sm" placeholder="Points" style="width:96px">
                                         <input name="reason" class="form-control form-control-sm" placeholder="Reason" style="width:130px">
                                         <button class="btn btn-sm btn-outline-success">Award</button>
                                     </form>
-                                @elseif($var === 'commissions')
+                                @elseif($var === 'commissions' && auth()->user()->hasPermission('salon.commissions.manage') && $row->status !== 'Paid')
                                     <form method="post" action="{{ route('salon.commissions.status', $row) }}" class="salon-actions">
                                         @csrf
                                         <select name="status" class="form-select form-select-sm" style="width:118px">
@@ -567,6 +632,7 @@
                                 @else
                                     <span class="salon-pill">{{ $row->points_balance ?? $row->balance ?? $row->amount ?? $row->price ?? $row->total_cost ?? 'Ready' }}</span>
                                 @endif
+                                @include('salon.record-actions', ['recordType' => $recordType, 'record' => $row])
                             </div>
                         @empty
                             <div class="text-muted">No {{ strtolower($label) }} yet.</div>
@@ -600,4 +666,25 @@
         @endif
     </section>
 </div>
+<script>
+document.querySelector('[data-add-service]')?.addEventListener('click', function () {
+    const list = document.querySelector('[data-booking-services]');
+    const row = list.firstElementChild.cloneNode(true);
+    row.querySelector('select').value = '';
+    row.querySelector('[data-remove-service]').hidden = false;
+    list.appendChild(row);
+    renumberServices();
+});
+document.querySelector('[data-booking-services]')?.addEventListener('click', function (event) {
+    if (event.target.matches('[data-remove-service]') && this.children.length > 1) {
+        event.target.closest('[data-booking-service]').remove();
+        renumberServices();
+    }
+});
+function renumberServices() {
+    document.querySelectorAll('[data-booking-service]').forEach((row, index) => {
+        row.querySelector('select').name = `services[${index}][service_id]`;
+    });
+}
+</script>
 @endsection

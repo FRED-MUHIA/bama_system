@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Services\StockService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Modules\Salon\Contracts\SalonSpaServiceContract;
 use Modules\Salon\Models\Appointment;
 use Modules\Salon\Models\ClientProfile;
@@ -206,15 +207,29 @@ class SalonSpaService implements SalonSpaServiceContract
 
     public function updateCommissionStatus(Commission $commission, string $status): Commission
     {
-        $commission->update(['status' => $status]);
+        return DB::transaction(function () use ($commission, $status) {
+            $commission = Commission::whereKey($commission->id)->lockForUpdate()->firstOrFail();
+            if (($commission->status === 'Paid' || $commission->payment_id) && $status !== $commission->status) {
+                throw ValidationException::withMessages(['status' => 'Paid commissions cannot be reopened or voided.']);
+            }
+            $commission->update(['status' => $status]);
 
-        return $commission->fresh(['staff', 'appointment']);
+            return $commission->fresh(['staff', 'appointment']);
+        });
     }
 
     public function bookAppointment(array $data): Appointment
     {
         return DB::transaction(function () use ($data) {
             $services = Service::whereIn('id', collect($data['services'] ?? [])->pluck('service_id')->filter())->get()->keyBy('id');
+            foreach ($data['services'] ?? [] as $line) {
+                if (! isset($services[$line['service_id'] ?? null]) || ! $services[$line['service_id']]->is_active) {
+                    throw ValidationException::withMessages(['services' => 'Select active services from this business.']);
+                }
+            }
+            if ($services->isEmpty()) {
+                throw ValidationException::withMessages(['services' => 'Choose at least one service.']);
+            }
             $startsAt = \Carbon\Carbon::parse($data['starts_at']);
             $duration = 0;
             $subtotal = 0.0;
@@ -247,6 +262,9 @@ class SalonSpaService implements SalonSpaServiceContract
                 ];
             });
 
+            $data['ends_at'] = $data['ends_at'] ?? $startsAt->copy()->addMinutes(max($duration, 5));
+            app(SalonBooking::class)->ensureAvailable($data, null, $lines->pluck('salon_staff_profile_id')->filter()->all());
+
             $appointment = Appointment::create([
                 'branch_id' => $data['branch_id'] ?? null,
                 'client_id' => $data['client_id'] ?? null,
@@ -256,7 +274,7 @@ class SalonSpaService implements SalonSpaServiceContract
                 'appointment_number' => $data['appointment_number'] ?? $this->numbers->appointment(),
                 'channel' => $data['channel'] ?? 'Walk-in',
                 'starts_at' => $startsAt,
-                'ends_at' => $data['ends_at'] ?? $startsAt->copy()->addMinutes(max($duration, 30)),
+                'ends_at' => $data['ends_at'],
                 'status' => $data['status'] ?? 'Booked',
                 'payment_status' => $data['payment_status'] ?? 'Unpaid',
                 'subtotal' => $subtotal,
@@ -275,13 +293,21 @@ class SalonSpaService implements SalonSpaServiceContract
     public function completeAppointment(Appointment $appointment, array $data = []): Appointment
     {
         return DB::transaction(function () use ($appointment, $data) {
+            $appointment = Appointment::whereKey($appointment->id)->lockForUpdate()->firstOrFail();
+            if ($appointment->status === 'Completed') {
+                return $appointment->load('client', 'profile.loyaltyAccount', 'staff', 'services.service', 'commissions');
+            }
+            if (in_array($appointment->status, ['Cancelled', 'No Show'], true)) {
+                throw ValidationException::withMessages(['appointment' => 'A cancelled or missed appointment must be rescheduled before completion.']);
+            }
             $appointment->loadMissing('profile.loyaltyAccount', 'services.service', 'staff');
             $appointment->update([
-                'status' => $data['status'] ?? 'Completed',
+                'status' => 'Completed',
                 'payment_status' => $data['payment_status'] ?? $appointment->payment_status,
                 'pos_order_id' => $data['pos_order_id'] ?? $appointment->pos_order_id,
                 'invoice_id' => $data['invoice_id'] ?? $appointment->invoice_id,
             ]);
+            $appointment->services()->update(['status' => 'Completed']);
 
             if ($appointment->profile) {
                 $appointment->profile->increment('lifetime_visits');
@@ -299,8 +325,11 @@ class SalonSpaService implements SalonSpaServiceContract
     public function recordProductConsumption(Appointment $appointment, array $data): ProductConsumption
     {
         return DB::transaction(function () use ($appointment, $data) {
-            $product = Product::findOrFail($data['product_id']);
+            $product = Product::whereKey($data['product_id'])->lockForUpdate()->firstOrFail();
             $quantity = (float) $data['quantity'];
+            if ($quantity <= 0 || $quantity > (float) $product->stock_quantity) {
+                throw ValidationException::withMessages(['quantity' => 'Enter a positive quantity no greater than the available stock.']);
+            }
             $unitCost = (float) ($data['unit_cost'] ?? $product->cost_price ?? 0);
 
             $consumption = ProductConsumption::create([
@@ -365,6 +394,7 @@ class SalonSpaService implements SalonSpaServiceContract
 
     private function createCommissions(Appointment $appointment): void
     {
+        $totals = [];
         foreach ($appointment->services as $line) {
             $staffId = $line->salon_staff_profile_id ?: $appointment->salon_staff_profile_id;
             if (! $staffId) {
@@ -376,13 +406,17 @@ class SalonSpaService implements SalonSpaServiceContract
                 continue;
             }
 
+            $totals[$staffId]['base'] = ($totals[$staffId]['base'] ?? 0) + (float) $line->line_total;
+            $totals[$staffId]['amount'] = ($totals[$staffId]['amount'] ?? 0) + round(((float) $line->line_total * $rate) / 100, 2);
+        }
+        foreach ($totals as $staffId => $total) {
             Commission::firstOrCreate(
                 ['salon_appointment_id' => $appointment->id, 'salon_staff_profile_id' => $staffId],
                 [
                     'commission_date' => today(),
-                    'base_amount' => $line->line_total,
-                    'rate' => $rate,
-                    'amount' => round(((float) $line->line_total * $rate) / 100, 2),
+                    'base_amount' => $total['base'],
+                    'rate' => $total['base'] > 0 ? round($total['amount'] / $total['base'] * 100, 2) : 0,
+                    'amount' => $total['amount'],
                 ]
             );
         }

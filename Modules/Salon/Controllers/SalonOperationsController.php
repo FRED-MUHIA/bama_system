@@ -35,26 +35,27 @@ class SalonOperationsController extends Controller
 
         return $this->view('Appointments', 'Appointments, consultations, treatment flow, rooms/chairs, and booking channels.', [
             'appointmentPage' => true,
-            'appointments' => $repository->upcomingAppointments(30)->get(),
+            'appointments' => Appointment::with('profile.client', 'staff', 'resource', 'services')->orderByDesc('starts_at')->paginate(20),
             'clients' => ClientProfile::with('client')->latest()->limit(50)->get(),
             'staff' => StaffProfile::where('status', 'Active')->orderBy('display_name')->get(),
             'services' => Service::where('is_active', true)->orderBy('name')->get(),
             'resources' => Resource::where('status', 'Available')->orderBy('name')->get(),
+            'managedResources' => Resource::orderBy('name')->get(),
         ]);
     }
 
     public function storeAppointment(Request $request, SalonSpaServiceContract $salon)
     {
         $data = $request->validate([
-            'salon_client_profile_id' => ['required', 'exists:salon_client_profiles,id'],
-            'salon_staff_profile_id' => ['nullable', 'exists:salon_staff_profiles,id'],
-            'salon_resource_id' => ['nullable', 'exists:salon_resources,id'],
+            'salon_client_profile_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\ClientProfile::class)],
+            'salon_staff_profile_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\StaffProfile::class)],
+            'salon_resource_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\Resource::class)],
             'starts_at' => ['required', 'date'],
             'channel' => ['nullable', 'string', 'max:80'],
             'notes' => ['nullable', 'string'],
             'services' => ['required', 'array', 'min:1'],
-            'services.*.service_id' => ['required', 'exists:salon_services,id'],
-            'services.*.salon_staff_profile_id' => ['nullable', 'exists:salon_staff_profiles,id'],
+            'services.*.service_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\Service::class)],
+            'services.*.salon_staff_profile_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\StaffProfile::class)],
         ]);
 
         $profile = ClientProfile::findOrFail($data['salon_client_profile_id']);
@@ -66,7 +67,7 @@ class SalonOperationsController extends Controller
 
     public function completeAppointment(Appointment $appointment, SalonSpaServiceContract $salon)
     {
-        $salon->completeAppointment($appointment, ['payment_status' => 'Paid']);
+        $salon->completeAppointment($appointment);
 
         return back()->with('success', 'Appointment completed and loyalty/commission updated.');
     }
@@ -84,7 +85,7 @@ class SalonOperationsController extends Controller
     {
         $salon->createClientProfile($request->validate([
             'name' => ['required_without:client_id', 'nullable', 'string', 'max:255'],
-            'client_id' => ['nullable', 'exists:clients,id'],
+            'client_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\App\Models\Client::class)],
             'phone' => ['nullable', 'string', 'max:80'],
             'email' => ['nullable', 'email', 'max:255'],
             'date_of_birth' => ['nullable', 'date'],
@@ -102,7 +103,7 @@ class SalonOperationsController extends Controller
         return $this->view('Staff Scheduling', 'Teams, shifts, capacity, services, commissions, and branch assignment.', [
             'staff' => StaffProfile::with('schedules')->latest()->paginate(20),
             'users' => $this->activeBusinessUsers()->orderBy('name')->get(),
-            'schedules' => StaffSchedule::with('staff')->whereDate('work_date', '>=', today())->orderBy('work_date')->limit(50)->get(),
+            'schedules' => StaffSchedule::with('staff')->orderByDesc('work_date')->paginate(20, ['*'], 'shifts_page'),
         ]);
     }
 
@@ -126,7 +127,7 @@ class SalonOperationsController extends Controller
         $gate->authorize('services');
 
         return $this->view('Services & Packages', 'Service catalogue, durations, tax, packages, and treatment templates.', [
-            'services' => $repository->activeServices()->paginate(30),
+            'services' => Service::orderBy('category')->orderBy('name')->paginate(30),
             'packages' => \Modules\Salon\Models\Package::latest()->limit(20)->get(),
         ]);
     }
@@ -146,7 +147,9 @@ class SalonOperationsController extends Controller
         ]);
 
         $duration = ((int) ($data['duration_hours'] ?? 0) * 60) + (int) ($data['duration_minutes_part'] ?? 0);
-        abort_if($duration < 5, 422, 'Service duration must be at least 5 minutes.');
+        if ($duration < 5 || $duration > 1440) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['duration_minutes_part' => 'Service duration must be between 5 minutes and 24 hours.']);
+        }
 
         unset($data['duration_hours'], $data['duration_minutes_part']);
         $data['duration_minutes'] = $duration;
@@ -184,8 +187,8 @@ class SalonOperationsController extends Controller
     public function storeMembership(Request $request, SalonSpaServiceContract $salon)
     {
         $salon->enrollMembership($request->validate([
-            'salon_client_profile_id' => ['required', 'exists:salon_client_profiles,id'],
-            'salon_membership_plan_id' => ['required', 'exists:salon_membership_plans,id'],
+            'salon_client_profile_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\ClientProfile::class)],
+            'salon_membership_plan_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\MembershipPlan::class)],
             'starts_on' => ['nullable', 'date'],
             'ends_on' => ['nullable', 'date', 'after_or_equal:starts_on'],
             'visits_remaining' => ['nullable', 'integer', 'min:0'],
@@ -223,7 +226,7 @@ class SalonOperationsController extends Controller
     public function storeGiftCard(Request $request, SalonSpaServiceContract $salon)
     {
         $salon->issueGiftCard($request->validate([
-            'client_id' => ['nullable', 'exists:clients,id'],
+            'client_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\App\Models\Client::class)],
             'amount' => ['required', 'numeric', 'min:1'],
             'currency' => ['nullable', 'string', 'size:3'],
             'expires_on' => ['nullable', 'date'],
@@ -259,9 +262,9 @@ class SalonOperationsController extends Controller
     public function storeConsultation(Request $request, SalonSpaServiceContract $salon)
     {
         $salon->createConsultation($request->validate([
-            'salon_client_profile_id' => ['required', 'exists:salon_client_profiles,id'],
-            'salon_appointment_id' => ['nullable', 'exists:salon_appointments,id'],
-            'salon_staff_profile_id' => ['nullable', 'exists:salon_staff_profiles,id'],
+            'salon_client_profile_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\ClientProfile::class)],
+            'salon_appointment_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\Appointment::class)],
+            'salon_staff_profile_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\StaffProfile::class)],
             'consultation_type' => ['nullable', 'string', 'max:120'],
             'observations' => ['nullable', 'string'],
             'recommendations' => ['nullable', 'string'],
@@ -288,10 +291,10 @@ class SalonOperationsController extends Controller
     public function storeTreatment(Request $request, SalonSpaServiceContract $salon)
     {
         $salon->createTreatment($request->validate([
-            'salon_client_profile_id' => ['required', 'exists:salon_client_profiles,id'],
-            'salon_appointment_id' => ['nullable', 'exists:salon_appointments,id'],
-            'salon_service_id' => ['nullable', 'exists:salon_services,id'],
-            'salon_staff_profile_id' => ['nullable', 'exists:salon_staff_profiles,id'],
+            'salon_client_profile_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\ClientProfile::class)],
+            'salon_appointment_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\Appointment::class)],
+            'salon_service_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\Service::class)],
+            'salon_staff_profile_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\StaffProfile::class)],
             'name' => ['required', 'string', 'max:255'],
             'performed_on' => ['required', 'date'],
             'notes' => ['nullable', 'string'],
@@ -317,9 +320,9 @@ class SalonOperationsController extends Controller
     public function storeInventoryConsumption(Request $request, SalonSpaServiceContract $salon)
     {
         $data = $request->validate([
-            'salon_appointment_id' => ['required', 'exists:salon_appointments,id'],
-            'salon_service_id' => ['nullable', 'exists:salon_services,id'],
-            'product_id' => ['required', 'exists:products,id'],
+            'salon_appointment_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\Appointment::class)],
+            'salon_service_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\Service::class)],
+            'product_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\App\Models\Product::class)],
             'quantity' => ['required', 'numeric', 'min:0.001'],
             'unit' => ['nullable', 'string', 'max:20'],
             'unit_cost' => ['nullable', 'numeric', 'min:0'],
@@ -335,8 +338,8 @@ class SalonOperationsController extends Controller
     public function storeConsumption(Request $request, Appointment $appointment, SalonSpaServiceContract $salon)
     {
         $salon->recordProductConsumption($appointment, $request->validate([
-            'product_id' => ['required', 'exists:products,id'],
-            'salon_service_id' => ['nullable', 'exists:salon_services,id'],
+            'product_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\App\Models\Product::class)],
+            'salon_service_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\Service::class)],
             'quantity' => ['required', 'numeric', 'min:0.001'],
             'unit' => ['nullable', 'string', 'max:20'],
             'unit_cost' => ['nullable', 'numeric', 'min:0'],
@@ -359,8 +362,8 @@ class SalonOperationsController extends Controller
     public function storeCommission(Request $request)
     {
         $data = $request->validate([
-            'salon_staff_profile_id' => ['required', 'exists:salon_staff_profiles,id'],
-            'salon_appointment_id' => ['nullable', 'exists:salon_appointments,id'],
+            'salon_staff_profile_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\StaffProfile::class)],
+            'salon_appointment_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\Appointment::class)],
             'commission_date' => ['required', 'date'],
             'base_amount' => ['required', 'numeric', 'min:0'],
             'rate' => ['required', 'numeric', 'min:0', 'max:100'],
@@ -412,8 +415,8 @@ class SalonOperationsController extends Controller
     public function storeWellnessEnrollment(Request $request, SalonSpaServiceContract $salon)
     {
         $salon->enrollWellnessProgram($request->validate([
-            'salon_wellness_program_id' => ['required', 'exists:salon_wellness_programs,id'],
-            'salon_client_profile_id' => ['required', 'exists:salon_client_profiles,id'],
+            'salon_wellness_program_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\WellnessProgram::class)],
+            'salon_client_profile_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\ClientProfile::class)],
             'starts_on' => ['nullable', 'date'],
             'ends_on' => ['nullable', 'date', 'after_or_equal:starts_on'],
             'progress' => ['nullable', 'string'],
