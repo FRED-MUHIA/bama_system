@@ -190,7 +190,8 @@ class NavigationManager
 
     private function packageMenus(string $industry): Collection
     {
-        $package = base_path('Modules/'.Str::studly($industry).'/module.php');
+        $packageDirectory = $industry === 'ngo' ? 'NGO' : Str::studly($industry);
+        $package = base_path('Modules/'.$packageDirectory.'/module.php');
 
         if (is_file($package)) {
             $definition = require $package;

@@ -18,6 +18,7 @@ class IndustrySetupService
         'construction',
         'fitness',
         'hospitality',
+        'ngo',
         'printing_branding',
         'real-estate',
         'retail',

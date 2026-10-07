@@ -76,6 +76,8 @@ use Modules\Retail\Controllers\RetailWarehouseController;
 use Modules\Retail\Controllers\SmartScanningController;
 use Modules\Salon\Controllers\SalonDashboardController;
 use Modules\Salon\Controllers\SalonOperationsController;
+use Modules\NGO\Controllers\NgoDashboardController;
+use Modules\NGO\Controllers\NgoOperationsController;
 use Shared\Communication\Controllers\CommunicationCenterController;
 use Shared\Compliance\Etims\Controllers\EtimsComplianceController;
 
@@ -586,6 +588,21 @@ Route::middleware('auth')->group(function () {
             Route::post('/wellness/programs', [SalonOperationsController::class, 'storeWellnessProgram'])->middleware('permission:salon.wellness.manage')->name('wellness.programs.store');
             Route::post('/wellness/enrollments', [SalonOperationsController::class, 'storeWellnessEnrollment'])->middleware('permission:salon.wellness.manage')->name('wellness.enrollments.store');
             Route::get('/reports', [SalonOperationsController::class, 'reports'])->middleware('permission:salon.reports')->name('reports.index');
+        });
+
+        Route::prefix('ngo')->name('ngo.')->middleware('module.enabled:ngo')->group(function () {
+            Route::get('/', NgoDashboardController::class)->middleware('permission:ngo.view')->name('dashboard');
+            Route::get('/programs', [NgoOperationsController::class, 'programs'])->middleware('permission:ngo.programs.view')->name('programs.index');
+            Route::post('/programs', [NgoOperationsController::class, 'storeProgram'])->middleware('permission:ngo.programs.manage')->name('programs.store');
+            Route::get('/sectors', [NgoOperationsController::class, 'sectors'])->middleware('permission:ngo.programs.view')->name('sectors.index');
+            Route::post('/sectors', [NgoOperationsController::class, 'storeSector'])->middleware('permission:ngo.programs.manage')->name('sectors.store');
+            Route::get('/donors', [NgoOperationsController::class, 'donors'])->middleware('permission:ngo.donors.view')->name('donors.index');
+            Route::post('/donors', [NgoOperationsController::class, 'storeDonor'])->middleware('permission:ngo.donors.manage')->name('donors.store');
+            Route::get('/activities', [NgoOperationsController::class, 'activities'])->middleware('permission:ngo.activities.view')->name('activities.index');
+            Route::post('/activities', [NgoOperationsController::class, 'storeActivity'])->middleware('permission:ngo.activities.manage')->name('activities.store');
+            Route::get('/beneficiaries', [NgoOperationsController::class, 'beneficiaries'])->middleware('permission:ngo.beneficiaries.view')->name('beneficiaries.index');
+            Route::post('/beneficiaries', [NgoOperationsController::class, 'storeBeneficiary'])->middleware('permission:ngo.beneficiaries.manage')->name('beneficiaries.store');
+            Route::get('/reports', [NgoOperationsController::class, 'reports'])->middleware('permission:ngo.reports')->name('reports.index');
         });
 
         Route::prefix('real-estate')->name('real-estate.')->middleware('module.enabled:real-estate')->group(function () {

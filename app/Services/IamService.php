@@ -153,6 +153,11 @@ class IamService
         'meetings.manage', 'attendance.manage', 'minutes.manage',
         'elections.manage', 'voting.manage',
         'chama.finance', 'chama.reports', 'chama.audit', 'chama.settings',
+        'ngo.view', 'ngo.manage', 'ngo.reports', 'ngo.programs.view', 'ngo.programs.manage',
+        'ngo.activities.view', 'ngo.activities.manage', 'ngo.beneficiaries.view', 'ngo.beneficiaries.manage',
+        'ngo.beneficiaries.sensitive.view', 'ngo.donors.view', 'ngo.donors.manage', 'ngo.grants.view',
+        'ngo.grants.manage', 'ngo.funds.view', 'ngo.funds.manage', 'ngo.monitoring.view', 'ngo.monitoring.manage',
+        'ngo.safeguarding.view', 'ngo.safeguarding.manage', 'ngo.impact.reporting.view',
         'salon.view', 'salon.manage', 'salon.reports',
         'salon.appointments.view', 'salon.appointments.manage',
         'salon.staff.view', 'salon.staff.manage',
@@ -301,6 +306,11 @@ class IamService
         'salon-branch-manager' => 'Salon Branch Manager',
         'wellness-consultant' => 'Wellness Consultant',
         'salon-finance-officer' => 'Salon Finance Officer',
+        'ngo-owner' => 'NGO Administrator',
+        'ngo-program-manager' => 'Program Manager',
+        'ngo-field-officer' => 'Field Officer',
+        'ngo-finance-officer' => 'NGO Finance Officer',
+        'ngo-safeguarding-officer' => 'Safeguarding Officer',
         'viewer' => 'Viewer',
     ];
 
@@ -344,6 +354,7 @@ class IamService
         $this->syncAutomotiveRolePermissions();
         $this->syncChamaRolePermissions();
         $this->syncSalonRolePermissions();
+        $this->syncNgoRolePermissions();
         $this->syncCommunicationRolePermissions();
 
         if (SchemaCache::hasTable('security_settings')) {
@@ -581,6 +592,7 @@ class IamService
         $this->syncAutomotiveRolePermissions();
         $this->syncChamaRolePermissions();
         $this->syncSalonRolePermissions();
+        $this->syncNgoRolePermissions();
         $this->syncCommunicationRolePermissions();
 
         if (SchemaCache::hasTable('security_settings')) {
@@ -1228,6 +1240,30 @@ class IamService
         foreach ($map as $slug => $permissions) {
             $role = $this->roleFor($slug);
             if ($role) {
+                $this->attachRolePermissions($role, $permissions);
+            }
+        }
+    }
+
+    private function syncNgoRolePermissions(): void
+    {
+        $all = [
+            'ngo.view', 'ngo.manage', 'ngo.reports', 'ngo.programs.view', 'ngo.programs.manage',
+            'ngo.activities.view', 'ngo.activities.manage', 'ngo.beneficiaries.view', 'ngo.beneficiaries.manage',
+            'ngo.beneficiaries.sensitive.view', 'ngo.donors.view', 'ngo.donors.manage', 'ngo.grants.view',
+            'ngo.grants.manage', 'ngo.funds.view', 'ngo.funds.manage', 'ngo.monitoring.view', 'ngo.monitoring.manage',
+            'ngo.safeguarding.view', 'ngo.safeguarding.manage', 'ngo.impact.reporting.view',
+        ];
+        $map = [
+            'ngo-owner' => $all,
+            'ngo-program-manager' => ['ngo.view', 'ngo.reports', 'ngo.programs.view', 'ngo.programs.manage', 'ngo.activities.view', 'ngo.activities.manage', 'ngo.beneficiaries.view', 'ngo.beneficiaries.manage', 'ngo.donors.view', 'ngo.grants.view', 'ngo.funds.view', 'ngo.monitoring.view', 'ngo.monitoring.manage', 'ngo.impact.reporting.view'],
+            'ngo-field-officer' => ['ngo.view', 'ngo.activities.view', 'ngo.activities.manage', 'ngo.beneficiaries.view', 'ngo.beneficiaries.manage', 'ngo.monitoring.view', 'ngo.monitoring.manage'],
+            'ngo-finance-officer' => ['ngo.view', 'ngo.reports', 'ngo.programs.view', 'ngo.donors.view', 'ngo.grants.view', 'ngo.funds.view', 'ngo.funds.manage', 'finance.view', 'finance.gl.view', 'finance.reports.view'],
+            'ngo-safeguarding-officer' => ['ngo.view', 'ngo.beneficiaries.view', 'ngo.beneficiaries.sensitive.view', 'ngo.safeguarding.view', 'ngo.safeguarding.manage'],
+        ];
+
+        foreach ($map as $slug => $permissions) {
+            if ($role = $this->roleFor($slug)) {
                 $this->attachRolePermissions($role, $permissions);
             }
         }

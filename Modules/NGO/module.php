@@ -5,7 +5,7 @@ return array (
   'slug' => 'ngo',
   'type' => 'industry',
   'description' => 'Track donors, grants, programs, beneficiaries, fundraising, monitoring and evaluation, and impact reporting.',
-  'features' => 
+  'features' =>
   array (
     0 => 'Donor Management',
     1 => 'Grants Management',
@@ -15,7 +15,7 @@ return array (
     5 => 'Monitoring & Evaluation',
     6 => 'Impact Reporting',
   ),
-  'core_modules' => 
+  'core_modules' =>
   array (
     0 => 'CRM',
     1 => 'Projects',
@@ -28,14 +28,21 @@ return array (
     8 => 'Portal',
     9 => 'Notifications',
   ),
-  'routes' => 
+  'routes' =>
   array (
+    'web' => array (
+      'dashboard' => 'ngo.dashboard',
+      'programs' => 'ngo.programs.index',
+      'activities' => 'ngo.activities.index',
+      'beneficiaries' => 'ngo.beneficiaries.index',
+      'reports' => 'ngo.reports.index',
+    ),
   ),
-  'api' => 
+  'api' =>
   array (
     'prefix' => '/api/v1/industries/ngo',
   ),
-  'widgets' => 
+  'widgets' =>
   array (
     0 => 'ngo-overview',
     1 => 'ngo-reports',
@@ -46,14 +53,14 @@ return array (
     6 => 'ngo-fundraising-summary',
     7 => 'ngo-monitoring-evaluation-summary',
   ),
-  'reports' => 
+  'reports' =>
   array (
     0 => 'Executive summary',
     1 => 'Operational performance',
     2 => 'Compliance report',
     3 => 'Financial performance',
   ),
-  'workflows' => 
+  'workflows' =>
   array (
     0 => 'Create',
     1 => 'Review',
@@ -61,14 +68,14 @@ return array (
     3 => 'Post',
     4 => 'Report',
   ),
-  'templates' => 
+  'templates' =>
   array (
     0 => 'Default dashboard',
     1 => 'Management report',
     2 => 'Approval workflow',
     3 => 'Document template',
   ),
-  'permissions' => 
+  'permissions' =>
   array (
     0 => 'ngo.view',
     1 => 'ngo.manage',
@@ -80,67 +87,129 @@ return array (
     7 => 'ngo.fundraising.view',
     8 => 'ngo.monitoring.evaluation.view',
     9 => 'ngo.impact.reporting.view',
+    10 => 'ngo.programs.manage',
+    11 => 'ngo.activities.view',
+    12 => 'ngo.activities.manage',
+    13 => 'ngo.beneficiaries.manage',
+    14 => 'ngo.beneficiaries.sensitive.view',
+    15 => 'ngo.donors.manage',
+    16 => 'ngo.grants.manage',
+    17 => 'ngo.funds.manage',
+    18 => 'ngo.safeguarding.view',
+    19 => 'ngo.safeguarding.manage',
   ),
-  'menus' => 
+  'menus' =>
   array (
-    0 => 
+    0 =>
+    array (
+      'label' => 'NGO Dashboard',
+      'module' => 'ngo',
+      'route' => 'ngo.dashboard',
+      'icon' => 'bi-speedometer2',
+      'permission' => 'ngo.view',
+      'tables' => array ('ngo_programs',),
+    ),
+    1 =>
+    array (
+      'label' => 'Programs',
+      'module' => 'ngo',
+      'route' => 'ngo.programs.index',
+      'icon' => 'bi-diagram-3',
+      'permission' => 'ngo.programs.view',
+      'tables' => array ('ngo_programs', 'ngo_sectors'),
+    ),
+    2 =>
+    array (
+      'label' => 'Activities',
+      'module' => 'ngo',
+      'route' => 'ngo.activities.index',
+      'icon' => 'bi-calendar2-check',
+      'permission' => 'ngo.activities.view',
+      'tables' => array ('ngo_activities',),
+    ),
+    3 =>
+    array (
+      'label' => 'Beneficiaries',
+      'module' => 'ngo',
+      'route' => 'ngo.beneficiaries.index',
+      'icon' => 'bi-people',
+      'permission' => 'ngo.beneficiaries.view',
+      'tables' => array ('ngo_beneficiaries',),
+    ),
+    4 =>
+    array (
+      'label' => 'NGO Reports',
+      'module' => 'ngo',
+      'route' => 'ngo.reports.index',
+      'icon' => 'bi-bar-chart',
+      'permission' => 'ngo.reports',
+      'tables' => array ('ngo_programs', 'ngo_activities', 'ngo_beneficiaries'),
+    ),
+    array (
+      'label' => 'Donors',
+      'module' => 'ngo',
+      'route' => 'ngo.donors.index',
+      'icon' => 'bi-cash-coin',
+      'permission' => 'ngo.donors.view',
+    ),
+    5 =>
     array (
       'label' => 'Donor Management',
       'module' => 'ngo-donor-management',
       'icon' => 'bi-grid',
     ),
-    1 => 
+    6 =>
     array (
       'label' => 'Grants Management',
       'module' => 'ngo-grants-management',
       'icon' => 'bi-grid',
     ),
-    2 => 
+    7 =>
     array (
       'label' => 'Programs',
       'module' => 'ngo-programs',
       'icon' => 'bi-grid',
     ),
-    3 => 
+    8 =>
     array (
       'label' => 'Beneficiaries',
       'module' => 'ngo-beneficiaries',
       'icon' => 'bi-grid',
     ),
-    4 => 
+    9 =>
     array (
       'label' => 'Fundraising',
       'module' => 'ngo-fundraising',
       'icon' => 'bi-grid',
     ),
-    5 => 
+    10 =>
     array (
       'label' => 'Monitoring & Evaluation',
       'module' => 'ngo-monitoring-evaluation',
       'icon' => 'bi-grid',
     ),
-    6 => 
+    11 =>
     array (
       'label' => 'Impact Reporting',
       'module' => 'ngo-impact-reporting',
       'icon' => 'bi-grid',
     ),
   ),
-  'dashboard_features' => 
+  'dashboard_features' =>
   array (
     0 => 'Donor Management dashboard',
     1 => 'Grants Management dashboard',
     2 => 'Programs dashboard',
     3 => 'Beneficiaries dashboard',
   ),
-  'sub_industries' => 
+  'sub_industries' =>
   array (
-    0 => 
+    0 =>
     array (
       'slug' => 'standard',
       'name' => 'NGO & Non-Profit Standard',
       'description' => 'Track donors, grants, programs, beneficiaries, fundraising, monitoring and evaluation, and impact reporting.',
-      'dashboard_features' => 
+      'dashboard_features' =>
       array (
         0 => 'Donor Management dashboard',
         1 => 'Grants Management dashboard',
@@ -148,12 +217,12 @@ return array (
         3 => 'Beneficiaries dashboard',
       ),
     ),
-    1 => 
+    1 =>
     array (
       'slug' => 'multi-branch',
       'name' => 'Multi-Branch NGO & Non-Profit',
       'description' => 'Coordinate multiple branches, teams, permissions, reports, and operating units for NGO & Non-Profit.',
-      'dashboard_features' => 
+      'dashboard_features' =>
       array (
         0 => 'Branch performance',
         1 => 'Team workload',
@@ -161,12 +230,12 @@ return array (
         3 => 'Approval queue',
       ),
     ),
-    2 => 
+    2 =>
     array (
       'slug' => 'enterprise',
       'name' => 'Enterprise NGO & Non-Profit',
       'description' => 'Scale NGO & Non-Profit operations with advanced controls, reports, workflows, and templates.',
-      'dashboard_features' => 
+      'dashboard_features' =>
       array (
         0 => 'Executive KPIs',
         1 => 'Risk alerts',
