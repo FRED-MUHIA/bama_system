@@ -519,9 +519,21 @@
 
     .home-page .trust-logo-card img {
         display: block;
-        max-width: 100%;
-        max-height: 56px;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
         object-fit: contain;
+        filter: grayscale(100%);
+        transition: filter .25s ease;
+    }
+
+    .home-page .trust-logo-card:hover img {
+        filter: grayscale(0%);
+    }
+
+    .home-page .trust-logo-card img[hidden],
+    .home-page .trust-logo-fallback[hidden] {
+        display: none;
     }
 
     .home-page .trust-logo-fallback {
@@ -805,18 +817,22 @@
 
                                 $logoUrl = null;
 
+                                if (! $src) {
+                                    $src = collect($defaults['trust']['logos'])->firstWhere('label', $label)['src'] ?? null;
+                                }
+
                                 if ($src) {
+                                    $src = trim($src);
                                     $logoUrl = preg_match('/^(https?:)?\/\//i', $src) || str_starts_with($src, 'data:')
                                         ? $src
-                                        : (\App\Support\PublicUpload::url($src) ?: asset(ltrim($src, '/')));
+                                        : \App\Support\PublicUpload::url($src);
                                 }
                             @endphp
                             <div class="trust-logo-card" @if($pass === 1) aria-hidden="true" @endif>
                                 @if($logoUrl)
-                                    <img src="{{ $logoUrl }}" alt="{{ $pass === 0 ? $label : '' }}" loading="lazy">
-                                @else
-                                    <span class="trust-logo-fallback">{{ $label }}</span>
+                                    <img src="{{ $logoUrl }}" alt="{{ $pass === 0 ? $label : '' }}" loading="lazy" onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
                                 @endif
+                                <span class="trust-logo-fallback" @if($logoUrl) hidden @endif>{{ $label }}</span>
                             </div>
                         @endforeach
                     @endfor
