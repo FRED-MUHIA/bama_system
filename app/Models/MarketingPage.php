@@ -283,11 +283,11 @@ class MarketingPage extends Model
                 'eyebrow' => 'How it works',
                 'title' => 'From signup to operations in five steps',
                 'items' => [
-                    ['title' => 'Choose Your Industry', 'copy' => 'A guided setup keeps the workspace practical from the first login.'],
-                    ['title' => 'Create Your Workspace', 'copy' => 'A guided setup keeps the workspace practical from the first login.'],
-                    ['title' => 'Configure Your Business', 'copy' => 'A guided setup keeps the workspace practical from the first login.'],
-                    ['title' => 'Invite Your Team', 'copy' => 'A guided setup keeps the workspace practical from the first login.'],
-                    ['title' => 'Start Managing Operations', 'copy' => 'A guided setup keeps the workspace practical from the first login.'],
+                    ['title' => 'Choose Your Industry', 'copy' => 'Select your sector to get the tools and workflows that fit your business.'],
+                    ['title' => 'Create Your Workspace', 'copy' => 'Register your company and create a central home for your business records.'],
+                    ['title' => 'Configure Your Business', 'copy' => 'Set up your services, pricing, and preferences to match how you work.'],
+                    ['title' => 'Invite Your Team', 'copy' => 'Add your colleagues and assign roles so everyone has the access they need.'],
+                    ['title' => 'Start Managing Operations', 'copy' => 'Track daily activity, manage transactions, and monitor performance in one place.'],
                 ],
             ],
             'showcase' => [

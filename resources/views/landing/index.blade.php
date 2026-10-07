@@ -1021,13 +1021,18 @@
                 @foreach ($stepItems as $step)
                     @php
                         $stepTitle = is_array($step) ? ($step['title'] ?? $step[0] ?? '') : (string) $step;
-                        $stepCopy = is_array($step) ? ($step['copy'] ?? $step[1] ?? 'A guided setup keeps the workspace practical from the first login.') : 'A guided setup keeps the workspace practical from the first login.';
+                        $stepCopy = is_array($step) ? ($step['copy'] ?? $step[1] ?? '') : '';
+                        if (trim($stepCopy) === '' || trim($stepCopy) === 'A guided setup keeps the workspace practical from the first login.') {
+                            $stepCopy = collect($defaults['steps']['items'])->firstWhere('title', $stepTitle)['copy'] ?? '';
+                        }
                     @endphp
                     @continue($stepTitle === '')
                     <article class="relative rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
                         <span class="grid h-10 w-10 place-items-center rounded-lg bg-[#00A651] text-base font-black text-white">{{ $loop->iteration }}</span>
                         <h3 class="mt-4 text-base font-black">{{ $stepTitle }}</h3>
-                        <p class="mt-2 text-sm leading-6 text-zinc-600">{{ $stepCopy }}</p>
+                        @if($stepCopy !== '')
+                            <p class="mt-2 text-sm leading-6 text-zinc-600">{{ $stepCopy }}</p>
+                        @endif
                     </article>
                 @endforeach
             </div>
