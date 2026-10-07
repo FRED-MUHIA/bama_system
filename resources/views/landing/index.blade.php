@@ -853,7 +853,7 @@
                     <div class="lg:pr-8">
                         <p class="eyebrow">{{ data_get($featuresContent, 'eyebrow', 'Core platform') }}</p>
                         <h2 class="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-4xl lg:text-5xl">{{ data_get($featuresContent, 'title', 'Everything Your Business Needs') }}</h2>
-                        <p class="mt-4 max-w-xl text-base leading-7 text-zinc-600 lg:text-lg lg:leading-8">
+                        <p class="mt-4 max-w-xl text-sm leading-6 text-zinc-600 sm:text-base sm:leading-7 lg:text-base lg:leading-7">
                             {{ data_get($featuresContent, 'body', 'A complete operating suite for CRM, finance, accounting, projects, inventory, procurement, HR, documents, reporting, and portal workflows.') }}
                         </p>
                     </div>
