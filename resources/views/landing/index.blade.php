@@ -848,14 +848,10 @@
 
     <section id="features" class="bg-[#F7F8F5] px-5 py-8">
         <div class="mx-auto max-w-6xl">
-            <div class="grid gap-6 lg:grid-cols-[.42fr_1fr]">
-                <div>
+            <div class="grid gap-6 lg:grid-cols-2">
+                <div class="contents lg:col-span-2 lg:grid lg:grid-cols-2 lg:items-center lg:gap-6">
                     <p class="eyebrow">{{ data_get($featuresContent, 'eyebrow', 'Core platform') }}</p>
-                    <h2 class="mt-2 text-2xl font-black leading-tight lg:text-3xl">{{ data_get($featuresContent, 'title', 'Everything Your Business Needs') }}</h2>
-                    <p class="mt-3 text-sm leading-6 text-zinc-600">
-                        {{ data_get($featuresContent, 'body', 'A complete operating suite for CRM, finance, accounting, projects, inventory, procurement, HR, documents, reporting, and portal workflows.') }}
-                    </p>
-                    <div class="mt-4 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
+                    <div class="lg:row-span-3">
                         <picture class="block">
                             @if($featuresImageSrcset)
                                 <source type="image/webp" srcset="{{ $featuresImageSrcset }}" sizes="(min-width: 1024px) 34vw, 100vw">
@@ -865,14 +861,18 @@
                                 alt="{{ data_get($media, 'features_image_alt', 'Diverse teams using the platform') }}"
                                 width="1254"
                                 height="1254"
-                                class="h-44 w-full object-cover sm:h-52 lg:h-56"
+                                class="h-44 w-full object-cover sm:h-52 lg:h-80"
                                 loading="lazy"
                                 decoding="async"
                             >
                         </picture>
                     </div>
+                    <h2 class="mt-2 text-2xl font-black leading-tight lg:col-start-1 lg:row-start-2 lg:text-3xl">{{ data_get($featuresContent, 'title', 'Everything Your Business Needs') }}</h2>
+                    <p class="mt-3 text-sm leading-6 text-zinc-600 lg:col-start-1 lg:row-start-3">
+                        {{ data_get($featuresContent, 'body', 'A complete operating suite for CRM, finance, accounting, projects, inventory, procurement, HR, documents, reporting, and portal workflows.') }}
+                    </p>
                 </div>
-                <div class="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                <div class="grid gap-2.5 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-3">
                     @foreach ($coreModules as $module)
                         @php
                             $name = is_array($module) ? ($module['name'] ?? $module[0] ?? '') : (string) $module;
