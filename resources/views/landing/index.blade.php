@@ -846,12 +846,18 @@
         </div>
     </section>
 
-    <section id="features" class="bg-[#F7F8F5] px-5 py-8">
-        <div class="mx-auto max-w-6xl">
-            <div class="grid gap-6 lg:grid-cols-2">
-                <div class="contents lg:col-span-2 lg:grid lg:grid-cols-2 lg:items-center lg:gap-6">
-                    <p class="eyebrow">{{ data_get($featuresContent, 'eyebrow', 'Core platform') }}</p>
-                    <div class="lg:row-span-3">
+    <section id="features" class="bg-[#F7F8F5] px-5 py-10 lg:py-14">
+        <div class="mx-auto max-w-7xl">
+            <div class="grid gap-8 lg:grid-cols-2 lg:gap-x-10 lg:gap-y-8">
+                <div class="grid gap-4 lg:col-span-2 lg:grid-cols-2 lg:items-center lg:gap-x-10">
+                    <div class="lg:pr-8">
+                        <p class="eyebrow">{{ data_get($featuresContent, 'eyebrow', 'Core platform') }}</p>
+                        <h2 class="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-4xl lg:text-5xl">{{ data_get($featuresContent, 'title', 'Everything Your Business Needs') }}</h2>
+                        <p class="mt-4 max-w-xl text-base leading-7 text-zinc-600 lg:text-lg lg:leading-8">
+                            {{ data_get($featuresContent, 'body', 'A complete operating suite for CRM, finance, accounting, projects, inventory, procurement, HR, documents, reporting, and portal workflows.') }}
+                        </p>
+                    </div>
+                    <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm lg:row-span-1">
                         <picture class="block">
                             @if($featuresImageSrcset)
                                 <source type="image/webp" srcset="{{ $featuresImageSrcset }}" sizes="(min-width: 1024px) 34vw, 100vw">
@@ -861,18 +867,14 @@
                                 alt="{{ data_get($media, 'features_image_alt', 'Diverse teams using the platform') }}"
                                 width="1254"
                                 height="1254"
-                                class="h-44 w-full object-cover sm:h-52 lg:h-80"
+                                class="h-56 w-full object-cover sm:h-72 lg:h-[22rem]"
                                 loading="lazy"
                                 decoding="async"
                             >
                         </picture>
                     </div>
-                    <h2 class="mt-2 text-2xl font-black leading-tight lg:col-start-1 lg:row-start-2 lg:text-3xl">{{ data_get($featuresContent, 'title', 'Everything Your Business Needs') }}</h2>
-                    <p class="mt-3 text-sm leading-6 text-zinc-600 lg:col-start-1 lg:row-start-3">
-                        {{ data_get($featuresContent, 'body', 'A complete operating suite for CRM, finance, accounting, projects, inventory, procurement, HR, documents, reporting, and portal workflows.') }}
-                    </p>
                 </div>
-                <div class="grid gap-2.5 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-3">
+                <div class="grid gap-4 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-4">
                     @foreach ($coreModules as $module)
                         @php
                             $name = is_array($module) ? ($module['name'] ?? $module[0] ?? '') : (string) $module;
@@ -881,11 +883,11 @@
                             [$moduleColor, $moduleSoftColor] = $moduleColors[$loop->index % count($moduleColors)];
                         @endphp
                         @continue($name === '')
-                        <article class="soft-panel p-3 transition hover:-translate-y-1 hover:shadow-lg" style="border-color: {{ $loop->first ? $moduleColor : 'rgba(0, 0, 0, .08)' }};">
+                        <article class="soft-panel p-4 transition hover:-translate-y-1 hover:shadow-lg" style="border-color: {{ $loop->first ? $moduleColor : 'rgba(0, 0, 0, .08)' }};">
                             <span class="grid h-8 w-8 place-items-center rounded-md text-xs font-black text-white" style="background-color: {{ $moduleColor }};">{{ $icon }}</span>
-                            <h3 class="mt-3 text-sm font-black">{{ $name }}</h3>
-                            <p class="mt-1.5 text-xs leading-5 text-zinc-600">{{ $copy }}</p>
-                            <div class="mt-3 rounded-md border border-zinc-200 p-2" style="background-color: {{ $moduleSoftColor }};">
+                            <h3 class="mt-3 text-base font-black">{{ $name }}</h3>
+                            <p class="mt-1.5 text-sm leading-6 text-zinc-600">{{ $copy }}</p>
+                            <div class="mt-4 rounded-md border border-zinc-200 p-2.5" style="background-color: {{ $moduleSoftColor }};">
                                 <div class="h-1.5 w-2/3 rounded-full" style="background-color: {{ $moduleColor }};"></div>
                                 <div class="mt-2 grid grid-cols-3 gap-1.5">
                                     <span class="h-5 rounded bg-zinc-100"></span>
