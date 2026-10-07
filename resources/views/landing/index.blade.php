@@ -867,7 +867,7 @@
                                 alt="{{ data_get($media, 'features_image_alt', 'Diverse teams using the platform') }}"
                                 width="1254"
                                 height="1254"
-                                class="h-56 w-full object-cover sm:h-72 lg:h-[22rem]"
+                                class="h-auto max-h-[22rem] w-full object-contain sm:max-h-[28rem] lg:max-h-[34rem]"
                                 loading="lazy"
                                 decoding="async"
                             >
