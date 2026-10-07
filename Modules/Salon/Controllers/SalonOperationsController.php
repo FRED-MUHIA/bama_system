@@ -5,6 +5,8 @@ namespace Modules\Salon\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Product;
+use App\Models\PosOrder;
+use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Modules\Salon\Contracts\SalonSpaServiceContract;
@@ -311,6 +313,12 @@ class SalonOperationsController extends Controller
 
         return $this->view('Product Usage', 'Inventory consumption per appointment and shared stock handoff.', [
             'consumptions' => ProductConsumption::with('appointment', 'product')->latest()->paginate(20),
+            'salesMovements' => StockMovement::with('product')
+                ->where('business_id', \App\Support\ActiveBusiness::id())
+                ->where('source_type', PosOrder::class)
+                ->where('type', 'Consumed')
+                ->where('notes', 'Stock consumed by sale.')
+                ->latest()->limit(50)->get(),
             'products' => Product::orderBy('name')->limit(100)->get(),
             'inventoryServices' => Service::where('is_active', true)->orderBy('name')->get(),
             'appointments' => Appointment::whereDate('starts_at', '>=', today()->subDays(7))->latest()->limit(30)->get(),
@@ -429,7 +437,7 @@ class SalonOperationsController extends Controller
     {
         $gate->authorize('pos');
 
-        return redirect()->route('pos-orders.index')->with('success', 'Use the shared POS core for Salon & Spa sales.');
+        return redirect()->route('pos-orders.index');
     }
 
     public function reports(SalonFeatureGate $gate, \Modules\Salon\Services\SalonDashboardService $dashboard)

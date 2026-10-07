@@ -19,6 +19,12 @@
         </div>
     </form>
 </div>
+@if(auth()->user()->hasPermission('salon.pos.view'))
+    <div class="alert alert-success d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span><i class="bi bi-scissors me-1"></i> Salon &amp; Spa POS: add catalog products to orders to deduct inventory and show sales in Product Usage.</span>
+        @if(auth()->user()->hasPermission('salon.pos.manage'))<a class="btn btn-sm btn-success" href="{{ route('pos-orders.create') }}">Create salon sale</a>@endif
+    </div>
+@endif
 <div class="card"><div class="card-body table-responsive"><table class="table align-middle">
 <thead><tr><th>Date</th><th>Order</th><th>Status</th><th>Customer</th><th>Customer Type</th><th>Products</th><th>Items Sold</th><th>Net Sales</th><th></th></tr></thead><tbody>
 @forelse($orders as $order)

@@ -456,12 +456,36 @@
             <div class="salon-card">
                 <h2 class="h5">Usage controls</h2>
                 <div class="salon-list">
-                    <div class="salon-item"><strong>Deducts stock</strong><span class="salon-pill">Inventory</span></div>
+                    <div class="salon-item"><strong>POS retail sales</strong><span class="salon-pill">Deducts stock</span></div>
                     <div class="salon-item"><strong>Links appointment</strong><span class="salon-pill">Cost trace</span></div>
                     <div class="salon-item"><strong>Tracks service usage</strong><span class="salon-pill">Reporting</span></div>
                 </div>
+                @if(auth()->user()->hasPermission('salon.pos.manage'))
+                    <a class="btn btn-success rounded-pill fw-bold mt-3" href="{{ route('pos-orders.create') }}"><i class="bi bi-cart-plus me-1"></i>New salon POS sale</a>
+                @endif
             </div>
         </section>
+
+        @if(isset($salesMovements))
+            <section class="salon-card mt-3">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div><h2 class="h5 mb-1">Products sold at POS</h2><p class="text-muted small mb-0">Catalog product sales are recorded here automatically when a POS order reduces stock.</p></div>
+                    @if(auth()->user()->hasPermission('salon.pos.manage'))<a class="btn btn-outline-success btn-sm rounded-pill fw-bold" href="{{ route('pos-orders.create') }}">Add products / create sale</a>@endif
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead><tr><th>Date</th><th>Product</th><th>POS order</th><th>Qty sold</th><th>Stock after sale</th></tr></thead>
+                        <tbody>
+                            @forelse($salesMovements as $movement)
+                                <tr><td>{{ $movement->created_at?->format('d M Y, H:i') }}</td><td>{{ $movement->product?->name ?? 'Product removed' }}</td><td>{{ $movement->reference ?: 'POS sale' }}</td><td>{{ number_format(abs((float) $movement->quantity), 3) }} {{ $movement->product?->stock_unit }}</td><td>{{ number_format((float) $movement->balance_after, 3) }} {{ $movement->product?->stock_unit }}</td></tr>
+                            @empty
+                                <tr><td colspan="5" class="text-muted">No POS product sales yet. Create a POS order with catalog products to see usage here.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        @endif
     @endif
 
     @if(isset($commissionStaff))
