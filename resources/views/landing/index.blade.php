@@ -511,9 +511,8 @@
         width: clamp(172px, 18vw, 244px);
         height: 82px;
         flex: 0 0 auto;
-        border: 1px solid rgba(0, 0, 0, .09);
-        border-radius: 12px;
-        background: #ffffff;
+        border: 0;
+        background: transparent;
         padding: 14px 20px;
     }
 
@@ -523,6 +522,7 @@
         height: 100%;
         min-height: 0;
         object-fit: contain;
+        mix-blend-mode: multiply;
         filter: grayscale(100%);
         transition: filter .25s ease;
     }
