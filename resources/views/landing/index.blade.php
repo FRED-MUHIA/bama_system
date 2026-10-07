@@ -497,7 +497,7 @@
     .home-page .trust-logo-track {
         display: flex;
         width: max-content;
-        gap: .95rem;
+        gap: .5rem;
         animation: bama-logo-slide 32s linear infinite;
     }
 
@@ -508,12 +508,12 @@
     .home-page .trust-logo-card {
         display: grid;
         place-items: center;
-        width: clamp(172px, 18vw, 244px);
+        width: clamp(148px, 15vw, 204px);
         height: 82px;
         flex: 0 0 auto;
         border: 0;
         background: transparent;
-        padding: 14px 20px;
+        padding: 14px 8px;
     }
 
     .home-page .trust-logo-card img {
@@ -593,7 +593,7 @@
 
     @keyframes bama-logo-slide {
         from { transform: translate3d(0, 0, 0); }
-        to { transform: translate3d(calc(-50% - .475rem), 0, 0); }
+        to { transform: translate3d(calc(-50% - .25rem), 0, 0); }
     }
 
     @media (prefers-reduced-motion: reduce) {
