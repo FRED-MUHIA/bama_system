@@ -8,6 +8,17 @@
     $reports = collect($industry['reports'] ?? []);
     $roles = collect($industry['roles'] ?? []);
     $menus = collect($industry['menus'] ?? $industry['dashboard']['menu_structure'] ?? [])->map(fn ($menu) => is_array($menu) ? ($menu['label'] ?? $menu['module'] ?? 'Module') : $menu);
+    $industrySlides = collect(data_get($pageSections, 'hero.slides', []))
+        ->filter(fn ($slide) => is_array($slide) && filled($slide['image_path'] ?? null))
+        ->values();
+    if ($industrySlides->isEmpty()) {
+        $industrySlides = collect([[
+            'image_path' => data_get($industry, 'media.hero_image_path', 'images/people-industry-mosaic.png'),
+            'image_alt' => data_get($industry, 'media.hero_image_alt', $industry['industry'].' teams using Bama'),
+            'title' => data_get($industry, 'hero.title', $industry['industry']),
+            'body' => data_get($industry, 'hero.body', $industry['description']),
+        ]]);
+    }
 
 
     $accent = ['#00A651', '#071B12'];
@@ -63,42 +74,49 @@
 <main class="bama-page min-h-screen" style="--accent: {{ $accent[0] }}; --dark: {{ $accent[1] }};">
     @include('landing.partials.site-header')
 
-    <section class="industry-banner text-white" style="background:var(--dark)">
-        <div class="industry-banner-media">
-            <picture class="block h-full w-full">
-                @if(data_get($industry, 'media.hero_image_path') === 'images/people-industry-mosaic.png')
-                    <source type="image/webp" srcset="{{ $mosaicImageSrcset }}" sizes="100vw">
-                @endif
-                <img
-                    src="{{ \App\Support\PublicUpload::url(data_get($industry, 'media.hero_image_path')) ?: asset('images/people-industry-mosaic.png') }}"
-                    alt="{{ data_get($industry, 'media.hero_image_alt') }}"
-                    class="industry-banner-image"
-                    fetchpriority="high" decoding="async"
-                >
-            </picture>
-        </div>
-        <div class="industry-banner-content relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-[.95fr_.7fr]">
-            <div class="industry-banner-copy min-w-0 max-w-3xl">
-                <a href="{{ route('landing') }}#industries" class="text-sm font-black uppercase text-white/70 no-underline hover:text-white">{{ data_get($pageSections, 'copy.back_label', 'Back to industries') }}</a>
-                <p class="bama-eyebrow mt-8">{{ data_get($industry, 'hero.eyebrow') }}</p>
-                <h1 class="mt-4 text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">{{ data_get($industry, 'hero.title') }}</h1>
-                <p class="mt-5 max-w-2xl text-lg leading-8 text-white/82">{{ data_get($industry, 'hero.body') }}</p>
-                <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-                    <a href="{{ data_get($pageSections, 'copy.button_url', route('register.account')) }}" class="rounded-full bg-white px-8 py-4 text-center text-sm font-black uppercase text-black no-underline">{{ data_get($pageSections, 'copy.button_label', 'Start Free Trial') }}</a>
-                </div>
-            </div>
-            <div class="industry-banner-panel rounded-lg border border-white/10 p-5 shadow-2xl">
-                <p id="industry-modules-heading" class="text-xs font-black uppercase text-white">{{ data_get($pageSections, 'copy.modules_heading', 'Workspace includes') }}</p>
-                <div class="industry-banner-modules mt-4 grid gap-2" role="region" aria-labelledby="industry-modules-heading" tabindex="0">
-                    @foreach($modules as $module)
-                        <div class="flex items-center gap-3 rounded-lg bg-white/[.08] px-3 py-2">
-                            <i class="bi bi-check2-circle" style="color:var(--accent)"></i>
-                            <span class="font-bold">{{ $module }}</span>
+    <section class="industry-showcase" data-industry-slider aria-roledescription="carousel" aria-label="{{ $industry['industry'] }} overview">
+        <div class="industry-showcase-track">
+            @foreach($industrySlides as $slideIndex => $slide)
+                <article class="industry-showcase-slide {{ $loop->first ? 'is-active' : '' }}" data-industry-slide aria-hidden="{{ $loop->first ? 'false' : 'true' }}">
+                    <div class="industry-showcase-copy">
+                        <a href="{{ route('landing') }}#industries" class="text-sm font-black uppercase text-zinc-500 no-underline hover:text-[#007A3B]">{{ data_get($pageSections, 'copy.back_label', 'Back to industries') }}</a>
+                        <p class="bama-eyebrow mt-8">{{ data_get($industry, 'hero.eyebrow') }}</p>
+                        <h1 class="mt-3 text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">{{ $slide['title'] ?? data_get($industry, 'hero.title') }}</h1>
+                        <p class="mt-5 max-w-2xl text-lg leading-8 text-zinc-600">{{ $slide['body'] ?? data_get($industry, 'hero.body') }}</p>
+                        <a href="{{ data_get($pageSections, 'copy.button_url', route('register.account')) }}" class="mt-7 inline-flex rounded-full bg-[#00A651] px-8 py-4 text-center text-sm font-black uppercase text-white no-underline shadow-sm hover:bg-[#007A3B]">{{ data_get($pageSections, 'copy.button_label', 'Start Free Trial') }}</a>
+                    </div>
+                    <div class="industry-showcase-visual">
+                        <div class="industry-showcase-image-frame">
+                            <picture>
+                                @if(($slide['image_path'] ?? null) === 'images/people-industry-mosaic.png')
+                                    <source type="image/webp" srcset="{{ $mosaicImageSrcset }}" sizes="(min-width: 1024px) 58vw, 100vw">
+                                @endif
+                                <img src="{{ \\App\\Support\\PublicUpload::url($slide['image_path'] ?? null) ?: asset('images/people-industry-mosaic.png') }}" alt="{{ $slide['image_alt'] ?? data_get($industry, 'media.hero_image_alt') }}" class="industry-showcase-image" @if($loop->first) fetchpriority="high" @else loading="lazy" @endif decoding="async">
+                            </picture>
                         </div>
+                    </div>
+                </article>
+            @endforeach
+        </div>
+        @if($industrySlides->count() > 1)
+            <div class="industry-showcase-controls" aria-label="Industry overview slides">
+                <button type="button" data-industry-prev aria-label="Previous slide"><i class="bi bi-arrow-left"></i></button>
+                <div class="industry-showcase-dots">
+                    @foreach($industrySlides as $slideIndex => $slide)
+                        <button type="button" data-industry-go="{{ $slideIndex }}" aria-label="Go to slide {{ $slideIndex + 1 }}" aria-current="{{ $loop->first ? 'true' : 'false' }}"></button>
                     @endforeach
                 </div>
+                <button type="button" data-industry-next aria-label="Next slide"><i class="bi bi-arrow-right"></i></button>
             </div>
-        </div>
+        @endif
+        <aside class="industry-showcase-includes">
+            <p class="text-xs font-black uppercase tracking-wider text-zinc-500">{{ data_get($pageSections, 'copy.modules_heading', 'Workspace includes') }}</p>
+            <div class="industry-showcase-module-list">
+                @foreach($modules as $module)
+                    <div class="industry-showcase-module"><i class="bi bi-check-circle-fill"></i><span>{{ $module }}</span></div>
+                @endforeach
+            </div>
+        </aside>
     </section>
 
     <section class="px-5 py-12">

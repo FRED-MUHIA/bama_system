@@ -88,52 +88,85 @@
             object-position: center;
         }
 
-        .industry-banner {
+        .industry-showcase {
             position: relative;
-            isolation: isolate;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 24px;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 36px 24px 32px;
+            background: #fff;
+        }
+        .industry-showcase-track { min-width: 0; }
+        .industry-showcase-slide {
+            display: none;
+            grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+            align-items: center;
+            gap: clamp(24px, 4vw, 72px);
+            min-height: 460px;
+        }
+        .industry-showcase-slide.is-active { display: grid; animation: industry-slide-in .35s ease both; }
+        .industry-showcase-copy { max-width: 570px; padding: 18px 0; }
+        .industry-showcase-visual { min-width: 0; }
+        .industry-showcase-image-frame {
+            width: 100%;
+            height: clamp(320px, 42vw, 600px);
             overflow: hidden;
-            padding: 40px 24px;
+            border-radius: 18px;
+            background: #f7f8f5;
         }
-        .industry-banner-media {
-            position: absolute;
-            inset: 0;
-            z-index: -2;
-            pointer-events: none;
-        }
-        .industry-banner-media picture { display: block; width: 100%; height: 100%; }
-        .industry-banner-media .industry-banner-image {
+        .industry-showcase-image-frame picture { display: block; width: 100%; height: 100%; }
+        .industry-showcase-image {
             display: block;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             object-position: center;
         }
-        .industry-banner::before {
-            content: '';
+        .industry-showcase-controls {
             position: absolute;
-            inset: 0;
-            z-index: -1;
-            background: linear-gradient(90deg, rgba(7,27,18,.92), rgba(7,27,18,.72) 48%, rgba(7,27,18,.12));
-            pointer-events: none;
+            z-index: 2;
+            left: 24px;
+            bottom: 42px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
         }
-        .industry-banner-content { width: 100%; align-items: center; }
-        .industry-banner-copy { color: #fff; }
-        .industry-banner-copy .bama-eyebrow { color: #79D9A3; }
-        .industry-banner-panel { min-width: 0; background: rgba(7,27,18,.9); }
-        .industry-banner-modules {
-            max-height: 360px;
-            overflow-y: auto;
-            scrollbar-gutter: stable;
-            padding-right: 8px;
+        .industry-showcase-controls > button {
+            display: grid;
+            width: 42px;
+            height: 42px;
+            place-items: center;
+            border: 1px solid #dfe5e1;
+            border-radius: 50%;
+            background: #fff;
+            color: #071b12;
         }
-        .industry-banner-modules:focus-visible { outline: 2px solid #79D9A3; outline-offset: 4px; }
+        .industry-showcase-controls > button:hover { border-color: #00a651; color: #007a3b; }
+        .industry-showcase-dots { display: flex; align-items: center; gap: 7px; }
+        .industry-showcase-dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 99px; background: #cbd5ce; }
+        .industry-showcase-dots button[aria-current="true"] { width: 24px; background: #00a651; }
+        .industry-showcase-includes { border-top: 1px solid #e8ece9; padding: 20px 0 0; }
+        .industry-showcase-module-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 13px; }
+        .industry-showcase-module { display: flex; min-width: 0; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #e7ece8; border-radius: 10px; background: #fbfcfb; color: #17221b; font-weight: 700; }
+        .industry-showcase-module i { flex: 0 0 auto; color: #00a651; }
+        @keyframes industry-slide-in { from { opacity: .35; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
         @media (min-width: 1024px) {
-            .industry-banner { height: 600px; display: flex; align-items: center; }
-            .industry-banner-copy { max-height: 520px; overflow-y: auto; }
-            .industry-banner-modules { max-height: 420px; }
+            .industry-showcase { grid-template-columns: minmax(0, 1fr) 310px; gap: 32px; padding: 54px 36px; }
+            .industry-showcase-includes { align-self: center; border: 1px solid #e8ece9; border-radius: 16px; padding: 22px; box-shadow: 0 12px 36px rgba(15,23,42,.06); }
+            .industry-showcase-module-list { grid-template-columns: 1fr; max-height: 500px; overflow-y: auto; }
+            .industry-showcase-controls { left: 36px; bottom: 60px; }
         }
         @media (max-width: 1023px) {
-            .industry-banner::before { background: rgba(7,27,18,.78); }
+            .industry-showcase-slide { grid-template-columns: 1fr; gap: 20px; min-height: 0; }
+            .industry-showcase-copy { max-width: none; }
+            .industry-showcase-image-frame { height: clamp(240px, 56vw, 440px); }
+            .industry-showcase-controls { position: static; justify-content: center; padding: 2px 0 8px; }
+        }
+        @media (max-width: 640px) {
+            .industry-showcase { padding: 24px 18px; }
+            .industry-showcase-module-list { grid-template-columns: 1fr; }
         }
 
         body {
@@ -232,4 +265,26 @@
     @include('mobile.pwa-shell')
     @yield('body')
 </body>
+<script>
+document.querySelectorAll('[data-industry-slider]').forEach((slider) => {
+    const slides = Array.from(slider.querySelectorAll('[data-industry-slide]'));
+    const dots = Array.from(slider.querySelectorAll('[data-industry-go]'));
+    if (slides.length < 2) return;
+
+    let active = 0;
+    const show = (index) => {
+        active = (index + slides.length) % slides.length;
+        slides.forEach((slide, position) => {
+            const selected = position === active;
+            slide.classList.toggle('is-active', selected);
+            slide.setAttribute('aria-hidden', selected ? 'false' : 'true');
+        });
+        dots.forEach((dot, position) => dot.setAttribute('aria-current', position === active ? 'true' : 'false'));
+    };
+
+    slider.querySelector('[data-industry-prev]')?.addEventListener('click', () => show(active - 1));
+    slider.querySelector('[data-industry-next]')?.addEventListener('click', () => show(active + 1));
+    dots.forEach((dot) => dot.addEventListener('click', () => show(Number(dot.dataset.industryGo))));
+});
+</script>
 </html>

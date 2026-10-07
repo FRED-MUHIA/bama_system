@@ -54,6 +54,12 @@
                         <option value="">Chair / room</option>
                         @foreach($resources as $resource)<option value="{{ $resource->id }}">{{ $resource->name }} · {{ $resource->type }}</option>@endforeach
                     </select>
+                    @if($branches->isNotEmpty())
+                        <select name="branch_id" class="form-select" required>
+                            <option value="">Salon / location</option>
+                            @foreach($branches as $branch)<option value="{{ $branch->id }}" @selected(old('branch_id') == $branch->id)>{{ $branch->name }}</option>@endforeach
+                        </select>
+                    @endif
                     <input type="datetime-local" name="starts_at" class="form-control" required>
                     <div data-booking-services>
                         <div class="d-flex gap-2 mb-2" data-booking-service>
@@ -694,6 +700,25 @@
 
         @if(isset($reports))
             <div class="salon-card">
+                @if(isset($reportBranches))
+                    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+                        <div><h2 class="h5 mb-1">Location performance</h2><p class="small text-muted mb-0">Revenue and appointment totals by salon, spa, or barbershop for {{ now()->format('F Y') }}. Finance remains consolidated for the business.</p></div>
+                        <form method="get" action="{{ route('salon.reports.index') }}" class="d-flex gap-2">
+                            <select class="form-select form-select-sm" name="branch_id" aria-label="Filter reports by location">
+                                <option value="">All locations</option>
+                                @foreach($reportBranches as $branch)<option value="{{ $branch->id }}" @selected($selectedReportBranch?->id === $branch->id)>{{ $branch->name }}</option>@endforeach
+                            </select>
+                            <button class="btn btn-sm btn-success">Apply</button>
+                        </form>
+                    </div>
+                    <div class="table-responsive mb-4"><table class="table table-sm align-middle mb-0"><thead><tr><th>Location</th><th>Appointments</th><th>Revenue</th></tr></thead><tbody>
+                        @forelse($branchReports as $branchReport)
+                            <tr><td class="fw-semibold">{{ $branchReport['name'] }}</td><td>{{ number_format($branchReport['appointments']) }}</td><td>{{ number_format($branchReport['revenue'], 2) }}</td></tr>
+                        @empty
+                            <tr><td colspan="3" class="text-muted">No locations yet. Add them in Administration → Branches.</td></tr>
+                        @endforelse
+                    </tbody></table></div>
+                @endif
                 <h2 class="h5">Report catalogue</h2>
                 <div class="d-flex flex-wrap gap-2">
                     @foreach($reports as $report)

@@ -4,6 +4,9 @@ namespace Modules\Salon\Services;
 
 use App\Models\Payment;
 use App\Models\Product;
+use App\Models\Branch;
+use App\Support\ActiveBusiness;
+use Illuminate\Support\Facades\DB;
 use Modules\Salon\Models\Appointment;
 use Modules\Salon\Models\ClientProfile;
 use Modules\Salon\Models\Commission;
@@ -34,6 +37,31 @@ class SalonDashboardService
         ];
     }
 
+    public function branchPerformance(): array
+    {
+        $branches = Branch::where('business_id', ActiveBusiness::id())
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        if ($branches->isEmpty()) {
+            return [];
+        }
+
+        $appointments = DB::table('salon_appointments')
+            ->where('business_id', ActiveBusiness::id())
+            ->whereBetween('starts_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->select('branch_id', DB::raw('COUNT(*) as appointments'), DB::raw("SUM(CASE WHEN status IN ('Completed','Paid') THEN total ELSE 0 END) as revenue"))
+            ->groupBy('branch_id')->get()->keyBy('branch_id');
+
+        return $branches->map(fn (Branch $branch) => [
+            'id' => $branch->id,
+            'name' => $branch->name,
+            'appointments' => (int) ($appointments->get($branch->id)->appointments ?? 0),
+            'revenue' => (float) ($appointments->get($branch->id)->revenue ?? 0),
+        ])->all();
+    }
+
     public function kpis(): array
     {
         $scheduledMinutes = Appointment::whereDate('starts_at', today())
@@ -52,6 +80,8 @@ class SalonDashboardService
     public function reports(): array
     {
         return [
+            'Unified salon finance (all branches)',
+            'Branch-by-branch revenue and appointments',
             'Appointment utilization',
             'Service revenue by category',
             'Staff commission and productivity',
@@ -59,7 +89,7 @@ class SalonDashboardService
             'Gift card liability',
             'Product consumption and margin',
             'Client loyalty and repeat visits',
-            'Multi-branch operating summary',
+            'Product consumption by branch',
         ];
     }
 }

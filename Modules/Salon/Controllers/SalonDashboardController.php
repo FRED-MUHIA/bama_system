@@ -21,6 +21,7 @@ class SalonDashboardController extends Controller
             'metrics' => $dashboard->metrics(),
             'kpis' => $dashboard->kpis(),
             'reports' => $dashboard->reports(),
+            'branchPerformance' => $dashboard->branchPerformance(),
             'appointments' => $repository->upcomingAppointments()->get(),
             'services' => $repository->activeServices()->limit(8)->get(),
             'staff' => $repository->staff()->limit(8)->get(),

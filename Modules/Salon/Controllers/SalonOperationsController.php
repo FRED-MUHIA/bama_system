@@ -5,12 +5,14 @@ namespace Modules\Salon\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Product;
+use App\Models\Branch;
 use App\Models\PosOrder;
 use App\Models\StockMovement;
 use App\Services\StockService;
 use App\Support\ActiveBusiness;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\Salon\Contracts\SalonSpaServiceContract;
 use Modules\Salon\Models\Appointment;
 use Modules\Salon\Models\ClientProfile;
@@ -45,6 +47,7 @@ class SalonOperationsController extends Controller
             'services' => Service::where('is_active', true)->orderBy('name')->get(),
             'resources' => Resource::where('status', 'Available')->orderBy('name')->get(),
             'managedResources' => Resource::orderBy('name')->get(),
+            'branches' => Branch::where('business_id', \App\Support\ActiveBusiness::id())->where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -54,6 +57,7 @@ class SalonOperationsController extends Controller
             'salon_client_profile_id' => ['required', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\ClientProfile::class)],
             'salon_staff_profile_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\StaffProfile::class)],
             'salon_resource_id' => ['nullable', \Modules\Salon\Services\SalonRecords::exists(\Modules\Salon\Models\Resource::class)],
+            'branch_id' => ['nullable', \Illuminate\Validation\Rule::exists('branches', 'id')->where('business_id', \App\Support\ActiveBusiness::id())],
             'starts_at' => ['required', 'date'],
             'channel' => ['nullable', 'string', 'max:80'],
             'notes' => ['nullable', 'string'],
@@ -116,7 +120,7 @@ class SalonOperationsController extends Controller
         $salon->createStaffProfile($request->validate([
             'display_name' => ['required', 'string', 'max:255'],
             'user_id' => ['nullable', $this->activeBusinessUserExistsRule()],
-            'branch_id' => ['nullable', 'integer'],
+            'branch_id' => ['nullable', \Illuminate\Validation\Rule::exists('branches', 'id')->where('business_id', \App\Support\ActiveBusiness::id())],
             'role_title' => ['nullable', 'string', 'max:120'],
             'commission_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'hourly_rate' => ['nullable', 'numeric', 'min:0'],
@@ -475,10 +479,34 @@ class SalonOperationsController extends Controller
     {
         $gate->authorize('reports');
 
+        $data = request()->validate([
+            'branch_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('branches', 'id')->where('business_id', \App\Support\ActiveBusiness::id())],
+        ]);
+        $branches = Branch::where('business_id', \App\Support\ActiveBusiness::id())->where('is_active', true)->orderBy('name')->get();
+        $branchId = isset($data['branch_id']) ? (int) $data['branch_id'] : null;
+        abort_if($branchId && ! $branches->contains('id', $branchId), 404);
+        $periodStart = now()->startOfMonth();
+        $periodEnd = now()->endOfMonth();
+        $branchReports = DB::table('salon_appointments')
+            ->where('business_id', \App\Support\ActiveBusiness::id())
+            ->when($branchId, fn ($query) => $query->where('branch_id', $branchId))
+            ->whereBetween('starts_at', [$periodStart, $periodEnd])
+            ->select('branch_id', DB::raw('COUNT(*) as appointments'), DB::raw("SUM(CASE WHEN status IN ('Completed','Paid') THEN total ELSE 0 END) as revenue"))
+            ->groupBy('branch_id')->get()->keyBy('branch_id');
+        $selectedBranch = $branchId ? $branches->firstWhere('id', $branchId) : null;
+
         return $this->view('Reports', 'Executive, branch, staff, revenue, stock, client, and compliance reporting.', [
             'metrics' => $dashboard->metrics(),
             'kpis' => $dashboard->kpis(),
             'reports' => $dashboard->reports(),
+            'branchReports' => $branches->map(fn ($branch) => [
+                'id' => $branch->id,
+                'name' => $branch->name,
+                'appointments' => (int) ($branchReports->get($branch->id)->appointments ?? 0),
+                'revenue' => (float) ($branchReports->get($branch->id)->revenue ?? 0),
+            ])->all(),
+            'reportBranches' => $branches,
+            'selectedReportBranch' => $selectedBranch,
         ]);
     }
 

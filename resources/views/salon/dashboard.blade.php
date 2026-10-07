@@ -17,6 +17,7 @@
     .salon-card .label{color:#667085;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
     .salon-card .value{font-size:1.55rem;font-weight:900;color:#050806}
     .salon-board{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+    .salon-branches{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
     .salon-list{display:grid;gap:10px}
     .salon-item{display:flex;justify-content:space-between;gap:14px;border:1px solid #ecedf0;border-radius:10px;padding:12px;background:#fff}
     .salon-pill{display:inline-flex;align-items:center;border-radius:999px;padding:.28rem .65rem;background:#e9fff2;color:#007a3b;font-size:.78rem;font-weight:800}
@@ -43,6 +44,22 @@
                 <div class="value">{{ is_numeric($value) ? number_format((float) $value, str_contains($label, 'Revenue') || str_contains($label, 'Commission') || str_contains($label, 'Consumption') || str_contains($label, 'Payments') ? 2 : 0) : $value }}</div>
             </div>
         @endforeach
+    </section>
+
+    <section class="salon-card">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div><div class="salon-kicker">All locations</div><h2 class="h4 mb-0">Branch performance this month</h2></div>
+            <a class="btn btn-sm btn-outline-dark" href="{{ route('salon.reports.index') }}">View location reports</a>
+        </div>
+        @if($branchPerformance)
+            <div class="salon-branches">
+                @foreach($branchPerformance as $branch)
+                    <div class="salon-item"><div><strong>{{ $branch['name'] }}</strong><div class="small text-muted">{{ number_format($branch['appointments']) }} appointments</div></div><span class="salon-pill">{{ number_format($branch['revenue'], 2) }}</span></div>
+                @endforeach
+            </div>
+        @else
+            <div class="text-muted">Add salon locations in Administration → Branches to see each location alongside your unified dashboard and finance.</div>
+        @endif
     </section>
 
     <section class="salon-board">
