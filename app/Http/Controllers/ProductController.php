@@ -13,6 +13,7 @@ use App\Services\StockService;
 use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -44,6 +45,9 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $data = $this->validated($request);
+        if ($request->hasFile('main_image')) {
+            $data['main_image_path'] = $request->file('main_image')->store('products', 'public');
+        }
         $openingStock = (float) ($data['stock_quantity'] ?? 0);
         $data['stock_quantity'] = 0;
         $product = Product::create($data);
@@ -61,6 +65,13 @@ class ProductController extends Controller
     {
         $oldStock = (float) $product->stock_quantity;
         $data = $this->validated($request, $product);
+        if ($request->hasFile('main_image')) {
+            $newImage = $request->file('main_image')->store('products', 'public');
+            if ($product->main_image_path && ! str_starts_with($product->main_image_path, 'http')) {
+                Storage::disk('public')->delete(ltrim(str_replace('storage/', '', $product->main_image_path), '/'));
+            }
+            $data['main_image_path'] = $newImage;
+        }
         $newStock = (float) ($data['stock_quantity'] ?? 0);
         unset($data['stock_quantity']);
         $product->update($data);
@@ -297,6 +308,7 @@ class ProductController extends Controller
             'sku' => ['nullable', 'string', 'max:100', Rule::unique('products', 'sku')->ignore($id)->where('business_id', ActiveBusiness::id())],
             'barcode' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
+            'main_image' => ['nullable', 'image', 'max:5120'],
             'price' => ['required', 'numeric', 'min:0'],
             'wholesale_price' => ['nullable', 'numeric', 'min:0'],
             'promotional_price' => ['nullable', 'numeric', 'min:0'],

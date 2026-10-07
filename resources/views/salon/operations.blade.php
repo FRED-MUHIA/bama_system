@@ -433,7 +433,7 @@
                         <div class="col-md-6">
                             <select name="product_id" class="form-select" required>
                                 <option value="">Product</option>
-                                @foreach($products as $product)<option value="{{ $product->id }}">{{ $product->name }} · Stock {{ $product->stock_quantity ?? 0 }}</option>@endforeach
+                                @foreach($products as $product)<option value="{{ $product->id }}">{{ $product->name }} · Stock {{ $product->formattedStock() }}</option>@endforeach
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -444,14 +444,39 @@
                         </div>
                     </div>
                     <div class="row g-2">
-                        <div class="col-md-4"><input name="quantity" type="number" step="0.001" min="0.001" class="form-control" placeholder="Qty" required></div>
-                        <div class="col-md-4"><input name="unit" class="form-control" placeholder="Unit" value="pcs"></div>
+                        <div class="col-md-4"><input name="quantity" type="number" step="0.001" min="0.001" class="form-control" placeholder="Quantity (selected product unit)" required></div>
+                        <div class="col-md-4"><input name="unit" class="form-control" placeholder="Unit (uses product unit if blank)"></div>
                         <div class="col-md-4"><input name="unit_cost" type="number" step="0.01" min="0" class="form-control" placeholder="Unit cost"></div>
                     </div>
                     <button class="btn btn-success rounded-pill fw-bold">Record usage</button>
                 </form>
                 @endif
             </div>
+
+            @if(auth()->user()->hasPermission('salon.inventory.manage'))
+            <div class="salon-card">
+                <h2 class="h5">Add a product to the salon catalog</h2>
+                <p class="small text-muted">New products are shared with POS and start with the opening stock entered here.</p>
+                <form class="salon-form" method="post" action="{{ route('salon.inventory.products.store') }}">
+                    @csrf
+                    <input name="name" class="form-control" placeholder="Product name" value="{{ old('name') }}" required>
+                    <div class="row g-2">
+                        <div class="col-md-6"><input name="sku" class="form-control" placeholder="SKU (optional)" value="{{ old('sku') }}"></div>
+                        <div class="col-md-6"><input name="price" type="number" min="0" step="0.01" class="form-control" placeholder="POS selling price" value="{{ old('price') }}" required></div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-4"><input name="stock_quantity" type="number" min="0" step="0.001" class="form-control" placeholder="Opening quantity" value="{{ old('stock_quantity', 0) }}" required></div>
+                        <div class="col-md-4"><select name="stock_unit" class="form-select" required>@foreach(\App\Models\Product::STOCK_UNITS as $unit => $label)<option value="{{ $unit }}" @selected(old('stock_unit', 'pcs') === $unit)>{{ $label }} ({{ $unit }})</option>@endforeach</select></div>
+                        <div class="col-md-4"><input name="reorder_level" type="number" min="0" step="0.001" class="form-control" placeholder="Low stock alert" value="{{ old('reorder_level', 0) }}"></div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-4"><input name="cost_price" type="number" min="0" step="0.01" class="form-control" placeholder="Unit cost (optional)" value="{{ old('cost_price') }}"></div>
+                        <div class="col-md-8"><input name="description" class="form-control" placeholder="Description (optional)" value="{{ old('description') }}"></div>
+                    </div>
+                    <button class="btn btn-success rounded-pill fw-bold"><i class="bi bi-plus-circle me-1"></i>Add product</button>
+                </form>
+            </div>
+            @endif
 
             <div class="salon-card">
                 <h2 class="h5">Usage controls</h2>

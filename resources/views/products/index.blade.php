@@ -61,7 +61,7 @@
                             </form>
                         </div>
                         <div class="collapse mt-3" id="mobile-edit-product-{{ $item->id }}">
-                            <form method="post" action="{{ route('products.update',$item) }}" class="row g-2">@csrf @method('PUT')
+                            <form method="post" action="{{ route('products.update',$item) }}" enctype="multipart/form-data" class="row g-2">@csrf @method('PUT')
                                 @include('products.partials.fields', ['product' => $item])
                                 @include('products.partials.variant-generator', ['product' => $item])
                                 <div class="col-12"><button class="btn btn-warning btn-sm w-100">Update Product</button></div>
@@ -78,7 +78,7 @@
                 <tbody>
                 @forelse($products as $item)
                     <tr>
-                        <td>{{ $item->name }}<div class="small text-muted">{{ $item->description }}</div></td>
+                        <td><div class="d-flex align-items-center gap-2"><div class="flex-shrink-0 rounded bg-light border overflow-hidden d-flex align-items-center justify-content-center" style="width:48px;height:48px">@if($item->main_image_path)<img src="{{ \App\Support\PublicUpload::url($item->main_image_path) }}" alt="{{ $item->name }}" style="width:100%;height:100%;object-fit:cover">@else<i class="bi bi-box-seam text-muted"></i>@endif</div><div>{{ $item->name }}<div class="small text-muted">{{ $item->description }}</div></div></div></td>
                         <td>{{ $item->category?->name }}</td>
                         <td>{{ $item->sku }}</td>
                         <td>{{ number_format($item->price,2) }}</td>
@@ -104,7 +104,7 @@
                         </form>
                     </td></tr>
                     <tr class="collapse" id="edit-product-{{ $item->id }}"><td colspan="9">
-                        <form method="post" action="{{ route('products.update',$item) }}" class="row g-2">@csrf @method('PUT')
+                        <form method="post" action="{{ route('products.update',$item) }}" enctype="multipart/form-data" class="row g-2">@csrf @method('PUT')
                             @include('products.partials.fields', ['product' => $item])
                             @include('products.partials.variant-generator', ['product' => $item])
                             <div class="col-12"><button class="btn btn-warning btn-sm">Update Product</button></div>
@@ -120,7 +120,7 @@
     <div class="col-lg-4 order-1 order-lg-2">
         <div class="card mb-4" id="add-product"><div class="card-body">
             <h2 class="h5">Add Product</h2>
-            <form method="post" action="{{ route('products.store') }}" class="row g-2">@csrf
+            <form method="post" action="{{ route('products.store') }}" enctype="multipart/form-data" class="row g-2">@csrf
                 @include('products.partials.fields', ['product' => $product])
                 <div class="col-12"><button class="btn btn-warning w-100">Save Product</button></div>
             </form>

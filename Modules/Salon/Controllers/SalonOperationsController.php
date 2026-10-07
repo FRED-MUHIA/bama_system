@@ -7,6 +7,8 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\PosOrder;
 use App\Models\StockMovement;
+use App\Services\StockService;
+use App\Support\ActiveBusiness;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Modules\Salon\Contracts\SalonSpaServiceContract;
@@ -319,7 +321,7 @@ class SalonOperationsController extends Controller
                 ->where('type', 'Consumed')
                 ->where('notes', 'Stock consumed by sale.')
                 ->latest()->limit(50)->get(),
-            'products' => Product::orderBy('name')->limit(100)->get(),
+            'products' => Product::where('is_active', true)->orderBy('name')->get(),
             'inventoryServices' => Service::where('is_active', true)->orderBy('name')->get(),
             'appointments' => Appointment::whereDate('starts_at', '>=', today()->subDays(7))->latest()->limit(30)->get(),
         ]);
@@ -341,6 +343,35 @@ class SalonOperationsController extends Controller
         $salon->recordProductConsumption($appointment, $data);
 
         return back()->with('success', 'Product usage recorded.');
+    }
+
+    public function storeInventoryProduct(Request $request, StockService $stock)
+    {
+        abort_unless(auth()->user()?->hasPermission('salon.inventory.manage'), 403);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'sku' => ['nullable', 'string', 'max:100', \Illuminate\Validation\Rule::unique('products', 'sku')->where('business_id', ActiveBusiness::id())],
+            'description' => ['nullable', 'string'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'cost_price' => ['nullable', 'numeric', 'min:0'],
+            'stock_quantity' => ['required', 'numeric', 'min:0'],
+            'stock_unit' => ['required', \Illuminate\Validation\Rule::in(array_keys(Product::STOCK_UNITS))],
+            'reorder_level' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $openingStock = (float) $data['stock_quantity'];
+        $data['stock_quantity'] = 0;
+        $data['is_active'] = true;
+        $data['status'] = 'active';
+        $data['track_inventory'] = true;
+        $product = Product::create($data);
+
+        if ($openingStock > 0) {
+            $stock->adjust($product, $openingStock, 'Add', 'Opening stock for Salon & Spa product.');
+        }
+
+        return back()->with('success', $product->name.' added to the catalog with '.$product->formattedStock().' in stock.');
     }
 
     public function storeConsumption(Request $request, Appointment $appointment, SalonSpaServiceContract $salon)

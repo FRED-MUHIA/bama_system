@@ -104,7 +104,7 @@
                     <a class="btn btn-sm btn-outline-dark" href="{{ route('products.index') }}">Open Full Catalog</a>
 </div>
 </div>
-            <form method="POST" action="{{ route('products.store') }}" class="row g-2">
+            <form method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data" class="row g-2">
                 @csrf
                 @include('products.partials.fields', ['product' => $product])
                 <div class="col-12">
@@ -633,8 +633,16 @@
                 @forelse($records as $record)
                     <tr>
                         <td class="fw-semibold">
-                            {{ $record->name }}
-                            <div class="small text-muted">{{ $record->sku ?: 'No SKU' }} @if($record->barcode) · {{ $record->barcode }} @endif</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="flex-shrink-0 rounded bg-light border overflow-hidden d-flex align-items-center justify-content-center" style="width:52px;height:52px">
+                                    @if($record->main_image_path)
+                                        <img src="{{ \App\Support\PublicUpload::url($record->main_image_path) }}" alt="{{ $record->name }}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+                                    @else
+                                        <i class="bi bi-box-seam text-muted"></i>
+                                    @endif
+                                </div>
+                                <div>{{ $record->name }}<div class="small text-muted">{{ $record->sku ?: 'No SKU' }} @if($record->barcode) · {{ $record->barcode }} @endif</div></div>
+                            </div>
                         </td>
                         <td>
                             {{ number_format((float) $record->price, 2) }}
@@ -669,7 +677,7 @@
                     <tr id="retail-product-edit-row-{{ $record->id }}" class="d-none" hidden>
                         <td colspan="6" class="p-0 border-0">
                             <div class="border-top p-3">
-                                <form method="post" action="{{ route('products.update', $record) }}" class="row g-2">@csrf @method('PUT')
+                                <form method="post" action="{{ route('products.update', $record) }}" enctype="multipart/form-data" class="row g-2">@csrf @method('PUT')
                                     @include('products.partials.fields', ['product' => $record])
                                     @include('products.partials.variant-generator', ['product' => $record])
                                     <div class="col-12"><button class="btn btn-warning btn-sm">Update Product</button></div>

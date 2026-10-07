@@ -577,6 +577,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/treatments', [SalonOperationsController::class, 'storeTreatment'])->middleware('permission:salon.treatments.manage')->name('treatments.store');
             Route::get('/inventory-usage', [SalonOperationsController::class, 'inventory'])->middleware('permission:salon.inventory.view')->name('inventory.index');
             Route::post('/inventory-usage', [SalonOperationsController::class, 'storeInventoryConsumption'])->middleware('permission:salon.inventory.manage')->name('inventory.consumption.quick-store');
+            Route::post('/inventory-usage/products', [SalonOperationsController::class, 'storeInventoryProduct'])->middleware('permission:salon.inventory.manage')->name('inventory.products.store');
             Route::post('/appointments/{appointment}/product-consumption', [SalonOperationsController::class, 'storeConsumption'])->middleware('permission:salon.inventory.manage')->name('inventory.consumption.store');
             Route::get('/commissions', [SalonOperationsController::class, 'commissions'])->middleware('permission:salon.commissions.view')->name('commissions.index');
             Route::post('/commissions', [SalonOperationsController::class, 'storeCommission'])->middleware('permission:salon.commissions.manage')->name('commissions.store');
