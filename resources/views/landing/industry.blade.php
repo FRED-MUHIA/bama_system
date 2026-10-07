@@ -91,7 +91,7 @@
                                 @if(($slide['image_path'] ?? null) === 'images/people-industry-mosaic.png')
                                     <source type="image/webp" srcset="{{ $mosaicImageSrcset }}" sizes="(min-width: 1024px) 58vw, 100vw">
                                 @endif
-                                <img src="{{ \\App\\Support\\PublicUpload::url($slide['image_path'] ?? null) ?: asset('images/people-industry-mosaic.png') }}" alt="{{ $slide['image_alt'] ?? data_get($industry, 'media.hero_image_alt') }}" class="industry-showcase-image" @if($loop->first) fetchpriority="high" @else loading="lazy" @endif decoding="async">
+                                <img src="{{ \App\Support\PublicUpload::url($slide['image_path'] ?? null) ?: asset('images/people-industry-mosaic.png') }}" alt="{{ $slide['image_alt'] ?? data_get($industry, 'media.hero_image_alt') }}" class="industry-showcase-image" @if($loop->first) fetchpriority="high" @else loading="lazy" @endif decoding="async">
                             </picture>
                         </div>
                     </div>
