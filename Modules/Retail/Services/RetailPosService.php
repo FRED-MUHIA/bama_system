@@ -7,6 +7,7 @@ use App\Models\PaymentMethod;
 use App\Models\PosOrder;
 use App\Models\Product;
 use App\Services\DocumentService;
+use App\Services\FinanceService;
 use App\Services\IamService;
 use App\Services\StockService;
 use Illuminate\Support\Collection;
@@ -28,6 +29,7 @@ class RetailPosService
         private RetailGiftCardService $giftCards,
         private IamService $iam,
         private EtimsComplianceServiceContract $etims,
+        private FinanceService $finance,
     ) {
     }
 
@@ -36,7 +38,7 @@ class RetailPosService
         return DB::transaction(function () use ($data) {
             $data = app(RetailShopContext::class)->saleContext($data);
             if (! empty($data['retail_cash_drawer_id'])) {
-                $drawer = RetailCashDrawer::where('branch_id', $data['branch_id'])->where('cashier_id', auth()->id())
+                $drawer = RetailCashDrawer::where('business_id', \App\Support\ActiveBusiness::id())->where('branch_id', $data['branch_id'])->where('cashier_id', auth()->id())
                     ->where('status', 'Open')->find($data['retail_cash_drawer_id']);
                 if (! $drawer) {
                     throw ValidationException::withMessages(['retail_cash_drawer_id' => 'Select your open drawer in this shop.']);
@@ -47,6 +49,9 @@ class RetailPosService
             $totals = $this->documents->totals($items);
             $payments = $this->validPayments($data['payments'] ?? []);
             $amountPaid = round($payments->sum('amount'), 2);
+            if ($amountPaid - (float) $totals['total'] > 0.005) {
+                throw ValidationException::withMessages(['payments' => 'Recorded payment cannot be greater than the sale total.']);
+            }
             $primaryPaymentMethodId = $payments->first()['payment_method_id'] ?? null;
 
             $order = PosOrder::create([
@@ -92,6 +97,7 @@ class RetailPosService
             $this->redeemGiftCards($order, $payments);
             $this->applyLoyalty($order, $client);
             $this->updateCashDrawer($data['retail_cash_drawer_id'] ?? null, $payments);
+            $this->postSaleFinance($order);
             $this->etims->submitSale($order->load('items.product', 'payments.paymentMethod'), [
                 'industry' => 'retail',
                 'channel' => $data['channel'] ?? 'Store',
@@ -148,7 +154,32 @@ class RetailPosService
 
         return DB::transaction(function () use ($order, $reason, $authorizedBy) {
             $order->load('items', 'payments.paymentMethod', 'retailExtension.cashDrawer');
+            $paymentColumns = Schema::hasTable('pos_order_payments') ? Schema::getColumnListing('pos_order_payments') : [];
+            $giftCardPayments = $order->payments->filter(fn ($payment) => str_contains(strtolower((string) ((in_array('method_type', $paymentColumns, true) ? $payment->method_type : null) ?: $payment->paymentMethod?->name)), 'gift'));
+            if ($giftCardPayments->isNotEmpty() && Schema::hasTable('retail_gift_card_transactions')) {
+                $giftTransactions = \Modules\Retail\Models\RetailGiftCardTransaction::where('business_id', $order->business_id)
+                    ->where('pos_order_id', $order->id)->where('type', 'Redeemed')->get();
+                foreach ($giftTransactions as $transaction) {
+                    $card = RetailGiftCard::whereKey($transaction->retail_gift_card_id)->lockForUpdate()->first();
+                    if ($card) {
+                        $card->increment('balance', (float) $transaction->amount);
+                        $card->transactions()->create(['pos_order_id' => $order->id, 'type' => 'Reversed', 'amount' => $transaction->amount, 'balance_after' => $card->fresh()->balance, 'reference' => 'Sale cancellation']);
+                    }
+                }
+            }
+            $financeJournals = \App\Models\JournalEntry::where('business_id', $order->business_id)
+                ->where(function ($query) use ($order) {
+                    $query->where(function ($source) use ($order) {
+                        $source->where('source_type', PosOrder::class)->where('source_id', $order->id);
+                    })->orWhere(function ($source) use ($order) {
+                        $source->where('source_type', \App\Models\PosOrderPayment::class)
+                            ->whereIn('source_id', $order->payments->pluck('id'));
+                    });
+                })->where('status', 'Posted')->get();
             $this->stock->syncSaleItems($order->items, collect(), $order, 'Retail POS void '.$order->order_number);
+            foreach ($financeJournals as $journal) {
+                $this->finance->reverse($journal, 'POS sale cancelled: '.$reason);
+            }
 
             $order->update([
                 'status' => 'cancelled',
@@ -221,7 +252,9 @@ class RetailPosService
                     return null;
                 }
 
-                $method = ! empty($payment['payment_method_id']) ? PaymentMethod::find($payment['payment_method_id']) : null;
+                $method = ! empty($payment['payment_method_id'])
+                    ? PaymentMethod::where('business_id', \App\Support\ActiveBusiness::id())->find($payment['payment_method_id'])
+                    : null;
 
                 return [
                     'payment_method_id' => $method?->id,
@@ -272,21 +305,28 @@ class RetailPosService
 
     private function recordPayments(PosOrder $order, Collection $payments): void
     {
+        if (! Schema::hasTable('pos_order_payments')) return;
+        $availableColumns = Schema::getColumnListing('pos_order_payments');
+
         foreach ($payments as $payment) {
-            $order->payments()->create([
+            $record = [
+                'business_id' => $order->business_id,
                 'payment_method_id' => $payment['payment_method_id'],
+                'method_type' => $payment['method_type'],
+                'retail_gift_card_id' => $payment['retail_gift_card_id'],
                 'amount' => $payment['amount'],
                 'payment_date' => now()->toDateString(),
                 'reference' => $payment['reference'],
                 'notes' => trim(($payment['method_type'] ?? 'Retail payment').($payment['notes'] ? ': '.$payment['notes'] : '')),
-            ]);
+            ];
+            $order->payments()->create(collect($record)->only($availableColumns)->all());
         }
     }
 
     private function redeemGiftCards(PosOrder $order, Collection $payments): void
     {
         foreach ($payments->whereNotNull('retail_gift_card_id') as $payment) {
-            $card = RetailGiftCard::find($payment['retail_gift_card_id']);
+            $card = RetailGiftCard::where('business_id', \App\Support\ActiveBusiness::id())->find($payment['retail_gift_card_id']);
             if ($card) {
                 $this->giftCards->redeem($card, (float) $payment['amount'], $order, $payment['reference']);
             }
@@ -330,6 +370,49 @@ class RetailPosService
 
             return str_contains($method, 'cash');
         })->sum('amount'), 2);
+    }
+
+    private function postSaleFinance(PosOrder $order): void
+    {
+        if (! $this->finance->ready() || (float) $order->total <= 0) return;
+
+        $salesAccount = $this->finance->account('4000');
+        $receivableAccount = $this->finance->account('1200');
+        $lines = [
+            ['finance_account_id' => $receivableAccount->id, 'description' => 'Retail POS sale '.$order->order_number, 'debit' => (float) $order->total, 'credit' => 0],
+            ['finance_account_id' => $salesAccount->id, 'description' => 'Retail POS sale '.$order->order_number, 'debit' => 0, 'credit' => max((float) $order->total - (float) $order->tax_total, 0)],
+        ];
+        if ((float) $order->tax_total > 0) {
+            $lines[] = ['finance_account_id' => $this->finance->account('2200')->id, 'description' => 'Retail POS tax '.$order->order_number, 'debit' => 0, 'credit' => (float) $order->tax_total];
+        }
+        $this->finance->post([
+            'business_id' => $order->business_id,
+            'entry_date' => $order->order_date,
+            'description' => 'Retail POS sale '.$order->order_number,
+            'source_type' => PosOrder::class,
+            'source_id' => $order->id,
+        ], $lines);
+
+        if (! Schema::hasTable('pos_order_payments')) return;
+        $paymentColumns = Schema::getColumnListing('pos_order_payments');
+        foreach ($order->payments()->with('paymentMethod')->get() as $payment) {
+            if ((float) $payment->amount <= 0) continue;
+            $method = strtolower((string) ((in_array('method_type', $paymentColumns, true) ? $payment->method_type : null) ?: $payment->paymentMethod?->name ?: 'cash'));
+            if (str_contains($method, 'gift') || str_contains($method, 'store credit')) {
+                continue;
+            }
+            $debitCode = str_contains($method, 'cash') ? '1000' : '1100';
+            $this->finance->post([
+                'business_id' => $order->business_id,
+                'entry_date' => $payment->payment_date,
+                'description' => 'Retail POS payment '.$order->order_number.' · '.((in_array('method_type', $paymentColumns, true) ? $payment->method_type : null) ?: 'Payment'),
+                'source_type' => \App\Models\PosOrderPayment::class,
+                'source_id' => $payment->id,
+            ], [
+                ['finance_account_id' => $this->finance->account($debitCode)->id, 'description' => 'POS payment received', 'debit' => (float) $payment->amount, 'credit' => 0],
+                ['finance_account_id' => $receivableAccount->id, 'description' => 'POS receivable settled', 'debit' => 0, 'credit' => (float) $payment->amount],
+            ]);
+        }
     }
 
     private function statusFor(string $saleType, float $amountPaid, float $total): string

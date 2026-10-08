@@ -55,7 +55,7 @@ class FinanceService
 
         foreach (self::ACCOUNTS as [$code, $name, $type, $subtype]) {
             FinanceAccount::firstOrCreate(
-                ['code' => $code],
+                ['business_id' => ActiveBusiness::id(), 'code' => $code],
                 ['name' => $name, 'type' => $type, 'subtype' => $subtype, 'is_system' => true]
             );
         }
@@ -69,7 +69,7 @@ class FinanceService
 
         $this->seedAccounts();
 
-        return FinanceAccount::where('code', $code)->firstOrFail();
+        return FinanceAccount::where('business_id', ActiveBusiness::id())->where('code', $code)->firstOrFail();
     }
 
     public function post(array $data, array $lines, bool $approve = true): JournalEntry

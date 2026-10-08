@@ -187,6 +187,7 @@
                     </select>
                     <input class="form-control" name="payments[0][amount]" type="number" step="0.01" min="0" placeholder="Amount">
                 </div>
+                <input class="form-control mb-2" name="payments[0][reference]" placeholder="Payment reference (optional)">
                 <div class="pos-expander" id="paymentOptions" hidden>
                     <div class="small text-muted fw-bold text-uppercase mb-2">Split Payments</div>
                     @for($i = 1; $i < 3; $i++)
@@ -198,9 +199,9 @@
                             </select>
                             <input class="form-control" name="payments[{{ $i }}][amount]" type="number" step="0.01" min="0" placeholder="Amount">
                         </div>
+                        <input class="form-control mb-2" name="payments[{{ $i }}][reference]" placeholder="Payment {{ $i + 1 }} reference (optional)">
                     @endfor
                     <div class="pos-grid mt-3">
-                        <input class="form-control" name="payments[0][reference]" placeholder="Payment reference">
                         <select class="form-select" name="payments[0][payment_method_id]">
                             <option value="">Shared payment method</option>
                             @foreach($paymentMethods as $method)
@@ -209,6 +210,30 @@
                         </select>
                         <select class="form-select" name="payments[0][retail_gift_card_id]">
                             <option value="">Gift card</option>
+                            @foreach($giftCards as $card)
+                                <option value="{{ $card->id }}">{{ $card->card_number }} · {{ number_format((float) $card->balance, 2) }}</option>
+                            @endforeach
+                        </select>
+                        <select class="form-select" name="payments[1][payment_method_id]">
+                            <option value="">Payment 2 method</option>
+                            @foreach($paymentMethods as $method)
+                                <option value="{{ $method->id }}">{{ $method->name }}</option>
+                            @endforeach
+                        </select>
+                        <select class="form-select" name="payments[1][retail_gift_card_id]">
+                            <option value="">Payment 2 gift card</option>
+                            @foreach($giftCards as $card)
+                                <option value="{{ $card->id }}">{{ $card->card_number }} · {{ number_format((float) $card->balance, 2) }}</option>
+                            @endforeach
+                        </select>
+                        <select class="form-select" name="payments[2][payment_method_id]">
+                            <option value="">Payment 3 method</option>
+                            @foreach($paymentMethods as $method)
+                                <option value="{{ $method->id }}">{{ $method->name }}</option>
+                            @endforeach
+                        </select>
+                        <select class="form-select" name="payments[2][retail_gift_card_id]">
+                            <option value="">Payment 3 gift card</option>
                             @foreach($giftCards as $card)
                                 <option value="{{ $card->id }}">{{ $card->card_number }} · {{ number_format((float) $card->balance, 2) }}</option>
                             @endforeach

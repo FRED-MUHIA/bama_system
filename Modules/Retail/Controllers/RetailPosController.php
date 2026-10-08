@@ -126,11 +126,11 @@ class RetailPosController extends Controller
             'items.*.discount' => ['nullable', 'numeric', 'min:0'],
             'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'payments' => ['nullable', 'array'],
-            'payments.*.payment_method_id' => ['nullable', 'exists:payment_methods,id'],
+            'payments.*.payment_method_id' => ['nullable', Rule::exists('payment_methods', 'id')->where('business_id', ActiveBusiness::id())],
             'payments.*.method_type' => ['nullable', 'string', 'max:100'],
             'payments.*.amount' => ['nullable', 'numeric', 'min:0'],
             'payments.*.reference' => ['nullable', 'string', 'max:255'],
-            'payments.*.retail_gift_card_id' => ['nullable', 'exists:retail_gift_cards,id'],
+            'payments.*.retail_gift_card_id' => ['nullable', Rule::exists('retail_gift_cards', 'id')->where('business_id', ActiveBusiness::id())],
             'payments.*.notes' => ['nullable', 'string', 'max:255'],
         ]);
 
