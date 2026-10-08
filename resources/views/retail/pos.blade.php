@@ -341,7 +341,7 @@
                     @csrf
                     <div class="modal-header"><h2 class="modal-title h5" id="voidSaleTitle{{ $order->id }}">Cancel sale {{ $order->order_number }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
                     <div class="modal-body">
-                        <p class="text-muted">An administrator must authorize this cancellation. Stock will be restored and the action audited.</p>
+                        <p class="text-muted">Any employee may submit this cancellation with the correct administrator PIN. Stock will be restored and the employee and authorization recorded.</p>
                         <label class="form-label" for="voidPin{{ $order->id }}">Admin authorization PIN</label>
                         <input class="form-control mb-3" id="voidPin{{ $order->id }}" type="password" name="authorization_pin" inputmode="numeric" pattern="[0-9]{4,12}" minlength="4" maxlength="12" autocomplete="off" required>
                         <label class="form-label" for="voidReason{{ $order->id }}">Reason for cancellation</label>

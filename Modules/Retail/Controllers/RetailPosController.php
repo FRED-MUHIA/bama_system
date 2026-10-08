@@ -183,7 +183,7 @@ class RetailPosController extends Controller
             ]);
         }
 
-        $pos->void($posOrder, $data['reason'], auth()->id());
+        $pos->void($posOrder, $data['reason'], auth()->id(), auth()->id());
 
         return back()->with('status', 'POS transaction voided and stock restored.');
     }

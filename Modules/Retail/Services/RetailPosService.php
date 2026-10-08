@@ -146,13 +146,13 @@ class RetailPosService
         return $drawer->refresh();
     }
 
-    public function void(PosOrder $order, string $reason, ?int $authorizedBy = null): PosOrder
+    public function void(PosOrder $order, string $reason, ?int $authorizedBy = null, ?int $cancelledBy = null): PosOrder
     {
         if ($order->status === 'cancelled') {
             return $order->load('retailExtension');
         }
 
-        return DB::transaction(function () use ($order, $reason, $authorizedBy) {
+        return DB::transaction(function () use ($order, $reason, $authorizedBy, $cancelledBy) {
             $order->load('items', 'payments.paymentMethod', 'retailExtension.cashDrawer');
             $paymentColumns = Schema::hasTable('pos_order_payments') ? Schema::getColumnListing('pos_order_payments') : [];
             $giftCardPayments = $order->payments->filter(fn ($payment) => str_contains(strtolower((string) ((in_array('method_type', $paymentColumns, true) ? $payment->method_type : null) ?: $payment->paymentMethod?->name)), 'gift'));
@@ -201,7 +201,9 @@ class RetailPosService
             }
 
             $this->iam->audit('retail.pos.sale.voided', $order, [
+                'authorization' => 'admin_pin',
                 'authorized_by' => $authorizedBy,
+                'cancelled_by' => $cancelledBy,
                 'reason' => $reason,
                 'payment_refund_required' => (float) $order->amount_paid > 0,
             ]);
