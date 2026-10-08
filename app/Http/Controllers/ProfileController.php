@@ -23,9 +23,10 @@ class ProfileController extends Controller
         $industry = $this->currentIndustrySlug($preferences);
         $tenant = ActiveTenant::current();
         $user = $request->user();
+        $isBusinessAdministrator = app(\App\Services\IamService::class)->isBusinessAdministrator($user);
         $employeeDetails = null;
 
-        if (! app(\App\Services\IamService::class)->isBusinessAdministrator($user)) {
+        if (! $isBusinessAdministrator) {
             $membership = null;
             if (Schema::hasTable('business_user')) {
                 $membershipQuery = DB::table('business_user')
@@ -62,7 +63,7 @@ class ProfileController extends Controller
         return view('profile.edit', [
             'user' => $user,
             'employeeDetails' => $employeeDetails,
-            'industryWorkspace' => $this->industryWorkspace($request, $navigation, $widgets, $preferences, $industry, $tenant),
+            'industryWorkspace' => $isBusinessAdministrator ? $this->industryWorkspace($request, $navigation, $widgets, $preferences, $industry, $tenant) : [],
         ]);
     }
 
@@ -75,15 +76,21 @@ class ProfileController extends Controller
             'timezone' => ['required', 'timezone'],
             'notification_preferences' => ['nullable', 'array'],
             'notification_preferences.*' => ['boolean'],
-            'industry_workspace' => ['nullable', 'array'],
-            'industry_workspace.enabled_menu_keys' => ['nullable', 'array'],
-            'industry_workspace.enabled_menu_keys.*' => ['string', 'max:255'],
-            'industry_workspace.enabled_widget_slugs' => ['nullable', 'array'],
-            'industry_workspace.enabled_widget_slugs.*' => ['string', 'max:255'],
-            'industry_workspace.component_density' => ['nullable', 'in:comfortable,compact'],
             'photo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'signature' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
+
+        $isBusinessAdministrator = app(\App\Services\IamService::class)->isBusinessAdministrator($user);
+        if ($isBusinessAdministrator) {
+            $request->validate([
+                'industry_workspace' => ['nullable', 'array'],
+                'industry_workspace.enabled_menu_keys' => ['nullable', 'array'],
+                'industry_workspace.enabled_menu_keys.*' => ['string', 'max:255'],
+                'industry_workspace.enabled_widget_slugs' => ['nullable', 'array'],
+                'industry_workspace.enabled_widget_slugs.*' => ['string', 'max:255'],
+                'industry_workspace.component_density' => ['nullable', 'in:comfortable,compact'],
+            ]);
+        }
 
         foreach (['photo', 'signature'] as $field) {
             if (! $request->hasFile($field)) continue;
@@ -96,7 +103,9 @@ class ProfileController extends Controller
         $data['notification_preferences'] = collect(['email', 'approvals', 'projects', 'security'])
             ->mapWithKeys(fn ($key) => [$key => (bool) ($notificationPreferences[$key] ?? false)])->all();
 
-        $this->saveIndustryWorkspace($request, $navigation, $widgets, $preferences);
+        if ($isBusinessAdministrator && $request->has('industry_workspace')) {
+            $this->saveIndustryWorkspace($request, $navigation, $widgets, $preferences);
+        }
 
         unset($data['photo'], $data['signature'], $data['industry_workspace']);
         $user->update($data);

@@ -96,6 +96,7 @@ class AppServiceProvider extends ServiceProvider
                     ->whereIn('notification_type', ['Message', 'Mention'])
                     ->count();
                 $headerNotifications = (clone $notificationQuery)
+                    ->where('status', 'Unread')
                     ->latest('created_at')
                     ->limit(8)
                     ->get();

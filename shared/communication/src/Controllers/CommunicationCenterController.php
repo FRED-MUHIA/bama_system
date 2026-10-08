@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Department;
 use App\Models\User;
+use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Shared\Communication\Contracts\CommunicationServiceContract;
 use Shared\Communication\Models\Announcement;
 use Shared\Communication\Models\CommunicationChannel;
+use Shared\Communication\Models\CommunicationNotification;
 use Shared\Communication\Models\MessageAttachment;
 use Shared\Communication\Models\Message;
 
@@ -24,19 +26,24 @@ class CommunicationCenterController extends Controller
         $activeChannel = $request->query('channel')
             ? $channels->firstWhere('id', (int) $request->query('channel'))
             : $channels->first();
+        $messages = $activeChannel ? Message::with('sender', 'attachments', 'reactions', 'reads', 'parent.sender')
+            ->where('communication_channel_id', $activeChannel->id)
+            ->whereDoesntHave('deletions', fn ($deletions) => $deletions->where('user_id', $request->user()->id))
+            ->latest()
+            ->limit(50)
+            ->get()
+            ->reverse()
+            ->values() : collect();
+
+        if ($activeChannel) {
+            $communication->markRead($activeChannel, $request->user(), $messages->last());
+        }
 
         return view('communication.center', [
             'metrics' => $communication->metrics($request->user()),
             'channels' => $channels,
             'activeChannel' => $activeChannel,
-            'messages' => $activeChannel ? Message::with('sender', 'attachments', 'reactions', 'reads', 'parent.sender')
-                ->where('communication_channel_id', $activeChannel->id)
-                ->whereDoesntHave('deletions', fn ($deletions) => $deletions->where('user_id', $request->user()->id))
-                ->latest()
-                ->limit(50)
-                ->get()
-                ->reverse()
-                ->values() : collect(),
+            'messages' => $messages,
             'announcements' => $communication->accessibleAnnouncements($request->user(), 10),
             'users' => $communication->employeeDirectory($request->user(), ['q' => $request->query('people')]),
             'departments' => Department::orderBy('name')->get(),
@@ -47,6 +54,26 @@ class CommunicationCenterController extends Controller
             'pinnedMessages' => $activeChannel ? $activeChannel->pins()->with('message.sender', 'pinnedBy')->latest()->limit(10)->get() : collect(),
             'sharedFiles' => $activeChannel ? MessageAttachment::with('message.sender')->whereHas('message', fn ($messages) => $messages->where('communication_channel_id', $activeChannel->id))->latest()->limit(12)->get() : collect(),
         ]);
+    }
+
+    public function openNotification(Request $request, int $notification, CommunicationServiceContract $communication)
+    {
+        $notice = CommunicationNotification::where('business_id', ActiveBusiness::id())
+            ->where('user_id', $request->user()->id)
+            ->findOrFail($notification);
+        $notice->update(['status' => 'Read', 'read_at' => now()]);
+
+        $channelId = (int) data_get($notice->payload, 'channel_id');
+        if ($channelId) {
+            $channel = $communication->accessibleChannels($request->user())->firstWhere('id', $channelId);
+            if ($channel) {
+                $communication->markRead($channel, $request->user());
+
+                return redirect()->route('communication.center', ['channel' => $channel->id]);
+            }
+        }
+
+        return redirect()->route('communication.center');
     }
 
     public function channel(Request $request, CommunicationServiceContract $communication)

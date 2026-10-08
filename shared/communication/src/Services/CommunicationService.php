@@ -416,6 +416,10 @@ class CommunicationService implements CommunicationServiceContract
             ->get()
             ->keyBy('user_id');
 
+        if (! app(\App\Services\IamService::class)->isBusinessAdministrator($user)) {
+            $memberships = $memberships->reject(fn ($membership) => in_array($membership->role_slug, ['system-administrator', 'business-administrator'], true));
+        }
+
         $query = User::query()->whereIn('id', $memberships->keys());
 
         if ($search = $filters['q'] ?? null) {
@@ -514,6 +518,7 @@ class CommunicationService implements CommunicationServiceContract
                     ->orWhere(fn ($scoped) => $scoped->where('type', 'Team')->whereIn('team_id', $teamIds))
                     ->orWhere(fn ($scoped) => $scoped->where('type', 'Industry')->where('industry', ActiveBusiness::current()?->industry));
             })
+            ->where(fn ($query) => $query->where('type', '!=', 'Role')->orWhere('role_slug', $businessRole))
             ->latest('last_message_at')
             ->get();
     }
@@ -543,14 +548,13 @@ class CommunicationService implements CommunicationServiceContract
     public function search(User $user, string $query): array
     {
         $channelIds = $this->accessibleChannels($user)->pluck('id');
-        $businessUserIds = $this->businessUserIds();
+        $directoryUserIds = $this->employeeDirectory($user, ['q' => $query])->pluck('id');
 
         return [
             'channels' => CommunicationChannel::whereIn('id', $channelIds)->where('name', 'like', '%'.$query.'%')->limit(25)->get(),
             'messages' => Message::with('sender')->whereIn('communication_channel_id', $channelIds)->where('body', 'like', '%'.$query.'%')->latest()->limit(50)->get(),
             'files' => \Shared\Communication\Models\MessageAttachment::whereHas('message', fn ($messages) => $messages->whereIn('communication_channel_id', $channelIds))->where('file_name', 'like', '%'.$query.'%')->limit(25)->get(),
-            'users' => User::whereIn('id', $businessUserIds)
-                ->where(fn ($users) => $users->where('name', 'like', '%'.$query.'%')->orWhere('email', 'like', '%'.$query.'%')->orWhere('username', 'like', '%'.$query.'%'))
+            'users' => User::whereIn('id', $directoryUserIds)
                 ->limit(25)
                 ->get(['id', 'name', 'username', 'email', 'job_title', 'presence_status']),
             'departments' => Department::where('name', 'like', '%'.$query.'%')->limit(25)->get(),
@@ -617,15 +621,12 @@ class CommunicationService implements CommunicationServiceContract
     public function metrics(User $user): array
     {
         $channels = $this->accessibleChannels($user);
-        $channelIds = $channels->pluck('id');
 
         return [
-            'Unread Messages' => CommunicationNotification::where('user_id', $user->id)->where('status', 'Unread')->count(),
+            'Unread Messages' => CommunicationNotification::where('business_id', ActiveBusiness::id())->where('user_id', $user->id)->where('status', 'Unread')->count(),
             'Recent Conversations' => $channels->whereNotNull('last_message_at')->count(),
-            'Department Activity' => Message::whereIn('communication_channel_id', $channelIds)->where('message_type', 'Message')->whereDate('created_at', today())->count(),
-            'Announcements' => Announcement::where('status', 'Published')->count(),
+            'Announcements' => $this->accessibleAnnouncements($user, 5000)->count(),
             'Pending Mentions' => Mention::where('mentioned_type', 'User')->where('mentioned_id', $user->id)->whereNull('notified_at')->count(),
-            'Team Activity' => Message::whereIn('communication_channel_id', $channelIds)->whereDate('created_at', today())->count(),
         ];
     }
 

@@ -1056,7 +1056,7 @@
                                     <div class="header-notification-list">
                                         @forelse(($headerNotifications ?? collect()) as $notification)
                                             @php
-                                                $notificationUrl = $notification->action_url ?: (Route::has('communication.center') ? route('communication.center') : '#');
+                                                $notificationUrl = Route::has('communication.notifications.open') ? route('communication.notifications.open', $notification->id) : '#';
                                                 $notificationIcon = in_array($notification->notification_type, ['Message', 'Mention'], true) ? 'bi-chat-dots' : 'bi-bell';
                                             @endphp
                                             <a class="header-notification-item" href="{{ $notificationUrl }}">
