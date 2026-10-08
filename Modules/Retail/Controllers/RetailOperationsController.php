@@ -278,6 +278,7 @@ class RetailOperationsController extends Controller
         return [
             'primary' => [
                 ['slug' => 'daily-sales', 'label' => 'Daily Sales', 'icon' => 'bi-file-earmark-bar-graph', 'tone' => 'success'],
+                ['slug' => 'canceled-sales', 'label' => 'Canceled Sales', 'icon' => 'bi-x-circle', 'tone' => 'danger'],
                 ['slug' => 'product-sales', 'label' => 'Product Sales', 'icon' => 'bi-file-earmark-bar-graph', 'tone' => 'primary'],
                 ['slug' => 'stock-levels', 'label' => 'Stock Levels', 'icon' => 'bi-file-earmark-bar-graph', 'tone' => 'success'],
                 ['slug' => 'returns', 'label' => 'Returns', 'icon' => 'bi-file-earmark-bar-graph', 'tone' => 'primary'],
@@ -313,6 +314,7 @@ class RetailOperationsController extends Controller
     private function retailReportData(string $slug, RetailEnterpriseOperationsService $enterprise): array
     {
         return match ($slug) {
+            'canceled-sales' => $this->canceledSalesReport(),
             'product-sales' => $this->productSalesReport(),
             'stock-levels' => $this->stockLevelsReport(),
             'returns' => $this->returnsReport(),
@@ -363,6 +365,51 @@ class RetailOperationsController extends Controller
             ['label' => 'Sales', 'value' => $this->money($orders->sum('total'))],
             ['label' => 'Paid', 'value' => $this->money($orders->sum('amount_paid'))],
         ]);
+    }
+
+    private function canceledSalesReport(): array
+    {
+        if (! Schema::hasTable('admin_audit_logs')) {
+            return $this->reportPayload('Canceled Sales', 'Canceled POS transactions with their reason, authorizer, product lines, and amounts.', ['date_time' => 'Date & Time', 'order' => 'Sale', 'seller' => 'Canceled By', 'reason' => 'Reason', 'products' => 'Products', 'amount' => 'Amount'], collect(), [], 'Cancellation audit data is unavailable until administration migrations are run.');
+        }
+
+        $logs = AdminAuditLog::query()
+            ->where('business_id', ActiveBusiness::id())
+            ->where('event', 'retail.pos.sale.voided')
+            ->latest('created_at')
+            ->limit(500)
+            ->get();
+        $orders = PosOrder::with('items.product', 'retailExtension.cashier')
+            ->where('business_id', ActiveBusiness::id())
+            ->where('status', 'cancelled')
+            ->whereIn('id', $logs->pluck('subject_id')->filter())
+            ->get()
+            ->keyBy('id');
+
+        $rows = $logs->map(function ($log) use ($orders) {
+            $order = $orders->get($log->subject_id);
+            if (! $order) return null;
+
+            $products = $order->items->map(fn ($item) => trim(($item->product?->name ?: $item->title ?: $item->description).' × '.rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.')))->implode('; ');
+            $authorizer = data_get($log->old_values, 'authorized_by');
+            $reason = data_get($log->old_values, 'reason') ?: 'Reason not recorded';
+
+            return [
+                'date_time' => optional($log->created_at)->format('d M Y H:i:s') ?: '-',
+                'order' => $order->order_number,
+                'seller' => $authorizer ? (\App\Models\User::find($authorizer)?->name ?: 'User #'.$authorizer) : ($order->retailExtension?->cashier?->name ?: 'Unknown'),
+                'reason' => $reason,
+                'products' => $products ?: 'No products recorded',
+                'amount' => $this->money($order->total),
+            ];
+        })->filter()->values();
+
+        return $this->reportPayload('Canceled Sales', 'Canceled POS transactions with cancellation time, authorizer, reason, products, and order amount.', [
+            'date_time' => 'Date & Time', 'order' => 'Sale', 'seller' => 'Canceled By', 'reason' => 'Reason', 'products' => 'Products', 'amount' => 'Amount',
+        ], $rows, [
+            ['label' => 'Canceled Sales', 'value' => number_format($rows->count())],
+            ['label' => 'Canceled Amount', 'value' => $this->money($orders->sum('total'))],
+        ], 'No canceled POS sales found.');
     }
 
     private function productSalesReport(): array

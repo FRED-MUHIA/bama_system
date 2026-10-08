@@ -7,6 +7,7 @@
     $enterprise = $enterprise ?? null;
     $primaryReports = $primaryReports ?? collect([
         ['slug' => 'daily-sales', 'label' => 'Daily Sales', 'icon' => 'bi-graph-up-arrow'],
+        ['slug' => 'canceled-sales', 'label' => 'Canceled Sales', 'icon' => 'bi-x-circle'],
         ['slug' => 'product-sales', 'label' => 'Product Sales', 'icon' => 'bi-bar-chart'],
         ['slug' => 'stock-levels', 'label' => 'Stock Levels', 'icon' => 'bi-box-seam'],
         ['slug' => 'returns', 'label' => 'Returns', 'icon' => 'bi-arrow-counterclockwise'],
