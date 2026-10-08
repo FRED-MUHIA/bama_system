@@ -15,8 +15,12 @@
             <span class="badge text-bg-light">{{ $product->productTypeLabel() }}</span>
         </div>
 
-        <form method="post" action="{{ route('products.variants.generate', $product) }}" class="row g-2">
+        <form method="post" action="{{ route('products.variants.generate', $product) }}" class="row g-2 align-items-end">
             @csrf
+            <div class="col-md-4">
+                <label class="form-label">Product and stock edit PIN</label>
+                <input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required>
+            </div>
             @foreach($variantAttributes as $attribute)
                 <div class="col-md-4">
                     <label class="form-label">{{ $attribute->name }}</label>
@@ -35,8 +39,8 @@
                 <label class="form-label">Limit</label>
                 <input class="form-control" type="number" min="1" max="1000" name="max_variants" value="250">
             </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button class="btn btn-success btn-sm w-100">Generate</button>
+            <div class="col-md-2">
+                <button class="btn btn-success btn-sm w-100" type="submit">Generate variants</button>
             </div>
         </form>
 

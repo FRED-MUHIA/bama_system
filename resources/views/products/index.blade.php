@@ -65,9 +65,9 @@
                             <form method="post" action="{{ route('products.update',$item) }}" enctype="multipart/form-data" class="row g-2">@csrf @method('PUT')
                                 <div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>
                                 @include('products.partials.fields', ['product' => $item])
-                                @include('products.partials.variant-generator', ['product' => $item])
                                 <div class="col-12"><button class="btn btn-warning btn-sm w-100">Update Product</button></div>
                             </form>
+                            @include('products.partials.variant-generator', ['product' => $item])
                         </div>
                     </div>
                 @empty
@@ -110,9 +110,9 @@
                         <form method="post" action="{{ route('products.update',$item) }}" enctype="multipart/form-data" class="row g-2">@csrf @method('PUT')
                             <div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>
                             @include('products.partials.fields', ['product' => $item])
-                            @include('products.partials.variant-generator', ['product' => $item])
                             <div class="col-12"><button class="btn btn-warning btn-sm">Update Product</button></div>
                         </form>
+                        @include('products.partials.variant-generator', ['product' => $item])
                     </td></tr>
                 @empty <tr><td colspan="9" class="text-muted">No products yet.</td></tr>@endforelse
                 </tbody>

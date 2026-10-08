@@ -730,9 +730,9 @@
                                 <form method="post" action="{{ route('products.update', $record) }}" enctype="multipart/form-data" class="row g-2">@csrf @method('PUT')
                                     <div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>
                                     @include('products.partials.fields', ['product' => $record])
-                                    @include('products.partials.variant-generator', ['product' => $record])
                                     <div class="col-12"><button class="btn btn-warning btn-sm">Update Product</button></div>
                                 </form>
+                                @include('products.partials.variant-generator', ['product' => $record])
                             </div>
                         </td>
                     </tr>
