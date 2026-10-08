@@ -5,7 +5,7 @@
 @include('retail.partials.nav')
 
 <style>
-    .pos-shell{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,.7fr);gap:10px}
+    .pos-shell{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,.7fr);gap:10px;align-items:start}
     .pos-band{background:#fff;border:1px solid #d9dee8;border-radius:7px;padding:10px}
     .pos-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
     .pos-kpi{border:1px solid #e1e5ee;border-radius:8px;padding:12px;background:#fbfcfd}
@@ -15,8 +15,9 @@
     .pos-scan-grid{display:grid;grid-template-columns:minmax(220px,1.35fr) minmax(160px,.85fr) auto auto auto;gap:10px;align-items:center}
     .pos-sell-grid{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(150px,.9fr) minmax(150px,.9fr);gap:10px}
     .pos-line-item{border:1px solid #edf0f5;border-radius:7px;padding:7px;background:#fbfcfd}
-    .pos-line{display:grid;grid-template-columns:minmax(220px,2fr) 88px 120px 120px;gap:8px;align-items:center}
+    .pos-line{display:grid;grid-template-columns:minmax(220px,2fr) 88px 120px 120px auto;gap:8px;align-items:center}
     .pos-line-total{min-height:38px;display:flex;align-items:center;justify-content:flex-end;border:1px solid #e1e5ee;border-radius:6px;padding:0 .75rem;background:#fff;color:#0f766e;font-weight:800}
+    .pos-line-remove[hidden]{display:none!important}
     .pos-pay{display:grid;grid-template-columns:minmax(150px,.7fr) minmax(160px,1fr);gap:8px;align-items:center}
     .pos-expander[hidden]{display:none!important}
     .pos-actions{display:flex;flex-wrap:wrap;gap:8px}
@@ -27,6 +28,12 @@
     .pos-summary-tile span{display:block;color:#667085;font-size:.68rem;font-weight:800;text-transform:uppercase}
     .pos-summary-tile strong{display:block;color:#0f766e;font-size:1.05rem}
     .pos-search-box{position:relative}
+    .pos-shell>.d-grid,.pos-shell aside{align-content:start;align-self:start;min-height:0}
+    .pos-shell>.d-grid>form{align-content:start;align-self:start;min-height:0}
+    .pos-shell>.d-grid>form>.pos-band{align-self:start;min-height:0}
+    .pos-shell>.d-grid>form>.pos-band:first-child{min-height:0;height:auto}
+    .pos-shell .pos-line-item{height:auto;min-height:0}
+    .pos-shell .pos-expander:not([hidden]){height:auto;min-height:0}
     .pos-suggestions{position:absolute;z-index:20;top:calc(100% + 4px);left:0;right:0;display:none;max-height:360px;overflow:auto;border:1px solid #d9dee8;border-radius:8px;background:#fff;box-shadow:0 12px 28px rgba(15,23,42,.12)}
     .pos-suggestion{width:100%;border:0;border-bottom:1px solid #edf0f5;background:#fff;padding:10px 12px;text-align:left;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
     .pos-suggestion:hover,.pos-suggestion:focus{background:#eef8f4;outline:0}
@@ -136,40 +143,32 @@
             <div class="pos-band">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h2 class="h5 mb-0">Cart</h2>
-                    <button class="btn btn-sm btn-outline-dark" type="button" data-pos-toggle="extraCartLines" aria-expanded="false" aria-controls="extraCartLines">
-                        <i class="bi bi-plus-lg me-1"></i>Add Item
-                    </button>
                 </div>
-                @for($i = 0; $i < 3; $i++)
-                    @if($i === 1)
-                        <div class="pos-expander" id="extraCartLines" hidden>
-                    @endif
+                <div id="cartRows">
                     @php
-                        $selectedProduct = $i === 0 ? $scanProduct : null;
+                        $selectedProduct = $scanProduct;
                         $selectedVariant = $selectedProduct?->variantProfile;
                         $selectedTaxRate = is_numeric($selectedProduct?->retailProfile?->tax_class) ? $selectedProduct?->retailProfile?->tax_class : '';
                     @endphp
-                    <div class="pos-line-item mb-2">
+                    <div class="pos-line-item mb-2" data-cart-row="0">
                         <div class="pos-line">
-                            <select class="form-select" name="items[{{ $i }}][product_id]" data-cart-product="{{ $i }}">
+                            <select class="form-select" name="items[0][product_id]" data-cart-product="0">
                                 <option value="">Select product</option>
                                 @foreach($products as $product)
                                     <option value="{{ $product->id }}" @selected($selectedProduct?->id === $product->id)>{{ $product->name }} · {{ $product->sku }}</option>
                                 @endforeach
                             </select>
-                            <input class="form-control" name="items[{{ $i }}][quantity]" data-cart-quantity="{{ $i }}" type="number" step="0.001" min="0.001" value="{{ $i === 0 ? 1 : '' }}" placeholder="Qty">
-                            <input class="form-control" name="items[{{ $i }}][unit_price]" data-cart-price="{{ $i }}" type="number" step="0.01" min="0" value="{{ $selectedProduct ? (float) $selectedProduct->price : '' }}" placeholder="Price">
-                            <div class="pos-line-total" data-cart-line-total="{{ $i }}">0.00</div>
+                            <input class="form-control" name="items[0][quantity]" data-cart-quantity="0" type="number" step="0.001" min="0.001" value="{{ $selectedProduct ? 1 : '' }}" placeholder="Qty">
+                            <input class="form-control" name="items[0][unit_price]" data-cart-price="0" type="number" step="0.01" min="0" value="{{ $selectedProduct ? (float) $selectedProduct->price : '' }}" placeholder="Price">
+                            <div class="pos-line-total" data-cart-line-total="0">0.00</div>
+                            <button class="btn btn-sm btn-outline-danger pos-line-remove" type="button" data-cart-remove="0" aria-label="Remove item" hidden><i class="bi bi-x-lg"></i></button>
                         </div>
-                        <input type="hidden" name="items[{{ $i }}][retail_product_variant_id]" data-cart-variant="{{ $i }}" value="{{ $selectedVariant?->id }}">
-                        <input type="hidden" name="items[{{ $i }}][description]" data-cart-description="{{ $i }}" value="{{ $selectedProduct?->name }}">
-                        <input type="hidden" name="items[{{ $i }}][discount]" data-cart-discount="{{ $i }}">
-                        <input type="hidden" name="items[{{ $i }}][tax_rate]" data-cart-tax="{{ $i }}" value="{{ $selectedTaxRate }}">
+                        <input type="hidden" name="items[0][retail_product_variant_id]" data-cart-variant="0" value="{{ $selectedVariant?->id }}">
+                        <input type="hidden" name="items[0][description]" data-cart-description="0" value="{{ $selectedProduct?->name }}">
+                        <input type="hidden" name="items[0][discount]" data-cart-discount="0">
+                        <input type="hidden" name="items[0][tax_rate]" data-cart-tax="0" value="{{ $selectedTaxRate }}">
                     </div>
-                    @if($i === 2)
-                        </div>
-                    @endif
-                @endfor
+                </div>
             </div>
 
             <div class="pos-band">
@@ -460,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const identifierType = document.getElementById('posIdentifierType');
     const saleButton = document.getElementById('posAddSaleButton');
     const saleFeedback = document.getElementById('posSaleFeedback');
-    const extraCartLines = document.getElementById('extraCartLines');
+    const cartRowsContainer = document.getElementById('cartRows');
 
     if (!search || !suggestions || !identifier || !identifierType) return;
 
@@ -554,10 +553,69 @@ document.addEventListener('DOMContentLoaded', () => {
         return Array.from(document.querySelectorAll('[data-cart-product]')).map((select) => select.dataset.cartProduct);
     }
 
-    function revealCartRow(row) {
-        if (Number(row) <= 0 || !extraCartLines) return;
+    function addCartRow() {
+        const row = cartRows().reduce((highest, current) => Math.max(highest, Number(current)), -1) + 1;
+        const item = document.createElement('div');
+        item.className = 'pos-line-item mb-2';
+        item.dataset.cartRow = row;
+        const line = document.createElement('div');
+        line.className = 'pos-line';
+        const select = document.createElement('select');
+        select.className = 'form-select';
+        select.name = `items[${row}][product_id]`;
+        select.dataset.cartProduct = row;
+        const placeholder = new Option('Select product', '');
+        select.add(placeholder);
+        products.forEach((product) => select.add(new Option(`${product.name} · ${product.sku || ''}`, String(product.id))));
+        line.appendChild(select);
 
-        showPanel(extraCartLines);
+        const addInput = (type, key, extra = {}) => {
+            const input = document.createElement('input');
+            input.className = 'form-control';
+            input.name = `items[${row}][${key}]`;
+            input.type = type;
+            Object.entries(extra).forEach(([name, value]) => input.setAttribute(name, value));
+            input.dataset[`cart${key === 'quantity' ? 'Quantity' : key === 'unit_price' ? 'Price' : key === 'retail_product_variant_id' ? 'Variant' : key === 'description' ? 'Description' : key === 'discount' ? 'Discount' : 'Tax'}`] = row;
+            return input;
+        };
+        line.appendChild(addInput('number', 'quantity', { step: '0.001', min: '0.001', placeholder: 'Qty' }));
+        line.appendChild(addInput('number', 'unit_price', { step: '0.01', min: '0', placeholder: 'Price' }));
+        const total = document.createElement('div');
+        total.className = 'pos-line-total';
+        total.dataset.cartLineTotal = row;
+        total.textContent = money.format(0);
+        line.appendChild(total);
+        const remove = document.createElement('button');
+        remove.className = 'btn btn-sm btn-outline-danger pos-line-remove';
+        remove.type = 'button';
+        remove.dataset.cartRemove = row;
+        remove.setAttribute('aria-label', 'Remove item');
+        remove.innerHTML = '<i class="bi bi-x-lg"></i>';
+        line.appendChild(remove);
+        item.appendChild(line);
+        ['retail_product_variant_id', 'description', 'discount', 'tax_rate'].forEach((key) => {
+            const input = addInput('hidden', key);
+            item.appendChild(input);
+        });
+        cartRowsContainer.appendChild(item);
+        bindCartRow(item);
+        updateCartRemoveButtons();
+        return String(row);
+    }
+
+    function updateCartRemoveButtons() {
+        const rows = cartRows();
+        rows.forEach((row) => {
+            const button = document.querySelector(`[data-cart-remove="${row}"]`);
+            if (button) button.hidden = rows.length === 1;
+        });
+    }
+
+    function ensureTrailingEmptyRow() {
+        const rows = cartRows();
+        const lastRow = rows.at(-1);
+        if (lastRow !== undefined && !cartRowIsEmpty(lastRow)) addCartRow();
+        updateCartRemoveButtons();
     }
 
     function cartRowHasProduct(row, product) {
@@ -620,20 +678,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const quantity = document.querySelector(`[data-cart-quantity="${existingRow}"]`);
             quantity.value = String((Number.parseFloat(quantity.value || '0') || 0) + 1);
             updateLineTotal(existingRow);
-            revealCartRow(existingRow);
             setSaleFeedback(`Added another ${product.name}.`);
             return true;
         }
 
-        const emptyRow = rows.find((row) => cartRowIsEmpty(row));
+        const emptyRow = rows.find((row) => cartRowIsEmpty(row)) ?? addCartRow();
 
-        if (emptyRow === undefined) {
-            setSaleFeedback('All cart rows are full.', 'text-danger');
-            return false;
-        }
-
-        revealCartRow(emptyRow);
         applyProductToRow(product, emptyRow);
+        ensureTrailingEmptyRow();
         setSaleFeedback(`${product.name} added to cart.`);
         return true;
     }
@@ -790,18 +842,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.querySelectorAll('[data-cart-product]').forEach((select) => {
+    function bindCartRow(rowElement) {
+        const select = rowElement.querySelector('[data-cart-product]');
+        const row = select?.dataset.cartProduct;
+        if (!select || row === undefined) return;
+
         select.addEventListener('change', () => {
             const product = productsById.get(select.value);
-            if (product) applyProductToRow(product, select.dataset.cartProduct);
+            if (product) {
+                applyProductToRow(product, row);
+                ensureTrailingEmptyRow();
+            } else {
+                document.querySelector(`[data-cart-quantity="${row}"]`).value = '';
+                document.querySelector(`[data-cart-price="${row}"]`).value = '';
+                document.querySelector(`[data-cart-variant="${row}"]`).value = '';
+                document.querySelector(`[data-cart-description="${row}"]`).value = '';
+                document.querySelector(`[data-cart-tax="${row}"]`).value = '';
+                updateLineTotal(row);
+            }
         });
-    });
 
-    document.querySelectorAll('[data-cart-quantity], [data-cart-price], [data-cart-discount], [data-cart-tax]').forEach((input) => {
-        input.addEventListener('input', () => updateLineTotal(input.dataset.cartQuantity || input.dataset.cartPrice || input.dataset.cartDiscount || input.dataset.cartTax));
-    });
+        rowElement.querySelectorAll('[data-cart-quantity], [data-cart-price], [data-cart-discount], [data-cart-tax]').forEach((input) => {
+            input.addEventListener('input', () => updateLineTotal(row));
+        });
 
+        rowElement.querySelector(`[data-cart-remove="${row}"]`)?.addEventListener('click', () => {
+            if (cartRows().length === 1) return;
+            rowElement.remove();
+            updateCartRemoveButtons();
+        });
+    }
+
+    document.querySelectorAll('[data-cart-row]').forEach(bindCartRow);
     document.querySelectorAll('[data-cart-line-total]').forEach((total) => updateLineTotal(total.dataset.cartLineTotal));
+    updateCartRemoveButtons();
+    ensureTrailingEmptyRow();
 });
 </script>
 @endsection
