@@ -673,6 +673,25 @@ class IamService
         return in_array($permission, $this->permissions($user), true);
     }
 
+    public function isBusinessAdministrator(User $user): bool
+    {
+        if (in_array($user->role, ['admin', 'super_admin'], true)) {
+            return true;
+        }
+
+        if (! $this->ready() || ! SchemaCache::hasTable('business_user') || ! SchemaCache::hasTable('iam_roles')) {
+            return false;
+        }
+
+        return DB::table('business_user')
+            ->join('iam_roles', 'iam_roles.id', '=', 'business_user.iam_role_id')
+            ->where('business_user.business_id', ActiveBusiness::id())
+            ->where('business_user.user_id', $user->id)
+            ->where('business_user.status', 'Active')
+            ->whereIn('iam_roles.slug', ['system-administrator', 'business-administrator'])
+            ->exists();
+    }
+
     public function audit(string $event, $subject = null, array $old = []): void
     {
         if (! SchemaCache::hasTable('admin_audit_logs')) {

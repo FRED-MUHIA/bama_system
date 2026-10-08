@@ -1308,7 +1308,7 @@
         ];
 
         $utilityOverflowItems = [
-            ['label' => 'Settings', 'route' => 'settings.edit', 'match' => 'settings.*', 'icon' => 'bi-gear'],
+            ['label' => 'Settings', 'route' => 'settings.edit', 'match' => 'settings.*', 'icon' => 'bi-gear', 'condition' => app(\App\Services\IamService::class)->isBusinessAdministrator($currentUser)],
             ['label' => 'My Profile', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'bi-person'],
             ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
             ['label' => 'Administration', 'route' => 'administration.index', 'match' => 'administration.*', 'icon' => 'bi-shield-lock', 'condition' => \App\Support\SchemaCache::hasTable('iam_roles') && $currentUser->hasPermission('administration.view')],

@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnforceHttps;
 use App\Http\Middleware\EnsureAdminAccess;
+use App\Http\Middleware\EnsureBusinessAdministrator;
 use App\Http\Middleware\EnsureModuleEnabled;
 use App\Http\Middleware\EnsureSubscriptionActive;
 use App\Http\Middleware\EnsureSuperAdmin;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => EnsureAdminAccess::class,
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
             'permission' => RequirePermission::class,
+            'business.admin' => EnsureBusinessAdministrator::class,
             'super_admin' => EnsureSuperAdmin::class,
             'tenant.context' => IdentifyTenant::class,
             'module.enabled' => EnsureModuleEnabled::class,
