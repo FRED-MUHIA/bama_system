@@ -571,6 +571,45 @@
             <div class="col-md-1"><button class="btn btn-success w-100" aria-label="Add store"><i class="bi bi-save"></i></button></div>
         </form>
     </div>
+    <div class="card p-0">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Record</th><th>Status</th><th>Details</th><th>Updated</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                    @forelse($records as $record)
+                        <tr>
+                            <td class="p-0">
+                                <form id="branchUpdate{{ $record->id }}" method="POST" action="{{ route('retail.branches.update', $record) }}" class="row g-2 align-items-center m-0 p-2">
+                                    @csrf @method('PUT')
+                                    <div class="d-grid gap-2 p-2">
+                                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                                            <input class="form-control flex-grow-1" style="min-width:150px" name="name" value="{{ $record->name }}" aria-label="Store name" required>
+                                            <label class="d-flex align-items-center gap-2 px-2 text-nowrap"><input class="form-check-input m-0" type="checkbox" name="is_active" value="1" id="branchActive{{ $record->id }}" @checked($record->is_active)>Active</label>
+                                        </div>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <input class="form-control" style="max-width:180px" name="code" value="{{ $record->code }}" placeholder="Code" aria-label="Store code">
+                                            <input class="form-control flex-grow-1" name="address" value="{{ $record->address }}" placeholder="Address" aria-label="Store address">
+                                            <span class="text-muted align-self-center text-nowrap">Updated {{ $record->updated_at?->format('d M Y') }}</span>
+                                        </div>
+                                    </div>
+                                </form>
+                            </td>
+                            <td class="text-end text-nowrap" style="min-width:125px">
+                                <button class="btn btn-sm btn-success" type="submit" form="branchUpdate{{ $record->id }}">Save</button>
+                                <form method="POST" action="{{ route('retail.branches.destroy', $record) }}" class="d-inline" onsubmit="return confirm('Delete this store?')">
+                                    @csrf @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i><span class="visually-hidden">Delete {{ $record->name }}</span></button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="5" class="text-center text-muted py-4">No stores have been added.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if(method_exists($records, 'links'))<div class="p-3">{{ $records->links() }}</div>@endif
+    </div>
 @elseif($section === 'ecommerce')
     <div class="card p-3 mb-3">
         <form method="POST" action="{{ route('retail.ecommerce.store') }}" class="row g-2 align-items-end">

@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\PaymentMethod;
 use App\Models\PosOrder;
 use App\Models\Product;
+use App\Models\SecuritySetting;
 use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -159,7 +160,20 @@ class RetailPosController extends Controller
 
     public function void(Request $request, PosOrder $posOrder, RetailPosService $pos)
     {
-        $pos->void($posOrder, $request->input('reason'));
+        abort_unless((int) $posOrder->business_id === (int) ActiveBusiness::id(), 404);
+        $data = $request->validate([
+            'authorization_pin' => ['required', 'digits_between:4,12'],
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+        $setting = SecuritySetting::where('business_id', ActiveBusiness::id())->first();
+
+        if (! $setting?->verifiesPosVoidPin($data['authorization_pin'])) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'authorization_pin' => 'The authorization PIN is incorrect or has not been configured. Contact an administrator.',
+            ]);
+        }
+
+        $pos->void($posOrder, $data['reason'], auth()->id());
 
         return back()->with('status', 'POS transaction voided and stock restored.');
     }

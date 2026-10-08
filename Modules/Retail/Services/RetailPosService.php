@@ -140,13 +140,13 @@ class RetailPosService
         return $drawer->refresh();
     }
 
-    public function void(PosOrder $order, ?string $reason = null): PosOrder
+    public function void(PosOrder $order, string $reason, ?int $authorizedBy = null): PosOrder
     {
         if ($order->status === 'cancelled') {
             return $order->load('retailExtension');
         }
 
-        return DB::transaction(function () use ($order, $reason) {
+        return DB::transaction(function () use ($order, $reason, $authorizedBy) {
             $order->load('items', 'payments.paymentMethod', 'retailExtension.cashDrawer');
             $this->stock->syncSaleItems($order->items, collect(), $order, 'Retail POS void '.$order->order_number);
 
@@ -169,7 +169,11 @@ class RetailPosService
                 }
             }
 
-            $this->iam->audit('retail.pos.sale.voided', $order);
+            $this->iam->audit('retail.pos.sale.voided', $order, [
+                'authorized_by' => $authorizedBy,
+                'reason' => $reason,
+                'payment_refund_required' => (float) $order->amount_paid > 0,
+            ]);
 
             return $order->refresh()->load('retailExtension', 'items', 'payments');
         });

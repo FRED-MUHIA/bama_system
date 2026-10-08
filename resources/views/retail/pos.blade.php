@@ -36,6 +36,7 @@
     .pos-shell .pos-expander:not([hidden]){height:auto;min-height:0}
     .pos-suggestions{position:absolute;z-index:20;top:calc(100% + 4px);left:0;right:0;display:none;max-height:360px;overflow:auto;border:1px solid #d9dee8;border-radius:8px;background:#fff;box-shadow:0 12px 28px rgba(15,23,42,.12)}
     .pos-suggestion{width:100%;border:0;border-bottom:1px solid #edf0f5;background:#fff;padding:10px 12px;text-align:left;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .pos-suggestion-image{width:56px;height:56px;flex:0 0 56px;border:1px solid #e1e5ee;border-radius:7px;object-fit:cover;background:#f8fafc}
     .pos-suggestion:hover,.pos-suggestion:focus{background:#eef8f4;outline:0}
     .pos-suggestion strong{display:block;color:#111827}
     .pos-suggestion-main{min-width:0}
@@ -282,10 +283,7 @@
                         <div class="fw-bold">{{ number_format((float) $order->amount_paid, 2) }}</div>
                         <a class="small" href="{{ route('retail.pos.receipt', $order) }}">Receipt</a>
                         @if($order->status !== 'cancelled')
-                            <form method="POST" action="{{ route('retail.pos.orders.void', $order) }}">
-                                @csrf
-                                <button class="btn btn-sm btn-link text-danger p-0">Void</button>
-                            </form>
+                            <button class="btn btn-sm btn-link text-danger p-0" type="button" data-bs-toggle="modal" data-bs-target="#voidSale{{ $order->id }}">Cancel sale</button>
                         @else
                             <span class="small text-muted">Voided</span>
                         @endif
@@ -309,6 +307,26 @@
         </div>
     </aside>
 </div>
+@foreach($recentOrders->where('status', '!=', 'cancelled') as $order)
+    <div class="modal fade" id="voidSale{{ $order->id }}" tabindex="-1" aria-labelledby="voidSaleTitle{{ $order->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('retail.pos.orders.void', $order) }}">
+                    @csrf
+                    <div class="modal-header"><h2 class="modal-title h5" id="voidSaleTitle{{ $order->id }}">Cancel sale {{ $order->order_number }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                    <div class="modal-body">
+                        <p class="text-muted">An administrator must authorize this cancellation. Stock will be restored and the action audited.</p>
+                        <label class="form-label" for="voidPin{{ $order->id }}">Admin authorization PIN</label>
+                        <input class="form-control mb-3" id="voidPin{{ $order->id }}" type="password" name="authorization_pin" inputmode="numeric" pattern="[0-9]{4,12}" minlength="4" maxlength="12" autocomplete="off" required>
+                        <label class="form-label" for="voidReason{{ $order->id }}">Reason for cancellation</label>
+                        <textarea class="form-control" id="voidReason{{ $order->id }}" name="reason" rows="2" maxlength="500" required></textarea>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Keep sale</button><button class="btn btn-danger">Authorize cancellation</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endforeach
 <style>
     .pos-shell>.d-grid{gap:.5rem!important}
     .pos-shell aside{gap:.5rem!important}
@@ -395,6 +413,7 @@
 
             $baseProduct = [
                 'id' => $product->id,
+                'image' => $product->main_image_path ? \\App\\Support\\PublicUpload::url($product->main_image_path) : (filled(data_get($product->retailProfile?->images, '0')) ? \\App\\Support\\PublicUpload::url(data_get($product->retailProfile?->images, '0')) : null),
                 'variant_id' => null,
                 'variant_name' => null,
                 'name' => $product->name,
@@ -422,6 +441,7 @@
 
                     return [
                         'id' => $variantProduct?->id ?: $variant->product_id,
+                        'image' => ($variantProduct?->main_image_path ?: $product->main_image_path) ? \\App\\Support\\PublicUpload::url($variantProduct?->main_image_path ?: $product->main_image_path) : (filled(data_get($variantProduct?->retailProfile?->images ?? $product->retailProfile?->images, '0')) ? \\App\\Support\\PublicUpload::url(data_get($variantProduct?->retailProfile?->images ?? $product->retailProfile?->images, '0')) : null),
                         'parent_id' => $product->id,
                         'variant_id' => $variant->id,
                         'variant_name' => $variantName,
@@ -743,6 +763,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const variantText = variants.slice(0, 2).map((variant) => variant.name || variant.sku || variant.barcode).filter(Boolean).join(' / ');
 
             details.className = 'pos-suggestion-main';
+            if (product.image) {
+                const image = document.createElement('img');
+                image.className = 'pos-suggestion-image';
+                image.src = product.image;
+                image.alt = '';
+                image.loading = 'lazy';
+                image.onerror = () => image.remove();
+                button.appendChild(image);
+            }
             name.textContent = product.name;
             meta.className = 'pos-suggestion-meta';
             meta.textContent = [

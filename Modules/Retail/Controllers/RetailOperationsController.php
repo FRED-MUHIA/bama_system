@@ -114,7 +114,7 @@ class RetailOperationsController extends Controller
 
     public function branches()
     {
-        return view('retail.module', ['title' => 'Stores', 'section' => 'branches', 'records' => Branch::latest()->paginate(20)]);
+        return view('retail.module', ['title' => 'Stores', 'section' => 'branches', 'records' => Branch::where('business_id', ActiveBusiness::id())->latest()->paginate(20)]);
     }
 
     public function storeBranch(Request $request)
@@ -127,6 +127,29 @@ class RetailOperationsController extends Controller
         ]) + ['is_active' => $request->boolean('is_active', true)]);
 
         return back()->with('status', 'Retail branch saved.');
+    }
+
+    public function updateBranch(Request $request, Branch $branch)
+    {
+        abort_unless((int) $branch->business_id === (int) ActiveBusiness::id(), 404);
+
+        $branch->update($request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:50', Rule::unique('branches', 'code')->where('business_id', ActiveBusiness::id())->ignore($branch->id)],
+            'address' => ['nullable', 'string'],
+            'is_active' => ['nullable', 'boolean'],
+        ]) + ['is_active' => $request->boolean('is_active')]);
+
+        return back()->with('status', 'Store updated.');
+    }
+
+    public function destroyBranch(Branch $branch)
+    {
+        abort_unless((int) $branch->business_id === (int) ActiveBusiness::id(), 404);
+
+        $branch->delete();
+
+        return back()->with('status', 'Store deleted.');
     }
 
     public function ecommerce()

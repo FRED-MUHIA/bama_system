@@ -521,6 +521,11 @@
                 @foreach(['max_failed_attempts','lockout_minutes','session_timeout_minutes','invitation_expiry_hours','password_expiry_days','password_history_count'] as $field)
                     <div class="col-md-4"><label>{{ $field }}</label><input class="form-control" type="number" name="{{ $field }}" value="{{ $settings->$field }}"></div>
                 @endforeach
+                <div class="col-md-4">
+                    <label class="form-label" for="posVoidPin">POS cancellation authorization PIN</label>
+                    <input class="form-control" id="posVoidPin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" minlength="4" maxlength="12" name="pos_void_pin" autocomplete="new-password" placeholder="{{ $settings->getRawOriginal('pos_void_pin') ? 'Configured · enter a new PIN to change' : 'Set a 4–12 digit PIN' }}">
+                    <div class="form-text">Leave blank to keep the current PIN. Only administrators with security settings access can change it.</div>
+                </div>
                 <div class="col-12"><button class="btn btn-warning">Save Policy</button></div>
             </form>
         </div>

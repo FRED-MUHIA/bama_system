@@ -437,6 +437,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/suppliers/{supplier}/contracts', [RetailOperationsController::class, 'storeSupplierContract'])->middleware('permission:retail.suppliers.manage')->name('suppliers.contracts.store');
             Route::get('/branches', [RetailOperationsController::class, 'branches'])->middleware('permission:retail.branches.view')->name('branches.index');
             Route::post('/branches', [RetailOperationsController::class, 'storeBranch'])->middleware('permission:retail.branches.manage')->name('branches.store');
+            Route::put('/branches/{branch}', [RetailOperationsController::class, 'updateBranch'])->middleware('permission:retail.branches.manage')->name('branches.update');
+            Route::delete('/branches/{branch}', [RetailOperationsController::class, 'destroyBranch'])->middleware('permission:retail.branches.manage')->name('branches.destroy');
             Route::get('/ecommerce', [RetailOperationsController::class, 'ecommerce'])->middleware('permission:retail.ecommerce.view')->name('ecommerce.index');
             Route::post('/ecommerce', [RetailOperationsController::class, 'storeEcommerce'])->middleware('permission:retail.ecommerce.manage')->name('ecommerce.store');
             Route::post('/ecommerce/{integration}/sync', [RetailOperationsController::class, 'syncEcommerce'])->middleware('permission:retail.ecommerce.manage')->name('ecommerce.sync');
