@@ -99,7 +99,11 @@
                     </thead>
                     <tbody>
                         @foreach($reportRows as $row)
-                            <tr>
+                            @php
+                                $isTodaySalesRow = ($selectedReport ?? '') === 'daily-sales'
+                                    && ($row['date'] ?? null) === now()->toDateString();
+                            @endphp
+                            <tr @class(['table-success' => $isTodaySalesRow])>
                                 @foreach($reportColumns as $key => $label)
                                     <td>{{ $row[$key] ?? '-' }}</td>
                                 @endforeach
