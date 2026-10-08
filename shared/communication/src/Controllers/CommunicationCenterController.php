@@ -37,6 +37,8 @@ class CommunicationCenterController extends Controller
 
         if ($activeChannel) {
             $communication->markRead($activeChannel, $request->user(), $messages->last());
+            $messages->load('reads');
+            $activeChannel->setAttribute('unread_count', 0);
         }
 
         return view('communication.center', [

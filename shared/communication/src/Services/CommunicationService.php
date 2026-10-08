@@ -219,13 +219,26 @@ class CommunicationService implements CommunicationServiceContract
                 ]);
 
             if ($message && Schema::hasTable('message_reads')) {
-                MessageRead::updateOrCreate(
-                    ['message_id' => $message->id, 'user_id' => $user->id],
-                    [
+                $readAt = now();
+                $reads = $channel->messages()
+                    ->where('sender_id', '!=', $user->id)
+                    ->where('id', '<=', $message->id)
+                    ->whereDoesntHave('reads', fn ($query) => $query->where('user_id', $user->id))
+                    ->get(['id', 'business_id', 'tenant_id'])
+                    ->map(fn ($readMessage) => [
+                        'business_id' => $readMessage->business_id,
+                        'tenant_id' => $readMessage->tenant_id,
                         'communication_channel_id' => $channel->id,
-                        'read_at' => now(),
-                    ]
-                );
+                        'message_id' => $readMessage->id,
+                        'user_id' => $user->id,
+                        'read_at' => $readAt,
+                        'created_at' => $readAt,
+                        'updated_at' => $readAt,
+                    ])->all();
+
+                if ($reads !== []) {
+                    MessageRead::upsert($reads, ['message_id', 'user_id'], ['communication_channel_id', 'read_at', 'updated_at']);
+                }
             }
 
             CommunicationNotification::where('user_id', $user->id)
@@ -507,7 +520,7 @@ class CommunicationService implements CommunicationServiceContract
         $membership = $this->businessMembership($user);
         $teamIds = $user->teams()->pluck('teams.id');
 
-        return CommunicationChannel::query()
+        $channels = CommunicationChannel::query()
             ->when(Schema::hasColumn('communication_channels', 'archived_at'), fn ($query) => $query->whereNull('archived_at'))
             ->where(function ($query) use ($user, $businessRole, $membership, $teamIds) {
                 $query->whereHas('members', fn ($members) => $members->where('user_id', $user->id)->where('status', 'Active'))
@@ -521,6 +534,16 @@ class CommunicationService implements CommunicationServiceContract
             ->where(fn ($query) => $query->where('type', '!=', 'Role')->orWhere('role_slug', $businessRole))
             ->latest('last_message_at')
             ->get();
+
+        $unreadByChannel = CommunicationNotification::where('business_id', ActiveBusiness::id())
+            ->where('user_id', $user->id)
+            ->where('status', 'Unread')
+            ->get(['payload'])
+            ->countBy(fn ($notification) => (string) data_get($notification->payload, 'channel_id'));
+
+        return $channels->each(function (CommunicationChannel $channel) use ($unreadByChannel) {
+            $channel->setAttribute('unread_count', (int) $unreadByChannel->get((string) $channel->id, 0));
+        });
     }
 
     public function accessibleAnnouncements(User $user, int $limit = 50): Collection

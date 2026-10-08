@@ -16,15 +16,32 @@
     .comm-channel{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid #edf0f5;border-radius:8px;padding:9px;text-decoration:none;color:#111827;margin-bottom:8px}
     .comm-channel:hover{border-color:#b8c0cc;background:#fafafa}
     .comm-channel.active{border-color:#00A651;background:#eefaf3}
+    .comm-channel.has-unread{border-color:#fca5a5;background:#fff7f7}
+    .comm-channel.has-unread.active{border-color:#00A651;background:#eefaf3}
+    .comm-channel-name{font-weight:600}
+    .comm-channel.has-unread .comm-channel-name{font-weight:800;color:#111827}
+    .comm-channel-state{display:inline-flex;align-items:center;gap:4px;margin-top:3px;font-size:.68rem;font-weight:800}
+    .comm-channel-state.is-unread{color:#b42318}
+    .comm-channel-state.is-read{color:#667085}
+    .comm-unread-badge{display:inline-grid;place-items:center;min-width:23px;height:23px;padding:0 6px;border-radius:999px;background:#dc2626;color:#fff;font-size:.72rem;font-weight:900}
     .comm-avatar{width:36px;height:36px;border-radius:8px;background:#0f766e;color:#fff;display:grid;place-items:center;font-weight:800;flex:0 0 auto}
     .comm-main{min-height:650px;display:grid;grid-template-rows:auto minmax(280px,1fr) auto}
-    .comm-stream{height:50vh;min-height:320px;overflow:auto;padding:6px 14px}
-    .comm-message{display:grid;grid-template-columns:36px minmax(0,1fr);gap:10px;padding:10px 0;border-bottom:1px solid #f1f3f6}
-    .comm-message:last-child{border-bottom:0}
-    .comm-bubble{min-width:0}
+    .comm-stream{height:50vh;min-height:320px;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;background:#f8fafc}
+    .comm-message{display:flex;align-items:flex-end;gap:8px;width:fit-content;max-width:86%;padding:0;border:0}
+    .comm-message.is-mine{margin-left:auto;flex-direction:row-reverse}
+    .comm-message.is-mine .comm-avatar{background:#00A651}
+    .comm-bubble{min-width:0;max-width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:14px 14px 14px 4px;background:#fff;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+    .comm-message.is-mine .comm-bubble{border-color:#b7e8cb;border-radius:14px 14px 4px 14px;background:#e8f8ef}
+    .comm-read-state{display:inline-flex;align-items:center;gap:3px;border-radius:999px;padding:2px 7px;font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+    .comm-read-state.is-read{color:#067647;background:#dcfae6}
+    .comm-read-state.is-unread{color:#b42318;background:#fee4e2}
+    .comm-read-state.is-sent{color:#475467;background:#f2f4f7}
+    .comm-message.is-mine .comm-meta{justify-content:flex-end}
+    .comm-message.is-mine .comm-meta strong{margin-right:auto}
     .comm-meta{display:flex;align-items:center;justify-content:space-between;gap:10px}
     .comm-text{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:2px}
     .comm-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+    .comm-message.is-mine .comm-actions{justify-content:flex-end}
     .comm-icon-btn{width:32px;height:32px;border:1px solid #d0d5dd;border-radius:8px;background:#fff;color:#344054;display:inline-grid;place-items:center}
     .comm-icon-btn:hover{background:#f6f8fb}
     .comm-composer{padding:12px 14px;border-top:1px solid #edf0f5;background:#fbfcfd;border-radius:0 0 8px 8px}
@@ -39,7 +56,7 @@
     .comm-side[data-defer-template]:empty::before{content:"";display:block;height:180px;border:1px solid #edf0f5;border-radius:8px;background:linear-gradient(90deg,#f7f8fb 25%,#eef1f5 37%,#f7f8fb 63%);background-size:400% 100%;animation:comm-skeleton 1.2s ease infinite}
     @keyframes comm-skeleton{0%{background-position:100% 0}100%{background-position:0 0}}
     @media(max-width:1300px){.comm-shell{grid-template-columns:280px minmax(0,1fr)}.comm-side{grid-column:1/-1}.comm-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.comm-search-results{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:760px){.comm-toolbar,.comm-shell,.comm-grid-two{grid-template-columns:1fr}.comm-metrics,.comm-search-results{grid-template-columns:repeat(2,minmax(0,1fr))}.comm-stream{height:44vh}.comm-panel-head{align-items:flex-start;flex-direction:column}.comm-actions .btn{width:100%}.comm-message{content-visibility:auto;contain-intrinsic-size:1px 92px}.comm-side[data-defer-template]:empty::before{display:none}}
+    @media(max-width:760px){.comm-toolbar,.comm-shell,.comm-grid-two{grid-template-columns:1fr}.comm-metrics,.comm-search-results{grid-template-columns:repeat(2,minmax(0,1fr))}.comm-stream{height:44vh;padding:10px}.comm-panel-head{align-items:flex-start;flex-direction:column}.comm-actions .btn{width:100%}.comm-message{max-width:94%;content-visibility:auto;contain-intrinsic-size:1px 92px}.comm-side[data-defer-template]:empty::before{display:none}}
 </style>
 
 <div class="page-shell">
@@ -83,13 +100,16 @@
         </div>
         <div class="comm-panel-body comm-scroll">
             @forelse($channels as $channel)
-                <a class="comm-channel {{ $activeChannel?->id === $channel->id ? 'active' : '' }}" href="{{ route('communication.center', ['channel' => $channel->id]) }}">
+                <a class="comm-channel {{ $activeChannel?->id === $channel->id ? 'active' : '' }} {{ ($channel->unread_count ?? 0) > 0 ? 'has-unread' : '' }}" href="{{ route('communication.center', ['channel' => $channel->id]) }}">
                     <span class="comm-avatar">{{ strtoupper(substr($channel->name, 0, 1)) }}</span>
                     <span class="min-w-0">
-                        <strong class="d-block text-truncate">{{ $channel->name }}</strong>
+                        <strong class="comm-channel-name d-block text-truncate">{{ $channel->name }}</strong>
                         <small class="text-muted">{{ $channel->type }} / {{ $channel->visibility }}</small>
+                        <span class="comm-channel-state {{ ($channel->unread_count ?? 0) > 0 ? 'is-unread' : 'is-read' }}">
+                            @if(($channel->unread_count ?? 0) > 0)<i class="bi bi-envelope-exclamation-fill"></i> {{ $channel->unread_count }} unread @else<i class="bi bi-check2-all"></i> All read@endif
+                        </span>
                     </span>
-                    @if(($channel->unread_count ?? 0) > 0)<span class="badge bg-success">{{ $channel->unread_count }}</span>@endif
+                    @if(($channel->unread_count ?? 0) > 0)<span class="comm-unread-badge" aria-label="{{ $channel->unread_count }} unread messages">{{ $channel->unread_count }}</span>@endif
                 </a>
             @empty
                 <div class="text-muted small">No conversations yet.</div>
@@ -146,13 +166,26 @@
 
         <div class="comm-stream">
             @forelse($messages as $message)
-                <article class="comm-message" id="message-{{ $message->id }}">
+                @php
+                    $isMyMessage = (int) $message->sender_id === (int) auth()->id();
+                    $isMessageRead = $isMyMessage
+                        ? $message->reads->contains(fn ($read) => (int) $read->user_id !== (int) auth()->id())
+                        : $message->reads->contains(fn ($read) => (int) $read->user_id === (int) auth()->id());
+                @endphp
+                <article class="comm-message {{ $isMyMessage ? 'is-mine' : 'is-other' }}" id="message-{{ $message->id }}">
                     <span class="comm-avatar">{{ strtoupper(substr($message->sender?->name ?? 'S', 0, 1)) }}</span>
                     <div class="comm-bubble">
                         <div class="comm-meta">
                             <strong>{{ $message->sender?->name ?? 'System' }}</strong>
                             <small class="text-muted">
                                 {{ $message->created_at->format('M j, H:i') }}
+                                <span class="comm-read-state {{ $isMyMessage ? ($isMessageRead ? 'is-read' : 'is-sent') : ($isMessageRead ? 'is-read' : 'is-unread') }}">
+                                    @if($isMyMessage)
+                                        <i class="bi {{ $isMessageRead ? 'bi-check2-all' : 'bi-check' }}"></i> {{ $isMessageRead ? 'Read' : 'Sent' }}
+                                    @else
+                                        <i class="bi {{ $isMessageRead ? 'bi-check2-all' : 'bi-envelope' }}"></i> {{ $isMessageRead ? 'Read' : 'Unread' }}
+                                    @endif
+                                </span>
                                 @if($message->edited_at)
                                     / edited
                                 @endif
