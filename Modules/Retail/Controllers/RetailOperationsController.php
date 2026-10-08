@@ -820,6 +820,7 @@ class RetailOperationsController extends Controller
     {
         return view('retail.settings', [
             'taxJurisdictions' => Schema::hasTable('retail_tax_jurisdictions') ? RetailTaxJurisdiction::latest()->get() : collect(),
+            'currencies' => \App\Models\CompanySetting::CURRENCIES,
         ]);
     }
 
@@ -831,7 +832,7 @@ class RetailOperationsController extends Controller
             'tax_name' => ['required', 'string', 'max:100'],
             'tax_code' => ['nullable', 'string', 'max:100'],
             'tax_rate' => ['required', 'numeric', 'min:0', 'max:100'],
-            'currency_code' => ['required', 'string', 'size:3'],
+            'currency_code' => ['required', 'string', 'in:'.implode(',', array_keys(\App\Models\CompanySetting::CURRENCIES))],
             'effective_from' => ['nullable', 'date'],
             'effective_to' => ['nullable', 'date'],
             'status' => ['required', 'in:Active,Inactive'],

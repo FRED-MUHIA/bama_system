@@ -19,7 +19,7 @@
             <div class="col-md-2"><input class="form-control" name="tax_name" value="VAT" required></div>
             <div class="col-md-1"><input class="form-control" name="tax_code" placeholder="Code"></div>
             <div class="col-md-1"><input class="form-control" name="tax_rate" type="number" step="0.0001" placeholder="Rate" required></div>
-            <div class="col-md-1"><input class="form-control" name="currency_code" value="KES" maxlength="3" required></div>
+            <div class="col-md-2"><select class="form-select" name="currency_code" required>@foreach($currencies as $code => $label)<option value="{{ $code }}" @selected($code === 'KES')>{{ $code }}</option>@endforeach</select></div>
             <div class="col-md-2"><select class="form-select" name="status"><option>Active</option><option>Inactive</option></select></div>
             <div class="col-md-1"><button class="btn btn-success w-100"><i class="bi bi-save"></i></button></div>
         </form>

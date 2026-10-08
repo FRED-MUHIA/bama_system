@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\CompanySetting;
 use App\Services\AccountEmailReuseService;
 use App\Services\IndustrySetupService;
 use App\Services\OutgoingMailService;
@@ -46,6 +47,7 @@ class RegistrationController extends Controller
     {
         return view('registration.company', [
             'company' => session('registration.company', []),
+            'currencies' => CompanySetting::CURRENCIES,
             'industries' => $industries->registrationIndustries(),
             'step' => 2,
         ]);
@@ -74,7 +76,7 @@ class RegistrationController extends Controller
             'industry' => ['required', Rule::in($industries->registrationSlugs())],
             'sub_industry' => ['required', 'string', 'max:80'],
             'country' => ['required', 'string', 'max:80'],
-            'currency' => ['required', 'string', 'size:3'],
+            'currency' => ['required', 'string', Rule::in(array_keys(CompanySetting::CURRENCIES))],
             'timezone' => ['required', 'timezone'],
         ]);
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\AdminAuditLog;
 use App\Models\Client;
+use App\Models\CompanySetting;
 use App\Models\PaymentMethod;
 use App\Models\PosOrder;
 use App\Models\Product;
@@ -152,7 +153,9 @@ class RetailPosController extends Controller
                 ->first()
             : null;
 
-        return view('retail.receipt', ['order' => $posOrder, 'business' => ActiveBusiness::current(), 'cancellation' => $cancellation]);
+        $currency = CompanySetting::where('business_id', $posOrder->business_id)->value('currency_code') ?: 'KES';
+
+        return view('retail.receipt', ['order' => $posOrder, 'business' => ActiveBusiness::current(), 'cancellation' => $cancellation, 'currency' => $currency]);
     }
 
     public function openDrawer(Request $request, RetailPosService $pos)

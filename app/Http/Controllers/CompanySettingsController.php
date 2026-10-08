@@ -18,6 +18,7 @@ class CompanySettingsController extends Controller
     {
         return view('settings.edit', [
             'settings' => $this->activeCompanySettings(),
+            'currencies' => CompanySetting::CURRENCIES,
             'methods' => Schema::hasTable('payment_methods') ? PaymentMethod::latest()->get() : collect(),
             'terms' => Schema::hasTable('terms_conditions') ? TermsCondition::latest()->get() : collect(),
             'users' => $this->profileUsers(),
@@ -40,7 +41,7 @@ class CompanySettingsController extends Controller
             'website' => ['nullable', 'string', 'max:255'],
             'tax_name' => ['nullable', 'string', 'max:50'],
             'tax_rate' => ['nullable', 'numeric', 'min:0'],
-            'currency_code' => ['required', 'string', 'size:3'],
+            'currency_code' => ['required', 'string', 'in:'.implode(',', array_keys(CompanySetting::CURRENCIES))],
             'locale' => ['required', 'string', 'max:20'],
             'default_terms' => ['nullable', 'string'],
         ]);

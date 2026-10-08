@@ -17,6 +17,25 @@ class CompanySetting extends Model
 
     public const DEFAULT_ACCENT_COLOR = '#E7F8EF';
 
+    public const CURRENCIES = [
+        'KES' => 'Kenyan Shilling (KES)',
+        'USD' => 'US Dollar (USD)',
+        'EUR' => 'Euro (EUR)',
+        'GBP' => 'British Pound (GBP)',
+        'UGX' => 'Ugandan Shilling (UGX)',
+        'TZS' => 'Tanzanian Shilling (TZS)',
+        'RWF' => 'Rwandan Franc (RWF)',
+        'ETB' => 'Ethiopian Birr (ETB)',
+        'NGN' => 'Nigerian Naira (NGN)',
+        'ZAR' => 'South African Rand (ZAR)',
+        'AED' => 'UAE Dirham (AED)',
+        'CAD' => 'Canadian Dollar (CAD)',
+        'AUD' => 'Australian Dollar (AUD)',
+        'INR' => 'Indian Rupee (INR)',
+        'JPY' => 'Japanese Yen (JPY)',
+        'CNY' => 'Chinese Yuan (CNY)',
+    ];
+
     protected $fillable = [
         'business_id', 'company_name', 'logo_path', 'primary_color', 'secondary_color', 'accent_color', 'phone', 'email', 'address', 'website',
         'location', 'tax_name', 'tax_rate', 'currency_code', 'locale', 'default_terms',

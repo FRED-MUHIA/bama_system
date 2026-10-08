@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Business;
+use App\Models\CompanySetting;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\TenantTheme;
@@ -105,6 +106,14 @@ class TenantProvisioningService
                 'sub_industry' => $company['sub_industry'],
                 'plan' => $plan,
             ], $user);
+
+            $business = $tenant->businesses()->first();
+            if ($business && Schema::hasTable('company_settings')) {
+                CompanySetting::withoutGlobalScopes()->updateOrCreate(
+                    ['business_id' => $business->id],
+                    ['company_name' => $company['company_name'], 'currency_code' => $company['currency']]
+                );
+            }
 
             $userUpdates = collect([
                 'current_tenant_id' => $tenant->id,

@@ -48,22 +48,22 @@
         <div class="receipt-item">
             <div class="receipt-item-name">{{ $item->title ?: $item->description }}</div>
             @if($item->sku_snapshot)<div class="receipt-muted">SKU {{ $item->sku_snapshot }}</div>@endif
-            <div class="receipt-row"><span>{{ rtrim(rtrim(number_format((float)$item->quantity, 3), '0'), '.') }} × {{ number_format((float)$item->unit_price, 2) }}</span><span>{{ number_format((float)$item->line_total, 2) }}</span></div>
+            <div class="receipt-row"><span>{{ rtrim(rtrim(number_format((float)$item->quantity, 3), '0'), '.') }} × {{ $currency }} {{ number_format((float)$item->unit_price, 2) }}</span><span>{{ $currency }} {{ number_format((float)$item->line_total, 2) }}</span></div>
         </div>
     @endforeach
     <hr class="receipt-rule">
-    <div class="receipt-row"><span>Subtotal</span><span>{{ number_format((float)$order->subtotal, 2) }}</span></div>
-    @if((float)$order->discount_total > 0)<div class="receipt-row"><span>Discount</span><span>-{{ number_format((float)$order->discount_total, 2) }}</span></div>@endif
-    @if((float)$order->tax_total > 0)<div class="receipt-row"><span>Tax</span><span>{{ number_format((float)$order->tax_total, 2) }}</span></div>@endif
-    <div class="receipt-row receipt-total"><span>TOTAL</span><span>{{ number_format((float)$order->total, 2) }}</span></div>
+    <div class="receipt-row"><span>Subtotal</span><span>{{ $currency }} {{ number_format((float)$order->subtotal, 2) }}</span></div>
+    @if((float)$order->discount_total > 0)<div class="receipt-row"><span>Discount</span><span>-{{ $currency }} {{ number_format((float)$order->discount_total, 2) }}</span></div>@endif
+    @if((float)$order->tax_total > 0)<div class="receipt-row"><span>Tax</span><span>{{ $currency }} {{ number_format((float)$order->tax_total, 2) }}</span></div>@endif
+    <div class="receipt-row receipt-total"><span>TOTAL</span><span>{{ $currency }} {{ number_format((float)$order->total, 2) }}</span></div>
     <hr class="receipt-rule">
     @forelse($order->payments as $payment)
-        <div class="receipt-row"><span>{{ $payment->paymentMethod?->name ?: 'Payment' }}{{ $payment->reference ? ' · '.$payment->reference : '' }}</span><span>{{ number_format((float)$payment->amount, 2) }}</span></div>
+        <div class="receipt-row"><span>{{ $payment->paymentMethod?->name ?: 'Payment' }}{{ $payment->reference ? ' · '.$payment->reference : '' }}</span><span>{{ $currency }} {{ number_format((float)$payment->amount, 2) }}</span></div>
     @empty
-        <div class="receipt-row"><span>Payment received</span><span>{{ number_format((float)$order->amount_paid, 2) }}</span></div>
+        <div class="receipt-row"><span>Payment received</span><span>{{ $currency }} {{ number_format((float)$order->amount_paid, 2) }}</span></div>
     @endforelse
-    <div class="receipt-row"><span>Paid</span><span>{{ number_format((float)$order->amount_paid, 2) }}</span></div>
-    @if((float)$order->total > (float)$order->amount_paid)<div class="receipt-row"><span>Balance</span><span>{{ number_format(max((float)$order->total - (float)$order->amount_paid, 0), 2) }}</span></div>@endif
+    <div class="receipt-row"><span>Paid</span><span>{{ $currency }} {{ number_format((float)$order->amount_paid, 2) }}</span></div>
+    @if((float)$order->total > (float)$order->amount_paid)<div class="receipt-row"><span>Balance</span><span>{{ $currency }} {{ number_format(max((float)$order->total - (float)$order->amount_paid, 0), 2) }}</span></div>@endif
     <hr class="receipt-rule">
     <div class="receipt-center">Thank you for shopping with us!</div>
     <div class="receipt-center receipt-muted">Goods sold are subject to store return policy.</div>

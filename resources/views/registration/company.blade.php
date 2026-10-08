@@ -69,7 +69,11 @@
                 </label>
                 <label class="grid gap-2">
                     <span class="text-xs font-bold uppercase text-black">Currency</span>
-                    <input name="currency" value="{{ old('currency', $company['currency'] ?? 'KES') }}" maxlength="3" required class="field-control rounded-lg px-4 py-3 uppercase outline-none transition">
+                    <select name="currency" required class="field-control rounded-lg px-4 py-3 outline-none transition">
+                        @foreach ($currencies as $code => $label)
+                            <option value="{{ $code }}" @selected(old('currency', $company['currency'] ?? 'KES') === $code)>{{ $label }}</option>
+                        @endforeach
+                    </select>
                 </label>
                 <label class="grid gap-2">
                     <span class="text-xs font-bold uppercase text-black">Timezone</span>
