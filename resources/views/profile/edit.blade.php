@@ -26,7 +26,25 @@
     <div class="col-lg-8">
         <div class="card p-4">
             <h1 class="h4">My profile</h1>
-            <p class="text-muted">You can update personal preferences. Role, permissions, branch, department and approval level remain administrator-controlled.</p>
+            <p class="text-muted">{{ $employeeDetails ? 'Your employee details and personal preferences.' : 'You can update personal preferences. Role, permissions, branch, department and approval level remain administrator-controlled.' }}</p>
+            @if($employeeDetails)
+                <section class="rounded border bg-light p-3 mb-3" aria-labelledby="employee-profile-heading">
+                    <h2 id="employee-profile-heading" class="h6 mb-3">My employee details</h2>
+                    <div class="row g-3">
+                        @foreach([
+                            'Employee number' => $employeeDetails['employee_number'],
+                            'Job title' => $employeeDetails['job_title'],
+                            'Access role' => $employeeDetails['access_role'],
+                            'Department' => $employeeDetails['department'],
+                            'Branch' => $employeeDetails['branch'],
+                            'Approval level' => $employeeDetails['approval_level'],
+                            'Status' => $employeeDetails['status'],
+                        ] as $label => $value)
+                            <div class="col-sm-6 col-lg-4"><div class="small text-muted">{{ $label }}</div><strong>{{ filled($value) ? $value : 'Not assigned' }}</strong></div>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
             <div class="mb-3">
                 @include('mobile.install-card')
             </div>

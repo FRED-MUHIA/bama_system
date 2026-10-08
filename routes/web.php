@@ -219,7 +219,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/portal', [PortalController::class, 'dashboard'])->name('portal.dashboard');
-    Route::middleware(['admin', 'verified'])->prefix('billing')->name('billing.')->group(function () {
+    Route::middleware(['admin', 'verified', 'business.admin'])->prefix('billing')->name('billing.')->group(function () {
         Route::get('/', [BillingController::class, 'index'])->name('index');
         Route::post('/invoices', [BillingController::class, 'invoice'])->name('invoices.store');
         Route::get('/invoices/{invoice}/mpesa', [BillingController::class, 'mpesaRedirect'])->name('invoices.mpesa.show');

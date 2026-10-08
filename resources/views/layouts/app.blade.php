@@ -917,6 +917,8 @@
 @php
     $currentUser = auth()->user();
     $isClientPortal = $currentUser?->role === 'client_portal';
+    $isBusinessAdministrator = $currentUser && app(\App\Services\IamService::class)->isBusinessAdministrator($currentUser);
+    $showBamaBilling = $isBusinessAdministrator && ($bamaBillingVisible ?? false);
     $mainColumnClass = $currentUser && ! $isClientPortal ? 'col-lg-10' : 'col-12';
     $sidebarBrandName = $activeTenant?->name ?? $activeBusiness?->name ?? 'Bama';
     $activeIndustryLabel = \Illuminate\Support\Str::headline($activeBusiness?->industry ?: $activeTenant?->industry ?: 'Workspace');
@@ -953,6 +955,7 @@
                 </div>
                 <nav class="d-grid gap-1">
                     @foreach($platformMenu ?? [] as $item)
+                        @continue(in_array($item['label'] ?? '', ['Settings', 'Bama Billing'], true) && ! $isBusinessAdministrator)
                         @php
                             $routeParams = $item['params'] ?? [];
                             $children = collect($item['children'] ?? []);
@@ -1022,7 +1025,7 @@
                         <div class="mobile-header-name">{{ $activeBusiness?->name ?? $activeTenant?->name ?? $currentUser->name }}</div>
                     </div>
                     <div class="app-header-title">
-                        <div class="text-muted small">Admin dashboard</div>
+                        <div class="text-muted small">{{ $isBusinessAdministrator ? 'Admin dashboard' : 'Employee workspace' }}</div>
                         <h1 class="h4 mb-0">@yield('title', 'Dashboard')</h1>
                     </div>
                     <div class="app-header-actions">
@@ -1095,7 +1098,7 @@
                                 <div class="small">Expires: {{ $subscriptionBillingState['expires_at']->format('d M Y') }} · Grace ends: {{ $subscriptionBillingState['grace_ends_at']?->format('d M Y') }}</div>
                             @endif
                         </div>
-                        @if(($bamaBillingVisible ?? false) && Route::has('billing.index'))
+                        @if($showBamaBilling && Route::has('billing.index'))
                             <a class="btn btn-sm btn-warning" href="{{ route('billing.index') }}"><i class="bi bi-credit-card"></i> Renew</a>
                         @endif
                     </div>
@@ -1145,7 +1148,8 @@
         </div>
         <div class="drawer-section-title">Navigation</div>
         <nav class="drawer-nav">
-            @foreach($platformMenu ?? [] as $item)
+                    @foreach($platformMenu ?? [] as $item)
+                        @continue(in_array($item['label'] ?? '', ['Settings', 'Bama Billing'], true) && ! $isBusinessAdministrator)
                 @php
                     $routeParams = $item['params'] ?? [];
                     $children = collect($item['children'] ?? []);
@@ -1224,7 +1228,7 @@
             ['label' => 'Quotations', 'route' => 'quotations.index', 'match' => 'quotations.*', 'icon' => 'bi-file-earmark-text'],
             ['label' => 'Invoices', 'route' => 'invoices.index', 'match' => 'invoices.*', 'icon' => 'bi-receipt'],
             ['label' => 'Receipts', 'route' => 'receipts.index', 'match' => 'receipts.*', 'icon' => 'bi-cash-coin'],
-            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
+            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $showBamaBilling],
         ];
 
         $fitnessMobileItems = [
@@ -1245,7 +1249,7 @@
             ['label' => 'Equipment', 'route' => 'fitness.equipment.index', 'match' => 'fitness.equipment.*', 'icon' => 'bi-tools'],
             ['label' => 'Inventory', 'route' => 'products.index', 'match' => 'products.*', 'icon' => 'bi-box-seam'],
             ['label' => 'Payments', 'route' => 'finance.index', 'match' => 'finance.*', 'icon' => 'bi-cash-coin'],
-            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
+            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $showBamaBilling],
             ['label' => 'Reports', 'route' => 'fitness.reports.index', 'match' => 'fitness.reports.*', 'icon' => 'bi-bar-chart'],
         ];
 
@@ -1268,7 +1272,7 @@
             ['label' => 'Suppliers', 'route' => 'hospitality.suppliers.index', 'match' => 'hospitality.suppliers.*', 'icon' => 'bi-truck'],
             ['label' => 'Procurement', 'route' => 'erp.procurement', 'match' => 'erp.procurement', 'icon' => 'bi-cart-check'],
             ['label' => 'Billing', 'route' => 'finance.index', 'match' => 'finance.*', 'icon' => 'bi-bank'],
-            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
+            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $showBamaBilling],
             ['label' => 'Reports', 'route' => 'hospitality.reports.index', 'match' => 'hospitality.reports.*', 'icon' => 'bi-bar-chart'],
         ];
 
@@ -1287,7 +1291,7 @@
             ['label' => 'Compliance', 'route' => 'agriculture.dashboard', 'match' => 'agriculture.dashboard', 'section' => 'compliance', 'icon' => 'bi-shield-check'],
             ['label' => 'Documents', 'route' => 'agriculture.dashboard', 'match' => 'agriculture.dashboard', 'section' => 'documents', 'icon' => 'bi-folder2-open'],
             ['label' => 'Finance', 'route' => 'agriculture.dashboard', 'match' => 'agriculture.dashboard', 'section' => 'finance', 'icon' => 'bi-bank'],
-            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
+            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $showBamaBilling],
             ['label' => 'Reports', 'route' => 'agriculture.reports.index', 'match' => 'agriculture.reports.*', 'icon' => 'bi-bar-chart'],
         ];
 
@@ -1304,13 +1308,13 @@
             ['label' => 'Suppliers', 'route' => 'retail.suppliers.index', 'match' => 'retail.suppliers.*', 'icon' => 'bi-truck'],
             ['label' => 'Stores', 'route' => 'retail.branches.index', 'match' => 'retail.branches.*', 'icon' => 'bi-shop'],
             ['label' => 'Gift Cards', 'route' => 'retail.gift-cards.index', 'match' => 'retail.gift-cards.*', 'icon' => 'bi-credit-card-2-front'],
-            ['label' => 'Settings', 'route' => 'retail.settings.index', 'match' => 'retail.settings.*', 'icon' => 'bi-gear'],
+            ['label' => 'Settings', 'route' => 'retail.settings.index', 'match' => 'retail.settings.*', 'icon' => 'bi-gear', 'condition' => $isBusinessAdministrator],
         ];
 
         $utilityOverflowItems = [
-            ['label' => 'Settings', 'route' => 'settings.edit', 'match' => 'settings.*', 'icon' => 'bi-gear', 'condition' => app(\App\Services\IamService::class)->isBusinessAdministrator($currentUser)],
+            ['label' => 'Settings', 'route' => 'settings.edit', 'match' => 'settings.*', 'icon' => 'bi-gear', 'condition' => $isBusinessAdministrator],
             ['label' => 'My Profile', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'bi-person'],
-            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $bamaBillingVisible ?? false],
+            ['label' => 'Bama Billing', 'route' => 'billing.index', 'match' => 'billing.*', 'icon' => 'bi-credit-card', 'condition' => $showBamaBilling],
             ['label' => 'Administration', 'route' => 'administration.index', 'match' => 'administration.*', 'icon' => 'bi-shield-lock', 'condition' => \App\Support\SchemaCache::hasTable('iam_roles') && $currentUser->hasPermission('administration.view')],
         ];
 
@@ -1343,6 +1347,7 @@
 
                 return array_merge($parent, $item['children'] ?? []);
             })
+            ->filter(fn ($item) => $isBusinessAdministrator || ! in_array($item['label'] ?? '', ['Settings', 'Bama Billing'], true))
             ->filter(fn ($item) => ! empty($item['route']))
             ->map(function ($item) {
                 $route = $item['route'];

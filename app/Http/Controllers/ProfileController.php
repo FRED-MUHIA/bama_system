@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
@@ -21,9 +22,46 @@ class ProfileController extends Controller
     {
         $industry = $this->currentIndustrySlug($preferences);
         $tenant = ActiveTenant::current();
+        $user = $request->user();
+        $employeeDetails = null;
+
+        if (! app(\App\Services\IamService::class)->isBusinessAdministrator($user)) {
+            $membership = null;
+            if (Schema::hasTable('business_user')) {
+                $membershipQuery = DB::table('business_user')
+                    ->where('business_user.business_id', ActiveBusiness::id())
+                    ->where('business_user.user_id', $user->id)
+                    ->select('business_user.status as membership_status', 'business_user.approval_level');
+
+                if (Schema::hasTable('iam_roles')) {
+                    $membershipQuery->leftJoin('iam_roles', 'iam_roles.id', '=', 'business_user.iam_role_id')
+                        ->addSelect('iam_roles.name as access_role');
+                }
+                if (Schema::hasTable('branches')) {
+                    $membershipQuery->leftJoin('branches', 'branches.id', '=', 'business_user.branch_id')
+                        ->addSelect('branches.name as branch_name');
+                }
+                if (Schema::hasTable('departments')) {
+                    $membershipQuery->leftJoin('departments', 'departments.id', '=', 'business_user.department_id')
+                        ->addSelect('departments.name as department_name');
+                }
+
+                $membership = $membershipQuery->first();
+            }
+            $employeeDetails = [
+                'employee_number' => $user->employee_number,
+                'job_title' => $user->job_title,
+                'access_role' => $membership->access_role ?? null,
+                'branch' => $membership->branch_name ?? null,
+                'department' => $membership->department_name ?? null,
+                'approval_level' => $membership->approval_level ?? null,
+                'status' => $user->status ?: ($membership->membership_status ?? null),
+            ];
+        }
 
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
+            'employeeDetails' => $employeeDetails,
             'industryWorkspace' => $this->industryWorkspace($request, $navigation, $widgets, $preferences, $industry, $tenant),
         ]);
     }
