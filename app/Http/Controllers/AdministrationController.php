@@ -494,10 +494,15 @@ class AdministrationController extends Controller
             'invitation_expiry_hours' => ['required', 'integer', 'min:1', 'max:168'],
             'password_expiry_days' => ['nullable', 'integer', 'min:1'],
             'password_history_count' => ['required', 'integer', 'min:0', 'max:20'],
-            'pos_void_pin' => ['nullable', 'string', 'regex:/^\\d{4,12}$/'],
         ]);
-        if (blank($data['pos_void_pin'] ?? null)) {
-            unset($data['pos_void_pin']);
+
+        if (Schema::hasColumn('security_settings', 'pos_void_pin')) {
+            $pinData = $request->validate([
+                'pos_void_pin' => ['nullable', 'string', 'regex:/^\\d{4,12}$/'],
+            ]);
+            if (filled($pinData['pos_void_pin'] ?? null)) {
+                $data['pos_void_pin'] = $pinData['pos_void_pin'];
+            }
         }
         SecuritySetting::updateOrCreate(['business_id' => $this->businessId()], $data);
         $this->iam->audit('security.settings.updated');
