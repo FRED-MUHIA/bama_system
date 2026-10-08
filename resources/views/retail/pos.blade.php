@@ -413,7 +413,7 @@
 
             $baseProduct = [
                 'id' => $product->id,
-                'image' => $product->main_image_path ? \\App\\Support\\PublicUpload::url($product->main_image_path) : (filled(data_get($product->retailProfile?->images, '0')) ? \\App\\Support\\PublicUpload::url(data_get($product->retailProfile?->images, '0')) : null),
+                'image' => $product->main_image_path ? \App\Support\PublicUpload::url($product->main_image_path) : (filled(data_get($product->retailProfile?->images, '0')) ? \App\Support\PublicUpload::url(data_get($product->retailProfile?->images, '0')) : null),
                 'variant_id' => null,
                 'variant_name' => null,
                 'name' => $product->name,
@@ -441,7 +441,7 @@
 
                     return [
                         'id' => $variantProduct?->id ?: $variant->product_id,
-                        'image' => ($variantProduct?->main_image_path ?: $product->main_image_path) ? \\App\\Support\\PublicUpload::url($variantProduct?->main_image_path ?: $product->main_image_path) : (filled(data_get($variantProduct?->retailProfile?->images ?? $product->retailProfile?->images, '0')) ? \\App\\Support\\PublicUpload::url(data_get($variantProduct?->retailProfile?->images ?? $product->retailProfile?->images, '0')) : null),
+                        'image' => ($variantProduct?->main_image_path ?: $product->main_image_path) ? \App\Support\PublicUpload::url($variantProduct?->main_image_path ?: $product->main_image_path) : (filled(data_get($variantProduct?->retailProfile?->images ?? $product->retailProfile?->images, '0')) ? \App\Support\PublicUpload::url(data_get($variantProduct?->retailProfile?->images ?? $product->retailProfile?->images, '0')) : null),
                         'parent_id' => $product->id,
                         'variant_id' => $variant->id,
                         'variant_name' => $variantName,
