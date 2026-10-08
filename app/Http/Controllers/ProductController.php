@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\SecuritySetting;
 use App\Models\ProductAttribute;
 use App\Models\ProductAttributeValue;
 use App\Models\ProductBrand;
@@ -63,6 +64,7 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        $this->authorizePosEdit($request, $product);
         $oldStock = (float) $product->stock_quantity;
         $data = $this->validated($request, $product);
         if ($request->hasFile('main_image')) {
@@ -87,6 +89,7 @@ class ProductController extends Controller
 
     public function updateStock(Request $request, Product $product, StockService $stock)
     {
+        $this->authorizePosEdit($request, $product);
         $data = $request->validate([
             'type' => ['required', Rule::in(['Add', 'Remove', 'Set'])],
             'quantity' => ['required', 'numeric', 'min:0'],
@@ -100,6 +103,7 @@ class ProductController extends Controller
 
     public function generateVariants(Request $request, Product $product, RetailCatalogService $catalog)
     {
+        $this->authorizePosEdit($request, $product);
         $data = $request->validate([
             'variant_values' => ['required', 'array', 'min:1'],
             'variant_values.*' => ['nullable', 'array'],
@@ -143,6 +147,8 @@ class ProductController extends Controller
 
     public function import(Request $request, ProductCatalogImportService $importer)
     {
+        $request->validate(['authorization_pin' => ['required', 'digits_between:4,12']]);
+        $this->verifyPosEditPin((string) $request->input('authorization_pin'));
         $data = $request->validate([
             'product_file' => ['required', 'file', 'max:10240'],
         ]);
@@ -185,9 +191,29 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        abort_unless((int) $product->business_id === (int) ActiveBusiness::id(), 404);
+        request()->validate(['authorization_pin' => ['required', 'digits_between:4,12']]);
+        $this->verifyPosEditPin((string) request('authorization_pin'));
         $product->update(['is_active' => false, 'status' => 'archived']);
 
         return back()->with('status', 'Product archived.');
+    }
+
+    private function authorizePosEdit(Request $request, Product $product): void
+    {
+        abort_unless((int) $product->business_id === (int) ActiveBusiness::id(), 404);
+        $request->validate(['authorization_pin' => ['required', 'digits_between:4,12']]);
+        $this->verifyPosEditPin((string) $request->input('authorization_pin'));
+    }
+
+    private function verifyPosEditPin(string $pin): void
+    {
+        $setting = SecuritySetting::where('business_id', ActiveBusiness::id())->first();
+        if (! $setting?->verifiesPosEditPin($pin)) {
+            throw ValidationException::withMessages([
+                'authorization_pin' => 'The product and stock authorization PIN is incorrect or has not been configured. Contact an administrator.',
+            ]);
+        }
     }
 
     public function storeCategory(Request $request)

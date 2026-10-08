@@ -115,7 +115,7 @@
                 <form method="POST" action="{{ route('products.import') }}" enctype="multipart/form-data" class="row g-2 align-items-center">
                     @csrf
                     <div class="col-md-8"><input class="form-control" type="file" name="product_file" accept=".csv,.txt,.tsv,.xls,.xlsx" required></div>
-                    <div class="col-md-4"><button class="btn btn-outline-dark w-100"><i class="bi bi-upload me-1"></i>Upload CSV / Excel</button></div>
+                <div class="col-md-4"><input class="form-control mb-2" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required><button class="btn btn-outline-dark w-100"><i class="bi bi-upload me-1"></i>Upload CSV / Excel</button></div>
                 </form>
                 <div class="small text-muted mt-2">Import updates products by SKU, creates missing categories, and posts stock changes through Inventory Core.</div>
             </div>
@@ -129,6 +129,7 @@
             <div class="col-md-2"><input class="form-control" name="brand" placeholder="Brand"></div>
             <div class="col-md-2"><select class="form-select" name="product_type"><option>Physical Product</option><option>Digital Product</option><option>Service Product</option><option>Gift Card</option><option>Bundle</option><option>Kit</option></select></div>
             <div class="col-md-2"><select class="form-select" name="status"><option>Active</option><option>Inactive</option><option>Discontinued</option></select></div>
+            <div class="col-md-2"><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required></div>
             <div class="col-md-1"><button class="btn btn-success w-100"><i class="bi bi-save"></i></button></div>
         </form>
     </div>
@@ -227,6 +228,7 @@
             <div class="col-md-2"><select class="form-select" name="type"><option>Add</option><option>Remove</option><option>Set</option></select></div>
             <div class="col-md-2"><input class="form-control" name="quantity" type="number" min="0" step="0.001" placeholder="Qty" required></div>
             <div class="col-md-3"><input class="form-control" name="notes" placeholder="Notes (optional)"></div>
+            <div class="col-md-2"><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required></div>
             <div class="col-md-1"><button class="btn btn-success w-100"><i class="bi bi-save"></i></button></div>
         </form>
     </div>
@@ -246,6 +248,7 @@
             <div class="col-md-3"><select class="form-select" name="retail_warehouse_bin_id"><option value="">Any bin</option>@foreach($bins as $bin)<option value="{{ $bin->id }}">{{ $bin->warehouse?->name }} / {{ $bin->bin_code }}</option>@endforeach</select></div>
             <div class="col-md-3"><input class="form-control" name="reference" placeholder="Reference"></div>
             <div class="col-md-3"><input class="form-control" name="notes" placeholder="Notes"></div>
+            <div class="col-md-3"><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required></div>
         </form>
         <div class="border-top mt-3 pt-3">
             <form method="POST" action="{{ route('retail.inventory.reserve') }}" class="row g-2">
@@ -254,6 +257,7 @@
                 <div class="col-md-2"><input class="form-control" name="quantity" type="number" step="0.001" placeholder="Qty" required></div>
                 <div class="col-md-2"><select class="form-select" name="branch_id"><option value="">Any branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></div>
                 <div class="col-md-3"><input class="form-control" name="reference" placeholder="Reservation reference"></div>
+                <div class="col-md-3"><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required></div>
                 <div class="col-md-1"><button class="btn btn-outline-dark w-100"><i class="bi bi-lock"></i></button></div>
             </form>
         </div>
@@ -264,6 +268,7 @@
                 <div class="col-md-2"><input class="form-control" name="quantity" type="number" step="0.001" placeholder="Qty" required></div>
                 <div class="col-md-2"><select class="form-select" name="from_branch_id"><option value="">From branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></div>
                 <div class="col-md-2"><select class="form-select" name="to_branch_id"><option value="">To branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></div>
+                <div class="col-md-2"><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required></div>
                 <div class="col-md-2"><button class="btn btn-outline-dark w-100">Transfer</button></div>
             </form>
         </div>
@@ -286,6 +291,7 @@
                 <div class="col-md-2"><select class="form-select" name="retail_warehouse_bin_id"><option value="">Bin / shelf</option>@foreach($bins as $bin)<option value="{{ $bin->id }}">{{ $bin->warehouse?->name }} / {{ $bin->bin_code }}</option>@endforeach</select></div>
                 <div class="col-md-2"><input class="form-control" name="counted_quantity" type="number" step="0.001" placeholder="Counted qty" required></div>
                 <div class="col-md-3"><input class="form-control" name="notes" placeholder="Count notes"></div>
+                <div class="col-md-2"><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required></div>
                 <div class="col-md-2"><button class="btn btn-outline-dark w-100">Post Count</button></div>
             </form>
         </div>
@@ -697,7 +703,7 @@
                             <div class="d-flex gap-1 justify-content-end">
                                 <button class="btn btn-sm btn-outline-success" type="button" data-retail-panel-toggle="retail-product-stock-row-{{ $record->id }}" aria-expanded="false" aria-controls="retail-product-stock-row-{{ $record->id }}"><i class="bi bi-boxes"></i></button>
                                 <button class="btn btn-sm btn-outline-dark" type="button" data-retail-panel-toggle="retail-product-edit-row-{{ $record->id }}" aria-expanded="false" aria-controls="retail-product-edit-row-{{ $record->id }}"><i class="bi bi-pencil"></i></button>
-                                <form method="post" action="{{ route('products.destroy', $record) }}" onsubmit="return confirm('Archive this product?')">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger" aria-label="Archive {{ $record->name }}"><i class="bi bi-archive"></i></button></form>
+                                <form method="post" action="{{ route('products.destroy', $record) }}" onsubmit="return confirm('Archive this product?')">@csrf @method('DELETE')<input class="form-control form-control-sm mb-1" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required><button class="btn btn-sm btn-outline-danger" aria-label="Archive {{ $record->name }}"><i class="bi bi-archive"></i></button></form>
                             </div>
                         </td>
                     </tr>
@@ -708,6 +714,7 @@
                                     <div class="col-md-3"><label class="form-label">Movement</label><select class="form-select" name="type"><option>Add</option><option>Remove</option><option>Set</option></select></div>
                                     <div class="col-md-3"><label class="form-label">Quantity ({{ $record->stock_unit ?: 'pcs' }})</label><input class="form-control" name="quantity" type="number" min="0" step="0.001" required></div>
                                     <div class="col-md-4"><label class="form-label">Notes</label><input class="form-control" name="notes" placeholder="Reason"></div>
+                                    <div class="col-md-2"><label class="form-label">Edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>
                                     <div class="col-md-2"><button class="btn btn-success btn-sm w-100">Update Stock</button></div>
                                 </form>
                             </div>
@@ -717,6 +724,7 @@
                         <td colspan="6" class="p-0 border-0">
                             <div class="border-top p-3">
                                 <form method="post" action="{{ route('products.update', $record) }}" enctype="multipart/form-data" class="row g-2">@csrf @method('PUT')
+                                    <div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>
                                     @include('products.partials.fields', ['product' => $record])
                                     @include('products.partials.variant-generator', ['product' => $record])
                                     <div class="col-12"><button class="btn btn-warning btn-sm">Update Product</button></div>

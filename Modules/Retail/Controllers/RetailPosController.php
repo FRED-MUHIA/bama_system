@@ -143,8 +143,16 @@ class RetailPosController extends Controller
     {
         abort_unless((int) $posOrder->business_id === (int) ActiveBusiness::id(), 404);
         $posOrder->load('client', 'items.product', 'payments.paymentMethod', 'retailExtension.branch', 'retailExtension.cashier');
+        $cancellation = $posOrder->status === 'cancelled'
+            ? AdminAuditLog::where('business_id', $posOrder->business_id)
+                ->where('event', 'retail.pos.sale.voided')
+                ->where('subject_id', $posOrder->id)
+                ->with('user:id,name')
+                ->latest('id')
+                ->first()
+            : null;
 
-        return view('retail.receipt', ['order' => $posOrder, 'business' => ActiveBusiness::current()]);
+        return view('retail.receipt', ['order' => $posOrder, 'business' => ActiveBusiness::current(), 'cancellation' => $cancellation]);
     }
 
     public function openDrawer(Request $request, RetailPosService $pos)

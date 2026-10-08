@@ -504,6 +504,14 @@ class AdministrationController extends Controller
                 $data['pos_void_pin'] = $pinData['pos_void_pin'];
             }
         }
+        if (Schema::hasColumn('security_settings', 'pos_edit_pin')) {
+            $editPinData = $request->validate([
+                'pos_edit_pin' => ['nullable', 'string', 'regex:/^\\d{4,12}$/'],
+            ]);
+            if (filled($editPinData['pos_edit_pin'] ?? null)) {
+                $data['pos_edit_pin'] = $editPinData['pos_edit_pin'];
+            }
+        }
         SecuritySetting::updateOrCreate(['business_id' => $this->businessId()], $data);
         $this->iam->audit('security.settings.updated');
 

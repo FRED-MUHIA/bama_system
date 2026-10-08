@@ -530,6 +530,13 @@
                 @else
                     <div class="col-12"><div class="alert alert-warning mb-0">Run pending database migrations to enable the POS cancellation PIN.</div></div>
                 @endif
+                @if(\Illuminate\Support\Facades\Schema::hasColumn('security_settings', 'pos_edit_pin'))
+                    <div class="col-md-4">
+                        <label class="form-label" for="posEditPin">POS product and stock edit PIN</label>
+                        <input class="form-control" id="posEditPin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" minlength="4" maxlength="12" name="pos_edit_pin" autocomplete="new-password" placeholder="{{ $settings->getRawOriginal('pos_edit_pin') ? 'Configured · enter a new PIN to change' : 'Set a different 4–12 digit PIN' }}">
+                        <div class="form-text">Required for changing existing products or stock. Adding new products remains open. Leave blank to keep the current PIN.</div>
+                    </div>
+                @endif
                 <div class="col-12"><button class="btn btn-warning">Save Policy</button></div>
             </form>
         </div>

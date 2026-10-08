@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Product;
 use App\Models\StockMovement;
+use App\Models\SecuritySetting;
 use App\Models\Supplier;
 use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
@@ -57,6 +58,7 @@ class RetailInventoryController extends Controller
 
     public function adjust(Request $request, RetailInventoryService $inventory)
     {
+        $this->verifyEditPin($request);
         $data = $request->validate([
             'product_id' => ['required', Rule::exists('products', 'id')->where('business_id', ActiveBusiness::id())],
             'retail_product_variant_id' => ['nullable', Rule::exists('retail_product_variants', 'id')->where('business_id', ActiveBusiness::id())],
@@ -90,8 +92,20 @@ class RetailInventoryController extends Controller
         return back()->with('status', 'Retail inventory adjusted.');
     }
 
+    private function verifyEditPin(Request $request): void
+    {
+        $data = $request->validate(['authorization_pin' => ['required', 'digits_between:4,12']]);
+        $setting = SecuritySetting::where('business_id', ActiveBusiness::id())->first();
+        if (! $setting?->verifiesPosEditPin($data['authorization_pin'])) {
+            throw ValidationException::withMessages([
+                'authorization_pin' => 'The product and stock authorization PIN is incorrect or has not been configured. Contact an administrator.',
+            ]);
+        }
+    }
+
     public function reserve(Request $request, RetailInventoryService $inventory)
     {
+        $this->verifyEditPin($request);
         $data = $request->validate([
             'product_id' => ['required', Rule::exists('products', 'id')->where('business_id', ActiveBusiness::id())],
             'quantity' => ['required', 'numeric', 'min:0.001'],
@@ -107,6 +121,7 @@ class RetailInventoryController extends Controller
 
     public function transfer(Request $request, RetailInventoryService $inventory)
     {
+        $this->verifyEditPin($request);
         $data = $request->validate([
             'product_id' => ['required', Rule::exists('products', 'id')->where('business_id', ActiveBusiness::id())],
             'quantity' => ['required', 'numeric', 'min:0.001'],
@@ -154,6 +169,7 @@ class RetailInventoryController extends Controller
 
     public function cycleCount(Request $request, RetailEnterpriseOperationsService $enterprise)
     {
+        $this->verifyEditPin($request);
         $data = $request->validate([
             'product_id' => ['required', Rule::exists('products', 'id')->where('business_id', ActiveBusiness::id())],
             'branch_id' => ['nullable', Rule::exists('branches', 'id')->where('business_id', ActiveBusiness::id())],

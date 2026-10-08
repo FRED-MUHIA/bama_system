@@ -13,6 +13,11 @@ return new class extends Migration
                 $table->string('pos_void_pin')->nullable();
             });
         }
+        if (Schema::hasTable('security_settings') && ! Schema::hasColumn('security_settings', 'pos_edit_pin')) {
+            Schema::table('security_settings', function (Blueprint $table) {
+                $table->string('pos_edit_pin')->nullable();
+            });
+        }
     }
 
     public function down(): void
@@ -20,6 +25,11 @@ return new class extends Migration
         if (Schema::hasTable('security_settings') && Schema::hasColumn('security_settings', 'pos_void_pin')) {
             Schema::table('security_settings', function (Blueprint $table) {
                 $table->dropColumn('pos_void_pin');
+            });
+        }
+        if (Schema::hasTable('security_settings') && Schema::hasColumn('security_settings', 'pos_edit_pin')) {
+            Schema::table('security_settings', function (Blueprint $table) {
+                $table->dropColumn('pos_edit_pin');
             });
         }
     }

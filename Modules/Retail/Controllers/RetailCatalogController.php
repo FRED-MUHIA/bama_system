@@ -7,7 +7,10 @@ use App\Models\Product;
 use App\Models\ProductAttribute;
 use App\Models\ProductBrand;
 use App\Models\ProductCategory;
+use App\Models\SecuritySetting;
+use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Modules\Retail\Repositories\RetailRepository;
 use Modules\Retail\Services\RetailCatalogService;
 use Modules\Retail\Services\RetailValidationRules;
@@ -37,8 +40,14 @@ class RetailCatalogController extends Controller
 
     public function storeProfile(Request $request, RetailCatalogService $catalog)
     {
+        $pinData = $request->validate(['authorization_pin' => ['required', 'digits_between:4,12']]);
+        $setting = SecuritySetting::where('business_id', ActiveBusiness::id())->first();
+        if (! $setting?->verifiesPosEditPin($pinData['authorization_pin'])) {
+            throw ValidationException::withMessages(['authorization_pin' => 'The product and stock authorization PIN is incorrect or has not been configured. Contact an administrator.']);
+        }
         $data = $request->validate(RetailValidationRules::productProfile());
         $product = Product::findOrFail($data['product_id']);
+        abort_unless((int) $product->business_id === (int) ActiveBusiness::id(), 404);
         unset($data['product_id']);
         $catalog->upsertProfile($product, $data);
 

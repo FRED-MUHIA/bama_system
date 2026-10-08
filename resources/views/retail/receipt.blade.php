@@ -8,6 +8,8 @@
     .receipt-center{text-align:center}.receipt-rule{border:0;border-top:1px dashed #555;margin:8px 0}
     .receipt-row{display:flex;justify-content:space-between;gap:8px}.receipt-item{margin:6px 0}.receipt-item-name{font-weight:700;overflow-wrap:anywhere}
     .receipt-total{font-size:14px;font-weight:800}.receipt-muted{color:#555;font-size:11px}
+    .receipt-cancelled{margin:8px 0;padding:8px;border:2px solid #b91c1c;color:#b91c1c;font-weight:900;text-align:center;letter-spacing:.08em}
+    .receipt-cancelled-details{font-size:10px;line-height:1.35;text-align:left;letter-spacing:0;font-weight:500;margin-top:4px}
     @media print{
         @page{size:80mm auto;margin:3mm}
         body{background:#fff!important;color:#000!important;padding:0!important}
@@ -24,6 +26,17 @@
 <article class="thermal-receipt" id="thermalReceipt" aria-label="Receipt {{ $order->order_number }}">
     <h1>{{ $business?->name ?? config('app.name') }}</h1>
     <div class="receipt-center receipt-muted">{{ $order->retailExtension?->branch?->name ?? 'Retail sale' }}</div>
+    @if($order->status === 'cancelled')
+        <div class="receipt-cancelled">
+            CANCELLED
+            <div class="receipt-cancelled-details">
+                Cancellation ID: {{ $cancellation?->id ? 'CAN-'.$cancellation->id : 'CAN-'.$order->id }}<br>
+                Date: {{ $cancellation?->created_at?->format('d/m/Y H:i:s') ?? $order->retailExtension?->voided_at?->format('d/m/Y H:i:s') ?? 'Not recorded' }}<br>
+                By: {{ $cancellation?->user?->name ?? 'Seller' }}<br>
+                Reason: {{ data_get($cancellation?->old_values, 'reason', 'Not recorded') }}
+            </div>
+        </div>
+    @endif
     <hr class="receipt-rule">
     <div>Receipt: {{ $order->order_number }}</div>
     <div>Date: {{ $order->created_at?->format('d/m/Y H:i') ?? $order->order_date?->format('d/m/Y') }}</div>
