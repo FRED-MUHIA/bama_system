@@ -5,8 +5,8 @@
 @include('retail.partials.nav')
 
 <style>
-    .pos-shell{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,.7fr);gap:14px}
-    .pos-band{background:#fff;border:1px solid #d9dee8;border-radius:8px;padding:14px}
+    .pos-shell{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,.7fr);gap:10px}
+    .pos-band{background:#fff;border:1px solid #d9dee8;border-radius:7px;padding:10px}
     .pos-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
     .pos-kpi{border:1px solid #e1e5ee;border-radius:8px;padding:12px;background:#fbfcfd}
     .pos-kpi span{display:block;color:#667085;font-size:.72rem;font-weight:800;text-transform:uppercase}
@@ -14,7 +14,7 @@
     .pos-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
     .pos-scan-grid{display:grid;grid-template-columns:minmax(220px,1.35fr) minmax(160px,.85fr) auto auto auto;gap:10px;align-items:center}
     .pos-sell-grid{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(150px,.9fr) minmax(150px,.9fr);gap:10px}
-    .pos-line-item{border:1px solid #edf0f5;border-radius:8px;padding:10px;background:#fbfcfd}
+    .pos-line-item{border:1px solid #edf0f5;border-radius:7px;padding:7px;background:#fbfcfd}
     .pos-line{display:grid;grid-template-columns:minmax(220px,2fr) 88px 120px 120px;gap:8px;align-items:center}
     .pos-line-total{min-height:38px;display:flex;align-items:center;justify-content:flex-end;border:1px solid #e1e5ee;border-radius:6px;padding:0 .75rem;background:#fff;color:#0f766e;font-weight:800}
     .pos-pay{display:grid;grid-template-columns:minmax(150px,.7fr) minmax(160px,1fr);gap:8px;align-items:center}
@@ -275,12 +275,13 @@
             @forelse($recentOrders as $order)
                 <div class="pos-list-row">
                     <div>
-                        <strong>{{ $order->order_number }}</strong>
+                        <a class="fw-bold" href="{{ route('retail.pos.receipt', $order) }}">{{ $order->order_number }}</a>
                         <div class="small">Shop: {{ $order->retailExtension?->branch?->name ?? 'Not recorded' }} · Employee: {{ $order->retailExtension?->cashier?->name ?? 'Not recorded' }}</div>
                         <div class="small text-muted">{{ $order->client?->name ?: $order->customer_name ?: 'Walk-in customer' }}</div>
                     </div>
                     <div class="text-end">
                         <div class="fw-bold">{{ number_format((float) $order->amount_paid, 2) }}</div>
+                        <a class="small" href="{{ route('retail.pos.receipt', $order) }}">Receipt</a>
                         @if($order->status !== 'cancelled')
                             <form method="POST" action="{{ route('retail.pos.orders.void', $order) }}">
                                 @csrf
@@ -309,6 +310,14 @@
         </div>
     </aside>
 </div>
+<style>
+    .pos-shell>.d-grid{gap:.5rem!important}
+    .pos-shell aside{gap:.5rem!important}
+    .pos-shell .mb-2{margin-bottom:.4rem!important}
+    .pos-shell .mt-3{margin-top:.55rem!important}
+    .pos-shell .pos-band .form-control,.pos-shell .pos-band .form-select{min-height:36px;padding:.4rem .6rem}
+    @media(max-width:1100px){.pos-shell{gap:8px}.pos-band{padding:8px}}
+</style>
 @php
     $posAttributePairs = function (?array $attributes) {
         return collect($attributes ?? [])

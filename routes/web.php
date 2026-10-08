@@ -392,6 +392,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/pos', [RetailPosController::class, 'index'])->middleware('permission:retail.pos.view')->name('pos.index');
             Route::get('/transactions', [RetailPosController::class, 'transactions'])->middleware('permission:retail.pos.view')->name('transactions.index');
             Route::post('/pos/sales', [RetailPosController::class, 'store'])->middleware('permission:retail.pos.manage')->name('pos.sales.store');
+            Route::get('/pos/orders/{posOrder}/receipt', [RetailPosController::class, 'receipt'])->middleware('permission:retail.pos.view')->name('pos.receipt');
             Route::post('/pos/drawers', [RetailPosController::class, 'openDrawer'])->middleware('permission:retail.pos.manage')->name('pos.drawers.open');
             Route::post('/pos/drawers/{drawer}/close', [RetailPosController::class, 'closeDrawer'])->middleware('permission:retail.pos.manage')->name('pos.drawers.close');
             Route::post('/pos/orders/{posOrder}/void', [RetailPosController::class, 'void'])->middleware('permission:retail.pos.manage')->name('pos.orders.void');

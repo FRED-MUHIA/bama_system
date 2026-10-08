@@ -50,7 +50,7 @@ class RetailPosController extends Controller
         return view('retail.pos', [
             'metrics' => $dashboard->pointOfSaleMetrics(),
             'lowStockProducts' => $dashboard->lowStockProducts(),
-            'recentOrders' => PosOrder::with('client', 'retailExtension.cashier', 'retailExtension.branch')->latest()->limit(10)->get(),
+            'recentOrders' => PosOrder::with('client', 'payments.paymentMethod', 'retailExtension.cashier', 'retailExtension.branch')->latest()->limit(10)->get(),
             'products' => Product::with([
                 'category',
                 'brand',
@@ -125,7 +125,15 @@ class RetailPosController extends Controller
 
         $order = $pos->createSale($data);
 
-        return redirect()->route('retail.pos.index')->with('status', 'Retail POS sale '.$order->order_number.' saved.');
+        return redirect()->route('retail.pos.receipt', $order)->with('status', 'Sale '.$order->order_number.' recorded.');
+    }
+
+    public function receipt(PosOrder $posOrder)
+    {
+        abort_unless((int) $posOrder->business_id === (int) ActiveBusiness::id(), 404);
+        $posOrder->load('client', 'items.product', 'payments.paymentMethod', 'retailExtension.branch', 'retailExtension.cashier');
+
+        return view('retail.receipt', ['order' => $posOrder, 'business' => ActiveBusiness::current()]);
     }
 
     public function openDrawer(Request $request, RetailPosService $pos)
