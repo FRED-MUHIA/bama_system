@@ -699,11 +699,15 @@
                         </td>
                         <td class="text-muted">{{ $record->category?->name ?: 'No category' }} @if($record->brand) · {{ $record->brand->name }} @endif</td>
                         <td>{{ optional($record->updated_at)->format('d M Y') }}</td>
-                        <td class="text-end">
-                            <div class="d-flex gap-1 justify-content-end">
-                                <button class="btn btn-sm btn-outline-success" type="button" data-retail-panel-toggle="retail-product-stock-row-{{ $record->id }}" aria-expanded="false" aria-controls="retail-product-stock-row-{{ $record->id }}"><i class="bi bi-boxes"></i></button>
-                                <button class="btn btn-sm btn-outline-dark" type="button" data-retail-panel-toggle="retail-product-edit-row-{{ $record->id }}" aria-expanded="false" aria-controls="retail-product-edit-row-{{ $record->id }}"><i class="bi bi-pencil"></i></button>
-                                <form method="post" action="{{ route('products.destroy', $record) }}" onsubmit="return confirm('Archive this product?')">@csrf @method('DELETE')<input class="form-control form-control-sm mb-1" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required><button class="btn btn-sm btn-outline-danger" aria-label="Archive {{ $record->name }}"><i class="bi bi-archive"></i></button></form>
+                        <td class="text-end retail-product-actions-cell">
+                            <div class="retail-product-actions">
+                                <button class="btn btn-sm btn-outline-success" type="button" title="Adjust stock" aria-label="Adjust stock for {{ $record->name }}" data-retail-panel-toggle="retail-product-stock-row-{{ $record->id }}" aria-expanded="false" aria-controls="retail-product-stock-row-{{ $record->id }}"><i class="bi bi-boxes"></i></button>
+                                <button class="btn btn-sm btn-outline-dark" type="button" title="Edit product" aria-label="Edit {{ $record->name }}" data-retail-panel-toggle="retail-product-edit-row-{{ $record->id }}" aria-expanded="false" aria-controls="retail-product-edit-row-{{ $record->id }}"><i class="bi bi-pencil"></i></button>
+                                <form class="retail-product-archive" method="post" action="{{ route('products.destroy', $record) }}" onsubmit="return confirm('Archive this product?')">
+                                    @csrf @method('DELETE')
+                                    <input class="form-control form-control-sm" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" aria-label="Product and stock edit PIN" required>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Archive {{ $record->name }}"><i class="bi bi-archive"></i></button>
+                                </form>
                             </div>
                         </td>
                     </tr>
@@ -846,6 +850,17 @@
             <div class="p-3">{{ $records->links() }}</div>
         @endif
     </div>
+@endif
+
+@if($section === 'products')
+    <style>
+        .retail-product-actions-cell{min-width:300px}
+        .retail-product-actions{display:flex;justify-content:flex-end;align-items:center;gap:6px;flex-wrap:nowrap}
+        .retail-product-actions>.btn,.retail-product-archive>.btn{width:40px;height:40px;flex:0 0 40px;display:inline-grid;place-items:center;padding:0}
+        .retail-product-archive{display:flex;align-items:center;gap:6px;margin:0}
+        .retail-product-archive .form-control{width:118px;height:40px;flex:0 0 118px}
+        @media(max-width:575.98px){.retail-product-actions-cell{min-width:270px}.retail-product-actions{justify-content:flex-start;gap:5px}.retail-product-actions>.btn,.retail-product-archive>.btn{width:38px;height:40px;flex-basis:38px}.retail-product-archive .form-control{width:112px;flex-basis:112px}}
+    </style>
 @endif
 @endsection
 
