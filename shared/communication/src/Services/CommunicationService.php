@@ -897,19 +897,57 @@ class CommunicationService implements CommunicationServiceContract
 
     private function notifyChannelMembers(Message $message, User $sender, Collection $mentions): void
     {
-        $message->channel->members()
-            ->where('user_id', '!=', $sender->id)
-            ->with('user')
-            ->get()
-            ->each(function (ChannelMember $member) use ($message, $mentions) {
-                $mentioned = $mentions->contains(fn (Mention $mention) => $mention->mentioned_type === 'User' && (int) $mention->mentioned_id === (int) $member->user_id);
-                $this->notify($member->user, [
-                    'notification_type' => $mentioned ? 'Mention' : 'Message',
-                    'title' => $mentioned ? 'You were mentioned' : 'New message in '.$message->channel->name,
-                    'body' => Str::limit($message->body, 160),
-                    'payload' => ['channel_id' => $message->communication_channel_id, 'message_id' => $message->id],
-                ], $message);
-            });
+        $channel = $message->channel;
+        $recipientIds = $channel->members()
+            ->where('status', 'Active')
+            ->pluck('user_id');
+        $businessUserIds = $this->businessUserIds();
+
+        if ($channel->visibility === 'Public') {
+            $recipientIds = $recipientIds->merge($businessUserIds);
+        }
+
+        $scopedUserIds = match ($channel->type) {
+            'Role' => DB::table('business_user')
+                ->join('iam_roles', 'iam_roles.id', '=', 'business_user.iam_role_id')
+                ->where('business_user.business_id', ActiveBusiness::id())
+                ->where('business_user.status', 'Active')
+                ->where('iam_roles.slug', $channel->role_slug)
+                ->pluck('business_user.user_id'),
+            'Department' => DB::table('business_user')
+                ->where('business_id', ActiveBusiness::id())
+                ->where('status', 'Active')
+                ->where('department_id', $channel->department_id)
+                ->pluck('user_id'),
+            'Branch' => DB::table('business_user')
+                ->where('business_id', ActiveBusiness::id())
+                ->where('status', 'Active')
+                ->where('branch_id', $channel->branch_id)
+                ->pluck('user_id'),
+            'Team' => DB::table('team_user')
+                ->join('teams', 'teams.id', '=', 'team_user.team_id')
+                ->where('team_user.team_id', $channel->team_id)
+                ->where('teams.business_id', ActiveBusiness::id())
+                ->pluck('team_user.user_id'),
+            'Industry' => $businessUserIds,
+            default => collect(),
+        };
+
+        $recipientIds = $recipientIds
+            ->merge($scopedUserIds)
+            ->merge($mentions->where('mentioned_type', 'User')->pluck('mentioned_id'))
+            ->unique()
+            ->reject(fn ($userId) => (int) $userId === (int) $sender->id);
+
+        User::whereIn('id', $recipientIds)->get()->each(function (User $recipient) use ($message, $mentions) {
+            $mentioned = $mentions->contains(fn (Mention $mention) => $mention->mentioned_type === 'User' && (int) $mention->mentioned_id === (int) $recipient->id);
+            $this->notify($recipient, [
+                'notification_type' => $mentioned ? 'Mention' : 'Message',
+                'title' => $mentioned ? 'You were mentioned' : 'New message in '.$message->channel->name,
+                'body' => Str::limit($message->body, 160),
+                'payload' => ['channel_id' => $message->communication_channel_id, 'message_id' => $message->id],
+            ], $message);
+        });
 
         $mentions->each(function (Mention $mention) {
             $mention->update(['notified_at' => now()]);
