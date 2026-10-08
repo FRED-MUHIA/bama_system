@@ -285,7 +285,8 @@
                         @if($order->status !== 'cancelled')
                             <button class="btn btn-sm btn-link text-danger p-0" type="button" data-bs-toggle="modal" data-bs-target="#voidSale{{ $order->id }}">Cancel sale</button>
                         @else
-                            <span class="small text-muted">Voided</span>
+                            <span class="badge text-bg-danger">CANCELED</span>
+                            <div class="small text-danger mt-1">By {{ $cancellationActors[$order->id]?->user?->name ?? 'Seller' }}</div>
                         @endif
                     </div>
                 </div>

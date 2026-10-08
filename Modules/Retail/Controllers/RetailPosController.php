@@ -4,6 +4,7 @@ namespace Modules\Retail\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\AdminAuditLog;
 use App\Models\Client;
 use App\Models\PaymentMethod;
 use App\Models\PosOrder;
@@ -52,6 +53,15 @@ class RetailPosController extends Controller
             'metrics' => $dashboard->pointOfSaleMetrics(),
             'lowStockProducts' => $dashboard->lowStockProducts(),
             'recentOrders' => PosOrder::with('client', 'payments.paymentMethod', 'retailExtension.cashier', 'retailExtension.branch')->latest()->limit(10)->get(),
+            'cancellationActors' => AdminAuditLog::query()
+                ->where('business_id', ActiveBusiness::id())
+                ->where('event', 'retail.pos.sale.voided')
+                ->whereIn('subject_id', PosOrder::where('status', 'cancelled')->pluck('id'))
+                ->with('user:id,name')
+                ->latest('id')
+                ->get()
+                ->unique('subject_id')
+                ->keyBy('subject_id'),
             'products' => Product::with([
                 'category',
                 'brand',
