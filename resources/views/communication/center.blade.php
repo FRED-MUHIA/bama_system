@@ -59,7 +59,7 @@
     @media(max-width:760px){.comm-toolbar,.comm-shell,.comm-grid-two{grid-template-columns:1fr}.comm-metrics,.comm-search-results{grid-template-columns:repeat(2,minmax(0,1fr))}.comm-stream{height:44vh;padding:10px}.comm-panel-head{align-items:flex-start;flex-direction:column}.comm-actions .btn{width:100%}.comm-message{max-width:94%;content-visibility:auto;contain-intrinsic-size:1px 92px}.comm-side[data-defer-template]:empty::before{display:none}}
 </style>
 
-<div class="page-shell">
+<div class="page-shell" data-live-updates-url="{{ route('communication.updates') }}" data-notification-url-template="{{ route('communication.notifications.open', ['notification' => '__NOTICE__']) }}" data-attachment-url-template="{{ route('communication.attachments.download', ['attachment' => '__ATTACHMENT__']) }}">
 <x-page-header title="Messages" kicker="Shared Workspace" subtitle="Conversations, alerts, files, announcements, and team communication.">
     <x-slot:actions>
     <form method="get" action="{{ route('communication.center') }}" class="d-flex gap-2 flex-wrap">
@@ -100,7 +100,7 @@
         </div>
         <div class="comm-panel-body comm-scroll">
             @forelse($channels as $channel)
-                <a class="comm-channel {{ $activeChannel?->id === $channel->id ? 'active' : '' }} {{ ($channel->unread_count ?? 0) > 0 ? 'has-unread' : '' }}" href="{{ route('communication.center', ['channel' => $channel->id]) }}">
+                <a class="comm-channel {{ $activeChannel?->id === $channel->id ? 'active' : '' }} {{ ($channel->unread_count ?? 0) > 0 ? 'has-unread' : '' }}" data-channel-id="{{ $channel->id }}" href="{{ route('communication.center', ['channel' => $channel->id]) }}">
                     <span class="comm-avatar">{{ strtoupper(substr($channel->name, 0, 1)) }}</span>
                     <span class="min-w-0">
                         <strong class="comm-channel-name d-block text-truncate">{{ $channel->name }}</strong>
@@ -170,7 +170,7 @@
             @endif
         </div>
 
-        <div class="comm-stream">
+        <div class="comm-stream" data-channel-id="{{ $activeChannel?->id }}" data-last-message-id="{{ $messages->last()?->id ?? 0 }}" aria-live="polite">
             @forelse($messages as $message)
                 @php
                     $isMyMessage = (int) $message->sender_id === (int) auth()->id();
@@ -388,4 +388,191 @@
     </template>
 </div>
 </div>
+@push('scripts')
+<script>
+(() => {
+    const page = document.querySelector('.page-shell[data-live-updates-url]');
+    const stream = document.querySelector('.comm-stream[data-channel-id]');
+    if (!page || !stream || !stream.dataset.channelId) return;
+
+    const updatesUrl = page.dataset.liveUpdatesUrl;
+    let lastMessageId = Number(stream.dataset.lastMessageId || 0);
+    let polling = false;
+
+    const element = (tag, className, text) => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined && text !== null) node.textContent = text;
+        return node;
+    };
+
+    const appendMessage = message => {
+        if (!message || document.getElementById(`message-${message.id}`)) return;
+        stream.querySelector('.text-muted.p-3')?.remove();
+        const nearBottom = stream.scrollHeight - stream.scrollTop - stream.clientHeight < 100;
+        const mine = Number(message.sender_id) === Number(@json(auth()->id()));
+        const article = element('article', `comm-message ${mine ? 'is-mine' : 'is-other'}`);
+        article.id = `message-${message.id}`;
+        article.dataset.messageId = message.id;
+
+        const name = message.sender?.name || 'System';
+        article.append(element('span', 'comm-avatar', name.trim().charAt(0).toUpperCase() || 'S'));
+        const bubble = element('div', 'comm-bubble');
+        const meta = element('div', 'comm-meta');
+        meta.append(element('strong', '', name));
+        const time = element('small', 'text-muted');
+        const date = new Date(message.created_at);
+        time.append(document.createTextNode(Number.isNaN(date.getTime()) ? '' : date.toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})));
+        const state = element('span', `comm-read-state ${mine ? 'is-sent' : 'is-unread'}`);
+        state.append(element('i', `bi ${mine ? 'bi-check' : 'bi-envelope'}`), document.createTextNode(mine ? ' Sent' : ' Unread'));
+        time.append(document.createTextNode(' '), state);
+        meta.append(time);
+        bubble.append(meta, element('div', 'comm-text', message.body || ''));
+
+        const attachments = Array.isArray(message.attachments) ? message.attachments : [];
+        if (attachments.length) {
+            const links = element('div', 'comm-actions');
+            attachments.forEach(attachment => {
+                const link = element('a', 'btn btn-sm btn-light border', attachment.file_name || 'Attachment');
+                link.href = page.dataset.attachmentUrlTemplate.replace('__ATTACHMENT__', attachment.id);
+                links.append(link);
+            });
+            bubble.append(links);
+        }
+        bubble.append(element('div', 'comm-actions', `${(message.reactions || []).length} reactions / ${(message.reads || []).length} reads`));
+        article.append(bubble);
+        stream.append(article);
+        lastMessageId = Math.max(lastMessageId, Number(message.id) || 0);
+        stream.dataset.lastMessageId = String(lastMessageId);
+        if (nearBottom) stream.scrollTop = stream.scrollHeight;
+        if (!mine) showMessageAlert(name, message.body || 'New message');
+    };
+
+    const showMessageAlert = (sender, body) => {
+        document.querySelector('[data-live-message-alert]')?.remove();
+        const notice = element('div', 'alert alert-success position-fixed shadow-sm');
+        notice.dataset.liveMessageAlert = 'true';
+        notice.setAttribute('role', 'status');
+        notice.style.cssText = 'right:18px;bottom:18px;z-index:1090;max-width:min(380px,calc(100vw - 36px))';
+        notice.textContent = `${sender}: ${body}`;
+        document.body.append(notice);
+        window.setTimeout(() => notice.remove(), 6000);
+    };
+
+    const updateChannelUnread = counts => {
+        document.querySelectorAll('.comm-channel[data-channel-id]').forEach(link => {
+            const count = Number(counts?.[link.dataset.channelId] || 0);
+            link.classList.toggle('has-unread', count > 0);
+            let badge = link.querySelector('.comm-unread-badge');
+            if (count > 0) {
+                if (!badge) {
+                    badge = element('span', 'comm-unread-badge');
+                    badge.setAttribute('aria-label', `${count} unread messages`);
+                    link.append(badge);
+                }
+                badge.textContent = String(count);
+                badge.setAttribute('aria-label', `${count} unread messages`);
+            } else {
+                badge?.remove();
+            }
+            const state = link.querySelector('.comm-channel-state');
+            if (state) {
+                state.classList.toggle('is-unread', count > 0);
+                state.classList.toggle('is-read', count === 0);
+                state.replaceChildren(element('i', count > 0 ? 'bi bi-envelope-exclamation-fill' : 'bi bi-check2-all'), document.createTextNode(count > 0 ? ` ${count} unread` : ' All read'));
+            }
+        });
+    };
+
+    const updateHeaderAlerts = data => {
+        const button = document.querySelector('.header-alert-btn');
+        const menu = document.querySelector('.header-notification-menu');
+        if (!button || !menu) return;
+        const total = Number(data.unread_total || 0);
+        let badge = button.querySelector('.header-badge');
+        if (total > 0) {
+            if (!badge) { badge = element('span', 'header-badge'); button.append(badge); }
+            badge.textContent = total > 99 ? '99+' : String(total);
+        } else badge?.remove();
+
+        const header = menu.querySelector('.header-notification-head');
+        const summary = header?.querySelector('.text-muted.small');
+        if (summary) summary.textContent = `${Number(data.unread_messages || 0).toLocaleString()} unread message${Number(data.unread_messages || 0) === 1 ? '' : 's'}`;
+        const totalBadge = header?.querySelector('.badge');
+        if (totalBadge) totalBadge.textContent = total.toLocaleString();
+
+        const list = menu.querySelector('.header-notification-list');
+        if (!list) return;
+        list.replaceChildren();
+        const notices = Array.isArray(data.notifications) ? data.notifications : [];
+        if (!notices.length) {
+            list.append(element('div', 'p-3 text-muted', 'No new messages or alerts.'));
+            return;
+        }
+        notices.forEach(notice => {
+            const link = element('a', 'header-notification-item');
+            link.href = page.dataset.notificationUrlTemplate.replace('__NOTICE__', notice.id);
+            const title = element('div', 'notification-title');
+            const label = element('span');
+            label.append(element('i', `bi ${['Message', 'Mention'].includes(notice.notification_type) ? 'bi-chat-dots' : 'bi-bell'} me-1 text-success`), document.createTextNode(notice.title || 'New alert'));
+            title.append(label, element('small', 'text-muted', notice.created_at ? new Date(notice.created_at).toLocaleString() : ''));
+            link.append(title);
+            if (notice.body) link.append(element('div', 'notification-body', notice.body));
+            list.append(link);
+        });
+    };
+
+    const refresh = async () => {
+        if (polling || document.hidden) return;
+        polling = true;
+        try {
+            const url = new URL(updatesUrl, window.location.origin);
+            url.searchParams.set('channel_id', stream.dataset.channelId);
+            url.searchParams.set('after_id', String(lastMessageId));
+            const response = await fetch(url, {headers: {'Accept': 'application/json'}, cache: 'no-store', credentials: 'same-origin'});
+            if (!response.ok) return;
+            const data = await response.json();
+            (data.messages || []).forEach(appendMessage);
+            updateChannelUnread(data.unread_by_channel || {});
+            updateHeaderAlerts(data);
+        } catch (_) {
+            // Retry when the connection is available again.
+        } finally { polling = false; }
+    };
+
+    const composer = document.querySelector('.comm-composer form');
+    composer?.addEventListener('submit', async event => {
+        event.preventDefault();
+        const submit = composer.querySelector('button[type="submit"], button:not([type])');
+        if (submit?.disabled) return;
+        if (submit) submit.disabled = true;
+        try {
+            const response = await fetch(composer.action, {method: 'POST', body: new FormData(composer), headers: {'Accept': 'application/json'}, credentials: 'same-origin'});
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || Object.values(result.errors || {}).flat()[0] || 'Message could not be sent.');
+            appendMessage(result.message);
+            composer.querySelector('textarea[name="body"]')?.value && (composer.querySelector('textarea[name="body"]').value = '');
+            composer.querySelector('input[type="file"]')?.value && (composer.querySelector('input[type="file"]').value = '');
+            await refresh();
+        } catch (error) {
+            showMessageAlert('Message not sent', error.message || 'Please try again.');
+        } finally { if (submit) submit.disabled = false; }
+    });
+
+    document.querySelector('.comm-main .comm-panel-head form')?.addEventListener('submit', async event => {
+        event.preventDefault();
+        try {
+            const form = event.currentTarget;
+            const response = await fetch(form.action, {method: 'POST', body: new FormData(form), headers: {'Accept': 'application/json'}, credentials: 'same-origin'});
+            if (response.ok) await refresh();
+        } catch (_) { /* The unread badge remains until the next poll. */ }
+    });
+
+    stream.scrollTop = stream.scrollHeight;
+    refresh();
+    window.setInterval(refresh, 4000);
+    document.addEventListener('visibilitychange', refresh);
+})();
+</script>
+@endpush
 @endsection

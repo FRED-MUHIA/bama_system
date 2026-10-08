@@ -296,6 +296,7 @@ Route::middleware('auth')->group(function () {
 
         Route::prefix('communication')->name('communication.')->group(function () {
             Route::get('/', [CommunicationCenterController::class, 'index'])->middleware('permission:communication.view')->name('center');
+            Route::get('/updates', [CommunicationCenterController::class, 'updates'])->middleware('permission:communication.view')->name('updates');
             Route::get('/notifications/{notification}/open', [CommunicationCenterController::class, 'openNotification'])->middleware('permission:communication.view')->name('notifications.open');
             Route::post('/channels', [CommunicationCenterController::class, 'channel'])->middleware('permission:communication.create_channel')->name('channels.store');
             Route::post('/channels/{channel}/read', [CommunicationCenterController::class, 'markRead'])->middleware('permission:communication.view')->name('channels.read');

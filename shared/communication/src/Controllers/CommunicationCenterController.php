@@ -58,6 +58,38 @@ class CommunicationCenterController extends Controller
         ]);
     }
 
+    public function updates(Request $request, CommunicationServiceContract $communication)
+    {
+        $data = $request->validate([
+            'channel_id' => ['nullable', 'integer', 'min:1'],
+            'after_id' => ['nullable', 'integer', 'min:0'],
+        ]);
+        $user = $request->user();
+        $channels = $communication->accessibleChannels($user);
+        $channel = ! empty($data['channel_id']) ? $channels->firstWhere('id', (int) $data['channel_id']) : null;
+        abort_if(! empty($data['channel_id']) && ! $channel, 403);
+
+        $messages = $channel
+            ? Message::with('sender', 'attachments', 'reads')
+                ->where('communication_channel_id', $channel->id)
+                ->where('id', '>', $data['after_id'] ?? 0)
+                ->whereDoesntHave('deletions', fn ($deletions) => $deletions->where('user_id', $user->id))
+                ->oldest('id')
+                ->limit(50)
+                ->get()
+            : collect();
+
+        $notificationQuery = CommunicationNotification::where('user_id', $user->id)->where('status', 'Unread');
+
+        return response()->json([
+            'messages' => $messages,
+            'unread_by_channel' => $channels->mapWithKeys(fn ($item) => [(string) $item->id => (int) ($item->unread_count ?? 0)]),
+            'unread_total' => (clone $notificationQuery)->count(),
+            'unread_messages' => (clone $notificationQuery)->whereIn('notification_type', ['Message', 'Mention'])->count(),
+            'notifications' => (clone $notificationQuery)->latest()->limit(8)->get(['id', 'notification_type', 'title', 'body', 'created_at']),
+        ]);
+    }
+
     public function openNotification(Request $request, int $notification, CommunicationServiceContract $communication)
     {
         $notice = CommunicationNotification::where('business_id', ActiveBusiness::id())
@@ -114,7 +146,11 @@ class CommunicationCenterController extends Controller
             : CommunicationChannel::findOrFail($data['channel_id']);
 
         $data['attachments'] = $this->storedAttachments($request);
-        $communication->sendMessage($channel, $request->user(), $data);
+        $message = $communication->sendMessage($channel, $request->user(), $data);
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $message->load('sender', 'attachments', 'reads')], 201);
+        }
 
         return redirect()->route('communication.center', ['channel' => $channel->id])->with('status', 'Message sent.');
     }
