@@ -106,10 +106,16 @@
                         <strong class="comm-channel-name d-block text-truncate">{{ $channel->name }}</strong>
                         <small class="text-muted">{{ $channel->type }} / {{ $channel->visibility }}</small>
                         <span class="comm-channel-state {{ ($channel->unread_count ?? 0) > 0 ? 'is-unread' : 'is-read' }}">
-                            @if(($channel->unread_count ?? 0) > 0)<i class="bi bi-envelope-exclamation-fill"></i> {{ $channel->unread_count }} unread @else<i class="bi bi-check2-all"></i> All read@endif
+                            @if(($channel->unread_count ?? 0) > 0)
+                                <i class="bi bi-envelope-exclamation-fill"></i> {{ $channel->unread_count }} unread
+                            @else
+                                <i class="bi bi-check2-all"></i> All read
+                            @endif
                         </span>
                     </span>
-                    @if(($channel->unread_count ?? 0) > 0)<span class="comm-unread-badge" aria-label="{{ $channel->unread_count }} unread messages">{{ $channel->unread_count }}</span>@endif
+                    @if(($channel->unread_count ?? 0) > 0)
+                        <span class="comm-unread-badge" aria-label="{{ $channel->unread_count }} unread messages">{{ $channel->unread_count }}</span>
+                    @endif
                 </a>
             @empty
                 <div class="text-muted small">No conversations yet.</div>
