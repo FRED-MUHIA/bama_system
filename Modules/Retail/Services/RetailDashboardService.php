@@ -7,6 +7,8 @@ use App\Models\PosOrder;
 use App\Models\Product;
 use App\Support\ActiveBusiness;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Modules\Retail\Models\RetailExpense;
 use Modules\Retail\Models\RetailInventoryBalance;
 use Modules\Retail\Models\RetailLoyaltyAccount;
 use Modules\Retail\Models\RetailWarehouse;
@@ -37,6 +39,11 @@ class RetailDashboardService
             'Warehouses' => RetailWarehouse::count(),
         ];
 
+        if (Schema::hasTable('retail_expenses')) {
+            $metrics['Expenses Today'] = RetailExpense::whereDate('expense_date', $today)->sum('amount');
+            $metrics['Expenses This Month'] = RetailExpense::whereBetween('expense_date', [$monthStart, now()->endOfMonth()->toDateString()])->sum('amount');
+        }
+
         if (app()->bound(EtimsComplianceServiceContract::class)) {
             $etims = app(EtimsComplianceServiceContract::class)->metrics('retail');
             $metrics['ETIMS Submitted Invoices'] = $etims['submitted_invoices'];
@@ -50,14 +57,21 @@ class RetailDashboardService
 
     public function overviewMetrics(): array
     {
-        return $this->onlyMetrics([
+        $labels = [
             'Sales Today',
             'Transactions Today',
             'Average Basket Value',
             'Net Revenue',
             'Stock Value',
             'Low Stock Alerts',
-        ]);
+        ];
+
+        if (auth()->user()?->hasPermission('expenses.view') && Schema::hasTable('retail_expenses')) {
+            $labels[] = 'Expenses Today';
+            $labels[] = 'Expenses This Month';
+        }
+
+        return $this->onlyMetrics($labels);
     }
 
     public function pointOfSaleMetrics(): array

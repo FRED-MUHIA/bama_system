@@ -232,11 +232,11 @@
                                     <button class="comm-icon-btn" title="Pin"><i class="bi bi-pin-angle"></i></button>
                                 </form>
                             @endif
-                            @if(auth()->user()?->hasPermission('communication.delete_own'))
+                            @if($isMyMessage && auth()->user()?->hasPermission('communication.delete_own'))
                                 <form method="post" action="{{ route('communication.messages.destroy', $message) }}">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="comm-icon-btn" title="Delete"><i class="bi bi-trash"></i></button>
+                                    <button class="comm-icon-btn" title="Delete for me" aria-label="Delete this message for me"><i class="bi bi-trash"></i></button>
                                 </form>
                             @endif
                             <span class="small text-muted">{{ $message->reactions->count() }} reactions / {{ $message->reads->count() }} reads</span>

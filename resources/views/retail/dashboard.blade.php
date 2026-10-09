@@ -17,7 +17,7 @@
     @foreach($metrics as $label => $value)
         <div class="retail-metric">
             <div class="label">{{ $label }}</div>
-            <div class="value">{{ is_numeric($value) ? number_format($value, str_contains($label, 'Sales') || str_contains($label, 'Revenue') || str_contains($label, 'Value') || str_contains($label, 'Basket') ? 2 : 0) : $value }}</div>
+            <div class="value">{{ is_numeric($value) ? number_format($value, str_contains($label, 'Sales') || str_contains($label, 'Revenue') || str_contains($label, 'Value') || str_contains($label, 'Basket') || str_contains($label, 'Expenses') ? 2 : 0) : $value }}</div>
         </div>
     @endforeach
 </div>
@@ -46,6 +46,23 @@
         @endforelse
     </div>
 
+    @if($canViewExpenses)
+        <div class="card p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h5 mb-0">Recent Expenses</h2>
+                <a class="btn btn-sm btn-outline-success" href="{{ route('retail.expenses.index') }}">View expenses</a>
+            </div>
+            @forelse($recentExpenses as $expense)
+                <div class="d-flex justify-content-between gap-3 border-bottom py-2">
+                    <div><strong>{{ $expense->category }}</strong><div class="small text-muted">{{ $expense->expense_date->format('d M Y') }} · {{ $expense->branch?->name ?? 'Business' }}</div></div>
+                    <div class="fw-bold text-nowrap">{{ $expenseCurrency }} {{ number_format((float) $expense->amount, 2) }}</div>
+                </div>
+            @empty
+                <div class="text-muted">No retail expenses recorded yet.</div>
+            @endforelse
+        </div>
+    @endif
+
     <div class="card p-3">
         <h2 class="h5 mb-2">Low Stock</h2>
         @forelse($lowStockProducts as $product)
@@ -68,6 +85,7 @@
             <a class="status-pill text-decoration-none" href="{{ route('retail.inventory.index') }}">Stock</a>
             <a class="status-pill text-decoration-none" href="{{ route('retail.customers.index') }}">Customers</a>
             <a class="status-pill text-decoration-none" href="{{ route('retail.reports.index') }}">Reports</a>
+            @if($canViewExpenses)<a class="status-pill text-decoration-none" href="{{ route('retail.expenses.index') }}">Expenses</a>@endif
         </div>
     </div>
 </div>

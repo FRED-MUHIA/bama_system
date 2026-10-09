@@ -358,8 +358,8 @@ class CommunicationService implements CommunicationServiceContract
         }
 
         if ($forEveryone) {
-            if ((int) $message->sender_id !== (int) $user->id && ! $user->hasPermission('communication.moderate')) {
-                throw ValidationException::withMessages(['message' => 'You cannot delete this message for everyone.']);
+            if (! $user->hasPermission('communication.moderate') && ! $user->hasPermission('communication.admin')) {
+                throw ValidationException::withMessages(['message' => 'Only a communication moderator can delete a message for everyone.']);
             }
 
             $message->update([
@@ -371,6 +371,10 @@ class CommunicationService implements CommunicationServiceContract
             $this->audit('message.deleted_for_everyone', $message);
 
             return;
+        }
+
+        if ((int) $message->sender_id !== (int) $user->id) {
+            throw ValidationException::withMessages(['message' => 'You can only delete your own message from your view.']);
         }
 
         MessageDeletion::updateOrCreate(
