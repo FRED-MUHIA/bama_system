@@ -35,6 +35,10 @@ class HospitalityRestaurantService
         }
 
         $headers = $this->headers(fgetcsv($handle) ?: []);
+        if (! $headers || ! array_intersect($headers, ['name', 'item', 'item_name', 'menu_item'])) {
+            fclose($handle);
+            throw ValidationException::withMessages(['menu_file' => 'The menu CSV needs a header row with an item name column, such as name or Item Name, and a price column.']);
+        }
         $created = 0;
         $updated = 0;
         $skipped = [];
@@ -48,7 +52,7 @@ class HospitalityRestaurantService
                 }
 
                 $data = array_combine($headers, array_slice(array_pad($row, count($headers), ''), 0, count($headers)));
-                $name = trim((string) ($data['name'] ?? $data['item'] ?? $data['menu_item'] ?? ''));
+                $name = trim((string) ($data['name'] ?? $data['item'] ?? $data['item_name'] ?? $data['menu_item'] ?? ''));
                 $price = $this->money($data['price'] ?? $data['selling_price'] ?? $data['amount'] ?? null);
 
                 if ($name === '' || $price === null) {
@@ -57,12 +61,16 @@ class HospitalityRestaurantService
                 }
 
                 $categoryName = trim((string) ($data['category'] ?? 'Restaurant Menu')) ?: 'Restaurant Menu';
+                $status = Str::of((string) ($data['status'] ?? 'available'))->lower()->trim()->toString();
+                if (in_array($status, ['unavailable', 'inactive', 'disabled', 'out of stock', '0', 'no'], true)) {
+                    continue;
+                }
                 $category = ProductCategory::firstOrCreate(
                     ['name' => $categoryName],
                     ['description' => 'Hospitality restaurant menu']
                 );
 
-                $sku = trim((string) ($data['sku'] ?? '')) ?: $this->sku($categoryName, $name);
+                $sku = trim((string) ($data['sku'] ?? $data['item_code'] ?? $data['code'] ?? '')) ?: $this->sku($categoryName, $name);
                 $product = Product::where('sku', $sku)->first();
                 $wasExisting = (bool) $product;
 
@@ -70,7 +78,7 @@ class HospitalityRestaurantService
                 $product->fill([
                     'product_category_id' => $category->id,
                     'name' => $name,
-                    'description' => trim((string) ($data['description'] ?? $categoryName)),
+                    'description' => trim((string) ($data['description'] ?? $data['ingredient_description'] ?? $data['ingredients'] ?? $categoryName)),
                     'price' => $price,
                     'cost_price' => $this->money($data['cost_price'] ?? $data['cost'] ?? 0) ?? 0,
                     'stock_quantity' => max($this->money($data['stock'] ?? $data['quantity'] ?? 0) ?? 0, 0),
@@ -317,7 +325,17 @@ class HospitalityRestaurantService
 
     private function headers(array $headers): array
     {
-        return array_map(fn ($header) => Str::of((string) $header)->lower()->replace(['#', '/', '-'], ' ')->squish()->replace(' ', '_')->toString(), $headers);
+        return array_map(function ($header) {
+            $normalized = Str::of((string) $header)->lower()->replace(['#', '/', '-'], ' ')->squish()->replace(' ', '_')->toString();
+
+            return match ($normalized) {
+                'item_name', 'food_name', 'product_name' => 'item_name',
+                'item_code', 'product_code', 'item_id' => 'item_code',
+                'ingredient_description', 'item_description', 'ingredients' => 'ingredient_description',
+                'selling_price', 'unit_price', 'amount' => 'price',
+                default => $normalized,
+            };
+        }, $headers);
     }
 
     private function money(mixed $value): ?float
