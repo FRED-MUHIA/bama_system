@@ -45,6 +45,7 @@
     .comm-icon-btn{width:32px;height:32px;border:1px solid #d0d5dd;border-radius:8px;background:#fff;color:#344054;display:inline-grid;place-items:center}
     .comm-icon-btn:hover{background:#f6f8fb}
     .comm-composer{padding:12px 14px;border-top:1px solid #edf0f5;background:#fbfcfd;border-radius:0 0 8px 8px}
+    .comm-composer textarea[name="body"]{min-height:44px;max-height:160px;resize:none;overflow-y:hidden}
     .comm-typing-indicator{min-height:1.25rem;color:#008a45;font-size:.78rem;font-weight:700}
     .comm-typing-dots{display:inline-flex;gap:3px;margin-right:5px;vertical-align:middle}
     .comm-typing-dots i{width:5px;height:5px;border-radius:50%;background:currentColor;animation:comm-typing 1s infinite ease-in-out}
@@ -251,7 +252,7 @@
             <form method="post" action="{{ route('communication.messages.store') }}" enctype="multipart/form-data" class="comm-list">
                 @csrf
                 <input type="hidden" name="channel_id" value="{{ $activeChannel?->id }}">
-                <textarea class="form-control" name="body" rows="3" placeholder="Write a message or @mention a teammate" required></textarea>
+                <textarea class="form-control" name="body" rows="1" placeholder="Write a message or @mention a teammate" required></textarea>
                 <div class="comm-typing-indicator" id="comm-typing-indicator" aria-live="polite"></div>
                 <div class="d-flex gap-2 flex-wrap">
                     <input class="form-control" type="file" name="attachments[]" multiple @disabled(!$settings->allow_file_sharing)>
@@ -586,7 +587,15 @@
 
     const composer = document.querySelector('.comm-composer form');
     const messageInput = composer?.querySelector('textarea[name="body"]');
+    const resizeComposer = () => {
+        if (!messageInput) return;
+        messageInput.style.height = 'auto';
+        const maxHeight = 160;
+        messageInput.style.height = `${Math.min(messageInput.scrollHeight, maxHeight)}px`;
+        messageInput.style.overflowY = messageInput.scrollHeight > maxHeight ? 'auto' : 'hidden';
+    };
     messageInput?.addEventListener('input', () => {
+        resizeComposer();
         window.clearTimeout(typingTimer);
         if (!messageInput.value.trim()) { stopTyping(); return; }
         const now = Date.now();
@@ -598,6 +607,7 @@
         typingTimer = window.setTimeout(stopTyping, 1600);
     });
     messageInput?.addEventListener('blur', stopTyping);
+    resizeComposer();
     composer?.addEventListener('submit', async event => {
         event.preventDefault();
         stopTyping();
@@ -609,7 +619,7 @@
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || Object.values(result.errors || {}).flat()[0] || 'Message could not be sent.');
             appendMessage(result.message);
-            composer.querySelector('textarea[name="body"]')?.value && (composer.querySelector('textarea[name="body"]').value = '');
+            if (messageInput) { messageInput.value = ''; resizeComposer(); }
             composer.querySelector('input[type="file"]')?.value && (composer.querySelector('input[type="file"]').value = '');
             await refresh();
         } catch (error) {
