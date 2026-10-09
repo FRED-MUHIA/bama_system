@@ -7,8 +7,11 @@
     .hospitality-panel{background:#fffdfa;border:1px solid #dedbd5;border-radius:12px}
     .hospitality-form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
     .restaurant-layout{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:16px}
-    .menu-list{display:grid;gap:10px;max-height:460px;overflow:auto;padding-right:4px}
-    .menu-row{display:grid;grid-template-columns:minmax(0,1fr) 86px;gap:10px;align-items:center;border:1px solid #dedbd5;border-radius:10px;padding:10px;background:#fff}
+    .menu-list{display:grid;gap:16px;max-height:560px;overflow:auto;padding:4px}
+    .menu-category{border:1px solid #dedbd5;border-radius:10px;background:#fff;padding:12px}
+    .menu-category-heading{font-size:.9rem;font-weight:800;margin:0 0 9px}
+    .menu-category-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:9px}
+    .menu-row{display:grid;grid-template-columns:minmax(0,1fr) 72px;gap:10px;align-items:center;border:1px solid #eeeae4;border-radius:9px;padding:10px;background:#fff}
     .menu-price{font-weight:800;color:#00A651}
     .qty-input{max-width:86px}
     .operations-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
@@ -263,21 +266,42 @@
                         </div>
                         <div class="h5 mb-0">Total: <span id="restaurant-total">0.00</span></div>
                     </div>
-                    <div class="menu-list">
-                        @forelse($menuItems as $index => $item)
-                            <div class="menu-row">
-                                <div>
-                                    <div class="fw-bold">{{ $item->name }}</div>
-                                    <div class="small text-muted">{{ $item->category?->name ?? 'Restaurant Menu' }}</div>
-                                    @if($item->description)<div class="small text-muted">{{ $item->description }}</div>@endif
-                                    <div class="menu-price">{{ number_format($item->price, 2) }}</div>
-                                    <input type="hidden" name="items[{{ $index }}][product_id]" value="{{ $item->id }}">
-                                </div>
-                                <input class="form-control qty-input restaurant-qty" name="items[{{ $index }}][quantity]" type="number" min="0" step="1" value="0" data-price="{{ $item->price }}">
+                    @if($menuItems->isNotEmpty())
+                        <div class="mb-2">
+                            <label class="visually-hidden" for="restaurant-menu-search">Search food menu</label>
+                            <input class="form-control" id="restaurant-menu-search" type="search" placeholder="Search menu items…" autocomplete="off">
+                            <div class="d-flex flex-wrap gap-2 mt-2" id="restaurant-menu-categories" aria-label="Filter menu by category">
+                                <button class="btn btn-sm btn-success menu-category-filter active" type="button" data-category="all">All categories</button>
+                                @foreach($menuCategories->filter(fn ($category) => $category->products->isNotEmpty()) as $category)
+                                    <button class="btn btn-sm btn-outline-success menu-category-filter" type="button" data-category="{{ $category->id }}">{{ $category->name }}</button>
+                                @endforeach
                             </div>
+                            <div class="small text-muted mt-1" id="restaurant-menu-search-hint" aria-live="polite">Search by food name or description, or choose a category.</div>
+                        </div>
+                    @endif
+                    <div class="menu-list" id="restaurant-menu-list">
+                        @forelse($menuCategories->filter(fn ($category) => $category->products->isNotEmpty()) as $category)
+                            <section class="menu-category" data-menu-category="{{ $category->id }}">
+                                <h3 class="menu-category-heading">{{ $category->name }}</h3>
+                                <div class="menu-category-items">
+                                    @foreach($category->products as $item)
+                                        @php($index = $menuItems->search(fn ($menuItem) => $menuItem->id === $item->id))
+                                        <div class="menu-row" data-menu-item data-category="{{ $category->id }}" data-search="{{ mb_strtolower($item->name.' '.$item->description) }}">
+                                            <div>
+                                                <div class="fw-bold">{{ $item->name }}</div>
+                                                @if($item->description)<div class="small text-muted">{{ $item->description }}</div>@endif
+                                                <div class="menu-price">{{ number_format($item->price, 2) }}</div>
+                                                <input type="hidden" name="items[{{ $index }}][product_id]" value="{{ $item->id }}">
+                                            </div>
+                                            <input aria-label="Quantity for {{ $item->name }}" class="form-control qty-input restaurant-qty" name="items[{{ $index }}][quantity]" type="number" min="0" step="1" value="0" data-price="{{ $item->price }}">
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </section>
                         @empty
                             <div class="alert alert-warning mb-0">Upload a menu CSV or add products in POS before creating restaurant reservations.</div>
                         @endforelse
+                        <div class="small text-muted d-none" id="restaurant-menu-no-results">No menu items match your search.</div>
                     </div>
                     <button class="btn btn-success mt-3" @disabled($menuItems->isEmpty())>Create Restaurant Order</button>
                 </form>
@@ -656,6 +680,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     const total = document.getElementById('restaurant-total');
     const inputs = document.querySelectorAll('.restaurant-qty');
+    const search = document.getElementById('restaurant-menu-search');
+    const categoryButtons = document.querySelectorAll('.menu-category-filter');
+    const menuRows = document.querySelectorAll('[data-menu-item]');
+    const menuSections = document.querySelectorAll('[data-menu-category]');
+    const noResults = document.getElementById('restaurant-menu-no-results');
+    const searchHint = document.getElementById('restaurant-menu-search-hint');
+    let selectedCategory = 'all';
     const render = () => {
         const amount = Array.from(inputs).reduce((sum, input) => {
             return sum + (Number(input.value || 0) * Number(input.dataset.price || 0));
@@ -663,6 +694,32 @@ document.addEventListener('DOMContentLoaded', () => {
         total.textContent = amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     };
     inputs.forEach((input) => input.addEventListener('input', render));
+    const filterMenu = () => {
+        const query = (search?.value || '').trim().toLocaleLowerCase();
+        let visible = 0;
+        menuRows.forEach((row) => {
+            const matches = (selectedCategory === 'all' || row.dataset.category === selectedCategory)
+                && (!query || row.dataset.search.includes(query));
+            row.classList.toggle('d-none', !matches);
+            if (matches) visible++;
+        });
+        menuSections.forEach((section) => {
+            section.classList.toggle('d-none', !section.querySelector('[data-menu-item]:not(.d-none)'));
+        });
+        noResults?.classList.toggle('d-none', visible > 0);
+        if (searchHint) searchHint.textContent = query ? `${visible} matching menu item${visible === 1 ? '' : 's'}.` : 'Search by food name or description, or choose a category.';
+    };
+    search?.addEventListener('input', filterMenu);
+    categoryButtons.forEach((button) => button.addEventListener('click', () => {
+        selectedCategory = button.dataset.category;
+        categoryButtons.forEach((filter) => {
+            const active = filter === button;
+            filter.classList.toggle('active', active);
+            filter.classList.toggle('btn-success', active);
+            filter.classList.toggle('btn-outline-success', !active);
+        });
+        filterMenu();
+    }));
     render();
 });
 </script>
