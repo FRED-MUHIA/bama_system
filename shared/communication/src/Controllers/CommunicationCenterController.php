@@ -65,7 +65,7 @@ class CommunicationCenterController extends Controller
             'after_id' => ['nullable', 'integer', 'min:0'],
         ]);
         $user = $request->user();
-        $channels = $communication->accessibleChannels($user);
+        $channels = ! empty($data['channel_id']) ? $communication->accessibleChannels($user) : collect();
         $channel = ! empty($data['channel_id']) ? $channels->firstWhere('id', (int) $data['channel_id']) : null;
         abort_if(! empty($data['channel_id']) && ! $channel, 403);
 

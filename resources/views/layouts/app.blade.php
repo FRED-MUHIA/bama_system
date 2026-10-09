@@ -1568,6 +1568,78 @@ document.addEventListener('DOMContentLoaded', () => {
 @vite('resources/js/app.js')
 @stack('scripts')
 @auth
+@if(auth()->user()->hasPermission('communication.view') && !in_array(auth()->user()->role, ['super_admin', 'client_portal'], true) && \App\Support\ActiveBusiness::id())
+<script>
+(() => {
+    if (document.querySelector('.page-shell[data-live-updates-url]')) return;
+    const button = document.querySelector('.header-alert-btn');
+    const menu = document.querySelector('.header-notification-menu');
+    if (!button || !menu) return;
+    const endpoint = @json(route('communication.updates'));
+    const noticeUrl = @json(route('communication.notifications.open', ['notification' => '__NOTICE__']));
+    let pending = false;
+
+    const node = (tag, className, text) => {
+        const item = document.createElement(tag);
+        if (className) item.className = className;
+        if (text !== undefined && text !== null) item.textContent = text;
+        return item;
+    };
+
+    const refresh = async () => {
+        if (pending || document.hidden) return;
+        pending = true;
+        try {
+            const response = await fetch(endpoint, {headers: {'Accept': 'application/json'}, cache: 'no-store', credentials: 'same-origin'});
+            if (!response.ok) return;
+            const data = await response.json();
+            const total = Number(data.unread_total || 0);
+            let badge = button.querySelector('.header-badge');
+            if (total > 0) {
+                if (!badge) { badge = node('span', 'header-badge'); button.append(badge); }
+                badge.textContent = total > 99 ? '99+' : String(total);
+            } else badge?.remove();
+
+            const header = menu.querySelector('.header-notification-head');
+            const messageCount = Number(data.unread_messages || 0);
+            const summary = header?.querySelector('.text-muted.small');
+            if (summary) summary.textContent = `${messageCount.toLocaleString()} unread message${messageCount === 1 ? '' : 's'}`;
+            const totalBadge = header?.querySelector('.badge');
+            if (totalBadge) totalBadge.textContent = total.toLocaleString();
+
+            const list = menu.querySelector('.header-notification-list');
+            if (!list) return;
+            list.replaceChildren();
+            const notices = Array.isArray(data.notifications) ? data.notifications : [];
+            if (!notices.length) {
+                list.append(node('div', 'p-3 text-muted', 'No new messages or alerts.'));
+                return;
+            }
+            notices.forEach(notice => {
+                const link = node('a', 'header-notification-item');
+                link.href = noticeUrl.replace('__NOTICE__', notice.id);
+                const title = node('div', 'notification-title');
+                const label = node('span');
+                const isMessage = ['Message', 'Mention'].includes(notice.notification_type);
+                label.append(node('i', `bi ${isMessage ? 'bi-chat-dots' : 'bi-bell'} me-1 text-success`), document.createTextNode(notice.title || 'New alert'));
+                title.append(label, node('small', 'text-muted', notice.created_at ? new Date(notice.created_at).toLocaleString() : ''));
+                link.append(title);
+                if (notice.body) link.append(node('div', 'notification-body', notice.body));
+                list.append(link);
+            });
+        } catch (_) {
+            // Retry on the next interval if this request cannot reach the server.
+        } finally { pending = false; }
+    };
+
+    refresh();
+    window.setInterval(refresh, 5000);
+    document.addEventListener('visibilitychange', refresh);
+})();
+</script>
+@endif
+@endauth
+@auth
 @if(!in_array(auth()->user()->role, ['super_admin', 'client_portal'], true) && \App\Support\ActiveBusiness::id())
 <script>
 (() => {

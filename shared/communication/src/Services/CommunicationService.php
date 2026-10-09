@@ -88,6 +88,13 @@ class CommunicationService implements CommunicationServiceContract
 
         $channel = CommunicationChannel::where('slug', $slug)->first();
         if ($channel) {
+            foreach ($ids as $userId) {
+                $member = ChannelMember::where('communication_channel_id', $channel->id)->where('user_id', $userId)->first();
+                if (! $member || $member->status !== 'Active') {
+                    $this->addMember($channel, (int) $userId);
+                }
+            }
+
             return $channel;
         }
 
