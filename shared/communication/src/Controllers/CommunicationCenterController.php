@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\User;
 use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Shared\Communication\Contracts\CommunicationServiceContract;
@@ -87,7 +88,53 @@ class CommunicationCenterController extends Controller
             'unread_total' => (clone $notificationQuery)->count(),
             'unread_messages' => (clone $notificationQuery)->whereIn('notification_type', ['Message', 'Mention'])->count(),
             'notifications' => (clone $notificationQuery)->latest()->limit(8)->get(['id', 'notification_type', 'title', 'body', 'created_at']),
+            'typing_users' => $channel && $communication->settings()->enable_typing_indicators
+                ? $this->activeTypers($channel->id, $user->id)
+                : [],
         ]);
+    }
+
+    public function typing(Request $request, CommunicationChannel $channel, CommunicationServiceContract $communication)
+    {
+        abort_unless($communication->accessibleChannels($request->user())->contains('id', $channel->id), 403);
+
+        if (! $communication->settings()->enable_typing_indicators) {
+            return response()->noContent();
+        }
+
+        $typing = $request->validate(['typing' => ['required', 'boolean']])['typing'];
+        $cacheKey = $this->typingCacheKey($channel->id);
+        $now = now()->timestamp;
+        $users = collect(Cache::get($cacheKey, []))
+            ->filter(fn ($entry) => (int) ($entry['expires_at'] ?? 0) > $now && (int) ($entry['user_id'] ?? 0) !== (int) $request->user()->id);
+
+        if (filter_var($typing, FILTER_VALIDATE_BOOLEAN)) {
+            $users->put((string) $request->user()->id, [
+                'user_id' => $request->user()->id,
+                'name' => $request->user()->name,
+                'expires_at' => now()->addSeconds(8)->timestamp,
+            ]);
+        }
+
+        Cache::put($cacheKey, $users->all(), now()->addSeconds(10));
+
+        return response()->noContent();
+    }
+
+    private function activeTypers(int $channelId, int $userId): array
+    {
+        $now = now()->timestamp;
+
+        return collect(Cache::get($this->typingCacheKey($channelId), []))
+            ->filter(fn ($entry) => (int) ($entry['expires_at'] ?? 0) > $now && (int) ($entry['user_id'] ?? 0) !== $userId)
+            ->map(fn ($entry) => ['user_id' => (int) $entry['user_id'], 'name' => (string) $entry['name']])
+            ->values()
+            ->all();
+    }
+
+    private function typingCacheKey(int $channelId): string
+    {
+        return 'communication:typing:'.ActiveBusiness::id().':'.$channelId;
     }
 
     public function openNotification(Request $request, int $notification, CommunicationServiceContract $communication)

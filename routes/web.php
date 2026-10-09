@@ -64,6 +64,7 @@ use Modules\Retail\Controllers\RetailCatalogController;
 use Modules\Retail\Controllers\RetailCustomerController;
 use Modules\Retail\Controllers\RetailDashboardController;
 use Modules\Retail\Controllers\RetailDeliveryController;
+use Modules\Retail\Controllers\RetailExpenseController;
 use Modules\Retail\Controllers\RetailGiftCardController;
 use Modules\Retail\Controllers\RetailInventoryController;
 use Modules\Retail\Controllers\RetailLoyaltyController;
@@ -300,6 +301,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/notifications/{notification}/open', [CommunicationCenterController::class, 'openNotification'])->middleware('permission:communication.view')->name('notifications.open');
             Route::post('/channels', [CommunicationCenterController::class, 'channel'])->middleware('permission:communication.create_channel')->name('channels.store');
             Route::post('/channels/{channel}/read', [CommunicationCenterController::class, 'markRead'])->middleware('permission:communication.view')->name('channels.read');
+            Route::post('/channels/{channel}/typing', [CommunicationCenterController::class, 'typing'])->middleware('permission:communication.send')->name('channels.typing');
             Route::get('/attachments/{attachment}/download', [CommunicationCenterController::class, 'downloadAttachment'])->middleware('permission:communication.view')->name('attachments.download');
             Route::post('/messages', [CommunicationCenterController::class, 'message'])->middleware('permission:communication.send')->name('messages.store');
             Route::post('/messages/{message}/reactions', [CommunicationCenterController::class, 'react'])->middleware('permission:communication.send')->name('messages.reactions.store');
@@ -435,6 +437,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/returns', [RetailReturnController::class, 'index'])->middleware('permission:retail.returns.view')->name('returns.index');
             Route::post('/returns', [RetailReturnController::class, 'store'])->middleware('permission:retail.returns.manage')->name('returns.store');
             Route::post('/returns/{returnAuthorization}/approve', [RetailReturnController::class, 'approve'])->middleware('permission:retail.returns.manage')->name('returns.approve');
+            Route::get('/expenses', [RetailExpenseController::class, 'index'])->middleware('permission:expenses.view')->name('expenses.index');
+            Route::post('/expenses', [RetailExpenseController::class, 'store'])->middleware('permission:expenses.manage')->name('expenses.store');
             Route::get('/procurement', [RetailOperationsController::class, 'procurement'])->middleware('permission:retail.procurement.view')->name('procurement.index');
             Route::get('/suppliers', [RetailOperationsController::class, 'suppliers'])->middleware('permission:retail.suppliers.view')->name('suppliers.index');
             Route::post('/suppliers', [RetailOperationsController::class, 'storeSupplier'])->middleware('permission:retail.suppliers.manage')->name('suppliers.store');

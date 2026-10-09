@@ -20,7 +20,7 @@ class Product extends Model
 
     protected $fillable = [
         'tenant_id', 'business_id', 'product_category_id', 'product_brand_id', 'product_type',
-        'name', 'sku', 'barcode', 'description', 'main_image_path', 'price', 'wholesale_price',
+        'name', 'sku', 'barcode', 'size', 'description', 'main_image_path', 'price', 'wholesale_price',
         'promotional_price', 'cost_price', 'tax_class', 'stock_quantity', 'reorder_level',
         'stock_unit', 'is_active', 'status', 'track_inventory', 'is_serialized',
         'is_batch_tracked', 'is_expiry_tracked', 'weight', 'length', 'width', 'height',

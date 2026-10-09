@@ -30,7 +30,7 @@
                         <div class="d-flex align-items-start justify-content-between gap-3">
                             <div class="min-w-0">
                                 <h3 class="h6 mb-1">{{ $item->name }}</h3>
-                                <div class="small text-muted">{{ $item->category?->name ?: 'No category' }} @if($item->sku) · {{ $item->sku }} @endif</div>
+                                <div class="small text-muted">{{ $item->category?->name ?: 'No category' }} @if($item->sku) · SKU {{ $item->sku }} @endif @if($item->barcode) · ID {{ $item->barcode }} @endif @if($item->brand?->name) · {{ $item->brand->name }} @endif @if($item->size) · Size {{ $item->size }} @endif</div>
                             </div>
                             <span class="status-pill flex-shrink-0">{{ $item->is_active ? 'active' : 'inactive' }}</span>
                         </div>
@@ -80,7 +80,7 @@
                 <tbody>
                 @forelse($products as $item)
                     <tr>
-                        <td><div class="d-flex align-items-center gap-2"><div class="flex-shrink-0 rounded bg-light border overflow-hidden d-flex align-items-center justify-content-center" style="width:48px;height:48px">@if($item->main_image_path)<img src="{{ \App\Support\PublicUpload::url($item->main_image_path) }}" alt="{{ $item->name }}" style="width:100%;height:100%;object-fit:cover">@else<i class="bi bi-box-seam text-muted"></i>@endif</div><div>{{ $item->name }}<div class="small text-muted">{{ $item->description }}</div></div></div></td>
+                        <td><div class="d-flex align-items-center gap-2"><div class="flex-shrink-0 rounded bg-light border overflow-hidden d-flex align-items-center justify-content-center" style="width:48px;height:48px">@if($item->main_image_path)<img src="{{ \App\Support\PublicUpload::url($item->main_image_path) }}" alt="{{ $item->name }}" style="width:100%;height:100%;object-fit:cover">@else<i class="bi bi-box-seam text-muted"></i>@endif</div><div>{{ $item->name }}<div class="small text-muted">{{ $item->description }}</div><div class="small text-muted">@if($item->barcode)ID {{ $item->barcode }} · @endif{{ $item->brand?->name }}@if($item->size) · Size {{ $item->size }}@endif</div></div></div></td>
                         <td>{{ $item->category?->name }}</td>
                         <td>{{ $item->sku }}</td>
                         <td>{{ number_format($item->price,2) }}</td>

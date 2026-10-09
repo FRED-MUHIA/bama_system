@@ -106,6 +106,7 @@ return [
         ['label' => 'Orders', 'route' => 'retail.orders.index', 'icon' => 'bi-bag-check', 'permission' => 'retail.orders.view', 'tables' => ['retail_orders']],
         ['label' => 'Customers', 'route' => 'retail.customers.index', 'icon' => 'bi-people', 'permission' => 'retail.customers.view', 'tables' => ['retail_customer_profiles']],
         ['label' => 'Returns', 'route' => 'retail.returns.index', 'icon' => 'bi-arrow-counterclockwise', 'permission' => 'retail.returns.view', 'tables' => ['retail_return_authorizations']],
+        ['label' => 'Expenses', 'route' => 'retail.expenses.index', 'icon' => 'bi-receipt', 'permission' => 'expenses.view', 'active_routes' => ['retail.expenses.*']],
         ['label' => 'Suppliers', 'route' => 'retail.suppliers.index', 'icon' => 'bi-truck', 'permission' => 'retail.suppliers.view'],
         ['label' => 'Website', 'route' => 'retail.ecommerce.index', 'icon' => 'bi-globe2', 'permission' => 'retail.ecommerce.view', 'tables' => ['retail_ecommerce_integrations']],
         ['label' => 'Reports', 'route' => 'retail.reports.index', 'icon' => 'bi-bar-chart', 'permission' => 'retail.reports'],

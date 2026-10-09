@@ -45,6 +45,11 @@
     .comm-icon-btn{width:32px;height:32px;border:1px solid #d0d5dd;border-radius:8px;background:#fff;color:#344054;display:inline-grid;place-items:center}
     .comm-icon-btn:hover{background:#f6f8fb}
     .comm-composer{padding:12px 14px;border-top:1px solid #edf0f5;background:#fbfcfd;border-radius:0 0 8px 8px}
+    .comm-typing-indicator{min-height:1.25rem;color:#008a45;font-size:.78rem;font-weight:700}
+    .comm-typing-dots{display:inline-flex;gap:3px;margin-right:5px;vertical-align:middle}
+    .comm-typing-dots i{width:5px;height:5px;border-radius:50%;background:currentColor;animation:comm-typing 1s infinite ease-in-out}
+    .comm-typing-dots i:nth-child(2){animation-delay:.15s}.comm-typing-dots i:nth-child(3){animation-delay:.3s}
+    @keyframes comm-typing{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
     .comm-list{display:grid;gap:8px}
     .comm-line{border:1px solid #edf0f5;border-radius:8px;padding:9px;min-width:0}
     .comm-scroll{max-height:320px;overflow:auto}
@@ -59,7 +64,7 @@
     @media(max-width:760px){.comm-toolbar,.comm-shell,.comm-grid-two{grid-template-columns:1fr}.comm-metrics,.comm-search-results{grid-template-columns:repeat(2,minmax(0,1fr))}.comm-stream{height:44vh;padding:10px}.comm-panel-head{align-items:flex-start;flex-direction:column}.comm-actions .btn{width:100%}.comm-message{max-width:94%;content-visibility:auto;contain-intrinsic-size:1px 92px}.comm-side[data-defer-template]:empty::before{display:none}}
 </style>
 
-<div class="page-shell" data-live-updates-url="{{ route('communication.updates') }}" data-notification-url-template="{{ route('communication.notifications.open', ['notification' => '__NOTICE__']) }}" data-attachment-url-template="{{ route('communication.attachments.download', ['attachment' => '__ATTACHMENT__']) }}">
+<div class="page-shell" data-live-updates-url="{{ route('communication.updates') }}" data-notification-url-template="{{ route('communication.notifications.open', ['notification' => '__NOTICE__']) }}" data-attachment-url-template="{{ route('communication.attachments.download', ['attachment' => '__ATTACHMENT__']) }}" data-typing-url-template="{{ route('communication.channels.typing', ['channel' => '__CHANNEL__']) }}" data-csrf-token="{{ csrf_token() }}">
 <x-page-header title="Messages" kicker="Shared Workspace" subtitle="Conversations, alerts, files, announcements, and team communication.">
     <x-slot:actions>
     <form method="get" action="{{ route('communication.center') }}" class="d-flex gap-2 flex-wrap">
@@ -247,6 +252,7 @@
                 @csrf
                 <input type="hidden" name="channel_id" value="{{ $activeChannel?->id }}">
                 <textarea class="form-control" name="body" rows="3" placeholder="Write a message or @mention a teammate" required></textarea>
+                <div class="comm-typing-indicator" id="comm-typing-indicator" aria-live="polite"></div>
                 <div class="d-flex gap-2 flex-wrap">
                     <input class="form-control" type="file" name="attachments[]" multiple @disabled(!$settings->allow_file_sharing)>
                     <button class="btn btn-success" @disabled(!$activeChannel || !$settings->chat_enabled)><i class="bi bi-send"></i> Send</button>
@@ -398,6 +404,9 @@
     const updatesUrl = page.dataset.liveUpdatesUrl;
     let lastMessageId = Number(stream.dataset.lastMessageId || 0);
     let polling = false;
+    let typingTimer = null;
+    let lastTypingSignalAt = 0;
+    let typingActive = false;
 
     const element = (tag, className, text) => {
         const node = document.createElement(tag);
@@ -522,6 +531,40 @@
         });
     };
 
+    const updateTypingIndicator = users => {
+        const indicator = document.getElementById('comm-typing-indicator');
+        if (!indicator) return;
+        const names = (Array.isArray(users) ? users : []).map(user => user.name).filter(Boolean);
+        indicator.replaceChildren();
+        if (!names.length) return;
+        const dots = element('span', 'comm-typing-dots');
+        dots.setAttribute('aria-hidden', 'true');
+        dots.append(element('i'), element('i'), element('i'));
+        indicator.append(dots, document.createTextNode(names.length === 1 ? `${names[0]} is typing…` : `${names.slice(0, 2).join(' and ')}${names.length > 2 ? ` +${names.length - 2}` : ''} are typing…`));
+    };
+
+    const signalTyping = async typing => {
+        const url = page.dataset.typingUrlTemplate.replace('__CHANNEL__', stream.dataset.channelId);
+        try {
+            await fetch(url, {
+                method: 'POST',
+                headers: {'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': page.dataset.csrfToken},
+                body: JSON.stringify({typing}),
+                credentials: 'same-origin',
+                keepalive: !typing,
+            });
+        } catch (_) { /* Typing feedback will expire automatically if this request fails. */ }
+    };
+
+    const stopTyping = () => {
+        window.clearTimeout(typingTimer);
+        typingTimer = null;
+        if (typingActive) {
+            typingActive = false;
+            signalTyping(false);
+        }
+    };
+
     const refresh = async () => {
         if (polling || document.hidden) return;
         polling = true;
@@ -535,14 +578,29 @@
             (data.messages || []).forEach(appendMessage);
             updateChannelUnread(data.unread_by_channel || {});
             updateHeaderAlerts(data);
+            updateTypingIndicator(data.typing_users || []);
         } catch (_) {
             // Retry when the connection is available again.
         } finally { polling = false; }
     };
 
     const composer = document.querySelector('.comm-composer form');
+    const messageInput = composer?.querySelector('textarea[name="body"]');
+    messageInput?.addEventListener('input', () => {
+        window.clearTimeout(typingTimer);
+        if (!messageInput.value.trim()) { stopTyping(); return; }
+        const now = Date.now();
+        if (!typingActive || now - lastTypingSignalAt > 2500) {
+            typingActive = true;
+            lastTypingSignalAt = now;
+            signalTyping(true);
+        }
+        typingTimer = window.setTimeout(stopTyping, 1600);
+    });
+    messageInput?.addEventListener('blur', stopTyping);
     composer?.addEventListener('submit', async event => {
         event.preventDefault();
+        stopTyping();
         const submit = composer.querySelector('button[type="submit"], button:not([type])');
         if (submit?.disabled) return;
         if (submit) submit.disabled = true;
