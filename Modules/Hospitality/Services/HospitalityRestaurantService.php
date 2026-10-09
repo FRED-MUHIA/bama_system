@@ -34,8 +34,11 @@ class HospitalityRestaurantService
             throw ValidationException::withMessages(['menu_file' => 'The menu file could not be opened.']);
         }
 
-        $headers = $this->headers(fgetcsv($handle) ?: []);
-        if (! $headers || ! array_intersect($headers, ['name', 'item', 'item_name', 'menu_item'])) {
+        $firstLine = fgets($handle);
+        $delimiter = $firstLine !== false && substr_count($firstLine, ';') > substr_count($firstLine, ',') ? ';' : ',';
+        rewind($handle);
+        $headers = $this->headers(fgetcsv($handle, 0, $delimiter) ?: []);
+        if (! $headers || ! array_intersect($headers, ['name', 'item', 'item_name', 'menu_item']) || ! in_array('price', $headers, true)) {
             fclose($handle);
             throw ValidationException::withMessages(['menu_file' => 'The menu CSV needs a header row with an item name column, such as name or Item Name, and a price column.']);
         }
@@ -44,8 +47,8 @@ class HospitalityRestaurantService
         $skipped = [];
         $line = 1;
 
-        DB::transaction(function () use ($handle, $headers, &$created, &$updated, &$skipped, &$line) {
-            while (($row = fgetcsv($handle)) !== false) {
+        DB::transaction(function () use ($handle, $headers, $delimiter, &$created, &$updated, &$skipped, &$line) {
+            while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 $line++;
                 if (collect($row)->every(fn ($value) => trim((string) $value) === '')) {
                     continue;
@@ -326,7 +329,7 @@ class HospitalityRestaurantService
     private function headers(array $headers): array
     {
         return array_map(function ($header) {
-            $normalized = Str::of((string) $header)->lower()->replace(['#', '/', '-'], ' ')->squish()->replace(' ', '_')->toString();
+            $normalized = Str::of((string) $header)->replace("\xEF\xBB\xBF", '')->lower()->replace(['#', '/', '-'], ' ')->squish()->replace(' ', '_')->toString();
 
             return match ($normalized) {
                 'item_name', 'food_name', 'product_name' => 'item_name',
