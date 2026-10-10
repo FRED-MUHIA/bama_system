@@ -102,6 +102,7 @@ Route::get('/portal/activate/{token}', [PortalController::class, 'activateForm']
 Route::post('/portal/activate/{token}', [PortalController::class, 'activate'])->name('portal.activate.store');
 Route::get('/hospitality/menu', [HospitalityFrontController::class, 'menu'])->name('public.hospitality.menu');
 Route::post('/hospitality/menu/reserve', [HospitalityFrontController::class, 'reserve'])->name('public.hospitality.reserve');
+Route::get('/hospitality/menu/orders/{order}', [HospitalityFrontController::class, 'order'])->middleware('signed')->name('public.hospitality.order');
 Route::post('/billing/mpesa/callback', [BillingController::class, 'mpesaCallback'])->name('billing.mpesa.callback');
 Route::get('/app', function () {
     $user = auth()->user();

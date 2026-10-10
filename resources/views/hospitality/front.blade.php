@@ -50,8 +50,8 @@
             </div>
             <div class="hero-grid">
                 <div>
-                    <h1>Menu & Table Reservations</h1>
-                    <p>Reserve a table, choose food ahead of arrival, and let the restaurant team prepare the order through the same POS-backed Hospitality workflow.</p>
+                    <h1>Menu & Orders</h1>
+                    <p>Choose your dishes and send your order straight to the kitchen. Your receipt will be available once your order is served.</p>
                 </div>
                 <div class="hero-panel">
                     <div class="text-muted">Today’s Menu</div>
@@ -66,6 +66,10 @@
         <div class="front-wrap">
             @if(session('status'))
                 <div class="front-alert">{{ session('status') }}</div>
+            @endif
+
+            @if($errors->any())
+                <div class="front-empty" role="alert">{{ $errors->first() }}</div>
             @endif
 
             <form method="post" action="{{ route('public.hospitality.reserve') }}" class="front-grid" id="front-menu-form">
@@ -105,41 +109,22 @@
                 </div>
 
                 <aside class="reserve-card">
-                    <h2>Reserve</h2>
+                    <h2>Your order</h2>
                     <div class="field-grid">
-                        <input class="front-input" name="full_name" placeholder="Full name" required>
-                        <input class="front-input" name="phone" placeholder="Phone">
-                        <input class="front-input" name="email" type="email" placeholder="Email">
-                        <select class="front-select" name="order_type" required>
-                            <option>Table Reservation</option>
+                        <select class="front-select" name="order_type" aria-label="Order type" required>
                             <option>Dine In</option>
-                            <option>Room Service</option>
                             <option>Takeaway</option>
                         </select>
-                        <select class="front-select" name="restaurant_table_id">
+                        <select class="front-select" name="restaurant_table_id" aria-label="Table">
                             <option value="">Choose table</option>
                             @foreach($restaurantTables as $table)
                                 <option value="{{ $table->id }}">{{ $table->table_number }} · {{ $table->section ?: 'Main floor' }} · {{ $table->capacity }} seats</option>
                             @endforeach
                         </select>
-                        <input class="front-input" name="reserved_for" type="datetime-local" required>
-                        <input class="front-input" name="party_size" type="number" min="1" value="2" placeholder="Guests" required>
-                        <select class="front-select" name="payment_method_id">
-                            <option value="">Pay at restaurant</option>
-                            @foreach($paymentMethods as $method)
-                                <option value="{{ $method->id }}">{{ $method->name }}</option>
-                            @endforeach
-                        </select>
-                        <select class="front-select" name="shipping_method">
-                            <option value="">No delivery</option>
-                            @foreach($shippingMethods as $method)
-                                <option>{{ $method }}</option>
-                            @endforeach
-                        </select>
-                        <input class="front-input" name="notes" placeholder="Special request">
+                        <input class="front-input" name="notes" placeholder="Special request" aria-label="Special request">
                     </div>
                     <div class="total-line"><span>Total</span><span id="front-menu-total">0.00</span></div>
-                    <button class="front-button" @disabled($menuItems->isEmpty())>Send Reservation</button>
+                    <button class="front-button" @disabled($menuItems->isEmpty())>Send order to kitchen</button>
                 </aside>
             </form>
         </div>
