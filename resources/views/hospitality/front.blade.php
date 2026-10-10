@@ -19,6 +19,14 @@
     .menu-card{background:#fff;border:1px solid #dedbd5;border-radius:12px;padding:14px;display:grid;gap:10px;min-height:172px}
     .menu-card h2{font-size:1.05rem;margin:0}
     .menu-card p{margin:0;color:#6f6b66;font-size:.92rem}
+    .menu-tools{display:grid;gap:12px;margin-bottom:16px}
+    .menu-search-label{font-weight:800}
+    .menu-categories{display:flex;flex-wrap:wrap;gap:8px}
+    .menu-category{border:1px solid #d8d4cc;border-radius:999px;padding:8px 14px;background:#fff;color:#101010;cursor:pointer;font:inherit}
+    .menu-category[aria-pressed="true"]{background:#00A651;border-color:#00A651;color:#fff}
+    .menu-category:focus-visible,.menu-tools input:focus-visible{outline:3px solid #00843f;outline-offset:3px}
+    .menu-results{margin:0;color:#6f6b66;font-size:.92rem}
+    .menu-card[hidden],.front-empty[hidden]{display:none}
     .menu-meta{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:auto}
     .price{color:#00A651;font-weight:900;font-size:1.15rem}
     .reserve-card{background:#fff;border:1px solid #dedbd5;border-radius:12px;padding:16px;position:sticky;top:14px}
@@ -63,9 +71,21 @@
             <form method="post" action="{{ route('public.hospitality.reserve') }}" class="front-grid" id="front-menu-form">
                 @csrf
                 <div>
-                    <div class="menu-grid">
+                    @php($menuCategories = $menuItems->map(fn ($item) => $item->category?->name ?? 'Restaurant Menu')->unique()->sort()->values())
+                    <div class="menu-tools">
+                        <label class="menu-search-label" for="menu-search">Search menu</label>
+                        <input class="front-input" id="menu-search" type="search" placeholder="Search dishes, ingredients or categories" aria-controls="menu-items">
+                        <div class="menu-categories" role="group" aria-label="Menu categories">
+                            <button class="menu-category" type="button" data-menu-category="" aria-pressed="true">All items</button>
+                            @foreach($menuCategories as $category)
+                                <button class="menu-category" type="button" data-menu-category="{{ $category }}" aria-pressed="false">{{ $category }}</button>
+                            @endforeach
+                        </div>
+                        <p class="menu-results" id="menu-results" role="status" aria-live="polite">{{ $menuItems->count() }} menu items</p>
+                    </div>
+                    <div class="menu-grid" id="menu-items">
                         @forelse($menuItems as $index => $item)
-                            <article class="menu-card">
+                            <article class="menu-card" data-category="{{ $item->category?->name ?? 'Restaurant Menu' }}" data-search="{{ $item->name }} {{ $item->category?->name ?? 'Restaurant Menu' }} {{ $item->description }}">
                                 <div>
                                     <h2>{{ $item->name }}</h2>
                                     <p>{{ $item->category?->name ?? 'Restaurant Menu' }}</p>
@@ -81,6 +101,7 @@
                             <div class="front-empty">The restaurant menu is not published yet.</div>
                         @endforelse
                     </div>
+                    <div class="front-empty" id="menu-no-results" hidden>No dishes match your search. Try another search or choose All items.</div>
                 </div>
 
                 <aside class="reserve-card">
@@ -127,6 +148,34 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    const search = document.getElementById('menu-search');
+    const categories = document.querySelectorAll('[data-menu-category]');
+    const cards = document.querySelectorAll('#menu-items .menu-card');
+    const results = document.getElementById('menu-results');
+    const empty = document.getElementById('menu-no-results');
+    let activeCategory = '';
+    const filterMenu = () => {
+        const terms = search.value.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+        let visible = 0;
+        cards.forEach(card => {
+            const matches = (!activeCategory || card.dataset.category === activeCategory)
+                && terms.every(term => card.dataset.search.toLocaleLowerCase().includes(term));
+            card.hidden = !matches;
+            if (matches) visible++;
+        });
+        results.textContent = `${visible} of ${cards.length} menu items`;
+        empty.hidden = visible > 0 || cards.length === 0;
+    };
+    search.addEventListener('input', filterMenu);
+    search.addEventListener('keydown', event => {
+        if (event.key === 'Enter') event.preventDefault();
+    });
+    categories.forEach(button => button.addEventListener('click', () => {
+        activeCategory = button.dataset.menuCategory;
+        categories.forEach(category => category.setAttribute('aria-pressed', String(category === button)));
+        filterMenu();
+    }));
+    filterMenu();
     const total = document.getElementById('front-menu-total');
     const inputs = document.querySelectorAll('.front-qty');
     const render = () => {
