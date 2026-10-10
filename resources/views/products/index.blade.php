@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('title','Products')
 @section('content')
+@php($productAdmin = auth()->check() && app(\App\Services\IamService::class)->isBusinessAdministrator(auth()->user()))
 <style>
     .product-catalog-table { min-width: 1120px; }
     .product-catalog-table th, .product-catalog-table td { padding: .85rem .75rem; white-space: nowrap; }
@@ -67,20 +68,20 @@
                         <div class="d-flex gap-2 mt-3">
                             <button class="btn btn-sm btn-outline-success flex-fill" type="button" data-bs-toggle="collapse" data-bs-target="#mobile-stock-product-{{ $item->id }}">Stock</button>
                             <button class="btn btn-sm btn-outline-dark flex-fill" type="button" data-bs-toggle="collapse" data-bs-target="#mobile-edit-product-{{ $item->id }}">Edit</button>
-                            <form method="post" action="{{ route('products.destroy',$item) }}" onsubmit="return confirm('Archive this product?')">@csrf @method('DELETE')<input class="form-control form-control-sm mb-1" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required><button class="btn btn-sm btn-outline-danger" aria-label="Archive {{ $item->name }}"><i class="bi bi-trash"></i></button></form>
+                            <form method="post" action="{{ route('products.destroy',$item) }}" onsubmit="return confirm('Archive this product?')">@csrf @method('DELETE')@unless($productAdmin)<input class="form-control form-control-sm mb-1" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required>@endunless<button class="btn btn-sm btn-outline-danger" aria-label="Archive {{ $item->name }}"><i class="bi bi-trash"></i></button></form>
                         </div>
                         <div class="collapse mt-3" id="mobile-stock-product-{{ $item->id }}">
                             <form method="post" action="{{ route('products.stock.update', $item) }}" class="row g-2 align-items-end">@csrf
                                 <div class="col-12"><label class="form-label">Movement</label><select class="form-select" name="type"><option>Add</option><option>Remove</option><option>Set</option></select></div>
                                 <div class="col-12"><label class="form-label">Quantity ({{ $item->stock_unit ?: 'pcs' }})</label><input class="form-control" name="quantity" type="number" min="0" step="0.001" inputmode="decimal" required></div>
                                 <div class="col-12"><label class="form-label">Notes</label><input class="form-control" name="notes" placeholder="Reason"></div>
-                                <div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>
+                                @unless($productAdmin)<div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>@endunless
                                 <div class="col-12"><button class="btn btn-success btn-sm w-100">Update Stock</button></div>
                             </form>
                         </div>
                         <div class="collapse mt-3" id="mobile-edit-product-{{ $item->id }}">
                             <form method="post" action="{{ route('products.update',$item) }}" enctype="multipart/form-data" class="row g-2">@csrf @method('PUT')
-                                <div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>
+                                @unless($productAdmin)<div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>@endunless
                                 @include('products.partials.fields', ['product' => $item])
                                 <div class="col-12"><button class="btn btn-warning btn-sm w-100">Update Product</button></div>
                             </form>
@@ -112,7 +113,7 @@
                             <div class="product-action-controls">
                             <button class="btn btn-sm btn-outline-success" data-bs-toggle="collapse" data-bs-target="#stock-product-{{ $item->id }}"><i class="bi bi-boxes"></i></button>
                             <button class="btn btn-sm btn-outline-dark" data-bs-toggle="collapse" data-bs-target="#edit-product-{{ $item->id }}"><i class="bi bi-pencil"></i></button>
-                            <form method="post" action="{{ route('products.destroy',$item) }}" onsubmit="return confirm('Archive this product?')">@csrf @method('DELETE')<input class="form-control form-control-sm mb-1" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                            <form method="post" action="{{ route('products.destroy',$item) }}" onsubmit="return confirm('Archive this product?')">@csrf @method('DELETE')@unless($productAdmin)<input class="form-control form-control-sm" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required>@endunless<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
                             </div>
                         </td>
                     </tr>
@@ -121,13 +122,13 @@
                             <div class="col-md-3"><label class="form-label">Movement</label><select class="form-select" name="type"><option>Add</option><option>Remove</option><option>Set</option></select></div>
                             <div class="col-md-3"><label class="form-label">Quantity ({{ $item->stock_unit ?: 'pcs' }})</label><input class="form-control" name="quantity" type="number" min="0" step="0.001" required></div>
                             <div class="col-md-4"><label class="form-label">Notes</label><input class="form-control" name="notes" placeholder="Reason"></div>
-                            <div class="col-md-3"><label class="form-label">Edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>
+                            @unless($productAdmin)<div class="col-md-3"><label class="form-label">Edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>@endunless
                             <div class="col-md-2"><button class="btn btn-success btn-sm w-100">Update Stock</button></div>
                         </form>
                     </td></tr>
                     <tr class="collapse" id="edit-product-{{ $item->id }}"><td colspan="9">
                         <form method="post" action="{{ route('products.update',$item) }}" enctype="multipart/form-data" class="row g-2">@csrf @method('PUT')
-                            <div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>
+                            @unless($productAdmin)<div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>@endunless
                             @include('products.partials.fields', ['product' => $item])
                             <div class="col-12"><button class="btn btn-warning btn-sm">Update Product</button></div>
                         </form>
@@ -152,7 +153,7 @@
             <h2 class="h5">Import / Export Products</h2>
             <form method="post" action="{{ route('products.import') }}" enctype="multipart/form-data" class="row g-2">
                 @csrf
-                <div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>
+                @unless($productAdmin)<div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>@endunless
                 <div class="col-12"><input class="form-control" type="file" name="product_file" accept=".csv,.txt,.tsv,.xls,.xlsx" required></div>
                 <div class="col-12"><button class="btn btn-outline-warning w-100"><i class="bi bi-upload me-1"></i>Upload CSV / Excel</button></div>
             </form>

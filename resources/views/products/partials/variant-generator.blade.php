@@ -18,8 +18,10 @@
         <form method="post" action="{{ route('products.variants.generate', $product) }}" class="row g-2 align-items-end">
             @csrf
             <div class="col-md-4">
-                <label class="form-label">Product and stock edit PIN</label>
-                <input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required>
+                @if(! auth()->check() || ! app(\App\Services\IamService::class)->isBusinessAdministrator(auth()->user()))
+                    <label class="form-label">Product and stock edit PIN</label>
+                    <input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required>
+                @endif
             </div>
             @foreach($variantAttributes as $attribute)
                 <div class="col-md-4">

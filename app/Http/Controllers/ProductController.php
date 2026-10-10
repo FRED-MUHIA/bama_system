@@ -9,6 +9,7 @@ use App\Models\ProductAttributeValue;
 use App\Models\ProductBrand;
 use App\Models\ProductCategory;
 use App\Models\StockMovement;
+use App\Services\IamService;
 use App\Services\ProductCatalogImportService;
 use App\Services\StockService;
 use App\Support\ActiveBusiness;
@@ -147,8 +148,7 @@ class ProductController extends Controller
 
     public function import(Request $request, ProductCatalogImportService $importer)
     {
-        $request->validate(['authorization_pin' => ['required', 'digits_between:4,12']]);
-        $this->verifyPosEditPin((string) $request->input('authorization_pin'));
+        $this->authorizePosEdit($request);
         $data = $request->validate([
             'product_file' => ['required', 'file', 'max:10240'],
         ]);
@@ -189,19 +189,24 @@ class ProductController extends Controller
         }, $filename, ['Content-Type' => $contentType]);
     }
 
-    public function destroy(Product $product)
+    public function destroy(Request $request, Product $product)
     {
-        abort_unless((int) $product->business_id === (int) ActiveBusiness::id(), 404);
-        request()->validate(['authorization_pin' => ['required', 'digits_between:4,12']]);
-        $this->verifyPosEditPin((string) request('authorization_pin'));
+        $this->authorizePosEdit($request, $product);
         $product->update(['is_active' => false, 'status' => 'archived']);
 
         return back()->with('status', 'Product archived.');
     }
 
-    private function authorizePosEdit(Request $request, Product $product): void
+    private function authorizePosEdit(Request $request, ?Product $product = null): void
     {
-        abort_unless((int) $product->business_id === (int) ActiveBusiness::id(), 404);
+        if ($product) {
+            abort_unless((int) $product->business_id === (int) ActiveBusiness::id(), 404);
+        }
+
+        if (app(IamService::class)->isBusinessAdministrator($request->user())) {
+            return;
+        }
+
         $request->validate(['authorization_pin' => ['required', 'digits_between:4,12']]);
         $this->verifyPosEditPin((string) $request->input('authorization_pin'));
     }

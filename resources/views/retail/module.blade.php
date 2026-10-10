@@ -670,6 +670,7 @@
 @endif
 
 @if($section === 'products')
+    @php($productAdmin = auth()->check() && app(\App\Services\IamService::class)->isBusinessAdministrator(auth()->user()))
     <div class="card p-0">
         <div class="table-responsive">
             <table class="table mb-0 align-middle">
@@ -705,7 +706,7 @@
                                 <button class="btn btn-sm btn-outline-dark" type="button" title="Edit product" aria-label="Edit {{ $record->name }}" data-retail-panel-toggle="retail-product-edit-row-{{ $record->id }}" aria-expanded="false" aria-controls="retail-product-edit-row-{{ $record->id }}"><i class="bi bi-pencil"></i></button>
                                 <form class="retail-product-archive" method="post" action="{{ route('products.destroy', $record) }}" onsubmit="return confirm('Archive this product?')">
                                     @csrf @method('DELETE')
-                                    <input class="form-control form-control-sm" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" aria-label="Product and stock edit PIN" required>
+                                    @unless($productAdmin)<input class="form-control form-control-sm" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" aria-label="Product and stock edit PIN" required>@endunless
                                     <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Archive {{ $record->name }}"><i class="bi bi-archive"></i></button>
                                 </form>
                             </div>
@@ -718,7 +719,7 @@
                                     <div class="col-md-3"><label class="form-label">Movement</label><select class="form-select" name="type"><option>Add</option><option>Remove</option><option>Set</option></select></div>
                                     <div class="col-md-3"><label class="form-label">Quantity ({{ $record->stock_unit ?: 'pcs' }})</label><input class="form-control" name="quantity" type="number" min="0" step="0.001" required></div>
                                     <div class="col-md-4"><label class="form-label">Notes</label><input class="form-control" name="notes" placeholder="Reason"></div>
-                                    <div class="col-md-2"><label class="form-label">Edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>
+                                    @unless($productAdmin)<div class="col-md-2"><label class="form-label">Edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>@endunless
                                     <div class="col-md-2"><button class="btn btn-success btn-sm w-100">Update Stock</button></div>
                                 </form>
                             </div>
@@ -728,7 +729,7 @@
                         <td colspan="6" class="p-0 border-0">
                             <div class="border-top p-3">
                                 <form method="post" action="{{ route('products.update', $record) }}" enctype="multipart/form-data" class="row g-2">@csrf @method('PUT')
-                                    <div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>
+                                    @unless($productAdmin)<div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>@endunless
                                     @include('products.partials.fields', ['product' => $record])
                                     <div class="col-12"><button class="btn btn-warning btn-sm">Update Product</button></div>
                                 </form>
@@ -853,6 +854,7 @@
 @endif
 
 @if($section === 'products')
+    @php($productAdmin = auth()->check() && app(\App\Services\IamService::class)->isBusinessAdministrator(auth()->user()))
     <style>
         .retail-product-actions-cell{min-width:300px}
         .retail-product-actions{display:flex;justify-content:flex-end;align-items:center;gap:6px;flex-wrap:nowrap}

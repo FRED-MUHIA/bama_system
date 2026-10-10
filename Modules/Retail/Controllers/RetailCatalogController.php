@@ -8,6 +8,7 @@ use App\Models\ProductAttribute;
 use App\Models\ProductBrand;
 use App\Models\ProductCategory;
 use App\Models\SecuritySetting;
+use App\Services\IamService;
 use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -40,11 +41,7 @@ class RetailCatalogController extends Controller
 
     public function storeProfile(Request $request, RetailCatalogService $catalog)
     {
-        $pinData = $request->validate(['authorization_pin' => ['required', 'digits_between:4,12']]);
-        $setting = SecuritySetting::where('business_id', ActiveBusiness::id())->first();
-        if (! $setting?->verifiesPosEditPin($pinData['authorization_pin'])) {
-            throw ValidationException::withMessages(['authorization_pin' => 'The product and stock authorization PIN is incorrect or has not been configured. Contact an administrator.']);
-        }
+        $this->verifyEditPin($request);
         $data = $request->validate(RetailValidationRules::productProfile());
         $product = Product::findOrFail($data['product_id']);
         abort_unless((int) $product->business_id === (int) ActiveBusiness::id(), 404);
@@ -52,5 +49,18 @@ class RetailCatalogController extends Controller
         $catalog->upsertProfile($product, $data);
 
         return back()->with('status', 'Retail product profile saved.');
+    }
+
+    private function verifyEditPin(Request $request): void
+    {
+        if (app(IamService::class)->isBusinessAdministrator($request->user())) {
+            return;
+        }
+
+        $pinData = $request->validate(['authorization_pin' => ['required', 'digits_between:4,12']]);
+        $setting = SecuritySetting::where('business_id', ActiveBusiness::id())->first();
+        if (! $setting?->verifiesPosEditPin($pinData['authorization_pin'])) {
+            throw ValidationException::withMessages(['authorization_pin' => 'The product and stock authorization PIN is incorrect or has not been configured. Contact an administrator.']);
+        }
     }
 }
