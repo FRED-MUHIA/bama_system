@@ -182,6 +182,7 @@
                 <input class="form-control" name="restaurant_charges" type="number" min="0" step="0.01" placeholder="Restaurant charges">
                 <input class="form-control" name="event_charges" type="number" min="0" step="0.01" placeholder="Event charges">
                 <input class="form-control" name="other_charges" type="number" min="0" step="0.01" placeholder="Other services">
+                <input class="form-control" name="final_amount" type="number" min="0" step="0.01" placeholder="Final bill total" required>
                 <input class="form-control" name="payment_amount" type="number" min="0" step="0.01" placeholder="Payment collected">
                 <input class="form-control" name="payment_method" placeholder="Payment method">
                 <input class="form-control" name="payment_reference" placeholder="Reference">

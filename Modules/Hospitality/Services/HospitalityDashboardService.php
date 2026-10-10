@@ -2,6 +2,7 @@
 
 namespace Modules\Hospitality\Services;
 
+use App\Models\Invoice;
 use App\Models\PosOrder;
 use App\Models\Product;
 use Modules\Hospitality\Models\CheckIn;
@@ -23,12 +24,14 @@ class HospitalityDashboardService
             'Available Rooms' => Room::where('status', 'Available')->count(),
             "Today's Check-ins" => CheckIn::whereDate('checked_in_at', today())->count(),
             "Today's Check-outs" => CheckOut::whereDate('checked_out_at', today())->count(),
-            'Revenue Today' => Reservation::whereDate('created_at', today())->sum('total_amount'),
-            'Monthly Revenue' => Reservation::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('total_amount'),
+            'Revenue Today' => $this->recognizedRevenue(today()->startOfDay(), today()->endOfDay()),
+            'Monthly Revenue' => $this->recognizedRevenue(now()->startOfMonth(), now()->endOfMonth()),
             'Pending Reservations' => Reservation::where('status', 'Pending')->count(),
             'Guest Satisfaction' => 'Tracked',
             'Maintenance Requests' => MaintenanceRequest::whereIn('status', ['Open', 'Assigned', 'In Progress'])->count(),
-            'Restaurant Sales' => RestaurantOrder::sum('total') ?: PosOrder::whereDate('order_date', today())->where('status', '!=', 'cancelled')->sum('amount_paid'),
+            'Restaurant Sales' => round((float) app(\App\Services\FinanceRecordSyncService::class)->invoices()
+                ->filter(fn ($invoice) => $invoice->industry_module === 'hospitality' && str_starts_with((string) $invoice->industry_reference, 'restaurant'))
+                ->sum('total'), 2),
             'Low Stock Items' => Product::where('reorder_level', '>', 0)->whereColumn('stock_quantity', '<=', 'reorder_level')->count(),
         ];
     }
@@ -41,5 +44,13 @@ class HospitalityDashboardService
             'Workflow Performance' => Reservation::whereIn('status', ['Confirmed', 'Checked In'])->count(),
             'Compliance Status' => 'Operational',
         ];
+    }
+
+    private function recognizedRevenue($start, $end): float
+    {
+        return round((float) Invoice::query()
+            ->where('industry_module', 'hospitality')
+            ->whereBetween('invoice_date', [$start->toDateString(), $end->toDateString()])
+            ->sum('total'), 2);
     }
 }

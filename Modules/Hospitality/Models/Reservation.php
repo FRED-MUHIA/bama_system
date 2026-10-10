@@ -46,4 +46,9 @@ class Reservation extends HospitalityModel
     {
         return $this->hasOne(CheckOut::class);
     }
+
+    public function checkIn(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(CheckIn::class)->latestOfMany();
+    }
 }

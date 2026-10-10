@@ -63,6 +63,8 @@ class FinanceDepartmentService
 
     private function industryRows(Collection $invoices): Collection
     {
+        $invoices = $invoices->filter(fn ($invoice) => in_array($invoice->industry_module, [null, '', 'hospitality'], true));
+
         return $invoices
             ->groupBy(fn ($invoice) => $invoice->industry_module ?: 'shared')
             ->map(function (Collection $invoices, string $module) {

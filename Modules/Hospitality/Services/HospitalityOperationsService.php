@@ -75,6 +75,10 @@ class HospitalityOperationsService
 
     public function checkOut(Reservation $reservation, array $data): CheckOut
     {
+        if (($existing = $reservation->checkOut()->with('invoice', 'receipt')->first()) !== null) {
+            return $existing;
+        }
+
         return DB::transaction(function () use ($reservation, $data) {
             $checkOut = CheckOut::create([
                 'reservation_id' => $reservation->id,

@@ -6,9 +6,11 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\SupplierInvoice;
 use App\Models\SupplierPayment;
+use App\Models\PosOrder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class FinanceRecordSyncService
@@ -24,11 +26,64 @@ class FinanceRecordSyncService
             $with[] = 'payments.paymentMethod';
         }
 
-        return Invoice::source()
+        $invoices = Invoice::source()
             ->with($with)
             ->get()
-            ->map(fn (Invoice $invoice) => $this->applyInvoiceSnapshot($invoice, true))
+            ->map(function (Invoice $invoice) {
+                $this->classifyIndustryInvoice($invoice);
+
+                return $this->applyInvoiceSnapshot($invoice, true);
+            })
             ->values();
+
+        return $invoices;
+    }
+
+    private function classifyIndustryInvoice(Invoice $invoice): void
+    {
+        if (! Schema::hasColumn('invoices', 'industry_module') || $invoice->industry_module) {
+            return;
+        }
+
+        $businessId = $invoice->business_id;
+        $hospitalityTables = ['hospitality_check_ins', 'hospitality_check_outs', 'hospitality_event_bookings', 'hospitality_restaurant_orders'];
+        foreach ($hospitalityTables as $table) {
+            if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'invoice_id')) {
+                continue;
+            }
+
+            $query = DB::table($table)->where('invoice_id', $invoice->id);
+            if ($businessId && Schema::hasColumn($table, 'business_id')) {
+                $query->where('business_id', $businessId);
+            }
+
+            if ($query->exists()) {
+                $invoice->forceFill([
+                    'industry_module' => 'hospitality',
+                    'industry_reference' => $invoice->industry_reference ?: 'Legacy hospitality transaction',
+                    'industry_context' => ['module' => 'hospitality', 'source' => 'legacy_source_link'],
+                ])->save();
+
+                return;
+            }
+        }
+
+        if (Schema::hasTable('pos_orders') && Schema::hasColumn('pos_orders', 'invoice_id')
+            && Schema::hasColumn('pos_orders', 'notes')) {
+            $query = PosOrder::withoutGlobalScope('business')->where('invoice_id', $invoice->id)
+                ->where('notes', 'like', 'Hospitality restaurant%');
+            if ($businessId && Schema::hasColumn('pos_orders', 'business_id')) {
+                $query->where('business_id', $businessId);
+            }
+
+            if ($query->exists()) {
+                $invoice->forceFill([
+                    'industry_module' => 'hospitality',
+                    'industry_reference' => $invoice->industry_reference ?: 'Legacy hospitality restaurant transaction',
+                    'industry_context' => ['module' => 'hospitality', 'source' => 'legacy_pos_link'],
+                ])->save();
+            }
+        }
     }
 
     public function receivables(): Collection

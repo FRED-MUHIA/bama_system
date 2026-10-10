@@ -142,23 +142,14 @@ class HospitalityRestaurantService
                 'Restaurant POS '.$posOrder->order_number
             );
 
-            // Room charges are billed at checkout; cancelled orders are not invoiced.
+            // Room charges are billed on the checkout invoice. Cancelled orders
+            // must never create receivables or revenue.
             if (! in_array($data['billing_status'], ['Room Charge', 'Cancelled'], true)) {
                 $billing = app(HospitalityBillingService::class);
                 $invoice = $billing->foodInvoice($posOrder, $items);
                 if ($data['billing_status'] === 'Paid' && $totals['total'] > 0) {
                     $billing->collectPayment($invoice, (float) $totals['total'], $posOrder->paymentMethod?->name ?? 'Cash', $posOrder->order_number);
                 }
-            }
-
-            if ($data['billing_status'] === 'Paid' && ! empty($data['payment_method_id']) && class_exists(PosOrderPayment::class)) {
-                $posOrder->payments()->create([
-                    'payment_method_id' => $data['payment_method_id'],
-                    'amount' => $totals['total'],
-                    'payment_date' => now()->toDateString(),
-                    'reference' => 'Restaurant POS',
-                    'notes' => 'Hospitality restaurant payment.',
-                ]);
             }
 
             $order = RestaurantOrder::create([

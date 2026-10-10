@@ -30,7 +30,7 @@ class CheckOutController extends Controller
             'restaurant_charges' => ['nullable', 'numeric', 'min:0'],
             'event_charges' => ['nullable', 'numeric', 'min:0'],
             'other_charges' => ['nullable', 'numeric', 'min:0'],
-            'final_amount' => ['nullable', 'numeric', 'min:0'],
+            'final_amount' => ['required', 'numeric', 'min:0'],
             'payment_amount' => ['nullable', 'numeric', 'min:0'],
             'payment_method' => ['nullable', 'string', 'max:80'],
             'payment_reference' => ['nullable', 'string', 'max:120'],

@@ -13,16 +13,25 @@ use Illuminate\Validation\ValidationException;
 use Modules\Hospitality\Models\CheckOut;
 use Modules\Hospitality\Models\EventBooking;
 use Modules\Hospitality\Models\Reservation;
+use Modules\Hospitality\Models\RestaurantOrder;
 
 class HospitalityBillingService
 {
     public function foodInvoice(PosOrder $order, array $items): Invoice
     {
+        if ($order->invoice_id) {
+            return Invoice::findOrFail($order->invoice_id);
+        }
+
         $clientId = $order->client_id ?? Client::firstOrCreate([
             'name' => 'Walk-in restaurant customer',
             'type' => 'individual',
         ])->id;
-        $invoice = $this->createInvoice($clientId, $items, 'Hospitality restaurant '.$order->order_number);
+        $restaurantOrder = RestaurantOrder::where('pos_order_id', $order->id)->latest('id')->first();
+        $reference = $restaurantOrder
+            ? 'Hospitality restaurant '.$restaurantOrder->order_type.' · '.$order->order_number
+            : 'Hospitality restaurant '.$order->order_number;
+        $invoice = $this->createInvoice($clientId, $items, $reference);
         $order->update(['client_id' => $clientId, 'invoice_id' => $invoice->id]);
 
         return $invoice;
@@ -34,6 +43,14 @@ class HospitalityBillingService
 
     public function reservationInvoice(Reservation $reservation, array $extraItems = []): Invoice
     {
+        if ($reservation->checkOut?->invoice_id) {
+            return Invoice::findOrFail($reservation->checkOut->invoice_id);
+        }
+
+        if ($reservation->checkIn?->invoice_id) {
+            return Invoice::findOrFail($reservation->checkIn->invoice_id);
+        }
+
         $guest = $reservation->guestProfile;
         if ($guest && ! $guest->client_id) {
             $guest = app(HospitalityCrmService::class)->syncGuest($guest);
@@ -56,20 +73,44 @@ class HospitalityBillingService
 
     public function finalBill(CheckOut $checkOut): Invoice
     {
+        if ($checkOut->invoice_id) {
+            return Invoice::findOrFail($checkOut->invoice_id);
+        }
+
         $reservation = $checkOut->reservation;
         $guest = $reservation->guestProfile;
         if ($guest && ! $guest->client_id) {
             $guest = app(HospitalityCrmService::class)->syncGuest($guest);
         }
 
-        $items = array_filter([
-            ['title' => 'Restaurant charges', 'description' => 'Restaurant POS and room service charges', 'quantity' => 1, 'unit_price' => (float) $checkOut->restaurant_charges, 'discount' => 0, 'tax_rate' => 0],
-            ['title' => 'Event charges', 'description' => 'Event venue, catering, and equipment charges', 'quantity' => 1, 'unit_price' => (float) $checkOut->event_charges, 'discount' => 0, 'tax_rate' => 0],
+        $items = [];
+        $stayInvoice = $reservation->checkIn?->invoice;
+        $stayTotal = 0.0;
+        if ($stayInvoice && (float) $stayInvoice->total > 0) {
+            $items[] = ['title' => 'Room stay - '.$reservation->reservation_number, 'description' => 'Accommodation charges from check-in invoice '.$stayInvoice->invoice_number, 'quantity' => 1, 'unit_price' => (float) $stayInvoice->total, 'discount' => 0, 'tax_rate' => 0];
+            $stayTotal = (float) $stayInvoice->total;
+        }
+
+        $separatelyInvoicedRestaurant = (float) RestaurantOrder::query()
+            ->where('reservation_id', $reservation->id)
+            ->where('billing_status', 'Paid')
+            ->whereHas('posOrder', fn ($query) => $query->whereNotNull('invoice_id'))
+            ->sum('total');
+
+        $items = array_merge($items, array_filter([
+            ['title' => 'Restaurant charges', 'description' => 'Restaurant POS and room service charges, excluding separately invoiced orders', 'quantity' => 1, 'unit_price' => max((float) $checkOut->restaurant_charges - $separatelyInvoicedRestaurant, 0), 'discount' => 0, 'tax_rate' => 0],
+            ['title' => 'Event charges', 'description' => 'Event venue, catering, and equipment charges', 'quantity' => 1, 'unit_price' => max((float) $checkOut->event_charges - $this->separatelyInvoicedEventTotal($reservation), 0), 'discount' => 0, 'tax_rate' => 0],
             ['title' => 'Other services', 'description' => 'Additional hospitality services', 'quantity' => 1, 'unit_price' => (float) $checkOut->other_charges, 'discount' => 0, 'tax_rate' => 0],
-        ], fn ($item) => $item['unit_price'] > 0);
+        ], fn ($item) => $item['unit_price'] > 0));
+
+        $itemTotal = array_sum(array_map(fn ($item) => (float) $item['unit_price'] * (float) $item['quantity'], $items));
+        $remainingFinalAmount = max((float) $checkOut->final_amount - $stayTotal, 0);
+        if ($remainingFinalAmount > $itemTotal) {
+            $items[] = ['title' => 'Other services', 'description' => 'Additional checkout charges', 'quantity' => 1, 'unit_price' => $remainingFinalAmount - $itemTotal, 'discount' => 0, 'tax_rate' => 0];
+        }
 
         if (! $items) {
-            $items[] = ['title' => 'Final bill reconciliation', 'description' => 'Checkout final bill for '.$reservation->reservation_number, 'quantity' => 1, 'unit_price' => (float) $checkOut->final_amount, 'discount' => 0, 'tax_rate' => 0];
+            throw ValidationException::withMessages(['final_amount' => 'Enter a final bill amount or at least one checkout charge before completing checkout.']);
         }
 
         return $this->createInvoice($guest?->client_id ?? $reservation->client_id, $items, 'Hospitality checkout '.$reservation->reservation_number);
@@ -77,6 +118,10 @@ class HospitalityBillingService
 
     public function eventInvoice(EventBooking $event): Invoice
     {
+        if ($event->invoice_id) {
+            return Invoice::findOrFail($event->invoice_id);
+        }
+
         $guest = $event->guestProfile;
         if ($guest && ! $guest->client_id) {
             $guest = app(HospitalityCrmService::class)->syncGuest($guest);
@@ -125,6 +170,19 @@ class HospitalityBillingService
         });
     }
 
+    private function separatelyInvoicedEventTotal(Reservation $reservation): float
+    {
+        $query = EventBooking::query()
+            ->where('guest_profile_id', $reservation->guest_profile_id)
+            ->whereNotNull('invoice_id')
+            ->whereBetween('starts_at', [
+                $reservation->arrival_date->startOfDay(),
+                $reservation->departure_date->endOfDay(),
+            ]);
+
+        return (float) $query->sum('total_amount');
+    }
+
     private function createInvoice(?int $clientId, array $items, string $notes): Invoice
     {
         if (! $clientId) {
@@ -138,6 +196,9 @@ class HospitalityBillingService
             $invoice = Invoice::create([
                 'client_id' => $clientId,
                 'invoice_number' => $this->documents->number('invoice'),
+                'industry_module' => 'hospitality',
+                'industry_reference' => trim(preg_replace('/^Hospitality\s+/i', '', $notes)),
+                'industry_context' => ['module' => 'hospitality', 'source' => 'hospitality_billing'],
                 'invoice_date' => now()->toDateString(),
                 'due_date' => now()->addDays(7)->toDateString(),
                 'payment_status' => 'unpaid',

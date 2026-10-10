@@ -2,6 +2,7 @@
 
 namespace Modules\Hospitality\Services;
 
+use App\Services\FinanceRecordSyncService;
 use Modules\Hospitality\Models\EventBooking;
 use Modules\Hospitality\Models\GuestProfile;
 use Modules\Hospitality\Models\HousekeepingTask;
@@ -16,15 +17,17 @@ class HospitalityReportService
     {
         $roomCount = Room::count();
         $occupied = Room::where('status', 'Occupied')->count();
+        $hospitalityInvoices = app(FinanceRecordSyncService::class)->invoices()
+            ->filter(fn ($invoice) => $invoice->industry_module === 'hospitality');
 
         return [
             'Occupancy Reports' => ['rooms' => $roomCount, 'occupied' => $occupied, 'occupancy_rate' => $roomCount ? round($occupied / $roomCount * 100, 1) : 0],
-            'Revenue Reports' => ['reservations' => Reservation::sum('total_amount'), 'events' => EventBooking::sum('total_amount'), 'restaurant' => RestaurantOrder::sum('total')],
+            'Revenue Reports' => ['invoiced' => (float) $hospitalityInvoices->sum('total'), 'collected' => (float) $hospitalityInvoices->sum('amount_paid'), 'outstanding' => (float) $hospitalityInvoices->sum('balance')],
             'Guest Reports' => ['profiles' => GuestProfile::count(), 'vip' => GuestProfile::where('vip_status', true)->count(), 'blacklisted' => GuestProfile::where('blacklist_flag', true)->count()],
             'Reservation Reports' => Reservation::query()->selectRaw('status, COUNT(*) total')->groupBy('status')->pluck('total', 'status')->all(),
             'Housekeeping Reports' => HousekeepingTask::query()->selectRaw('status, COUNT(*) total')->groupBy('status')->pluck('total', 'status')->all(),
             'Maintenance Reports' => MaintenanceRequest::query()->selectRaw('status, COUNT(*) total')->groupBy('status')->pluck('total', 'status')->all(),
-            'Restaurant Reports' => ['orders' => RestaurantOrder::count(), 'sales' => RestaurantOrder::sum('total')],
+            'Restaurant Reports' => ['orders' => RestaurantOrder::count(), 'invoiced' => (float) $hospitalityInvoices->filter(fn ($invoice) => str_starts_with((string) $invoice->industry_reference, 'restaurant'))->sum('total')],
             'Event Reports' => ['bookings' => EventBooking::count(), 'revenue' => EventBooking::sum('total_amount')],
             'Loyalty Reports' => GuestProfile::query()
                 ->selectRaw("COALESCE(loyalty_level, 'None') as level, COUNT(*) as total")
