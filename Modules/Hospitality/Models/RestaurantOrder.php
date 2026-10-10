@@ -18,6 +18,7 @@ class RestaurantOrder extends HospitalityModel
         'guest_profile_id',
         'pos_order_id',
         'restaurant_table_id',
+        'room_id',
         'table_number',
         'reserved_for',
         'party_size',
@@ -67,6 +68,11 @@ class RestaurantOrder extends HospitalityModel
     public function restaurantTable(): BelongsTo
     {
         return $this->belongsTo(RestaurantTable::class);
+    }
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class);
     }
 
     public function paymentMethod(): BelongsTo

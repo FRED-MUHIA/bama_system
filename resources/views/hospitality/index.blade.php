@@ -603,7 +603,7 @@
                             @elseif($section === 'maintenance')
                                 {{ $record->title }}<div class="small text-muted">{{ $record->category }}</div>
                             @elseif($section === 'restaurant')
-                                {{ $record->order_type ?? 'Restaurant' }}<div class="small text-muted">Table {{ ($record->restaurantTable?->table_number ?? $record->table_number) ?: 'n/a' }} · {{ $record->posOrder?->order_number ?: 'Hospitality order' }}</div>
+                                {{ $record->order_type ?? 'Restaurant' }}<div class="small text-muted">@if($record->room)Room {{ $record->room->room_number }}@else Table {{ ($record->restaurantTable?->table_number ?? $record->table_number) ?: 'n/a' }}@endif · {{ $record->posOrder?->order_number ?: 'Hospitality order' }}</div>
                             @elseif($section === 'events')
                                 {{ $record->booking_number }}<div class="small text-muted">{{ $record->venue_name }}</div>
                             @endif

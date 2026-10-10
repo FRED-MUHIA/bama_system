@@ -157,6 +157,7 @@ class HospitalityRestaurantService
                 'guest_profile_id' => $guest?->id,
                 'pos_order_id' => $posOrder->id,
                 'restaurant_table_id' => $data['restaurant_table_id'] ?? null,
+                'room_id' => $data['room_id'] ?? null,
                 'table_number' => $data['table_number'] ?? null,
                 'reserved_for' => $data['reserved_for'] ?? null,
                 'party_size' => $data['party_size'] ?? 1,

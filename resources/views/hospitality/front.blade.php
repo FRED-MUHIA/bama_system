@@ -122,11 +122,18 @@
                         <select class="front-select" name="order_type" aria-label="Order type" required>
                             <option>Dine In</option>
                             <option>Takeaway</option>
+                            <option @selected(old('order_type') === 'Room Service')>Room Service</option>
                         </select>
                         <select class="front-select" name="restaurant_table_id" aria-label="Table">
                             <option value="">Choose table</option>
                             @foreach($restaurantTables as $table)
                                 <option value="{{ $table->id }}">{{ $table->table_number }} · {{ $table->section ?: 'Main floor' }} · {{ $table->capacity }} seats</option>
+                            @endforeach
+                        </select>
+                        <select class="front-select" name="room_id" aria-label="Room">
+                            <option value="">Choose room (optional)</option>
+                            @foreach($rooms as $room)
+                                <option value="{{ $room->id }}" @selected(old('room_id') == $room->id)>Room {{ $room->room_number }}</option>
                             @endforeach
                         </select>
                         <input class="front-input" name="notes" placeholder="Special request" aria-label="Special request">
@@ -159,6 +166,23 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    const room = document.querySelector('[name="room_id"]');
+    const orderType = document.querySelector('[name="order_type"]');
+    const table = document.querySelector('[name="restaurant_table_id"]');
+    const updateDestination = () => {
+        room.required = orderType.value === 'Room Service';
+        table.disabled = orderType.value === 'Room Service' || !!room.value;
+        if (table.disabled) table.value = '';
+    };
+    room.addEventListener('change', () => {
+        if (room.value) orderType.value = 'Room Service';
+        updateDestination();
+    });
+    orderType.addEventListener('change', () => {
+        if (orderType.value !== 'Room Service') room.value = '';
+        updateDestination();
+    });
+    updateDestination();
     const search = document.getElementById('menu-search');
     const categories = document.querySelectorAll('[data-menu-category]');
     const cards = document.querySelectorAll('#menu-items .menu-card');

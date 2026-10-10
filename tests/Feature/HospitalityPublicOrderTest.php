@@ -52,6 +52,7 @@ class HospitalityPublicOrderTest extends TestCase
         $order = new RestaurantOrder(['kitchen_status' => 'Queued', 'billing_status' => 'Open', 'order_type' => 'Dine In']);
         $order->setRelation('posOrder', $posOrder);
         $order->setRelation('restaurantTable', null);
+        $order->setRelation('room', null);
         $order->setRelation('waiter', new \App\Models\User(['name' => 'Jane Server']));
         $order->setRelation('business', null);
 
@@ -83,7 +84,7 @@ class HospitalityPublicOrderTest extends TestCase
         $posOrder->setRelation('invoice', $invoice);
         $order = new RestaurantOrder(['kitchen_status' => 'Served', 'billing_status' => 'Open']);
         $order->setRelation('posOrder', $posOrder);
-        foreach (['restaurantTable', 'waiter', 'business'] as $relation) {
+        foreach (['restaurantTable', 'room', 'waiter', 'business'] as $relation) {
             $order->setRelation($relation, null);
         }
         $html = view('hospitality.order', compact('order'))->render();

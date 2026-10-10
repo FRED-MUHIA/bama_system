@@ -29,6 +29,7 @@
     <p>Serving staff: {{ $order->waiter?->name ?? 'Not assigned' }}</p>
     <p class="status">{{ $order->kitchen_status }}</p>
     <p>{{ $order->order_type }} @if($order->restaurantTable) · Table {{ $order->restaurantTable->table_number }} @endif</p>
+    @if($order->room)<p>Room: {{ $order->room->room_number }}</p>@endif
     @if($order->kitchen_status === 'Served')
         <p>Served {{ $order->kitchen_served_at?->format('d M Y H:i') }}</p>
     @elseif($order->kitchen_status === 'Cancelled')

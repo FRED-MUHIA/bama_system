@@ -11,6 +11,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\URL;
 use Modules\Hospitality\Models\RestaurantOrder;
 use Modules\Hospitality\Models\RestaurantTable;
+use Modules\Hospitality\Models\Room;
 use Modules\Hospitality\Services\HospitalityRestaurantService;
 
 class HospitalityFrontController extends Controller
@@ -21,6 +22,7 @@ class HospitalityFrontController extends Controller
             'menuItems' => Product::with('category')->where('is_active', true)->orderBy('name')->get(),
             'restaurantTables' => RestaurantTable::whereIn('status', ['Available', 'Reserved'])->orderBy('section')->orderBy('table_number')->get(),
             'staff' => $this->servingStaff()->orderBy('name')->get(['id', 'name']),
+            'rooms' => Room::whereIn('status', ['Available', 'Occupied', 'Reserved'])->orderBy('room_number')->get(['id', 'room_number']),
             'recentOrders' => RestaurantOrder::with('posOrder.invoice', 'waiter')
                 ->whereIn('id', session('hospitality_order_ids', []))->latest()->limit(20)->get(),
         ]);
@@ -31,7 +33,8 @@ class HospitalityFrontController extends Controller
         $data = $request->validate([
             'restaurant_table_id' => ['nullable', 'exists:hospitality_restaurant_tables,id'],
             'waiter_id' => ['required', Rule::exists('users', 'id')->where(fn ($query) => $query->whereIn('id', $this->servingStaff()->select('users.id')->toBase()))],
-            'order_type' => ['required', Rule::in(['Dine In', 'Takeaway'])],
+            'order_type' => ['required', Rule::in(['Dine In', 'Takeaway', 'Room Service'])],
+            'room_id' => ['nullable', 'required_if:order_type,Room Service', Rule::exists('hospitality_rooms', 'id')->where(fn ($query) => $query->whereIn('id', Room::whereIn('status', ['Available', 'Occupied', 'Reserved'])->select('id')->toBase()))],
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array'],
             'items.*.product_id' => ['nullable', 'exists:products,id'],
@@ -39,9 +42,10 @@ class HospitalityFrontController extends Controller
         ]);
 
         $order = $restaurant->createFoodReservation([
-            'restaurant_table_id' => $data['restaurant_table_id'] ?? null,
+            'restaurant_table_id' => empty($data['room_id']) ? ($data['restaurant_table_id'] ?? null) : null,
+            'room_id' => $data['room_id'] ?? null,
             'waiter_id' => $data['waiter_id'],
-            'order_type' => $data['order_type'],
+            'order_type' => empty($data['room_id']) ? $data['order_type'] : 'Room Service',
             'kitchen_status' => 'Queued',
             'billing_status' => 'Open',
             'items' => $data['items'],
@@ -55,7 +59,7 @@ class HospitalityFrontController extends Controller
 
     public function order(RestaurantOrder $order)
     {
-        $order->load('posOrder.items', 'posOrder.invoice.receipts.payment', 'restaurantTable', 'waiter', 'business');
+        $order->load('posOrder.items', 'posOrder.invoice.receipts.payment', 'restaurantTable', 'room', 'waiter', 'business');
 
         return response()->view('hospitality.order', compact('order'))
             ->header('Cache-Control', 'private, no-store')
