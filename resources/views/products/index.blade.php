@@ -111,13 +111,13 @@
                         <td><span class="status-pill">{{ $item->is_active ? 'active' : 'inactive' }}</span></td>
                         <td class="text-end product-action-cell">
                             <div class="product-action-controls">
-                            <button class="btn btn-sm btn-outline-success" data-bs-toggle="collapse" data-bs-target="#stock-product-{{ $item->id }}"><i class="bi bi-boxes"></i></button>
-                            <button class="btn btn-sm btn-outline-dark" data-bs-toggle="collapse" data-bs-target="#edit-product-{{ $item->id }}"><i class="bi bi-pencil"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-success" data-product-panel-toggle="stock-product-{{ $item->id }}" aria-expanded="false" aria-controls="stock-product-{{ $item->id }}"><i class="bi bi-boxes"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-dark" data-product-panel-toggle="edit-product-{{ $item->id }}" aria-expanded="false" aria-controls="edit-product-{{ $item->id }}"><i class="bi bi-pencil"></i></button>
                             <form method="post" action="{{ route('products.destroy',$item) }}" onsubmit="return confirm('Archive this product?')">@csrf @method('DELETE')@unless($productAdmin)<input class="form-control form-control-sm" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required>@endunless<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
                             </div>
                         </td>
                     </tr>
-                    <tr class="collapse" id="stock-product-{{ $item->id }}"><td colspan="9">
+                    <tr id="stock-product-{{ $item->id }}" class="d-none" hidden><td colspan="9">
                         <form method="post" action="{{ route('products.stock.update', $item) }}" class="row g-2 align-items-end">@csrf
                             <div class="col-md-3"><label class="form-label">Movement</label><select class="form-select" name="type"><option>Add</option><option>Remove</option><option>Set</option></select></div>
                             <div class="col-md-3"><label class="form-label">Quantity ({{ $item->stock_unit ?: 'pcs' }})</label><input class="form-control" name="quantity" type="number" min="0" step="0.001" required></div>
@@ -126,7 +126,7 @@
                             <div class="col-md-2"><button class="btn btn-success btn-sm w-100">Update Stock</button></div>
                         </form>
                     </td></tr>
-                    <tr class="collapse" id="edit-product-{{ $item->id }}"><td colspan="9">
+                    <tr id="edit-product-{{ $item->id }}" class="d-none" hidden><td colspan="9">
                         <form method="post" action="{{ route('products.update',$item) }}" enctype="multipart/form-data" class="row g-2">@csrf @method('PUT')
                             @unless($productAdmin)<div class="col-12"><label class="form-label">Product and stock edit PIN</label><input class="form-control" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" required></div>@endunless
                             @include('products.partials.fields', ['product' => $item])
@@ -243,4 +243,21 @@
         </div></div>
     </div>
 </div>
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-product-panel-toggle]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const panel = document.getElementById(button.dataset.productPanelToggle);
+            if (!panel) return;
+
+            const open = panel.classList.contains('d-none');
+            panel.classList.toggle('d-none', !open);
+            panel.toggleAttribute('hidden', !open);
+            button.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+    });
+});
+</script>
+@endpush
 @endsection
