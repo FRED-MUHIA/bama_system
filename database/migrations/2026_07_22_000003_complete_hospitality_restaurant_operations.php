@@ -125,6 +125,10 @@ return new class extends Migration
                     $table->foreignId('restaurant_table_id')->nullable()->after('pos_order_id')->constrained('hospitality_restaurant_tables')->nullOnDelete();
                 }
 
+                if (! Schema::hasColumn('hospitality_restaurant_orders', 'room_id')) {
+                    $table->foreignId('room_id')->nullable()->after('restaurant_table_id')->constrained('hospitality_rooms')->nullOnDelete();
+                }
+
                 if (! Schema::hasColumn('hospitality_restaurant_orders', 'payment_method_id')) {
                     $table->foreignId('payment_method_id')->nullable()->after('waiter_id')->constrained()->nullOnDelete();
                 }

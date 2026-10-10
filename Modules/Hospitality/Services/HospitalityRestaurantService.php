@@ -11,6 +11,7 @@ use App\Services\DocumentService;
 use App\Services\StockService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Modules\Hospitality\Models\GuestProfile;
@@ -152,12 +153,11 @@ class HospitalityRestaurantService
                 }
             }
 
-            $order = RestaurantOrder::create([
+            $orderAttributes = [
                 'reservation_id' => $data['reservation_id'] ?? null,
                 'guest_profile_id' => $guest?->id,
                 'pos_order_id' => $posOrder->id,
                 'restaurant_table_id' => $data['restaurant_table_id'] ?? null,
-                'room_id' => $data['room_id'] ?? null,
                 'table_number' => $data['table_number'] ?? null,
                 'reserved_for' => $data['reserved_for'] ?? null,
                 'party_size' => $data['party_size'] ?? 1,
@@ -169,7 +169,13 @@ class HospitalityRestaurantService
                 'billing_status' => $data['billing_status'] ?? 'Open',
                 'total' => $totals['total'],
                 'notes' => $data['notes'] ?? null,
-            ]);
+            ];
+
+            if (Schema::hasColumn('hospitality_restaurant_orders', 'room_id')) {
+                $orderAttributes['room_id'] = $data['room_id'] ?? null;
+            }
+
+            $order = RestaurantOrder::create($orderAttributes);
 
             if (! empty($data['restaurant_table_id'])) {
                 RestaurantTable::whereKey($data['restaurant_table_id'])->update([
