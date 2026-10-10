@@ -3,6 +3,7 @@
 namespace Modules\Hospitality\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\User;
 use App\Support\ActiveBusiness;
@@ -22,8 +23,11 @@ class HospitalityFrontController extends Controller
             'menuItems' => Product::with('category')->where('is_active', true)->orderBy('name')->get(),
             'restaurantTables' => RestaurantTable::whereIn('status', ['Available', 'Reserved'])->orderBy('section')->orderBy('table_number')->get(),
             'staff' => $this->servingStaff()->orderBy('name')->get(['id', 'name']),
+            'paymentMethods' => auth()->check()
+                ? PaymentMethod::where('is_active', true)->orderBy('name')->get()
+                : collect(),
             'rooms' => Room::whereIn('status', ['Available', 'Occupied', 'Reserved'])->orderBy('room_number')->get(['id', 'room_number']),
-            'recentOrders' => RestaurantOrder::with('posOrder.invoice', 'waiter')
+            'recentOrders' => RestaurantOrder::with('posOrder.invoice.receipts.payment', 'waiter')
                 ->whereIn('id', session('hospitality_order_ids', []))->latest()->limit(20)->get(),
         ]);
     }

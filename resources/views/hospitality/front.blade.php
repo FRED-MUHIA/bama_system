@@ -144,14 +144,54 @@
             </form>
             @if($recentOrders->isNotEmpty())
                 <section style="margin-top:28px" aria-label="Your orders and receipts">
-                    <h2>Your orders & receipts</h2>
+                    <h2>Receipts & orders</h2>
                     <div class="menu-grid">
                         @foreach($recentOrders as $recentOrder)
                             <article class="menu-card">
                                 <h3>{{ $recentOrder->posOrder?->order_number }}</h3>
                                 <p>{{ $recentOrder->kitchen_status }} · {{ $recentOrder->waiter?->name ?? 'Staff not assigned' }}</p>
-                                <p>Total: {{ number_format($recentOrder->total, 2) }} · Paid: {{ number_format($recentOrder->posOrder?->invoice?->amount_paid ?? 0, 2) }}</p>
+                                @php
+                                    $billingInvoice = $recentOrder->posOrder?->invoice;
+                                    $paidAmount = (float) ($billingInvoice?->amount_paid ?? $recentOrder->posOrder?->amount_paid ?? 0);
+                                    $balanceAmount = max((float) ($billingInvoice?->balance ?? $recentOrder->total - $paidAmount), 0);
+                                @endphp
+                                <p>Total: {{ number_format($recentOrder->total, 2) }} · Paid: {{ number_format($paidAmount, 2) }} · Balance: {{ number_format($balanceAmount, 2) }}</p>
+                                @if($billingInvoice?->receipts?->isNotEmpty())
+                                    <div>
+                                        @foreach($billingInvoice->receipts as $receipt)
+                                            <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('public.hospitality.order', ['order' => $recentOrder->id]) }}">Receipt {{ $receipt->receipt_number }} · {{ number_format($receipt->amount_paid, 2) }}</a>
+                                        @endforeach
+                                    </div>
+                                @endif
                                 <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('public.hospitality.order', ['order' => $recentOrder->id]) }}">{{ $recentOrder->kitchen_status === 'Served' ? 'View / print receipt' : 'View order' }}</a>
+                                @auth
+                                    @if($billingInvoice && $recentOrder->kitchen_status === 'Served' && $recentOrder->billing_status !== 'Cancelled' && $balanceAmount > 0)
+                                        <details>
+                                            <summary>Record payment</summary>
+                                            <form method="post" action="{{ route('invoices.payments.store', $billingInvoice) }}" class="field-grid">
+                                                @csrf
+                                                <label>Amount
+                                                    <input class="front-input" name="amount" type="number" min="0.01" max="{{ $balanceAmount }}" step="0.01" required>
+                                                </label>
+                                                <label>Payment method
+                                                    <select class="front-select" name="payment_method_id" required>
+                                                        <option value="">Choose payment method</option>
+                                                        @foreach($paymentMethods as $method)
+                                                            <option value="{{ $method->id }}">{{ $method->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </label>
+                                                <label>Payment date
+                                                    <input class="front-input" name="payment_date" type="date" value="{{ now()->toDateString() }}" required>
+                                                </label>
+                                                <label>Reference
+                                                    <input class="front-input" name="reference" maxlength="255" placeholder="Transaction reference">
+                                                </label>
+                                                <button class="front-button">Record payment & generate receipt</button>
+                                            </form>
+                                        </details>
+                                    @endif
+                                @endauth
                             </article>
                         @endforeach
                     </div>
