@@ -33,15 +33,28 @@ class HospitalityBillingTest extends TestCase
         $this->assertEquals($invoice->id, $order->fresh()->invoice_id);
         $this->assertEquals(1000, $invoice->total);
         $this->assertEquals($business->id, $invoice->business_id);
+
+        $response = $this->post(route('invoices.payments.store', $invoice), [
+            'amount' => 250,
+            'payment_date' => now()->toDateString(),
+            'return_to' => 'public.hospitality.menu',
+        ]);
+        $response->assertRedirect(route('public.hospitality.menu'));
+        $response->assertSessionHas('status');
+        $this->assertEquals(250, $invoice->fresh()->amount_paid);
+        $this->assertEquals(750, $invoice->fresh()->balance);
+        $this->assertCount(1, $invoice->fresh()->receipts);
+
+        $invoice->refresh();
         $receipt = $billing->collectPayment($invoice, 400);
-        $this->assertEquals(400, $invoice->fresh()->amount_paid);
-        $this->assertEquals(600, $invoice->fresh()->balance);
-        $this->assertEquals(600, $receipt->balance_remaining);
+        $this->assertEquals(650, $invoice->fresh()->amount_paid);
+        $this->assertEquals(350, $invoice->fresh()->balance);
+        $this->assertEquals(350, $receipt->balance_remaining);
         $this->assertEquals($invoice->id, $receipt->invoice_id);
 
-        $billing->collectPayment($invoice, 600);
+        $billing->collectPayment($invoice, 350);
         $this->assertEquals(1000, $invoice->fresh()->amount_paid);
         $this->assertEquals(0, $invoice->fresh()->balance);
-        $this->assertCount(2, $invoice->fresh()->receipts);
+        $this->assertCount(3, $invoice->fresh()->receipts);
     }
 }

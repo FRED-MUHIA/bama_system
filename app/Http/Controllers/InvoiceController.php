@@ -198,8 +198,11 @@ class InvoiceController extends Controller
             'payment_date' => ['required', 'date'],
             'reference' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
+            'return_to' => ['nullable', Rule::in(['public.hospitality.menu'])],
         ]);
 
+        $returnTo = $data['return_to'] ?? null;
+        unset($data['return_to']);
         $data += ['department_id' => $invoice->department_id, 'cost_center_id' => $invoice->cost_center_id];
 
         $receipt = DB::transaction(function () use ($invoice, $data) {
@@ -241,6 +244,10 @@ class InvoiceController extends Controller
 
             return $receipt;
         });
+
+        if ($returnTo === 'public.hospitality.menu') {
+            return redirect()->route($returnTo)->with('status', 'Payment recorded and receipt '.$receipt->receipt_number.' generated.');
+        }
 
         return redirect()->route('receipts.show', $receipt)->with('status', 'Payment recorded and receipt generated.');
     }

@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Invoice;
 use App\Models\PosOrder;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
@@ -91,5 +93,36 @@ class HospitalityPublicOrderTest extends TestCase
         foreach (['RCP-001', 'PAY-123', '400.00', '550.00', 'Payment status: Partial', 'Print receipt'] as $expected) {
             $this->assertStringContainsString($expected, $html);
         }
+    }
+
+    public function test_staff_can_record_payment_for_an_unserved_order_from_the_front_listing(): void
+    {
+        $invoice = new Invoice(['amount_paid' => 0, 'balance' => 950]);
+        $invoice->id = 5;
+        $invoice->setRelation('receipts', new Collection);
+
+        $posOrder = new PosOrder(['order_number' => 'POS-005', 'total' => 950, 'subtotal' => 950]);
+        $posOrder->id = 5;
+        $posOrder->setRelation('invoice', $invoice);
+
+        $order = new RestaurantOrder(['kitchen_status' => 'Queued', 'billing_status' => 'Open', 'order_type' => 'Dine In', 'total' => 950]);
+        $order->id = 5;
+        $order->setRelation('posOrder', $posOrder);
+        $order->setRelation('waiter', null);
+
+        $this->actingAs(new User(['name' => 'Restaurant Staff']));
+        $html = view('hospitality.front', [
+            'errors' => new \Illuminate\Support\ViewErrorBag,
+            'menuItems' => new Collection,
+            'restaurantTables' => new Collection,
+            'staff' => new Collection,
+            'rooms' => new Collection,
+            'paymentMethods' => new Collection,
+            'recentOrders' => new Collection([$order]),
+        ])->render();
+
+        $this->assertStringContainsString('Record payment', $html);
+        $this->assertStringContainsString('name="return_to" value="public.hospitality.menu"', $html);
+        $this->assertStringContainsString('max="950"', $html);
     }
 }

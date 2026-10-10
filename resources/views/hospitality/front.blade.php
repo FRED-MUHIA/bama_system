@@ -167,11 +167,12 @@
                                 @endif
                                 <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('public.hospitality.order', ['order' => $recentOrder->id]) }}">{{ $recentOrder->kitchen_status === 'Served' ? 'View / print receipt' : 'View order' }}</a>
                                 @auth
-                                    @if($billingInvoice && $recentOrder->kitchen_status === 'Served' && $recentOrder->billing_status !== 'Cancelled' && $balanceAmount > 0)
+                                    @if($billingInvoice && $recentOrder->billing_status !== 'Cancelled' && $balanceAmount > 0)
                                         <details>
                                             <summary>Record payment</summary>
                                             <form method="post" action="{{ route('invoices.payments.store', $billingInvoice) }}" class="field-grid">
                                                 @csrf
+                                                <input type="hidden" name="return_to" value="public.hospitality.menu">
                                                 <label>Amount
                                                     <input class="front-input" name="amount" type="number" min="0.01" max="{{ $balanceAmount }}" step="0.01" required>
                                                 </label>
