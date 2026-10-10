@@ -638,6 +638,25 @@
                                     @php($billingInvoice = $record->reservation?->checkOut?->invoice)
                                 @endif
                                 @if($billingInvoice)
+                                    @if($section === 'restaurant')
+                                        <div class="small mb-2">Serving staff: {{ $record->waiter?->name ?? 'Not assigned' }}<br>Paid: {{ number_format($billingInvoice->amount_paid, 2) }} · Balance: {{ number_format($billingInvoice->balance, 2) }}</div>
+                                        @if($record->kitchen_status === 'Served')
+                                            <a class="btn btn-sm btn-outline-success mb-1" href="{{ \Illuminate\Support\Facades\URL::signedRoute('public.hospitality.order', ['order' => $record->id]) }}" target="_blank" rel="noopener">View / print order receipt</a>
+                                        @endif
+                                        @if($record->kitchen_status === 'Served' && $record->billing_status !== 'Cancelled' && $billingInvoice->balance > 0)
+                                            <details class="my-2">
+                                                <summary>Record payment for {{ $record->posOrder->order_number }}</summary>
+                                                <form method="post" action="{{ route('invoices.payments.store', $billingInvoice) }}" class="d-grid gap-2 mt-2">
+                                                    @csrf
+                                                    <label>Amount<input class="form-control form-control-sm" name="amount" type="number" min="0.01" max="{{ $billingInvoice->balance }}" step="0.01" required></label>
+                                                    <label>Payment method<select class="form-select form-select-sm" name="payment_method_id" required><option value="">Choose payment method</option>@foreach($paymentMethods as $method)<option value="{{ $method->id }}">{{ $method->name }}</option>@endforeach</select></label>
+                                                    <label>Payment date<input class="form-control form-control-sm" name="payment_date" type="date" value="{{ now()->toDateString() }}" required></label>
+                                                    <label>Reference<input class="form-control form-control-sm" name="reference" maxlength="255" placeholder="Transaction reference"></label>
+                                                    <button class="btn btn-sm btn-success">Record payment & generate receipt</button>
+                                                </form>
+                                            </details>
+                                        @endif
+                                    @endif
                                     <a class="btn btn-sm btn-outline-success mb-1" href="{{ route('invoices.show', $billingInvoice) }}">Invoice {{ $billingInvoice->invoice_number }}</a>
                                     @foreach($billingInvoice->receipts as $billingReceipt)
                                         <a class="btn btn-sm btn-outline-success mb-1" href="{{ route('receipts.show', $billingReceipt) }}">Receipt {{ $billingReceipt->receipt_number }}</a>

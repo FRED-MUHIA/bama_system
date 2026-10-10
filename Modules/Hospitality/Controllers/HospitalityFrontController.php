@@ -4,6 +4,8 @@ namespace Modules\Hospitality\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\User;
+use App\Support\ActiveBusiness;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\URL;
@@ -18,6 +20,9 @@ class HospitalityFrontController extends Controller
         return view('hospitality.front', [
             'menuItems' => Product::with('category')->where('is_active', true)->orderBy('name')->get(),
             'restaurantTables' => RestaurantTable::whereIn('status', ['Available', 'Reserved'])->orderBy('section')->orderBy('table_number')->get(),
+            'staff' => $this->servingStaff()->orderBy('name')->get(['id', 'name']),
+            'recentOrders' => RestaurantOrder::with('posOrder.invoice', 'waiter')
+                ->whereIn('id', session('hospitality_order_ids', []))->latest()->limit(20)->get(),
         ]);
     }
 
@@ -25,6 +30,7 @@ class HospitalityFrontController extends Controller
     {
         $data = $request->validate([
             'restaurant_table_id' => ['nullable', 'exists:hospitality_restaurant_tables,id'],
+            'waiter_id' => ['required', Rule::exists('users', 'id')->where(fn ($query) => $query->whereIn('id', $this->servingStaff()->select('users.id')->toBase()))],
             'order_type' => ['required', Rule::in(['Dine In', 'Takeaway'])],
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array'],
@@ -34,6 +40,7 @@ class HospitalityFrontController extends Controller
 
         $order = $restaurant->createFoodReservation([
             'restaurant_table_id' => $data['restaurant_table_id'] ?? null,
+            'waiter_id' => $data['waiter_id'],
             'order_type' => $data['order_type'],
             'kitchen_status' => 'Queued',
             'billing_status' => 'Open',
@@ -41,15 +48,24 @@ class HospitalityFrontController extends Controller
             'notes' => $data['notes'] ?? null,
         ]);
 
+        session(['hospitality_order_ids' => collect(session('hospitality_order_ids', []))->push($order->id)->unique()->take(-20)->values()->all()]);
+
         return redirect(URL::signedRoute('public.hospitality.order', ['order' => $order->id]));
     }
 
     public function order(RestaurantOrder $order)
     {
-        $order->load('posOrder.items', 'restaurantTable');
+        $order->load('posOrder.items', 'posOrder.invoice.receipts.payment', 'restaurantTable', 'waiter', 'business');
 
         return response()->view('hospitality.order', compact('order'))
             ->header('Cache-Control', 'private, no-store')
             ->header('Referrer-Policy', 'no-referrer');
+    }
+
+    private function servingStaff()
+    {
+        return User::where('is_active', true)->where('role', '!=', 'client_portal')
+            ->whereIn('id', fn ($query) => $query->select('user_id')->from('business_user')
+                ->where('business_id', ActiveBusiness::id() ?? 0)->where('status', 'Active'));
     }
 }

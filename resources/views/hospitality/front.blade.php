@@ -111,6 +111,14 @@
                 <aside class="reserve-card">
                     <h2>Your order</h2>
                     <div class="field-grid">
+                        <label for="serving-staff">Serving staff</label>
+                        <select class="front-select" id="serving-staff" name="waiter_id" required>
+                            <option value="">Choose staff</option>
+                            @foreach($staff as $member)
+                                <option value="{{ $member->id }}" @selected(old('waiter_id') == $member->id)>{{ $member->name }}</option>
+                            @endforeach
+                        </select>
+                        @if($staff->isEmpty())<p>No serving staff are available. Please contact the restaurant.</p>@endif
                         <select class="front-select" name="order_type" aria-label="Order type" required>
                             <option>Dine In</option>
                             <option>Takeaway</option>
@@ -124,9 +132,27 @@
                         <input class="front-input" name="notes" placeholder="Special request" aria-label="Special request">
                     </div>
                     <div class="total-line"><span>Total</span><span id="front-menu-total">0.00</span></div>
-                    <button class="front-button" @disabled($menuItems->isEmpty())>Send order to kitchen</button>
+                    <button class="front-button" @disabled($menuItems->isEmpty() || $staff->isEmpty())>Send order to kitchen</button>
                 </aside>
             </form>
+            @if($recentOrders->isNotEmpty())
+                <section style="margin-top:28px" aria-label="Your orders and receipts">
+                    <h2>Your orders & receipts</h2>
+                    <div class="menu-grid">
+                        @foreach($recentOrders as $recentOrder)
+                            <article class="menu-card">
+                                <h3>{{ $recentOrder->posOrder?->order_number }}</h3>
+                                <p>{{ $recentOrder->kitchen_status }} · {{ $recentOrder->waiter?->name ?? 'Staff not assigned' }}</p>
+                                <p>Total: {{ number_format($recentOrder->total, 2) }} · Paid: {{ number_format($recentOrder->posOrder?->invoice?->amount_paid ?? 0, 2) }}</p>
+                                <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('public.hospitality.order', ['order' => $recentOrder->id]) }}">{{ $recentOrder->kitchen_status === 'Served' ? 'View / print receipt' : 'View order' }}</a>
+                            </article>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+            @auth
+                <p style="margin-top:20px"><a href="{{ route('hospitality.restaurant.index') }}">Staff: manage orders, receipts & payments</a></p>
+            @endauth
         </div>
     </main>
 </div>
