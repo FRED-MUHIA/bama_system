@@ -75,7 +75,9 @@
             <form method="post" action="{{ route('public.hospitality.reserve') }}" class="front-grid" id="front-menu-form">
                 @csrf
                 <div>
-                    @php($menuCategories = $menuItems->map(fn ($item) => $item->category?->name ?? 'Restaurant Menu')->unique()->sort()->values())
+                    @php
+                        $menuCategories = $menuItems->map(fn ($item) => $item->category?->name ?? 'Restaurant Menu')->unique()->sort()->values();
+                    @endphp
                     <div class="menu-tools">
                         <label class="menu-search-label" for="menu-search">Search menu</label>
                         <input class="front-input" id="menu-search" type="search" placeholder="Search dishes, ingredients or categories" aria-controls="menu-items">
