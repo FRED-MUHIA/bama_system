@@ -1,6 +1,23 @@
 @extends('layouts.app')
 @section('title','Products')
 @section('content')
+<style>
+    .product-catalog-table { min-width: 1120px; }
+    .product-catalog-table th, .product-catalog-table td { padding: .85rem .75rem; white-space: nowrap; }
+    .product-catalog-table .product-name-cell { min-width: 300px; max-width: 380px; white-space: normal; }
+    .product-catalog-table .product-name-cell > div:last-child { min-width: 0; overflow-wrap: anywhere; }
+    .product-catalog-table .product-action-cell { min-width: 180px; }
+    .product-catalog-table .product-action-controls { display:flex; align-items:center; justify-content:flex-end; gap:.4rem; }
+    .product-catalog-table .product-action-controls form { display:flex; align-items:center; gap:.35rem; margin:0; }
+    .product-catalog-table .product-action-controls input { width:90px; }
+    .product-catalog-table .product-action-controls button { min-width:38px; }
+    @media (min-width: 992px) {
+        .product-catalog-layout > .col-lg-8 { width:100%; }
+        .product-catalog-layout > .col-lg-4 { width:100%; }
+        .product-catalog-tools { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
+        .product-catalog-tools > .card { margin:0 !important; }
+    }
+</style>
 @if($lowStockProducts->isNotEmpty())
     <div class="alert alert-warning">
         <strong>Low stock:</strong>
@@ -17,7 +34,7 @@
         </ul>
     </div>
 @endif
-<div class="row g-4">
+<div class="row g-4 product-catalog-layout">
     <div class="col-lg-8 order-2 order-lg-1">
         <div class="card"><div class="card-body">
             <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
@@ -75,12 +92,12 @@
                 @endforelse
             </div>
             <div class="table-responsive d-none d-lg-block">
-            <table class="table align-middle">
+            <table class="table align-middle product-catalog-table">
                 <thead><tr><th>Name</th><th>Category</th><th>SKU</th><th>Price</th><th>Cost</th><th>Stock</th><th>Reorder</th><th>Status</th><th></th></tr></thead>
                 <tbody>
                 @forelse($products as $item)
                     <tr>
-                        <td><div class="d-flex align-items-center gap-2"><div class="flex-shrink-0 rounded bg-light border overflow-hidden d-flex align-items-center justify-content-center" style="width:48px;height:48px">@if($item->main_image_path)<img src="{{ \App\Support\PublicUpload::url($item->main_image_path) }}" alt="{{ $item->name }}" style="width:100%;height:100%;object-fit:cover">@else<i class="bi bi-box-seam text-muted"></i>@endif</div><div>{{ $item->name }}<div class="small text-muted">{{ $item->description }}</div><div class="small text-muted">@if($item->barcode)ID {{ $item->barcode }} · @endif{{ $item->brand?->name }}@if($item->size) · Size {{ $item->size }}@endif</div></div></div></td>
+                        <td class="product-name-cell"><div class="d-flex align-items-center gap-2"><div class="flex-shrink-0 rounded bg-light border overflow-hidden d-flex align-items-center justify-content-center" style="width:48px;height:48px">@if($item->main_image_path)<img src="{{ \App\Support\PublicUpload::url($item->main_image_path) }}" alt="{{ $item->name }}" style="width:100%;height:100%;object-fit:cover">@else<i class="bi bi-box-seam text-muted"></i>@endif</div><div>{{ $item->name }}<div class="small text-muted">{{ $item->description }}</div><div class="small text-muted">@if($item->barcode)ID {{ $item->barcode }} · @endif{{ $item->brand?->name }}@if($item->size) · Size {{ $item->size }}@endif</div></div></div></td>
                         <td>{{ $item->category?->name }}</td>
                         <td>{{ $item->sku }}</td>
                         <td>{{ number_format($item->price,2) }}</td>
@@ -91,10 +108,12 @@
                         </td>
                         <td>{{ $item->formattedStock((float) $item->reorder_level) }}</td>
                         <td><span class="status-pill">{{ $item->is_active ? 'active' : 'inactive' }}</span></td>
-                        <td class="text-end d-flex gap-1 justify-content-end">
+                        <td class="text-end product-action-cell">
+                            <div class="product-action-controls">
                             <button class="btn btn-sm btn-outline-success" data-bs-toggle="collapse" data-bs-target="#stock-product-{{ $item->id }}"><i class="bi bi-boxes"></i></button>
                             <button class="btn btn-sm btn-outline-dark" data-bs-toggle="collapse" data-bs-target="#edit-product-{{ $item->id }}"><i class="bi bi-pencil"></i></button>
                             <form method="post" action="{{ route('products.destroy',$item) }}" onsubmit="return confirm('Archive this product?')">@csrf @method('DELETE')<input class="form-control form-control-sm mb-1" name="authorization_pin" type="password" inputmode="numeric" pattern="[0-9]{4,12}" placeholder="Edit PIN" required><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                            </div>
                         </td>
                     </tr>
                     <tr class="collapse" id="stock-product-{{ $item->id }}"><td colspan="9">
@@ -121,7 +140,7 @@
             {{ $products->links() }}
         </div></div>
     </div>
-    <div class="col-lg-4 order-1 order-lg-2">
+    <div class="col-lg-4 order-1 order-lg-2 product-catalog-tools">
         <div class="card mb-4" id="add-product"><div class="card-body">
             <h2 class="h5">Add Product</h2>
             <form method="post" action="{{ route('products.store') }}" enctype="multipart/form-data" class="row g-2">@csrf
