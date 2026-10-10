@@ -90,7 +90,7 @@
 <div class="tab-content">
     <div class="tab-pane fade show active" id="a-access">
         <div class="row g-3">
-            <div class="col-xl-5">
+            <div class="col-12">
                 <div class="card p-3">
                     <h3 class="h5">Assign employee role & {{ strtolower($locationLabel) }}</h3>
                     <p class="text-muted">Invite someone or update an existing employee by email. Choose their role and {{ strtolower($locationLabel) }} below.</p>
@@ -132,6 +132,41 @@
                             </select>
                             <input class="form-control mt-2" name="approval_level" placeholder="Approval level, optional" value="{{ old('approval_level') }}">
                         </details></div>
+                        <div class="col-12 mt-3">
+                            <h3 class="h5">{{ $industryPackage['name'] ?? $permissionScope }} features</h3>
+                            <p class="text-muted">{{ implode(', ', $industryPackage['modules'] ?? []) }}</p>
+                            <details @if(old('permissions')) open @endif><summary class="fw-semibold mb-3">Customize individual feature access</summary>
+                            <p class="text-muted mb-2">Select custom permissions for this employee, or leave all unchecked to use the selected role. Custom selections replace the feature access from the role for this employee.</p>
+                            <div class="permission-scope mb-3">
+                                <span>Profile</span>
+                                <strong>{{ $profileName }}</strong>
+                                <span>Modules</span>
+                                <strong>{{ $permissionScope }}</strong>
+                            </div>
+                                <div class="permissions-toolbar mb-2">
+                                    <input class="form-control form-control-sm permissions-search" type="search" placeholder="Search permissions" aria-label="Search permissions">
+                                    <span class="text-muted small">{{ $permissions->flatten(1)->count() }} available</span>
+                                </div>
+                                <div class="permissions-panel" data-permissions-panel>
+                                    @forelse($permissions as $module=>$items)
+                                        <section class="permission-group" data-permission-group>
+                                            <strong>{{ \Illuminate\Support\Str::headline(str_replace(['-', '_'], ' ', $module)) }}</strong>
+                                            <div class="permission-grid">
+                                                @foreach($items as $permission)
+                                                    <label class="permission-option" data-permission-option>
+                                                        <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" @checked(in_array($permission->id, old('permissions', [])))>
+                                                        <span>{{ $permission->name }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        </section>
+                                    @empty
+                                        <div class="alert alert-warning mb-0">No permissions are available for this profile yet.</div>
+                                    @endforelse
+                                    <div class="permissions-empty text-muted small d-none">No matching permissions.</div>
+                                </div>
+                            </details>
+                        </div>
                         <div class="col-12">
                             <button class="btn btn-warning w-100">Save employee assignment</button>
                             @if($userSeatsFull)
@@ -139,71 +174,6 @@
                             @endif
                         </div>
                     </form>
-                </div>
-            </div>
-            <div class="col-xl-7">
-                <div class="card p-3">
-                    <h3 class="h5">{{ $industryPackage['name'] ?? $permissionScope }} features</h3>
-                    <p class="text-muted">{{ implode(', ', $industryPackage['modules'] ?? []) }}</p>
-                    <details><summary class="fw-semibold mb-3">Customize individual feature access</summary>
-                    <p class="text-muted mb-2">Create an email-specific access role for {{ $profileName }}.</p>
-                    <div class="permission-scope mb-3">
-                        <span>Profile</span>
-                        <strong>{{ $profileName }}</strong>
-                        <span>Modules</span>
-                        <strong>{{ $permissionScope }}</strong>
-                    </div>
-                    <form method="post" action="{{ route('administration.access.assign') }}">
-                        @csrf
-                        <div class="row g-2 mb-3">
-                            <div class="col-md-6"><input class="form-control" name="name" placeholder="Full name"></div>
-                            <div class="col-md-6"><input class="form-control" type="email" name="email" placeholder="Email" required></div>
-                            <div class="col-md-4">
-                                <select class="form-select" name="department_id">
-                                    <option value="">Department</option>
-                                    @foreach($departments as $department)
-                                        <option value="{{ $department->id }}">{{ $department->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <select class="form-select" name="branch_id">
-                                    <option value="">{{ $locationLabel }}</option>
-                                    @foreach($branches as $branch)
-                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-4"><input class="form-control" name="approval_level" placeholder="Approval level"></div>
-                        </div>
-                        <div class="permissions-toolbar mb-2">
-                            <input class="form-control form-control-sm permissions-search" type="search" placeholder="Search permissions" aria-label="Search permissions">
-                            <span class="text-muted small">{{ $permissions->flatten(1)->count() }} available</span>
-                        </div>
-                        <div class="permissions-panel" data-permissions-panel>
-                            @forelse($permissions as $module=>$items)
-                                <section class="permission-group" data-permission-group>
-                                    <strong>{{ \Illuminate\Support\Str::headline(str_replace(['-', '_'], ' ', $module)) }}</strong>
-                                    <div class="permission-grid">
-                                        @foreach($items as $permission)
-                                            <label class="permission-option" data-permission-option>
-                                                <input type="checkbox" name="permissions[]" value="{{ $permission->id }}">
-                                                <span>{{ $permission->name }}</span>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                </section>
-                            @empty
-                                <div class="alert alert-warning mb-0">No permissions are available for this profile yet.</div>
-                            @endforelse
-                            <div class="permissions-empty text-muted small d-none">No matching permissions.</div>
-                        </div>
-                        <button class="btn btn-warning mt-3 w-100" @disabled($userSeatsFull)>Save Custom Feature Access</button>
-                        @if($userSeatsFull)
-                            <small class="text-muted d-block mt-2">Upgrade the package to add another employee profile.</small>
-                        @endif
-                    </form>
-                    </details>
                 </div>
             </div>
         </div>
@@ -747,6 +717,12 @@
     const renderRoleFeatures = () => document.querySelectorAll('[data-role-preview]').forEach(panel => {
         panel.hidden = panel.dataset.rolePreview !== employeeRole?.value;
     });
+    const customPermissions = document.querySelectorAll('#a-access input[name="permissions[]"]');
+    const updateRoleRequirement = () => {
+        if (employeeRole) employeeRole.required = !Array.from(customPermissions).some(input => input.checked);
+    };
+    customPermissions.forEach(input => input.addEventListener('change', updateRoleRequirement));
+    updateRoleRequirement();
     employeeRole?.addEventListener('change', renderRoleFeatures);
     renderRoleFeatures();
     document.querySelectorAll('.permissions-search').forEach((search) => {
