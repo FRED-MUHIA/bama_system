@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Business;
 use App\Support\ActiveBusiness;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class BusinessController extends Controller
@@ -17,12 +18,28 @@ class BusinessController extends Controller
 
     public function switch(Request $request)
     {
-        $data = $request->validate(['business_id' => ['required', 'exists:businesses,id']]);
         $accessibleBusinessIds = ActiveBusiness::accessibleBusinessIds();
 
-        abort_if($accessibleBusinessIds !== null && ! in_array((int) $data['business_id'], $accessibleBusinessIds, true), 403);
+        abort_unless($accessibleBusinessIds !== null, 403);
+
+        $data = $request->validate([
+            'business_id' => ['required', 'integer', function ($attribute, $value, $fail) use ($accessibleBusinessIds) {
+                if (! in_array((int) $value, $accessibleBusinessIds, true)) {
+                    $fail('You do not have access to that business.');
+                }
+            }],
+        ]);
 
         $business = Business::where('is_active', true)->findOrFail($data['business_id']);
+
+        abort_unless(
+            DB::table('business_user')->where('business_id', $business->id)
+                ->where('user_id', $request->user()->id)
+                ->whereIn('status', ['Active', 'Pending Invitation'])
+                ->exists(),
+            403
+        );
+
         ActiveBusiness::switchTo($business);
 
         return redirect()->route('dashboard')->with('status', 'Business switched to '.$business->name.'.');

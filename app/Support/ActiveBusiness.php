@@ -39,13 +39,12 @@ class ActiveBusiness
         $accessibleIds = self::accessibleBusinessIds();
 
         if ($accessibleIds !== null && $accessibleIds === []) {
-            if ($sessionId && Business::withoutGlobalScopes()->whereKey($sessionId)->exists()) {
-                $accessibleIds = [(int) $sessionId];
-            } else {
-                Session::forget(self::SESSION_KEY);
+            // A stale session value must never grant access to a business. In
+            // particular, a newly created account may inherit a browser
+            // session that still points at another business.
+            Session::forget(self::SESSION_KEY);
 
-                return self::$current = null;
-            }
+            return self::$current = null;
         }
 
         $business = $accessibleIds === null ? self::ensureDefaults() : null;
