@@ -39,6 +39,9 @@ class LandingController extends Controller
         $definition = $industries->find($industry);
         $page = MarketingPage::resolve($definition['slug']);
         abort_unless($page->is_published, 404);
+        if ($industry !== $definition['slug']) {
+            return redirect()->route('industries.show', $definition['slug'], 301);
+        }
         $pageSections = array_replace(MarketingPage::defaultSections($definition['slug']), $page->sections ?? []);
         $hero = data_get($pageSections, 'hero', []);
         $media = data_get($pageSections, 'media', []);

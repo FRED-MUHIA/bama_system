@@ -85,6 +85,8 @@ use Shared\Compliance\Etims\Controllers\EtimsComplianceController;
 Route::get('/uploads/{path}', PublicUploadController::class)->where('path', '.*')->name('uploads.public');
 
 Route::get('/', LandingController::class)->name('landing');
+Route::get('/sitemap.xml', \App\Http\Controllers\SitemapController::class)->name('sitemap');
+Route::get('/robots.txt', [\App\Http\Controllers\SitemapController::class, 'robots'])->name('robots');
 Route::get('/blog', [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
 Route::get('/industries/{industry}', [LandingController::class, 'industry'])->name('industries.show');

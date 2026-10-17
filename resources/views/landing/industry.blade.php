@@ -74,6 +74,14 @@
 <main class="bama-page min-h-screen" style="--accent: {{ $accent[0] }}; --dark: {{ $accent[1] }};">
     @include('landing.partials.site-header')
 
+    <nav aria-label="Breadcrumb" class="mx-auto max-w-7xl px-5 pt-6 text-sm text-zinc-600">
+        <ol class="flex flex-wrap items-center gap-2">
+            <li><a href="{{ route('landing') }}" class="hover:underline">Home</a></li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page">{{ $industry['industry'] }}</li>
+        </ol>
+    </nav>
+
     <section class="industry-showcase" data-industry-slider aria-roledescription="carousel" aria-label="{{ $industry['industry'] }} overview">
         <div class="industry-showcase-track">
             @foreach($industrySlides as $slideIndex => $slide)
@@ -81,7 +89,11 @@
                     <div class="industry-showcase-copy">
                         <a href="{{ route('landing') }}#industries" class="text-sm font-black uppercase text-zinc-500 no-underline hover:text-[#007A3B]">{{ data_get($pageSections, 'copy.back_label', 'Back to industries') }}</a>
                         <p class="bama-eyebrow mt-8">{{ data_get($industry, 'hero.eyebrow') }}</p>
-                        <h1 class="mt-3 text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">{{ $slide['title'] ?? data_get($industry, 'hero.title') }}</h1>
+                        @if($loop->first)
+                            <h1 class="mt-3 text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">{{ $slide['title'] ?? data_get($industry, 'hero.title') }}</h1>
+                        @else
+                            <h2 class="mt-3 text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">{{ $slide['title'] ?? data_get($industry, 'hero.title') }}</h2>
+                        @endif
                         <p class="mt-5 max-w-2xl text-lg leading-8 text-zinc-600">{{ $slide['body'] ?? data_get($industry, 'hero.body') }}</p>
                         <a href="{{ data_get($pageSections, 'copy.button_url', route('register.account')) }}" class="mt-7 inline-flex rounded-full bg-[#00A651] px-8 py-4 text-center text-sm font-black uppercase text-white no-underline shadow-sm hover:bg-[#007A3B]">{{ data_get($pageSections, 'copy.button_label', 'Start Free Trial') }}</a>
                     </div>
@@ -198,6 +210,16 @@
         </div>
     </section>
     @include('landing.partials.page-blocks', ['blocks' => $pageSections['blocks'] ?? []])
+    <section class="mx-auto max-w-7xl px-5 py-10" aria-labelledby="related-industries-heading">
+        <h2 id="related-industries-heading" class="text-2xl font-black">Explore other industry solutions</h2>
+        <ul class="mt-5 flex flex-wrap gap-4">
+            @foreach($industries as $relatedIndustry)
+                @if($relatedIndustry['slug'] !== $industry['slug'])
+                    <li><a href="{{ route('industries.show', $relatedIndustry['slug']) }}" class="font-bold text-[#007A3B] hover:underline">{{ $relatedIndustry['name'] }} software</a></li>
+                @endif
+            @endforeach
+        </ul>
+    </section>
     @include('landing.partials.site-footer')
 </main>
 @endsection

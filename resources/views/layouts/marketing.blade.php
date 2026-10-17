@@ -4,11 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Bama Business Cloud' }}</title>
+    @if(request()->routeIs('landing', 'industries.show', 'marketing.pages.show'))
+        @include('seo.marketing')
+    @else
+        <title>{{ $title ?? 'Bama Business Cloud' }}</title>
+        @isset($metaDescription)
+            <meta name="description" content="{{ $metaDescription }}">
+        @endisset
+    @endif
     @stack('seo')
-    @isset($metaDescription)
-        <meta name="description" content="{{ $metaDescription }}">
-    @endisset
     @php
         $marketingDefaults = \App\Models\MarketingPage::defaultSections('home');
         $marketingSiteContent = $marketingSiteContent ?? ($marketingContent ?? null);

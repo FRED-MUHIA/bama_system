@@ -114,9 +114,11 @@ class MarketingPageController extends Controller
 
         $page = MarketingPage::published()->where('slug', $slug)->firstOrFail();
 
-        abort_if($page->slug === 'home', 404);
+        if ($page->slug === 'home') {
+            return redirect()->route('landing', [], 301);
+        }
         if (app(IndustrySetupService::class)->isImplemented($slug)) {
-            return redirect($page->publicUrl());
+            return redirect($page->publicUrl(), 301);
         }
         $homePage = MarketingPage::resolve('home');
 

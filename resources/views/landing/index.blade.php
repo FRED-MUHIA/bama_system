@@ -660,7 +660,7 @@
                                     <div class="grid grid-cols-2 gap-1.5">
                                         @foreach ($industryCards as $industry)
                                             @php
-                                                $industrySlug = str_replace('_', '-', $industry['slug']);
+                                                $industrySlug = $industry['slug'];
                                             @endphp
                                             <a href="{{ route('industries.show', ['industry' => $industrySlug]) }}" class="flex items-center gap-2 rounded-lg px-3 py-2.5 hover:bg-[#EAF8F0]">
                                                 <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#EAF8F0] text-xs font-black text-[#007A3B]">{{ substr($industry['name'], 0, 1) }}</span>
@@ -915,7 +915,7 @@
             <div class="mt-8 grid gap-6 lg:grid-cols-[.9fr_1.1fr]">
                 <div class="grid gap-3 sm:grid-cols-2">
                     @foreach ($industryCards as $industry)
-                        <a href="{{ route('industries.show', ['industry' => str_replace('_', '-', $industry['slug'])]) }}" data-industry-tab="{{ $industry['slug'] }}" class="industry-tab rounded-2xl border border-zinc-200 bg-white p-4 text-left text-black no-underline shadow-sm transition hover:-translate-y-1 hover:border-[#00A651] hover:text-black hover:shadow-xl">
+                        <a href="{{ route('industries.show', ['industry' => $industry['slug']]) }}" data-industry-tab="{{ $industry['slug'] }}" class="industry-tab rounded-2xl border border-zinc-200 bg-white p-4 text-left text-black no-underline shadow-sm transition hover:-translate-y-1 hover:border-[#00A651] hover:text-black hover:shadow-xl">
                             <div class="flex items-start justify-between gap-4">
                                 <span class="grid h-10 w-10 place-items-center rounded-lg bg-[#EAF8F0] text-sm font-black text-[#007A3B]">{{ substr($industry['name'], 0, 1) }}</span>
                                 <span class="text-sm font-black text-[#00A651]">Learn More</span>
