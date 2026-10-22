@@ -28,7 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->validateCsrfTokens(except: ['logout', 'billing/mpesa/callback', 'api/payments/*']);
+        $middleware->preventRequestForgery(except: ['logout', 'billing/mpesa/callback', 'api/payments/*']);
         $middleware->append([EnforceHttps::class, SecurityHeaders::class]);
         $middleware->web(append: [IdentifyTenant::class, RecordMajorActivity::class]);
         $middleware->alias([

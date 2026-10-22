@@ -1,5 +1,40 @@
 # bama_system
 
+## Runtime and Laravel upgrade
+
+This application uses Laravel 13 and requires PHP 8.3 or newer for both
+the web server and command-line processes, including Composer, scheduled tasks,
+and queue workers. PHPUnit 12 is used for testing.
+
+Install the versions recorded in `composer.lock` with `composer install`.
+Enable the standard Laravel extensions, the PostgreSQL PDO driver, GD (QR codes),
+and ZIP. Run `composer check-platform-reqs` to verify the runtime.
+
+On this Windows workspace, PHP 8.3.36 is available at
+`C:\xampp\htdocs\zomo\.runtime\php83\php.exe`. From the `zadi` directory:
+
+```powershell
+& ..\.runtime\php83\php.exe artisan serve
+& ..\.runtime\php83\php.exe vendor/bin/phpunit
+```
+
+The workspace runtime is local tooling, not part of the repository. XAMPP's
+existing PHP 8.2 installation cannot serve Laravel 13; configure the web server
+with PHP 8.3+ before deploying this upgrade. After installing dependencies on the
+target server, clear compiled configuration/views and restart queue workers:
+
+```sh
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+php artisan queue:restart
+```
+
+Session serialization remains `php` to preserve existing sessions. Payment
+callback exclusions are retained under Laravel 13's request-forgery middleware.
+Feature tests use the dedicated PostgreSQL database configured in `phpunit.xml`
+(`bama_test` by default); never point these tests at a production database.
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

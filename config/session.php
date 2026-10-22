@@ -214,4 +214,7 @@ return [
 
     'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
 
+    // Preserve existing sessions when upgrading from Laravel 12.
+    'serialization' => 'php',
+
 ];
