@@ -670,7 +670,9 @@
 @endif
 
 @if($section === 'products')
-    @php($productAdmin = auth()->check() && app(\App\Services\IamService::class)->isBusinessAdministrator(auth()->user()))
+    @php
+        $productAdmin = auth()->check() && app(\App\Services\IamService::class)->isBusinessAdministrator(auth()->user());
+    @endphp
     <div class="card p-0">
         <div class="table-responsive">
             <table class="table mb-0 align-middle">
@@ -854,7 +856,9 @@
 @endif
 
 @if($section === 'products')
-    @php($productAdmin = auth()->check() && app(\App\Services\IamService::class)->isBusinessAdministrator(auth()->user()))
+    @php
+        $productAdmin = auth()->check() && app(\App\Services\IamService::class)->isBusinessAdministrator(auth()->user());
+    @endphp
     <style>
         .retail-product-actions-cell{min-width:300px}
         .retail-product-actions{display:flex;justify-content:flex-end;align-items:center;gap:6px;flex-wrap:nowrap}
