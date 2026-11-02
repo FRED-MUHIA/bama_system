@@ -10,7 +10,7 @@ class PurchaseOrder extends Model
 {
     use BelongsToBusiness, AuditsAccountingChanges;
 
-    protected $fillable = ['business_id', 'supplier_id', 'project_id', 'department_id', 'cost_center_id', 'po_number', 'order_date', 'amount', 'status', 'notes'];
+    protected $fillable = ['business_id', 'supplier_id', 'project_id', 'department_id', 'cost_center_id', 'po_number', 'order_date', 'amount', 'tax_amount', 'status', 'notes'];
     protected $casts = ['order_date' => 'date'];
 
     public function supplier() { return $this->belongsTo(Supplier::class); }

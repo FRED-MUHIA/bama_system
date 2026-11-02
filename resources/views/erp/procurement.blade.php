@@ -13,7 +13,7 @@
     .procurement-card{min-width:0}
     #purchase-order-items{width:100%;table-layout:fixed}
     #purchase-order-items input{min-width:0}
-    #purchase-order-items th:first-child,#purchase-order-items td:first-child{width:42%}
+    #purchase-order-items th:first-child,#purchase-order-items td:first-child{width:35%}
     @media(max-width:1400px){.procurement-grid{grid-template-columns:repeat(2,minmax(260px,1fr))}}
     @media(max-width:700px){
         .procurement-grid{grid-template-columns:minmax(0,1fr);gap:12px}
@@ -109,19 +109,24 @@
             <label class="form-label">Items</label>
             <div class="table-responsive po-items-wrap mb-2">
                 <table class="table table-sm align-middle" id="purchase-order-items">
-                    <thead><tr><th>Description</th><th style="width:90px">Qty</th><th style="width:125px">Unit price</th><th style="width:110px">Total</th><th></th></tr></thead>
+                    <thead><tr><th>Description</th><th style="width:70px">Qty</th><th style="width:100px">Unit price</th><th style="width:75px">Tax %</th><th style="width:105px">Total</th><th></th></tr></thead>
                     <tbody>
                         @foreach(old('items', [['description' => '', 'quantity' => 1, 'unit_price' => '']]) as $i => $item)
                             <tr>
                                 <td data-label="Description"><input class="form-control form-control-sm" name="items[{{ $i }}][description]" value="{{ $item['description'] ?? '' }}" placeholder="Item or service" required></td>
                                 <td data-label="Quantity"><input class="form-control form-control-sm po-quantity" name="items[{{ $i }}][quantity]" type="number" min="0.001" step="0.001" value="{{ $item['quantity'] ?? 1 }}" required></td>
                                 <td data-label="Unit price"><input class="form-control form-control-sm po-unit-price" name="items[{{ $i }}][unit_price]" type="number" min="0" step="0.01" value="{{ $item['unit_price'] ?? '' }}" placeholder="0.00" required></td>
-                                <td data-label="Line total" class="text-end po-line-total">0.00</td>
+                                <td data-label="Tax rate (%)"><input class="form-control form-control-sm po-tax-rate" name="items[{{ $i }}][tax_rate]" type="number" min="0" max="100" step="0.01" value="{{ $item['tax_rate'] ?? 0 }}" placeholder="0"></td>
+                                <td data-label="Total including tax" class="text-end po-line-total">0.00</td>
                                 <td data-label="Remove"><button type="button" class="btn btn-outline-danger btn-sm remove-po-row" aria-label="Remove item">&times;</button></td>
                             </tr>
                         @endforeach
                     </tbody>
-                    <tfoot><tr><th colspan="3" class="text-end">PO Total</th><th class="text-end" id="purchase-order-total">0.00</th><th></th></tr></tfoot>
+                    <tfoot>
+                        <tr><th colspan="4" class="text-end">Subtotal</th><th class="text-end" id="purchase-order-subtotal">0.00</th><th></th></tr>
+                        <tr><th colspan="4" class="text-end">Tax</th><th class="text-end" id="purchase-order-tax">0.00</th><th></th></tr>
+                        <tr><th colspan="4" class="text-end">PO total</th><th class="text-end" id="purchase-order-total">0.00</th><th></th></tr>
+                    </tfoot>
                 </table>
             </div>
             <button type="button" class="btn btn-outline-secondary btn-sm mb-2" id="add-po-row"><i class="bi bi-plus"></i> Add item</button>
@@ -231,15 +236,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!table) return;
     let index = table.querySelectorAll('tbody tr').length;
     const updateTotal = () => {
-        let total = 0;
+        let subtotal = 0;
+        let taxTotal = 0;
         table.querySelectorAll('tbody tr').forEach((row) => {
             const quantity = Number(row.querySelector('.po-quantity').value || 0);
             const price = Number(row.querySelector('.po-unit-price').value || 0);
-            const line = quantity * price;
+            const lineSubtotal = Math.round(quantity * price * 100) / 100;
+            const taxRate = Number(row.querySelector('.po-tax-rate').value || 0);
+            const lineTax = Math.round(lineSubtotal * taxRate) / 100;
+            const line = lineSubtotal + lineTax;
             row.querySelector('.po-line-total').textContent = line.toFixed(2);
-            total += line;
+            subtotal += lineSubtotal;
+            taxTotal += lineTax;
         });
-        document.getElementById('purchase-order-total').textContent = total.toFixed(2);
+        document.getElementById('purchase-order-subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('purchase-order-tax').textContent = taxTotal.toFixed(2);
+        document.getElementById('purchase-order-total').textContent = (subtotal + taxTotal).toFixed(2);
     };
     table.addEventListener('input', updateTotal);
     document.getElementById('add-po-row').addEventListener('click', () => {
@@ -247,7 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <td data-label="Description"><input class="form-control form-control-sm" name="items[${index}][description]" placeholder="Item or service" required></td>
             <td data-label="Quantity"><input class="form-control form-control-sm po-quantity" name="items[${index}][quantity]" type="number" min="0.001" step="0.001" value="1" required></td>
             <td data-label="Unit price"><input class="form-control form-control-sm po-unit-price" name="items[${index}][unit_price]" type="number" min="0" step="0.01" placeholder="0.00" required></td>
-            <td data-label="Line total" class="text-end po-line-total">0.00</td>
+            <td data-label="Tax rate (%)"><input class="form-control form-control-sm po-tax-rate" name="items[${index}][tax_rate]" type="number" min="0" max="100" step="0.01" value="0" placeholder="0"></td>
+            <td data-label="Total including tax" class="text-end po-line-total">0.00</td>
             <td data-label="Remove"><button type="button" class="btn btn-outline-danger btn-sm remove-po-row" aria-label="Remove item">&times;</button></td>
         </tr>`);
         index++;

@@ -214,16 +214,21 @@ class ErpController extends Controller
             'items.*.description' => ['required', 'string', 'max:2000'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
         $purchaseOrder = DB::transaction(function () use ($data) {
             $items = collect($data['items'])->map(function ($item) {
-                $item['line_total'] = round((float) $item['quantity'] * (float) $item['unit_price'], 2);
+                $subtotal = round((float) $item['quantity'] * (float) $item['unit_price'], 2);
+                $item['tax_rate'] = (float) ($item['tax_rate'] ?? 0);
+                $item['tax_amount'] = round($subtotal * $item['tax_rate'] / 100, 2);
+                $item['line_total'] = $subtotal + $item['tax_amount'];
 
                 return $item;
             });
             unset($data['items']);
-            $data['amount'] = $items->sum('line_total');
+            $data['amount'] = round($items->sum('line_total'), 2);
+            $data['tax_amount'] = round($items->sum('tax_amount'), 2);
             $purchaseOrder = PurchaseOrder::create($data);
             foreach ($items as $item) {
                 $purchaseOrder->items()->create($item);

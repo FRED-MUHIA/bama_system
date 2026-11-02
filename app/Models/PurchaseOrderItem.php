@@ -9,7 +9,7 @@ class PurchaseOrderItem extends Model
 {
     use BelongsToBusiness;
 
-    protected $fillable = ['business_id', 'purchase_order_id', 'description', 'quantity', 'unit_price', 'line_total'];
+    protected $fillable = ['business_id', 'purchase_order_id', 'description', 'quantity', 'unit_price', 'tax_rate', 'tax_amount', 'line_total'];
 
     public function purchaseOrder() { return $this->belongsTo(PurchaseOrder::class); }
 }

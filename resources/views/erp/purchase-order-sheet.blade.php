@@ -18,7 +18,9 @@
     .po-sheet .po-items th{text-align:left;background:#008b50;color:white;padding:10px}
     .po-sheet .po-items td{padding:10px;border-bottom:1px solid #e0e5eb}
     .po-sheet .po-right{text-align:right}
-    .po-sheet .po-total{text-align:right;font-size:15px;font-weight:bold;margin-top:18px}
+    .po-sheet .po-totals{width:100%;max-width:300px;margin:18px 0 0 auto;border-collapse:collapse}
+    .po-sheet .po-totals td{padding:5px 0;text-align:right}
+    .po-sheet .po-totals tr:last-child td{border-top:1px solid #d7dee7;padding-top:9px;font-size:15px;font-weight:bold}
     .po-sheet .po-notes{margin-top:24px;white-space:pre-line}
     @media print{.po-sheet{border:0}}
 </style>
@@ -47,14 +49,18 @@
             </tr>
         </table>
         <table class="po-items">
-            <thead><tr><th>Description</th><th class="po-right">Quantity</th><th class="po-right">Unit price</th><th class="po-right">Line total</th></tr></thead>
+            <thead><tr><th>Description</th><th class="po-right">Quantity</th><th class="po-right">Unit price</th><th class="po-right">Tax</th><th class="po-right">Total</th></tr></thead>
             <tbody>
                 @foreach($purchaseOrder->items as $item)
-                    <tr><td>{{ $item->description }}</td><td class="po-right">{{ number_format((float) $item->quantity, 3) }}</td><td class="po-right">{{ $formatMoney($item->unit_price) }}</td><td class="po-right">{{ $formatMoney($item->line_total) }}</td></tr>
+                    <tr><td>{{ $item->description }}</td><td class="po-right">{{ number_format((float) $item->quantity, 3) }}</td><td class="po-right">{{ $formatMoney($item->unit_price) }}</td><td class="po-right">{{ number_format((float) $item->tax_rate, 2) }}% · {{ $formatMoney($item->tax_amount) }}</td><td class="po-right">{{ $formatMoney($item->line_total) }}</td></tr>
                 @endforeach
             </tbody>
         </table>
-        <div class="po-total">Total: {{ $formatMoney($purchaseOrder->amount) }}</div>
+        <table class="po-totals">
+            <tr><td>Subtotal</td><td>{{ $formatMoney((float) $purchaseOrder->amount - (float) $purchaseOrder->tax_amount) }}</td></tr>
+            <tr><td>Tax</td><td>{{ $formatMoney($purchaseOrder->tax_amount) }}</td></tr>
+            <tr><td>Total</td><td>{{ $formatMoney($purchaseOrder->amount) }}</td></tr>
+        </table>
         @if($purchaseOrder->notes)<div class="po-notes"><strong>Notes</strong><br>{{ $purchaseOrder->notes }}</div>@endif
     </div>
 </article>
