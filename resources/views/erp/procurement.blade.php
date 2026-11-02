@@ -9,8 +9,31 @@
     .procurement-card .form-label{font-size:.72rem;font-weight:800;text-transform:uppercase;color:#5e5a56;letter-spacing:.06em}
     .supplier-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
     .supplier-tile{border:1px solid #dedbd5;border-radius:10px;background:#fff;padding:12px}
+    .procurement-grid>*{min-width:0}
+    .procurement-card{min-width:0}
+    #purchase-order-items{width:100%;table-layout:fixed}
+    #purchase-order-items input{min-width:0}
+    #purchase-order-items th:first-child,#purchase-order-items td:first-child{width:42%}
     @media(max-width:1400px){.procurement-grid{grid-template-columns:repeat(2,minmax(260px,1fr))}}
-    @media(max-width:700px){.procurement-grid{grid-template-columns:1fr}}
+    @media(max-width:700px){
+        .procurement-grid{grid-template-columns:minmax(0,1fr);gap:12px}
+        .procurement-card{padding:14px}
+        .po-items-wrap{overflow-x:visible}
+        #purchase-order-items{display:block;table-layout:auto}
+        #purchase-order-items thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+        #purchase-order-items tbody{display:grid;gap:10px}
+        #purchase-order-items tbody tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:10px;border:1px solid #dedbd5;border-radius:10px;background:#fff}
+        #purchase-order-items tbody td{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:0;border:0}
+        #purchase-order-items tbody td:before{content:attr(data-label);margin-bottom:4px;color:#5e5a56;font-size:.66rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+        #purchase-order-items tbody td:first-child{grid-column:1/-1}
+        #purchase-order-items tbody td:nth-child(4){align-items:flex-start;text-align:left!important;font-weight:700}
+        #purchase-order-items tbody td:last-child{align-items:flex-end;justify-content:flex-end}
+        #purchase-order-items tfoot{display:block;margin-top:8px}
+        #purchase-order-items tfoot tr{display:flex;justify-content:flex-end;gap:10px}
+        #purchase-order-items tfoot th{padding:4px 0}
+        #purchase-order-items tfoot th:first-child{flex:1;text-align:right}
+        #purchase-order-items tfoot th:last-child{min-width:80px}
+    }
 </style>
 
 <div class="row g-4">
@@ -84,17 +107,17 @@
             <label class="form-label">Order date</label>
             <input class="form-control mb-2" name="order_date" type="date" value="{{ old('order_date', now()->format('Y-m-d')) }}">
             <label class="form-label">Items</label>
-            <div class="table-responsive mb-2">
+            <div class="table-responsive po-items-wrap mb-2">
                 <table class="table table-sm align-middle" id="purchase-order-items">
                     <thead><tr><th>Description</th><th style="width:90px">Qty</th><th style="width:125px">Unit price</th><th style="width:110px">Total</th><th></th></tr></thead>
                     <tbody>
                         @foreach(old('items', [['description' => '', 'quantity' => 1, 'unit_price' => '']]) as $i => $item)
                             <tr>
-                                <td><input class="form-control form-control-sm" name="items[{{ $i }}][description]" value="{{ $item['description'] ?? '' }}" placeholder="Item or service" required></td>
-                                <td><input class="form-control form-control-sm po-quantity" name="items[{{ $i }}][quantity]" type="number" min="0.001" step="0.001" value="{{ $item['quantity'] ?? 1 }}" required></td>
-                                <td><input class="form-control form-control-sm po-unit-price" name="items[{{ $i }}][unit_price]" type="number" min="0" step="0.01" value="{{ $item['unit_price'] ?? '' }}" placeholder="0.00" required></td>
-                                <td class="text-end po-line-total">0.00</td>
-                                <td><button type="button" class="btn btn-outline-danger btn-sm remove-po-row" aria-label="Remove item">&times;</button></td>
+                                <td data-label="Description"><input class="form-control form-control-sm" name="items[{{ $i }}][description]" value="{{ $item['description'] ?? '' }}" placeholder="Item or service" required></td>
+                                <td data-label="Quantity"><input class="form-control form-control-sm po-quantity" name="items[{{ $i }}][quantity]" type="number" min="0.001" step="0.001" value="{{ $item['quantity'] ?? 1 }}" required></td>
+                                <td data-label="Unit price"><input class="form-control form-control-sm po-unit-price" name="items[{{ $i }}][unit_price]" type="number" min="0" step="0.01" value="{{ $item['unit_price'] ?? '' }}" placeholder="0.00" required></td>
+                                <td data-label="Line total" class="text-end po-line-total">0.00</td>
+                                <td data-label="Remove"><button type="button" class="btn btn-outline-danger btn-sm remove-po-row" aria-label="Remove item">&times;</button></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -221,11 +244,11 @@ document.addEventListener('DOMContentLoaded', () => {
     table.addEventListener('input', updateTotal);
     document.getElementById('add-po-row').addEventListener('click', () => {
         table.querySelector('tbody').insertAdjacentHTML('beforeend', `<tr>
-            <td><input class="form-control form-control-sm" name="items[${index}][description]" placeholder="Item or service" required></td>
-            <td><input class="form-control form-control-sm po-quantity" name="items[${index}][quantity]" type="number" min="0.001" step="0.001" value="1" required></td>
-            <td><input class="form-control form-control-sm po-unit-price" name="items[${index}][unit_price]" type="number" min="0" step="0.01" placeholder="0.00" required></td>
-            <td class="text-end po-line-total">0.00</td>
-            <td><button type="button" class="btn btn-outline-danger btn-sm remove-po-row" aria-label="Remove item">&times;</button></td>
+            <td data-label="Description"><input class="form-control form-control-sm" name="items[${index}][description]" placeholder="Item or service" required></td>
+            <td data-label="Quantity"><input class="form-control form-control-sm po-quantity" name="items[${index}][quantity]" type="number" min="0.001" step="0.001" value="1" required></td>
+            <td data-label="Unit price"><input class="form-control form-control-sm po-unit-price" name="items[${index}][unit_price]" type="number" min="0" step="0.01" placeholder="0.00" required></td>
+            <td data-label="Line total" class="text-end po-line-total">0.00</td>
+            <td data-label="Remove"><button type="button" class="btn btn-outline-danger btn-sm remove-po-row" aria-label="Remove item">&times;</button></td>
         </tr>`);
         index++;
         updateTotal();
