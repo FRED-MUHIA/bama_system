@@ -15,6 +15,9 @@ class PurchaseOrder extends Model
 
     public function supplier() { return $this->belongsTo(Supplier::class); }
     public function project() { return $this->belongsTo(Project::class); }
+    public function department() { return $this->belongsTo(Department::class); }
+    public function costCenter() { return $this->belongsTo(CostCenter::class); }
+    public function items() { return $this->hasMany(PurchaseOrderItem::class); }
     public function goodsReceivedNotes() { return $this->hasMany(GoodsReceivedNote::class); }
     public function supplierInvoices() { return $this->hasMany(SupplierInvoice::class); }
 }

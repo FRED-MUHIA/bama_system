@@ -371,6 +371,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/projects/{project}/handovers', [ErpController::class, 'storeHandover'])->name('projects.handovers.store');
         Route::post('/erp/suppliers', [ErpController::class, 'storeSupplier'])->name('erp.suppliers.store');
         Route::post('/erp/supplier-quotes', [ErpController::class, 'storeSupplierQuote'])->name('erp.supplier-quotes.store');
+        Route::get('/erp/purchase-orders/{purchaseOrder}', [ErpController::class, 'showPurchaseOrder'])->name('erp.purchase-orders.show');
+        Route::get('/erp/purchase-orders/{purchaseOrder}/download', [ErpController::class, 'downloadPurchaseOrder'])->name('erp.purchase-orders.download');
         Route::post('/erp/purchase-orders', [ErpController::class, 'storePurchaseOrder'])->name('erp.purchase-orders.store');
         Route::post('/erp/goods-received', [ErpController::class, 'storeGoodsReceived'])->name('erp.goods-received.store');
         Route::post('/erp/supplier-invoices', [ErpController::class, 'storeSupplierInvoice'])->name('erp.supplier-invoices.store');

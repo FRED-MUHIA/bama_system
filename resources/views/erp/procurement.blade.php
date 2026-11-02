@@ -82,9 +82,26 @@
             <label class="form-label">PO number</label>
             <input class="form-control mb-2" name="po_number" placeholder="PO number" required>
             <label class="form-label">Order date</label>
-            <input class="form-control mb-2" name="order_date" type="date">
-            <label class="form-label">Amount</label>
-            <input class="form-control mb-2" name="amount" type="number" step="0.01" placeholder="Amount" required>
+            <input class="form-control mb-2" name="order_date" type="date" value="{{ old('order_date', now()->format('Y-m-d')) }}">
+            <label class="form-label">Items</label>
+            <div class="table-responsive mb-2">
+                <table class="table table-sm align-middle" id="purchase-order-items">
+                    <thead><tr><th>Description</th><th style="width:90px">Qty</th><th style="width:125px">Unit price</th><th style="width:110px">Total</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach(old('items', [['description' => '', 'quantity' => 1, 'unit_price' => '']]) as $i => $item)
+                            <tr>
+                                <td><input class="form-control form-control-sm" name="items[{{ $i }}][description]" value="{{ $item['description'] ?? '' }}" placeholder="Item or service" required></td>
+                                <td><input class="form-control form-control-sm po-quantity" name="items[{{ $i }}][quantity]" type="number" min="0.001" step="0.001" value="{{ $item['quantity'] ?? 1 }}" required></td>
+                                <td><input class="form-control form-control-sm po-unit-price" name="items[{{ $i }}][unit_price]" type="number" min="0" step="0.01" value="{{ $item['unit_price'] ?? '' }}" placeholder="0.00" required></td>
+                                <td class="text-end po-line-total">0.00</td>
+                                <td><button type="button" class="btn btn-outline-danger btn-sm remove-po-row" aria-label="Remove item">&times;</button></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot><tr><th colspan="3" class="text-end">PO Total</th><th class="text-end" id="purchase-order-total">0.00</th><th></th></tr></tfoot>
+                </table>
+            </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm mb-2" id="add-po-row"><i class="bi bi-plus"></i> Add item</button>
             <label class="form-label">Status</label>
             <select class="form-select mb-2" name="status">
                 <option>Draft</option>
@@ -93,8 +110,18 @@
             </select>
             <label class="form-label">Notes</label>
             <textarea class="form-control mb-2" name="notes" placeholder="Notes" rows="3"></textarea>
-            <button class="btn btn-outline-success btn-sm">Save PO</button>
+            <button class="btn btn-outline-success btn-sm">Prepare Purchase Order</button>
         </form>
+        <hr>
+        <h3 class="h6">Recent Purchase Orders</h3>
+        @forelse($purchaseOrders->take(5) as $po)
+            <div class="border-top py-2 d-flex justify-content-between gap-2">
+                <a href="{{ route('erp.purchase-orders.show', $po) }}">{{ $po->po_number }} · {{ $po->supplier?->name }}</a>
+                <span class="text-nowrap">{{ number_format($po->amount, 2) }}</span>
+            </div>
+        @empty
+            <div class="text-muted small">No purchase orders yet.</div>
+        @endforelse
     </div>
 
     <div class="procurement-card">
@@ -174,4 +201,43 @@
         </form>
     </div>
 </div>
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const table = document.getElementById('purchase-order-items');
+    if (!table) return;
+    let index = table.querySelectorAll('tbody tr').length;
+    const updateTotal = () => {
+        let total = 0;
+        table.querySelectorAll('tbody tr').forEach((row) => {
+            const quantity = Number(row.querySelector('.po-quantity').value || 0);
+            const price = Number(row.querySelector('.po-unit-price').value || 0);
+            const line = quantity * price;
+            row.querySelector('.po-line-total').textContent = line.toFixed(2);
+            total += line;
+        });
+        document.getElementById('purchase-order-total').textContent = total.toFixed(2);
+    };
+    table.addEventListener('input', updateTotal);
+    document.getElementById('add-po-row').addEventListener('click', () => {
+        table.querySelector('tbody').insertAdjacentHTML('beforeend', `<tr>
+            <td><input class="form-control form-control-sm" name="items[${index}][description]" placeholder="Item or service" required></td>
+            <td><input class="form-control form-control-sm po-quantity" name="items[${index}][quantity]" type="number" min="0.001" step="0.001" value="1" required></td>
+            <td><input class="form-control form-control-sm po-unit-price" name="items[${index}][unit_price]" type="number" min="0" step="0.01" placeholder="0.00" required></td>
+            <td class="text-end po-line-total">0.00</td>
+            <td><button type="button" class="btn btn-outline-danger btn-sm remove-po-row" aria-label="Remove item">&times;</button></td>
+        </tr>`);
+        index++;
+        updateTotal();
+    });
+    table.addEventListener('click', (event) => {
+        if (event.target.closest('.remove-po-row') && table.querySelectorAll('tbody tr').length > 1) {
+            event.target.closest('tr').remove();
+            updateTotal();
+        }
+    });
+    updateTotal();
+});
+</script>
+@endpush
 @endsection

@@ -24,6 +24,7 @@ use App\Support\ActiveBusiness;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -200,19 +201,59 @@ class ErpController extends Controller
     public function storePurchaseOrder(Request $request)
     {
         $this->requireErp();
-        PurchaseOrder::create($request->validate([
+        $data = $request->validate([
             'supplier_id' => ['required', Rule::exists('suppliers', 'id')->where('business_id', ActiveBusiness::id())],
             'project_id' => ['nullable', Rule::exists('projects', 'id')->where('business_id', ActiveBusiness::id())],
             'department_id' => ['nullable', Rule::exists('departments', 'id')->where('business_id', ActiveBusiness::id())],
             'cost_center_id' => ['nullable', Rule::exists('cost_centers', 'id')->where('business_id', ActiveBusiness::id())],
             'po_number' => ['required', 'string', 'max:255'],
             'order_date' => ['nullable', 'date'],
-            'amount' => ['required', 'numeric', 'min:0'],
             'status' => ['required', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
-        ]));
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.description' => ['required', 'string', 'max:2000'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
+            'items.*.unit_price' => ['required', 'numeric', 'min:0'],
+        ]);
 
-        return back()->with('status', 'Purchase order saved.');
+        $purchaseOrder = DB::transaction(function () use ($data) {
+            $items = collect($data['items'])->map(function ($item) {
+                $item['line_total'] = round((float) $item['quantity'] * (float) $item['unit_price'], 2);
+
+                return $item;
+            });
+            unset($data['items']);
+            $data['amount'] = $items->sum('line_total');
+            $purchaseOrder = PurchaseOrder::create($data);
+            foreach ($items as $item) {
+                $purchaseOrder->items()->create($item);
+            }
+
+            return $purchaseOrder;
+        });
+
+        return redirect()->route('erp.purchase-orders.show', $purchaseOrder)->with('status', 'Purchase order saved.');
+    }
+
+    public function showPurchaseOrder(PurchaseOrder $purchaseOrder)
+    {
+        $this->requireErp();
+
+        return view('erp.purchase-order', [
+            'purchaseOrder' => $purchaseOrder->load('supplier', 'project', 'items'),
+            'settings' => CompanySetting::where('business_id', ActiveBusiness::id())->first(),
+        ]);
+    }
+
+    public function downloadPurchaseOrder(PurchaseOrder $purchaseOrder)
+    {
+        $this->requireErp();
+        $purchaseOrder->load('supplier', 'project', 'items');
+
+        return Pdf::loadView('erp.purchase-order-pdf', [
+            'purchaseOrder' => $purchaseOrder,
+            'settings' => CompanySetting::where('business_id', $purchaseOrder->business_id)->first(),
+        ])->download($purchaseOrder->po_number.'.pdf');
     }
 
     public function storeGoodsReceived(Request $request)
