@@ -27,9 +27,12 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ErpController extends Controller
 {
+    private const MAX_PURCHASE_ORDER_AMOUNT = 9999999999999.99;
+
     public function profit()
     {
         $this->requireErp();
@@ -212,8 +215,8 @@ class ErpController extends Controller
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:2000'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
-            'items.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001', 'max:999999999.999'],
+            'items.*.unit_price' => ['required', 'numeric', 'min:0', 'max:9999999999999.99'],
             'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
@@ -224,11 +227,24 @@ class ErpController extends Controller
                 $item['tax_amount'] = round($subtotal * $item['tax_rate'] / 100, 2);
                 $item['line_total'] = $subtotal + $item['tax_amount'];
 
+                if ($item['line_total'] > self::MAX_PURCHASE_ORDER_AMOUNT) {
+                    throw ValidationException::withMessages([
+                        'items' => 'A purchase order line total exceeds the maximum supported amount.',
+                    ]);
+                }
+
                 return $item;
             });
             unset($data['items']);
             $data['amount'] = round($items->sum('line_total'), 2);
             $data['tax_amount'] = round($items->sum('tax_amount'), 2);
+
+            if ($data['amount'] > self::MAX_PURCHASE_ORDER_AMOUNT) {
+                throw ValidationException::withMessages([
+                    'items' => 'The purchase order total exceeds the maximum supported amount.',
+                ]);
+            }
+
             $purchaseOrder = PurchaseOrder::create($data);
             foreach ($items as $item) {
                 $purchaseOrder->items()->create($item);
@@ -254,11 +270,12 @@ class ErpController extends Controller
     {
         $this->requireErp();
         $purchaseOrder->load('supplier', 'project', 'items');
+        $filename = Str::slug($purchaseOrder->po_number) ?: 'purchase-order-'.$purchaseOrder->getKey();
 
         return Pdf::loadView('erp.purchase-order-pdf', [
             'purchaseOrder' => $purchaseOrder,
             'settings' => CompanySetting::where('business_id', $purchaseOrder->business_id)->first(),
-        ])->download($purchaseOrder->po_number.'.pdf');
+        ])->download($filename.'.pdf');
     }
 
     public function storeGoodsReceived(Request $request)
