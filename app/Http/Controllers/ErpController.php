@@ -262,7 +262,7 @@ class ErpController extends Controller
 
         return view('erp.purchase-order', [
             'purchaseOrder' => $purchaseOrder->load('supplier', 'project', 'items'),
-            'settings' => CompanySetting::where('business_id', ActiveBusiness::id())->first(),
+            'settings' => $this->companySettingsForBusiness($purchaseOrder->business_id),
         ]);
     }
 
@@ -274,7 +274,7 @@ class ErpController extends Controller
 
         return Pdf::loadView('erp.purchase-order-pdf', [
             'purchaseOrder' => $purchaseOrder,
-            'settings' => CompanySetting::where('business_id', $purchaseOrder->business_id)->first(),
+            'settings' => $this->companySettingsForBusiness($purchaseOrder->business_id),
         ])->download($filename.'.pdf');
     }
 
