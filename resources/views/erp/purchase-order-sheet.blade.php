@@ -16,6 +16,7 @@
 @endphp
 <style>
     .po-sheet{border:1px solid #d7dee7;padding:28px;color:#17202a;background:#fff}
+    .po-sheet.po-sheet-pdf{min-height:1000px;box-sizing:border-box}
     .po-sheet .po-top{height:7px;background:linear-gradient(90deg,{{ $primaryColor }} 0 78%,{{ $secondaryColor }} 78% 100%);margin:-28px -28px 24px}
     .po-sheet .po-header{width:100%;margin-bottom:26px}
     .po-sheet .po-header td{vertical-align:top}
@@ -44,7 +45,7 @@
     @media print{.po-sheet{border:0}}
 </style>
 <article class="{{ $pdf ? 'po-document' : 'card shadow-sm mx-auto' }}" style="{{ $pdf ? '' : 'max-width: 850px;' }}">
-    <div class="po-sheet {{ $pdf ? '' : 'card-body p-4 p-md-5' }}">
+    <div class="po-sheet {{ $pdf ? 'po-sheet-pdf' : 'card-body p-4 p-md-5' }}">
         @if($pdf)<div class="po-top"></div>@endif
         <table class="po-header">
             <tr>
