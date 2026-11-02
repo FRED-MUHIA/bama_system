@@ -18,14 +18,16 @@
     @media(max-width:700px){
         .procurement-grid{grid-template-columns:minmax(0,1fr);gap:12px}
         .procurement-card{padding:14px}
-        .po-items-wrap{overflow-x:visible}
+        .po-items-wrap{min-width:0;overflow-x:clip}
         #purchase-order-items{display:block;table-layout:auto}
         #purchase-order-items thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
         #purchase-order-items tbody{display:grid;gap:10px}
-        #purchase-order-items tbody tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:10px;border:1px solid #dedbd5;border-radius:10px;background:#fff}
+        #purchase-order-items tbody tr{display:grid;width:100%;box-sizing:border-box;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:10px;border:1px solid #dedbd5;border-radius:10px;background:#fff}
         #purchase-order-items tbody td{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:0;border:0}
+        #purchase-order-items tbody td input{width:100%;max-width:100%;box-sizing:border-box}
         #purchase-order-items tbody td:before{content:attr(data-label);margin-bottom:4px;color:#5e5a56;font-size:.66rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
         #purchase-order-items tbody td:first-child{grid-column:1/-1}
+        #purchase-order-items tbody td:nth-child(3){grid-column:1/-1}
         #purchase-order-items tbody td:nth-child(4){align-items:flex-start;text-align:left!important;font-weight:700}
         #purchase-order-items tbody td:last-child{align-items:flex-end;justify-content:flex-end}
         #purchase-order-items tfoot{display:block;margin-top:8px}
